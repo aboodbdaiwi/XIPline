@@ -38,6 +38,7 @@ print('getcwd:      ', os.getcwd())
 print('__file__:    ', __file__)
 
 # % test Xe -Unet - Resnet 
+''' '''
 # Create an instance of Tkinter
 root = Tk()
 # Hide the main window
@@ -51,8 +52,8 @@ print("Selected file:", file_path)
 X_test = loadmat(file_path)
 X_test = X_test["Images"]
 
-Vent_wout_H = True
-Vent_w_H = False
+Vent_wout_H = False
+Vent_w_H = True
 GaxExchnage = False
 
 # % load model
@@ -64,13 +65,20 @@ elif GaxExchnage:
     model = load_model(folder_path+'\\Unet_model_3DGasExchange_1000e.hdf5',compile=False) 
     
 #% predict mask for each slice
-gen_masks = np.zeros((X_test.shape[1],X_test.shape[2],X_test.shape[0]))
-for i in range(0, X_test.shape[0]):   
-    test_img = X_test[i]
-    test_img_input=np.expand_dims(test_img, 0)
-    prediction = model.predict(test_img_input)
-    gen_masks[:,:,i] = prediction[0,:,:,0]
-gen_masks = gen_masks > 0.9
+if Vent_wout_H or Vent_w_H:
+    gen_masks = np.zeros((X_test.shape[1],X_test.shape[2],X_test.shape[0]))
+    for i in range(0, X_test.shape[0]):   
+        test_img = X_test[i]
+        test_img_input=np.expand_dims(test_img, 0)
+        prediction = model.predict(test_img_input)
+        gen_masks[:,:,i] = prediction[0,:,:,0]
+    gen_masks = gen_masks > 0.9
+   
+elif GaxExchnage:
+    gen_masks = model.predict(X_test)
+    gen_masks = gen_masks > 0.5
+    
+
 # view images
 ''' 
 test_img_number = random.randint(0, len(X_test)-1)
@@ -85,6 +93,7 @@ plt.show()
 '''
 
 # % save mask
+''' 
 # Create an instance of Tkinter
 root = Tk()
 # Hide the main window
@@ -93,6 +102,8 @@ root.withdraw()
 save_path = askdirectory()
 # Print the selected folder path
 print("Selected folder:", save_path)
+'''
+save_path = os.path.dirname(file_path)
 
 # save .mat file
 savemat(save_path+'/auto_segmented_mask.mat', {"auto_segmented_mask":gen_masks} )
