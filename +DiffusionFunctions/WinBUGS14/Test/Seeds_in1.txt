@@ -1,0 +1,1 @@
+ list(alpha0 = 10, alpha1 = 10, alpha2 = 10, alpha12 = 10, tau = 0.1)
