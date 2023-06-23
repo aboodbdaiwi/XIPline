@@ -44,9 +44,9 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
         case 'Diffusion'
         case 'GasExchange'
     end
-    save([MainInput.XeDataLocation '\Images.mat'],'Images');
+    save([MainInput.XeDataLocation '\preprocessed_Images.mat'],'Images');
     scriptLocation = fileparts(mfilename('fullpath'));
     MainInput.AutoSegmentPath = scriptLocation;
-    disp(scriptLocation)
+    %disp(scriptLocation)
 disp('preprocessing completed')
 end

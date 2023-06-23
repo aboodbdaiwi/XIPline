@@ -27,8 +27,8 @@ MainInput.AnalysisType = 'Ventilation';
 % MainInput.AnalysisType = 'GasExchange';
 
 % 2) Do you have protom images? 
-% MainInput.NoProtonImage = 'yes';  % There is no proton images 
-MainInput.NoProtonImage = 'no';    % There is  proton images 
+MainInput.NoProtonImage = 'yes';  % There is no proton images 
+% MainInput.NoProtonImage = 'no';    % There is  proton images 
 
 MainInput.Institute = 'CCHMC'; 
 % MainInput.Institute = 'XeCTC'; 
@@ -360,7 +360,7 @@ figure; Global.imslice(Images)
 clc
 [Images, MainInput] = Segmentation.preprocess_images_for_auto_segmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
 cd(MainInput.AutoSegmentPath)
-system('predict_mask_Vent_w_H.exe')
+%system('predict_mask_Vent_w_H.exe')
 cd(MainInput.XeDataLocation)
 
 %% 
