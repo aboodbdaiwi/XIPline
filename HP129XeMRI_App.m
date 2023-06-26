@@ -276,6 +276,15 @@ figure; Global.imslice(Diffusion.LungMask)
 % figure; Global.imslice(NormMR)
 % diary off 
 
+[preprocessed_data, MainInput] = Segmentation.preprocess_images_for_auto_segmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
+cd(MainInput.AutoSegmentPath)
+if strcmp(MainInput.NoProtonImage, 'no') == 1
+    system('predict_mask_Vent_w_H.exe')
+else 
+    system('predict_mask_Vent_wout_H.exe')           
+end
+
+cd(MainInput.XeDataLocation)
 
 %% Ventilation analysis
 clc

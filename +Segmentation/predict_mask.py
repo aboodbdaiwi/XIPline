@@ -52,8 +52,8 @@ print("Selected file:", file_path)
 X_test = loadmat(file_path)
 X_test = X_test["Images"]
 
-Vent_wout_H = False
-Vent_w_H = True
+Vent_wout_H = True
+Vent_w_H = False
 GaxExchnage = False
 
 # % load model
@@ -73,7 +73,6 @@ if Vent_wout_H or Vent_w_H:
         prediction = model.predict(test_img_input)
         gen_masks[:,:,i] = prediction[0,:,:,0]
     gen_masks = gen_masks > 0.9
-   
 elif GaxExchnage:
     gen_masks = model.predict(X_test)
     gen_masks = gen_masks > 0.5
@@ -108,8 +107,9 @@ save_path = os.path.dirname(file_path)
 # save .mat file
 savemat(save_path+'/auto_segmented_mask.mat', {"auto_segmented_mask":gen_masks} )
 # save .nii file
+preNii_gen_mask = gen_masks
 preNii_gen_mask = np.flip(gen_masks,0)
-preNii_gen_mask = np.rot90(np.rot90(np.rot90(preNii_gen_mask)))
+preNii_gen_mask = np.rot90(preNii_gen_mask)
 final_generated_mask = nib.Nifti1Image(preNii_gen_mask.astype(np.uint8), affine=np.eye(4))
 nib.save(final_generated_mask, save_path+'/auto_segmented_mask.nii.gz') # Here you put the path + the extionsion 'nii' or 'nii.gz'
 
