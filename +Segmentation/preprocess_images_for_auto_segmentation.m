@@ -43,8 +43,43 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
         
         case 'Diffusion'
         case 'GasExchange'
+            % resize xenon images
+            if size(GasExchange.VentImage,1) ~= 112
+                Xe_Img = zeros(112,112,112);
+                for i = 1:size(GasExchange.VentImage,3)
+                    Xe_Img(:,:,i) = imresize(GasExchange.VentImage(:,:,i),[112,112]);
+                end
+            end
+            Xe_Img = Xe_Img./max(Xe_Img(:));
+            % resize proton images
+            if strcmp(MainInput.NoProtonImage, 'no') == 1
+                % resize
+                if size(GasExchange.ProtonImageRegistered,1) ~= 112
+                    H_Img = zeros(112,112,112);
+                    for i = 1:size(GasExchange.ProtonImageRegistered,3)
+                        H_Img(:,:,i) = imresize(GasExchange.ProtonImageRegistered(:,:,i),[112,112]);
+                    end
+                end
+                % normalize
+                H_Img = H_Img./max(H_Img(:));
+            end
+            % make stacks 
+            if strcmp(MainInput.NoProtonImage, 'no') == 1
+                Images = zeros(1,112,112,112,2);
+            else
+                Images = zeros(1,112,112,112,1);
+            end
+            
+            for j = 1:size(Ventilation.Image,3)
+                Images(1,:,:,:,1) = Xe_Img;
+                if strcmp(MainInput.NoProtonImage, 'no') == 1
+                    Images(1,:,:,:,2) = H_Img;
+                end
+            end
+
+            
     end
-    save([MainInput.XeDataLocation '\preprocessed_Images.mat'],'Images');
+    save([MainInput.XeDataLocation '\Mat2Py_preprocessing.mat'],'Images');
     scriptLocation = fileparts(mfilename('fullpath'));
     MainInput.AutoSegmentPath = scriptLocation;
     %disp(scriptLocation)

@@ -30,15 +30,12 @@ from scipy.io import savemat, loadmat
 from keras.models import load_model
 from tkinter import Tk
 from tkinter.filedialog import askopenfilename
-from tkinter.filedialog import askdirectory
 
 folder_path =  os.getcwd()
 script_path = __file__
 print('getcwd:      ', os.getcwd())
 print('__file__:    ', __file__)
 
-# % test Xe -Unet - Resnet 
-''' '''
 # Create an instance of Tkinter
 root = Tk()
 # Hide the main window
@@ -50,20 +47,24 @@ print("Selected file:", file_path)
 
 # load mat files
 X_test = loadmat(file_path)
-X_test = X_test["Images"]
+X_test = X_test["Mat2Py_preprocessing"]
+#X_test = X_test/np.max(X_test)
 
-Vent_wout_H = True
+Vent_wout_H = False
 Vent_w_H = False
-GaxExchnage = False
+GaxExchnage_wout_H = True
+GaxExchnage_w_H = False
 
 # % load model
 if Vent_wout_H:
     model = load_model(folder_path+'\Resnet_model_Xe_2D_Vent_2000epochs.hdf5',compile=False) 
 elif Vent_w_H:
     model = load_model(folder_path+'\Resnet_model_Xe_H_2D_Vent_2000epochs.hdf5',compile=False) 
-elif GaxExchnage:
-    model = load_model(folder_path+'\\Unet_model_3DGasExchange_1000e.hdf5',compile=False) 
-    
+elif GaxExchnage_wout_H:
+    model = load_model(folder_path+'\\AutoSegment_3DGasExchange_Xe_200e.hdf5',compile=False) 
+elif GaxExchnage_w_H:
+    model = load_model(folder_path+'\\AutoSegment_3DGasExchange_Xe_H_1000e.hdf5',compile=False) 
+        
 #% predict mask for each slice
 if Vent_wout_H or Vent_w_H:
     gen_masks = np.zeros((X_test.shape[1],X_test.shape[2],X_test.shape[0]))
@@ -73,42 +74,39 @@ if Vent_wout_H or Vent_w_H:
         prediction = model.predict(test_img_input)
         gen_masks[:,:,i] = prediction[0,:,:,0]
     gen_masks = gen_masks > 0.9
-elif GaxExchnage:
+elif GaxExchnage_wout_H or GaxExchnage_w_H:
+    IMG_SIZE = 112
+    if len(X_test.shape) == 4:
+        X_test_tmp = np.zeros((1,X_test.shape[1],X_test.shape[2],X_test.shape[3],1))
+        X_test_tmp[:,:,:,:,0] = X_test
+        X_test = X_test_tmp
     gen_masks = model.predict(X_test)
-    gen_masks = gen_masks > 0.5
-    
+    gen_masks = gen_masks > 0.2
+gen_masks = gen_masks.astype(float)
 
 # view images
-''' 
 test_img_number = random.randint(0, len(X_test)-1)
 plt.figure(figsize=(16, 8))
 plt.subplot(231)
 plt.title('Testing Image')
-plt.imshow(X_test[test_img_number,:,:,0], cmap='gray')
+plt.imshow(X_test[0,:,:,test_img_number,0], cmap='gray')
 plt.subplot(232)
 plt.title('Prediction on test image')
-plt.imshow(gen_masks[:,:,test_img_number], cmap='gray')
+plt.imshow(gen_masks[0,:,:,test_img_number,0], cmap='gray')
 plt.show()
-'''
 
-# % save mask
-''' 
-# Create an instance of Tkinter
-root = Tk()
-# Hide the main window
-root.withdraw()
-# Open the folder selection dialog
-save_path = askdirectory()
-# Print the selected folder path
-print("Selected folder:", save_path)
-'''
+
 save_path = os.path.dirname(file_path)
 
 # save .mat file
 savemat(save_path+'/auto_segmented_mask.mat', {"auto_segmented_mask":gen_masks} )
 # save .nii file
-preNii_gen_mask = gen_masks
-preNii_gen_mask = np.flip(gen_masks,0)
+if Vent_wout_H or Vent_w_H:
+    preNii_gen_mask = gen_masks
+elif GaxExchnage_wout_H or GaxExchnage_w_H:
+    preNii_gen_mask = gen_masks[0,:,:,:,0]
+    
+preNii_gen_mask = np.flip(preNii_gen_mask,0)
 preNii_gen_mask = np.rot90(preNii_gen_mask)
 final_generated_mask = nib.Nifti1Image(preNii_gen_mask.astype(np.uint8), affine=np.eye(4))
 nib.save(final_generated_mask, save_path+'/auto_segmented_mask.nii.gz') # Here you put the path + the extionsion 'nii' or 'nii.gz'
@@ -140,7 +138,6 @@ plt.axis('off')
 plt.title('Generated Mask')
 plt.show()
 '''
-
 
 '''
 create .exe file to run on matlab 
