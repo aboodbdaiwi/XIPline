@@ -22,10 +22,10 @@ function [UncorrectedVentImage,...
 %   data/list files for the dissolved and proton images
 %   If no folder is provided, user will be prompted to select the folder
 %
-%   Syntax:  LoadData_Gas_GasExchange_Philips_Sin(GasDataLocation)
+%   Syntax:  LoadData_Gas_GasExchangeFunctions_Philips_Sin(GasGasDataLocation)
 %
 %   Inputs:
-%      GasDataLocation - string containing the path of the folder
+%      GasGasDataLocation - string containing the path of the folder
 %
 %   Outputs:
 %       UncorrectedVentImage,...
@@ -46,7 +46,7 @@ function [UncorrectedVentImage,...
 %       SigDynamics
 %
 %   Example: 
-%   GasExchange_ProcessSingleSubject('C:\Users\mwillmering\Documents\Subject1')
+%   GasExchangeFunctions_ProcessSingleSubject('C:\Users\mwillmering\Documents\Subject1')
 %
 % 
 %   Package: https://github.com/cchmc-cpir/CCHMC-Gas-Exchange-Processing-Package
@@ -70,52 +70,100 @@ FunctionDirectory = FunctionDirectory(1:idcs(end)-1);%remove file
 cd(GasDataLocation)
 mkdir([GasDataLocation '\Gax Exchange Analysis']);
 outputpath = [GasDataLocation '\Gax Exchange Analysis'];
-%% Determine files to use
-if strcmp(Institute,'XeCTC') == 1    
-    ScanVersion = 'Xe_CTC';
-%     XeSinFile = dir([GasDataLocation,'\*.sin']);    
-elseif strcmp(Institute,'CCHMC') == 1                 
-    ScanVersion = 'CCHMC_V3';
-%     XeSinFile = dir([GasDataLocation,'\*.sin']);    
-end
-XeSinFile = dir([GasDataLocation,'\*.sin']);    
 
-% if size(XeSinFile,1) < 1 %didn't find that sequence version
-%     XeSinFile = dir([GasDataLocation,'\*CTC_GasExchange_Xe.sin']);
-%     ScanVersion = 'Xe_CTC';
-% end
+ReconVersion = 'TEST';%If not connected to git, can't determine hash so state test
+NumPlotSlices = 7;%must be odd to work as expected
+
+
+%% Determine files to use
+XeSinFile = dir([GasDataLocation,'\*Dissolved_Xe_20191008.sin']);
+ScanVersion = Institute;
+if strcmp(ScanVersion,'CCHMC')%didn't find that sequence naming version; check for new sequence names
+    XeSinFile = dir([GasDataLocation,'\*CPIR_Gas_Exchange.sin']);
+    ScanVersion = 'CCHMC';
+end
+if strcmp(ScanVersion,'XeCTC')%didn't find that sequence version
+    XeSinFile = dir([GasDataLocation,'\*CTC_GasExchangeFunctions_Xe.sin']);
+    ScanVersion = 'XeCTC';
+end
+
+if strcmp(ScanVersion,'Duke') %didn't find that sequence naming version; check for duke version/Intermediate dixon
+    XeSinFile = dir([GasDataLocation,'\*DukeIPF_Gas_Exchange.sin']);
+    ScanVersion = 'Duke';
+end
+
+
 DataFiles = dir([GasDataLocation,'\*.data']);
 XeDataFile = DataFiles(1);
+clear DataFiles
+
 disp('Looking For Necessary Files Completed.')
 
+
 %% Import Acquisition Information
-if strcmp(ScanVersion,'CCHMC_V3')
-    dwell_ms = 1.1049/58; %in ms - for 58 points with 1.1049ms readout
-    dwell_s = dwell_ms / 1000; %convert to s
+disp('Importing Acquisition Information...')
+XeSin = GasExchangeFunctions.loadSIN([XeSinFile.folder,'\',XeSinFile.name]);
+
+extraOvs = false;
+OvsFactor = 1.0;
+if strcmp(ScanVersion,'CCHMC')
+    dwell_ms = 1.1049/58; %in ms - for 58 points with 1.1049ms readout   
+    if (exist('XeSin','var') && isfield(XeSin, 'sample_time_interval')) %R59 passes it so will update here
+        dwell_ms = XeSin.sample_time_interval.vals(1) / 1000;
+    end
+    if (exist('XeSin','var') && XeSin.max_encoding_numbers.vals(1) ~= 57) %R59 oversampling; RC thinks its cartesian
+        extraOvs = true;
+        OvsFactor = (XeSin.max_encoding_numbers.vals(1)+1)/58;
+    end
     pw = 0.65; %pulse width in ms
     DisFlipAngle = 20; %Dissolved flip angle
     GasFlipAngle = 0.5; %Gas flip angle
     freq_jump = 7143; %change in freqeuncy for dissolved and off-res
-elseif strcmp(ScanVersion,'Xe_CTC')
-    dwell_ms = 0.64/68; %in ms - for 64 points with 0.64ms readout
-    dwell_s = dwell_ms / 1000; %convert to s
+elseif strcmp(ScanVersion,'XeCTC')
+    dwell_ms = 0.64/68; %in ms - for 64 points with 0.64ms readout   
+    if (exist('XeSin','var') && isfield(XeSin, 'sample_time_interval')) %R59 passes it so will update here
+        dwell_ms = XeSin.sample_time_interval.vals(1) / 1000;
+    end
+    if (exist('XeSin','var') && XeSin.non_cart_max_encoding_nrs.vals(1) ~= 63) %R59 oversampling
+        extraOvs = true;
+        OvsFactor = (XeSin.non_cart_max_encoding_nrs.vals(1)+1)/64;
+    end
     pw = 0.65; %pulse width in ms
     DisFlipAngle = 20; %Dissolved flip angle
     GasFlipAngle = 0.5; %Gas flip angle
     freq_jump = 7702; %change in freqeuncy for dissolved and off-res
+elseif strcmp(ScanVersion,'Duke')
+    dwell_ms = 0.64/68; %in ms - for 64 points with 0.64ms readout   
+    if (exist('XeSin','var') && isfield(XeSin, 'sample_time_interval')) %R59 passes it so will update here
+        dwell_ms = XeSin.sample_time_interval.vals(1) / 1000;
+    end
+    if (exist('XeSin','var') && XeSin.non_cart_max_encoding_nrs.vals(1) ~= 63) %R59 oversampling
+        extraOvs = true;
+        OvsFactor = (XeSin.non_cart_max_encoding_nrs.vals(1)+1)/64;
+    end
+    pw = 0.67; %pulse width in ms
+    DisFlipAngle = 15; %Dissolved flip angle
+    GasFlipAngle = 0.5; %Gas flip angle
+    freq_jump = 7340; %change in freqeuncy for dissolved and off-res
 end
+dwell_s = dwell_ms / 1000; %convert to s
 
-disp('Importing Acquisition Information...')
-XeSin = GasExchangeFunctions.loadSIN([XeSinFile.folder,'\',XeSinFile.name]);
 
-% ScanDate = [folderName{1,1}(1:4),'-',folderName{1,1}(5:6),'-',folderName{1,1}(7:8)];
-if strcmp(ScanVersion,'Xe_CTC')
+[~, folderName, ~] = fileparts(GasDataLocation);
+folderName = strsplit(folderName);
+Subject = 'Subject: ';   %folderName{1,2:end};
+Notes = '';
+if(size(folderName,2)>2)
+    Notes = cat(2,folderName{1,3:end});
+end
+ScanDate = 'ScanDate'; %[folderName{1,1}(1:4),'-',folderName{1,1}(5:6),'-',folderName{1,1}(7:8)];
+if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
     XeTR = XeSin.repetition_times.vals(1)*2/1000;%account for 2 acqs, convert to s
 else
     XeTR = XeSin.repetition_times.vals(1)*3/1000;%account for 3 acqs, convert to s
 end
 TE90 = XeSin.echo_times.vals(1);
-if strcmp(ScanVersion,'Xe_CTC')
+if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
     %CTC protocl always defines dissolved TE as mid pulse to acq
     ActTE90 = TE90; %TE90 from center of pulse
     Scanner = 'CheckRecords';
@@ -129,12 +177,13 @@ else
     Scanner = '3T-R';
 end
 Xe_AcqMatrix = XeSin.scan_resolutions.vals(1);
-if strcmp(ScanVersion,'Xe_CTC') %recon 2x interpolated
+if strcmp(ScanVersion,'CCHMC')  || strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke') %recon 2x interpolated
     Xe_RecMatrix = 2*Xe_AcqMatrix;
-else %CCHMC V3, recon 2x interpolated
-    Xe_RecMatrix = 2*Xe_AcqMatrix;
+%else %CCHMC V3, recon 2x interpolated
+    %Xe_RecMatrix = 2*Xe_AcqMatrix;
 end
 disp('Importing Acquisition Information Completed.')
+
 
 %% Import Data
 disp('Importing Data...')
@@ -142,15 +191,26 @@ disp('Importing Data...')
 [XeData,XeInfo] = GasExchangeFunctions.loadLISTDATA([XeDataFile.folder,'\',XeDataFile.name]);
 XeData = squeeze(XeData);
 
-if strcmp(ScanVersion,'Xe_CTC')
+if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
     %Dissolved k-space
     DissolvedKSpace = XeData(:,:,2);
     %Gas k-space
     GasKSpace = XeData(:,:,1);
 
+    if(extraOvs)
+        DissolvedKSpace = movmean(DissolvedKSpace,OvsFactor);
+        DissolvedKSpace = downsample(DissolvedKSpace,OvsFactor);
+        
+        GasKSpace = movmean(GasKSpace,OvsFactor);
+        GasKSpace = downsample(GasKSpace,OvsFactor);
+
+        dwell_s = dwell_s * OvsFactor;
+    end
+
     %Get sizes of dimensions
     Xe_nprof = size(DissolvedKSpace,2);
     Xe_interleaves = 1;
+
 else
     %Split Xe data into components; formatted as [read, proj, interleave, dyn, mix]
     %Dissolved Spectra
@@ -159,7 +219,7 @@ else
 
     %%Gas Spectra - Not Needed
     %%PreGasFID = XeData(:,1,1,2,2);
-    %%PostGasFID = XeData(:,2,1,2,2);
+    PostGasFID = XeData(:,2,1,2,2);
 
     %%Off-Res Spectra - Not needed
     %%PreOffResFID = XeData(:,1,1,3,2);
@@ -172,28 +232,66 @@ else
     %%Off-Res k-space - Not needed
     %%OffResKSpace = XeData(:,:,:,3,1);
 
+    if(extraOvs)
+        PreDissolvedFID = movmean(PreDissolvedFID,OvsFactor);
+        PreDissolvedFID =  downsample(PreDissolvedFID,OvsFactor);
+
+        PostDissolvedFID = movmean(PostDissolvedFID,OvsFactor);
+        PostDissolvedFID =  downsample(PostDissolvedFID,OvsFactor);
+
+        PostGasFID = movmean(PostGasFID,OvsFactor);
+        PostGasFID =  downsample(PostGasFID,OvsFactor);
+
+        DissolvedKSpaceInit = movmean(DissolvedKSpaceInit,OvsFactor);
+        DissolvedKSpaceInit = downsample(DissolvedKSpaceInit,OvsFactor);
+        
+        GasKSpaceInit = movmean(GasKSpaceInit,OvsFactor);
+        GasKSpaceInit = downsample(GasKSpaceInit,OvsFactor);
+
+        dwell_s = dwell_s * OvsFactor;
+    end
+
+    %Correct Atten. 
+    %Since R59, different levels of attn are used for the two mixes, scale here using last gas kspace and first post gas spec)
+    scaleFac = abs(PostGasFID(1,1))/abs(GasKSpaceInit(1,end,end)); %These should be almost identical at k0
+    DissolvedKSpaceInit = DissolvedKSpaceInit * scaleFac;
+    GasKSpaceInit = GasKSpaceInit * scaleFac;
+
     %Get sizes of dimensions
     XeSpec_nsamp = size(DissolvedKSpaceInit,1);
-    XeImg_nsamp = XeSin.max_encoding_numbers.vals(1)+1;
+    XeImg_nsamp = (XeSin.max_encoding_numbers.vals(1)+1) / OvsFactor;
     Xe_nprof = size(DissolvedKSpaceInit,2);
     Xe_interleaves = size(DissolvedKSpaceInit,3);
 
     %Trim Kspaces to correct number of readout points
     DissolvedKSpaceInit = DissolvedKSpaceInit(1:XeImg_nsamp,:,:);
     GasKSpaceInit = GasKSpaceInit(1:XeImg_nsamp,:,:);
-    
+
     % Put KSpaces in order and logical format
     XeOrder = GasExchangeFunctions.GetProjectionOrder(XeInfo);
     DissolvedKSpace = GasExchangeFunctions.SortUTEData_AcqOrder(GasExchangeFunctions.reshapeUTEData(DissolvedKSpaceInit),[XeImg_nsamp, Xe_nprof, Xe_interleaves], XeOrder);
     GasKSpace = GasExchangeFunctions.SortUTEData_AcqOrder(GasExchangeFunctions.reshapeUTEData(GasKSpaceInit),[XeImg_nsamp, Xe_nprof, Xe_interleaves], XeOrder);
+
 end
 disp('Importing Data Completed.')
 
+
 %% Calculate Trajectories
 disp('Calculating Trajectories...')
-if strcmp(ScanVersion,'Xe_CTC')
-    XeTraj = GasExchangeFunctions.philipsradialcoords(1.25,2,[XeSinFile.folder,'\',XeSinFile.name]); %1.25us delay, Haltoned Spiral
-    XeTraj = permute(XeTraj,[4 3 2 1]);
+if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
+    del = 1.25;
+    if (extraOvs)
+        del = del * OvsFactor;
+    end
+    XeTraj = GasExchangeFunctions.philipsradialcoords(del,2,[XeSinFile.folder,'\',XeSinFile.name]); %1.25us delay, Haltoned Spiral
+    XeTraj = permute(XeTraj,[3 2 1 4]); %ro, proj, intlv, dims
+    if (extraOvs)
+        XeTraj = movmean(XeTraj,OvsFactor);
+        XeTraj =  downsample(XeTraj,OvsFactor);
+    end
+    XeTraj = permute(XeTraj,[4 1 2 3]); %dims, ro, proj, intlv
+    del = 1.25;
+
 else
     if (strcmp(Scanner,'3T-R'))%R5.3.1
         XeTraj = GasExchangeFunctions.philipsradialcoords(0.36,1,[FunctionDirectory,'\V3 Scan Info\20191008_162511_Dissolved_Xe_20191008 - 3T-R.sin']); %0.36us delay, GM, from non-spectroscopy version
@@ -205,7 +303,12 @@ else
 end
 disp('Calculating Trajectories Completed.')
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Transform Data into Images and Spectra                                  %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Determine FOV Shift
+
 %not using planned shifts as techs don't seem to do it consistently
 disp('Determining Image offset...')
 PixelShiftinit = [0; 0; 0]; %start with no offset
@@ -248,17 +351,17 @@ disp('Determining Image Offset Completed.')
 
 %% Spectra
 disp('Fitting Spectrum...')
-if strcmp(ScanVersion,'Xe_CTC')
+if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
     try
-%         calFile = dir(fullfile(GasDataLocation,'*.data'));
         calFile = dir(fullfile(GasDataLocation,'cal','*.data'));
         [GasExResults, ~] = GasExchangeFunctions.XeCTC_Calibration(fullfile(calFile.folder,calFile.name));
     catch
         error('Error. Could not analyze calibration Data file')
+        success = 0;
     end
     time = GasExResults.DisFit.t;
     AppendedDissolvedNMRFit = GasExResults.DisFit;
-    AppendedDissolvedFit = dwell_s*fftshift(fft(AppendedDissolvedNMRFit.calcComponentTimeDomainSignal(time),[],1),1);
+    AppendedDissolvedFit = (time(2)-time(1))*fftshift(fft(AppendedDissolvedNMRFit.calcComponentTimeDomainSignal(time),[],1),1);
 else
     %Set parameters
     time = dwell_s*(0:XeSpec_nsamp-1);
@@ -302,7 +405,6 @@ else
     AppendedDissolvedNMRFit.fitTimeDomainSignal();%refit
     AppendedDissolvedFit = dwell_s*fftshift(fft(AppendedDissolvedNMRFit.calcComponentTimeDomainSignal(time),[],1),1);
 end
-SpecRBCBarrierRatio = AppendedDissolvedNMRFit.area(1)/AppendedDissolvedNMRFit.area(2); %To determine expected ratio in image, only use appended to be closer to be at steady state
 
 %View
 DissolvedNMR = figure('Name','Dissolved Phase Spectrum');set(DissolvedNMR,'WindowState','minimized');
@@ -343,24 +445,28 @@ DissolvedKSpace_SS(:,1:SS_ind) = [];
 GasKSpace_SS(:,1:SS_ind) = [];
 XeTraj_SS(:,:,1:SS_ind) = [];
 
+
 %% Gas Phase Contamination Removal
 if(NewImages == 1)
     disp('Removing Gas Phase Contamination...')
-    if strcmp(ScanVersion,'Xe_CTC')
-        %correction not possible
-        CorrectedDissKSpace_SS = DissolvedKSpace_SS;
+    if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
+       %correction not possible
+       CorrectedDissKSpace_SS = DissolvedKSpace_SS;
     else
-        CorrectedDissKSpace_SS = GasExchangeFunctions.GasPhaseContaminationRemoval(DissolvedKSpace_SS,GasKSpace_SS,dwell_s,-freq_jump,AppendedDissolvedNMRFit.phase(3),AppendedDissolvedNMRFit.area(3),GasFlipAngle);
+       CorrectedDissKSpace_SS = GasExchangeFunctions.GasPhaseContaminationRemoval(DissolvedKSpace_SS,GasKSpace_SS,dwell_s,-freq_jump,AppendedDissolvedNMRFit.phase(3),AppendedDissolvedNMRFit.area(3),GasFlipAngle);
     end
     disp('Removing Gas Phase Contamination Completed.')
 end
 
+
 %% View k0 dynamics
 XePulses = (1:size(CorrectedDissKSpace_SS,2))'+SS_ind;%start after steady state
-%View Xe Dynamic data
+
+%View H and Xe Dynamic data
 SigDynamics = figure('Name','Signal Dynamics');set(SigDynamics,'WindowState','minimized');
 set(SigDynamics,'color','white','Units','inches','Position',[0.25 0.25 16 9])
 %Xe - SS and Detrending
+subplot(1,2,1);
 hold on
 set(gca,'FontSize',18)
 %Dissolved
@@ -383,46 +489,71 @@ hold off
 cd(outputpath)
 savefig('SigDynamics.fig')
 close(gcf)
+% %H - Motion
+% subplot(1,2,2);
+% hold on
+% set(gca,'FontSize',18)
+% h1 = plot(HPhaseDynamics,'k','LineWidth',1);
+% xl = xlim; yl = ylim;
+% patch([motion_ind length(HPulses) length(HPulses) motion_ind], [max(ylim) max(ylim) min(ylim) min(ylim)], [0.5 0.5 0.5],'EdgeColor','none')%Remove due to motion
+% uistack(h1, 'top');
+% plot(HDynFit,'Color',[0 1 0 0.5],'LineWidth',3);
+% plot(HDynFit+3*HDynRMSE,'Color',[0 1 0 0.5])
+% plot(HDynFit-3*HDynRMSE,'Color',[0 1 0 0.5])
+% xlim(xl);ylim(yl);
+% title('H Signal Phase Dynamics')
+% box on
+% xlabel('Projection')
+% ylabel('Signal Phase (deg)')
+% legend({'Unused - Motion','Data','Fit'},'Location','best','FontSize',12)
+% hold off
+% sgtitle('Signal Dynamics','FontSize',22)
+
 
 %% Reconstruct Xe Images
-%Vent Image
-disp('Reconstructing Ventilation Image...')
-UncorrectedVentImage = GasExchangeFunctions.Dissolved_HighResImageRecon(Xe_RecMatrix,GasKSpace_SS,XeTraj_SS/2,PixelShift); %2x Resolution
-disp('Reconstructing Ventilation Image Completed.')
-disp('Correcting Ventilation Bias...')
-VentMask = (abs(UncorrectedVentImage))>(prctile(abs(UncorrectedVentImage(:)),95)/3);
-VentMask = imerode(VentMask,strel('sphere',5));
-Xeregions = regionprops3(logical(VentMask), 'all'); %get information on remaining regions
-Xeregions = sortrows(Xeregions,1,'descend'); %order by size
-VentMask = zeros(size(VentMask)); %restart mask
-try
-    VentMask(Xeregions.VoxelIdxList{1,1}) = 1; %select largest region only
-    if (size(Xeregions,1)>1)
-        if (Xeregions.Volume(2) > 0.33*Xeregions.Volume(1)) %Select 2nd largest region if similar size
-            VentMask(Xeregions.VoxelIdxList{2,1}) = 1;
+if(NewImages == 1)
+    %Vent Image
+    disp('Reconstructing Ventilation Image...')
+    UncorrectedVentImage = GasExchangeFunctions.Dissolved_HighResImageRecon(Xe_RecMatrix,GasKSpace_SS,XeTraj_SS/2,PixelShift); %2x Resolution
+    disp('Reconstructing Ventilation Image Completed.')
+    disp('Correcting Ventilation Bias...')
+    VentMask = (abs(UncorrectedVentImage))>(prctile(abs(UncorrectedVentImage(:)),95)/3);
+    VentMask = imerode(VentMask,strel('sphere',5));
+    Xeregions = regionprops3(logical(VentMask), 'all'); %get information on remaining regions
+    Xeregions = sortrows(Xeregions,1,'descend'); %order by size
+    VentMask = zeros(size(VentMask)); %restart mask
+    try
+        VentMask(Xeregions.VoxelIdxList{1,1}) = 1; %select largest region only
+        if (size(Xeregions,1)>1)
+            if (Xeregions.Volume(2) > 0.33*Xeregions.Volume(1)) %Select 2nd largest region if similar size
+                VentMask(Xeregions.VoxelIdxList{2,1}) = 1;
+            end
         end
+        VentMask = logical(imdilate(VentMask,strel('sphere',6)));
+    catch
+        %if no signal for mask to be made, create mask of one
+        success = 0;%mark as unsuccessful
+        VentMask = ones(size(VentMask));
     end
-    VentMask = logical(imdilate(VentMask,strel('sphere',6)));
-catch
-    %if no signal for mask to be made, create mask of one
-    VentMask = ones(size(VentMask));
+    [VentImage, ~] = GasExchangeFunctions.Vent_BiasCorrection(UncorrectedVentImage,VentMask);
+    disp('Ventilation Bias Corrected.')
+
+    %Gas Image
+    disp('Reconstructing Gas Image...')
+    GasImage = GasExchangeFunctions.Dissolved_LowResImageRecon(Xe_RecMatrix,GasKSpace_SS,XeTraj_SS/2,PixelShift); %2x Resolution
+    disp('Reconstructing Gas Image Completed.')
+
+    %Dissolved Image
+    disp('Reconstructing Dissolved Image...')
+    DissolvedImage = GasExchangeFunctions.Dissolved_LowResImageRecon(Xe_RecMatrix,DissolvedKSpace_SS,XeTraj_SS/2,PixelShift); %2x Resolution
+    disp('Reconstructing Dissolved Image Completed.')
+    disp('Reconstructing Corrected Dissolved Image...')
+    CorrDissolvedImage = GasExchangeFunctions.Dissolved_LowResImageRecon(Xe_RecMatrix,CorrectedDissKSpace_SS,XeTraj_SS/2,PixelShift); %2x Resolution
+    disp('Reconstructing Corrected Dissolved Image Completed.')
+elseif (VentMask == ones(size(VentMask)))%Vent mask already exists since not 
+    %make success = 0 since indicates no signal
+    success = 0;%mark as unsuccessful
 end
-[VentImage, ~] = GasExchangeFunctions.Vent_BiasCorrection(UncorrectedVentImage,VentMask);
-disp('Ventilation Bias Corrected.')
-
-cd(outputpath)
-%Gas Image
-disp('Reconstructing Gas Image...')
-GasImage = GasExchangeFunctions.Dissolved_LowResImageRecon(Xe_RecMatrix,GasKSpace_SS,XeTraj_SS/2,PixelShift); %2x Resolution
-disp('Reconstructing Gas Image Completed.')
-
-%Dissolved Image
-disp('Reconstructing Dissolved Image...')
-DissolvedImage = GasExchangeFunctions.Dissolved_LowResImageRecon(Xe_RecMatrix,DissolvedKSpace_SS,XeTraj_SS/2,PixelShift); %2x Resolution
-disp('Reconstructing Dissolved Image Completed.')
-disp('Reconstructing Corrected Dissolved Image...')
-CorrDissolvedImage = GasExchangeFunctions.Dissolved_LowResImageRecon(Xe_RecMatrix,CorrectedDissKSpace_SS,XeTraj_SS/2,PixelShift); %2x Resolution
-disp('Reconstructing Corrected Dissolved Image Completed.')
 
 %View
 VentMontage = figure('Name','Vent Image');set(VentMontage,'WindowState','minimized');
@@ -452,7 +583,9 @@ close(gcf)
 
 
 %% Determine Keys for RBC Oscillations
+clc
 disp('Analyzing RBC Osclications...')
+SpecRBCBarrierRatio = AppendedDissolvedNMRFit.area(1)/AppendedDissolvedNMRFit.area(2); %To determine expected ratio in image, only use appended to be closer to be at steady state
 [RBCOsc_High_Key,RBCOsc_Low_Key,DissolvedKSpace_SS_Detrend_Normalized,RBC2Bar_struct,OscWorkFlow_Fig] = GasExchangeFunctions.dissolved_RBC_Osc_Keyhole(XeTraj_SS,GasKSpace_SS,CorrectedDissKSpace_SS,XeTR,SpecRBCBarrierRatio);
 disp('Analyzing RBC Osclications Completed.')
 saveas(OscWorkFlow_Fig,'OscWorkFlow_Fig.png')
@@ -465,5 +598,5 @@ RBCOsc_Normalization = GasExchangeFunctions.Dissolved_RBCOscImageRecon(Xe_RecMat
 disp('Reconstructing RBC keyhole Images Completed.')
 
 
-
+close all;
 end

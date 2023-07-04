@@ -22,13 +22,13 @@ MainInput.PatientInfo = 'CF Perfusion|IRC668-005.V2|11y/o,M|04/01/2022|';
 
 
 % 1) choose the type of analysis
-MainInput.AnalysisType = 'Ventilation';
+% MainInput.AnalysisType = 'Ventilation';
 % MainInput.AnalysisType = 'Diffusion';
-% MainInput.AnalysisType = 'GasExchange';
+MainInput.AnalysisType = 'GasExchange';
 
 % 2) Do you have protom images? 
-MainInput.NoProtonImage = 'yes';  % There is no proton images 
-% MainInput.NoProtonImage = 'no';    % There is  proton images 
+% MainInput.NoProtonImage = 'yes';  % There is no proton images 
+MainInput.NoProtonImage = 'no';    % There is  proton images 
 
 MainInput.Institute = 'CCHMC'; 
 % MainInput.Institute = 'XeCTC'; 
@@ -37,8 +37,8 @@ MainInput.Scanner = 'Philips';
 % MainInput.ScannerSoftware = '5.3.1'; % R-scanner
 MainInput.ScannerSoftware = '5.9.0'; % R-scanner
 % MainInput.ScannerSoftware = '5.6.1'; % T1-scanner
-MainInput.SequenceType = '2D GRE';
-% MainInput.SequenceType = '3D Radial';
+% MainInput.SequenceType = '2D GRE';
+MainInput.SequenceType = '3D Radial';
 
 
 % diary Log.txt
@@ -98,7 +98,7 @@ end
 % Diffusion.Image = double(Rotated);
 % figure; Global.imslice(Diffusion.Image)
 
-figure; Global.imslice(Ventilation.Image)
+% figure; Global.imslice(Ventilation.Image)
 % 
 % Proton.Image = Proton.Image(:,:,16:42);
 % figure; Global.imslice(T2)
@@ -156,9 +156,18 @@ cd(MainInput.XeDataLocation)
 MainInput.RegistrationType = 'affine'; % 'translation' | 'rigid' | 'similarity' | 'affine'
 MainInput.SliceSelection = 0;
 
-Xesize = size(Ventilation.Image);
-Hsize = size(Proton.Image);
-sizeRatio = Hsize./Xesize;
+
+if strcmp(MainInput.AnalysisType, 'Ventilation')
+    Xesize = size(Ventilation.Image);
+    Hsize = size(Proton.Image);
+    sizeRatio = Hsize./Xesize;
+elseif strcmp(MainInput.AnalysisType, 'GasExchange')
+    Xesize = size(GasExchange.VentImage);
+    Hsize = size(Proton.Image);
+    sizeRatio = Hsize./Xesize;
+end
+
+
 
 MainInput.XeVoxelInfo.PixelSize1 = sizeRatio(1);
 MainInput.XeVoxelInfo.PixelSize2 = sizeRatio(2);
