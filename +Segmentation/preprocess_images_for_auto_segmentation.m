@@ -49,16 +49,20 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
                 for i = 1:size(GasExchange.VentImage,3)
                     Xe_Img(:,:,i) = imresize(GasExchange.VentImage(:,:,i),[112,112]);
                 end
+            else
+                Xe_Img = GasExchange.VentImage;
             end
             Xe_Img = Xe_Img./max(Xe_Img(:));
             % resize proton images
             if strcmp(MainInput.NoProtonImage, 'no') == 1
                 % resize
-                if size(GasExchange.ProtonImageRegistered,1) ~= 112
+                if size(Proton.ProtonRegistered,1) ~= 112
                     H_Img = zeros(112,112,112);
-                    for i = 1:size(GasExchange.ProtonImageRegistered,3)
-                        H_Img(:,:,i) = imresize(GasExchange.ProtonImageRegistered(:,:,i),[112,112]);
+                    for i = 1:size(Proton.ProtonRegistered,3)
+                        H_Img(:,:,i) = imresize(Proton.ProtonRegistered(:,:,i),[112,112]);
                     end
+                else
+                    H_Img = Proton.ProtonRegistered;
                 end
                 % normalize
                 H_Img = H_Img./max(H_Img(:));

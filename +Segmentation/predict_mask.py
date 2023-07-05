@@ -47,19 +47,19 @@ print("Selected file:", file_path)
 
 # load mat files
 X_test = loadmat(file_path)
-X_test = X_test["Mat2Py_preprocessing"]
+X_test = X_test["Images"]
 #X_test = X_test/np.max(X_test)
 
-Vent_wout_H = False
+Vent_wout_H = True
 Vent_w_H = False
-GaxExchnage_wout_H = True
+GaxExchnage_wout_H = False
 GaxExchnage_w_H = False
 
 # % load model
 if Vent_wout_H:
-    model = load_model(folder_path+'\Resnet_model_Xe_2D_Vent_2000epochs.hdf5',compile=False) 
+    model = load_model(folder_path+'\AutoSegment_2DVent_Xe_2000e.hdf5',compile=False) 
 elif Vent_w_H:
-    model = load_model(folder_path+'\Resnet_model_Xe_H_2D_Vent_2000epochs.hdf5',compile=False) 
+    model = load_model(folder_path+'\AutoSegment_2DVent_Xe_H_1000e.hdf5',compile=False) 
 elif GaxExchnage_wout_H:
     model = load_model(folder_path+'\\AutoSegment_3DGasExchange_Xe_200e.hdf5',compile=False) 
 elif GaxExchnage_w_H:
@@ -84,16 +84,16 @@ elif GaxExchnage_wout_H or GaxExchnage_w_H:
     gen_masks = gen_masks > 0.2
 gen_masks = gen_masks.astype(float)
 
-# view images
-test_img_number = random.randint(0, len(X_test)-1)
-plt.figure(figsize=(16, 8))
-plt.subplot(231)
-plt.title('Testing Image')
-plt.imshow(X_test[0,:,:,test_img_number,0], cmap='gray')
-plt.subplot(232)
-plt.title('Prediction on test image')
-plt.imshow(gen_masks[0,:,:,test_img_number,0], cmap='gray')
-plt.show()
+# # view images
+# test_img_number = random.randint(0, len(X_test)-1)
+# plt.figure(figsize=(16, 8))
+# plt.subplot(231)
+# plt.title('Testing Image')
+# plt.imshow(X_test[0,:,:,test_img_number,0], cmap='gray')
+# plt.subplot(232)
+# plt.title('Prediction on test image')
+# plt.imshow(gen_masks[0,:,:,test_img_number,0], cmap='gray')
+# plt.show()
 
 
 save_path = os.path.dirname(file_path)
@@ -140,12 +140,12 @@ plt.show()
 '''
 
 '''
-create .exe file to run on matlab 
+create .exe file to run in matlab 
 •	compile your .exe file.
     o	To create the exe file:
         	pip install pyinstaller
         	In terminal, run:
-            pyinstaller --onefile --name="predict_mask_Vent_wout_H.exe" .\predict_mask.py
+            pyinstaller --onefile --name="predict_mask_2DVent_wout_H.exe" .\predict_mask.py
 This will create a single .exe file under \dist. 
 
 '''

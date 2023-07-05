@@ -22,13 +22,13 @@ MainInput.PatientInfo = 'CF Perfusion|IRC668-005.V2|11y/o,M|04/01/2022|';
 
 
 % 1) choose the type of analysis
-% MainInput.AnalysisType = 'Ventilation';
+MainInput.AnalysisType = 'Ventilation';
 % MainInput.AnalysisType = 'Diffusion';
-MainInput.AnalysisType = 'GasExchange';
+% MainInput.AnalysisType = 'GasExchange';
 
 % 2) Do you have protom images? 
-% MainInput.NoProtonImage = 'yes';  % There is no proton images 
-MainInput.NoProtonImage = 'no';    % There is  proton images 
+MainInput.NoProtonImage = 'yes';  % There is no proton images 
+% MainInput.NoProtonImage = 'no';    % There is  proton images 
 
 MainInput.Institute = 'CCHMC'; 
 % MainInput.Institute = 'XeCTC'; 
@@ -37,8 +37,8 @@ MainInput.Scanner = 'Philips';
 % MainInput.ScannerSoftware = '5.3.1'; % R-scanner
 MainInput.ScannerSoftware = '5.9.0'; % R-scanner
 % MainInput.ScannerSoftware = '5.6.1'; % T1-scanner
-% MainInput.SequenceType = '2D GRE';
-MainInput.SequenceType = '3D Radial';
+MainInput.SequenceType = '2D GRE';
+% MainInput.SequenceType = '3D Radial';
 
 
 % diary Log.txt
@@ -372,7 +372,7 @@ disp('Analysis done')
 
 clc
 [Images, MainInput] = Segmentation.preprocess_images_for_auto_segmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
-figure; Global.imslice(Images)
+figure; Global.imslice(squeeze(Images(1,:,:,:,:)))
 
 %% 
 clc
@@ -381,6 +381,7 @@ cd(MainInput.AutoSegmentPath)
 %system('predict_mask_Vent_w_H.exe')
 cd(MainInput.XeDataLocation)
 
+figure; Global.imslice(squeeze(Images))
 %% 
 clc
 scriptName = 'preprocess_images_for_auto_segmentation.m';
