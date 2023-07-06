@@ -11,8 +11,9 @@ function [Ventilation] = Ventilation_Analysis (Ventilation,Proton,MainInput)
 %% 1) Apply the settings:
 % We shall use a custom 'input_params' function to define the initial
 % settings:
-f = waitbar(0,'Please wait...');
-pause(.5)
+close all;
+f = waitbar(0,'Processing ventilation analysis...');
+pause(.1)
 
 settings = VentilationFunctions.input_params(...
 1,... % Median filter
@@ -32,7 +33,11 @@ parentPath = [MainInput.XeDataLocation '\Ventilation Analysis\'];
 %parentPath = [MainInput.XeDataLocation,'\'];
 FileNames = Ventilation.filename;
 maskarray = double(Ventilation.LungMask);
-airwaymask = double(Ventilation.AirwayMask);
+try
+    airwaymask = double(Ventilation.AirwayMask);
+catch
+    airwaymask = zeros(size(Ventilation.LungMask));
+end
 ventmean = Ventilation.LB_RefMean; % Defined by data collected up to Jan 2021.
 ventstd =  Ventilation.LB_RefSD; % Defined by data collected up to Jan 2021.
 
@@ -59,9 +64,9 @@ end
 % -- written by Joey Plummer, 05/10/2021
 
 switch settings.N4_bias_analysis
-    case "yes"
+    case "yes"    
         waitbar(.10,f,'Performing N4 bias analysis...');
-        pause(1)
+        pause(.1)
         disp('Running N4 bias field correction...')
         [N4, Bias] = VentilationFunctions.N4_bias_correction(MR, maskarray, parentPath);
         Ventilation.Bias = Bias;       
@@ -99,7 +104,7 @@ end
 switch settings.calculate_SNR
     case "yes"
         waitbar(.20,f,'Calculating SNR...');
-        pause(1)        
+        pause(.1)        
         disp('Calculating SNR...')
         [SNR_slice, Overall_SNR] = VentilationFunctions.calculate_SNR(MR, maskarray);
         Ventilation.SNR_slice = SNR_slice;
@@ -123,7 +128,7 @@ end
 if strcmp(Ventilation.ThreshAnalysis,'yes') == 1   % 'yes'; || 'no'
     f = waitbar(.20,'Calculating SNR...');
     waitbar(.50,f,'Performing Thershold Analysis ...');
-    pause(1)    
+    pause(.1)    
     medfilter = settings.Median_Filter;
     complete = settings.Complete_threshold;
     incomplete = settings.Incomplete_threshold;
@@ -153,7 +158,7 @@ close all;
 if strcmp(Ventilation.LB_Analysis,'yes') == 1 
     f = waitbar(.50,'Performing Thershold Analysis ...');
     waitbar(.75,f,'Performing Linear Binning Analysis ...');
-    pause(1)     
+    pause(.1)     
     % Note: This section is highly dependent on whether N4 bias correction is
     % applied. N4 bias correction is applied in this case INSIDE the
     % calculate_LB_VDP() function. It uses the same optimization parameters as
@@ -198,7 +203,7 @@ close all;
 if Ventilation.GLRLM_Analysis == "yes" % 'yes'; || 'no'
     f = waitbar(.75,'Performing Linear Binning Analysis ...');
     waitbar(.90,f,'Performing Texture Analysis ...');
-    pause(1)     
+    pause(.1)     
     cd(parentPath)
     if settings.N4_bias_analysis == "yes"
        VentImage = N4.*maskarray;        

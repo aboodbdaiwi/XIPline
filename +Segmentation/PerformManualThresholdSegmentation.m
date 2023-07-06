@@ -38,11 +38,11 @@ switch MainInput.AnalysisType
         Image = GasExchange.VentImage;
         switch MainInput.Imagestosegment
             case 'Xe & Proton Registered'
-               Image_to_Segment = Proton.ProtonRegisteredColored;
+               Image_to_Segment = GasExchange.ProtonRegisteredColored;
             case 'Xenon'
                Image_to_Segment = GasExchange.VentImage;               
             case 'Registered Proton'
-               Image_to_Segment = Proton.ProtonRegistered;  
+               Image_to_Segment = GasExchange.ProtonRegistered;  
         end
 end
 

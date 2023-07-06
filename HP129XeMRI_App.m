@@ -261,18 +261,18 @@ clc
 cd(MainInput.XeDataLocation)
 
 % diary Log.txt
-MainInput.SegmentationMethod = 'Manual'; % 'Threshold' || 'Manual' || 'Auto'
-MainInput.SegmentAnatomy = 'Parenchyma'; % 'Airway'; || 'parenchyma'
+MainInput.SegmentationMethod = 'Threshold'; % 'Threshold' || 'Manual' || 'Auto'
+MainInput.SegmentAnatomy = 'Airway'; % 'Airway'; || 'parenchyma'
 MainInput.Imagestosegment = 'Xenon';  % 'Xe & Proton Registered' | 'Xenon' | 'Registered Proton'
 
 MainInput.thresholdlevel = 1; % 'threshold' 
 MainInput.SE = 1; % 'threshold' 
 
-MainInput.SegmentManual = 'AppSegmenter'; % 'AppSegmenter' || 'Freehand'
+MainInput.SegmentManual = 'Freehand'; % 'AppSegmenter' || 'Freehand'
 MainInput.SliceOrientation = 'coronal'; % 'transversal' || 'isotropic'
 [Proton,Ventilation,Diffusion,GasExchange] = Segmentation.PerformSegmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
 
-[Proton,Ventilation,Diffusion, GasExchange] = Segmentation.loadSegmentedMask(Proton,Ventilation,Diffusion,GasExchange,MainInput);
+% [Proton,Ventilation,Diffusion, GasExchange] = Segmentation.loadSegmentedMask(Proton,Ventilation,Diffusion,GasExchange,MainInput);
 % Ventilation.AirwayMask = zeros(size(Ventilation.LungMask));
 
 figure; Global.imslice(Ventilation.LungMask)
@@ -305,7 +305,7 @@ Ventilation.RFCorrect = 0;
 Ventilation.CompleteThresh = 15;
 Ventilation.HyperventilatedThresh = 200;
 Ventilation.ThreshAnalysis = 'yes'; % 'yes'; || 'no'
-Ventilation.LB_Analysis = 'no'; % 'yes'; || 'no'
+Ventilation.LB_Analysis = 'yes'; % 'yes'; || 'no'
 Ventilation.GLRLM_Analysis = 'no'; % 'yes'; || 'no'
 
 if Ventilation.N4Analysis == 1
@@ -367,12 +367,6 @@ disp('Analysis done')
 
 
 %% 
-
-clc
-[Images, MainInput] = Segmentation.preprocess_images_for_auto_segmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
-figure; Global.imslice(squeeze(Images(1,:,:,:,:)))
-
-%% 
 clc
 [Images, MainInput] = Segmentation.preprocess_images_for_auto_segmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
 cd(MainInput.AutoSegmentPath)
@@ -380,11 +374,6 @@ cd(MainInput.AutoSegmentPath)
 cd(MainInput.XeDataLocation)
 
 figure; Global.imslice(squeeze(Images))
-%% 
-clc
-scriptName = 'preprocess_images_for_auto_segmentation.m';
-fullPath = which(scriptName);
-clipboard('copy', fullPath);
 
 
  %% 
@@ -400,7 +389,25 @@ presentation.Close();
 ppt.Quit();
 delete(ppt);
 
+%% patient report
+clc
+MainInput.studyID = '740H';
+MainInput.studyType = 'CF';
+MainInput.patientID = '001';
+MainInput.scanDate = '7/6/2023';
+MainInput.xeDoseVolume = '1000';
+MainInput.PatientName = 'test test';
+MainInput.MRMnumber = '1201201';
+MainInput.sex = 'M';
+MainInput.age = '25';
+MainInput.height = '180';
+MainInput.weight = '200';
+MainInput.summaryofFindings = 'all good';
+MainInput.notes = 'all good';
+MainInput.dataAnalyst = 'ASB';
+MainInput.processingDate = '7/6/2023';
 
+Global.PatientReport(MainInput)
 
 
 

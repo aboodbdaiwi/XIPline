@@ -1,4 +1,4 @@
-function [Proton] = GasExchange_RegisterProton_to_Xenon(Proton,GasExchange,MainInput)
+function [Proton,GasExchange] = GasExchange_RegisterProton_to_Xenon(Proton,GasExchange,MainInput)
 %   Inputs: 
 %      ProtonImage - 3D array:
 %      UncorrectedVentImage:
@@ -140,6 +140,10 @@ Proton.optimizer = optimizer;
 Proton.ProtonRegistered = ProtonRegistered;
 Proton.ProtonMaskRegistred = ProtonMaskRegistred;
 Proton.ProtonRegisteredColored = permute(ProtonRegisteredColored,[1 2 4 3]);
+GasExchange.LungMask = LungMask;
+GasExchange.ProtonRegistered = ProtonRegistered;
+GasExchange.ProtonMaskRegistred = ProtonMaskRegistred;
+GasExchange.ProtonRegisteredColored = permute(ProtonRegisteredColored,[1 2 4 3]);
 
 %% wite tiff images
 

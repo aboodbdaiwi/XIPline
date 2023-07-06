@@ -1,5 +1,5 @@
 
-function [Proton,MainInput] = RegisterProton_to_Xenon(Proton,Ventilation,GasExchange,MainInput)
+function [Proton,GasExchange,MainInput] = RegisterProton_to_Xenon(Proton,Ventilation,GasExchange,MainInput)
 %   Inputs:
 %          
 %   Outputs:
@@ -34,7 +34,7 @@ elseif strcmp(MainInput.AnalysisType,'GasExchange') == 1
 
     elseif (strcmp(MainInput.Institute,'CCHMC') == 1 || strcmp(MainInput.Institute,'XeCTC') == 1)&& strcmp(MainInput.SequenceType, '3D Radial') == 1  &&...
            strcmp(MainInput.XeDataext,'.data') == 1  && strcmp(MainInput.Scanner, 'Philips') == 1    
-        [Proton] = Registration.GasExchange_RegisterProton_to_Xenon(Proton,GasExchange,MainInput);
+        [Proton,GasExchange] = Registration.GasExchange_RegisterProton_to_Xenon(Proton,GasExchange,MainInput);
     end 
 end 
 

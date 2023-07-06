@@ -98,5 +98,4 @@ if LungMask == zeros(size(LungMask))
 end
 
 
-
 end

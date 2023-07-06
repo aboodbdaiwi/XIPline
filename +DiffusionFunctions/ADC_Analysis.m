@@ -432,7 +432,7 @@ Global.exportToPPTX('addpicture',ADC_hist,'Position',[0 3.5 10 10*(size(ADC_hist
 % save all
 Global.exportToPPTX('save',fullfile(outputpath, ReportTitle));
 Global.exportToPPTX('close');
-fprintf('PowerPoint file has been saved\n'); 
+fprintf('PowerPoint file has been saved'); 
 close all;
 %% save maps in mat file
 save_data=[outputpath,'ADC_Analysis','.mat'];

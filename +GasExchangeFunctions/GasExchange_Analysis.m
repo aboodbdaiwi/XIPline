@@ -14,7 +14,7 @@ DissolvedImage = GasExchange.DissolvedImage;
 CorrDissolvedImage = GasExchange.CorrDissolvedImage;
 ProtonImage = Proton.Image;
 H_RecMatrix = Proton.H_RecMatrix;
-LungMask = Proton.LungMask;
+LungMask = GasExchange.LungMask;
 RBC2Bar_struct = GasExchange.RBC2Bar_struct;
 RBCOsc_High_Image = GasExchange.RBCOsc_High_Image;
 RBCOsc_Low_Image = GasExchange.RBCOsc_Low_Image;
@@ -770,7 +770,7 @@ isOpen  = Global.exportToPPTX();
 if ~isempty(isOpen) %If PowerPoint already started, then close first and then open a new one
     Global.exportToPPTX('close');
 end
-ReportTitle = 'GasExchangeAnalysis';
+ReportTitle = 'GasExchange_Analysis';
 Global.exportToPPTX('new','Dimensions',[16 9], ...
     'Title',ReportTitle, ...
     'Author','CPIR @ CCHMC');
