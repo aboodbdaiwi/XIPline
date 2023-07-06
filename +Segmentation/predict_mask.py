@@ -50,10 +50,10 @@ X_test = loadmat(file_path)
 X_test = X_test["Images"]
 #X_test = X_test/np.max(X_test)
 
-Vent_wout_H = True
+Vent_wout_H = False
 Vent_w_H = False
 GaxExchnage_wout_H = False
-GaxExchnage_w_H = False
+GaxExchnage_w_H = True
 
 # % load model
 if Vent_wout_H:

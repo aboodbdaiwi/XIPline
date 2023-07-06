@@ -39,7 +39,7 @@ switch MainInput.SegmentationMethod
             case 'Ventilation'                            
                switch MainInput.SliceOrientation
                     case 'coronal' 
-                        if strcmp(MainInput.NoProtonImage, 'no') == 1
+                        if MainInput.NoProtonImage == 0
                             system('predict_mask_2DVent_w_H_coronal.exe')
                         else 
                             system('predict_mask_2DVent_wout_H_coronal.exe')           

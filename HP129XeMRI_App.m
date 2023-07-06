@@ -27,8 +27,8 @@ MainInput.AnalysisType = 'Ventilation';
 % MainInput.AnalysisType = 'GasExchange';
 
 % 2) Do you have protom images? 
-MainInput.NoProtonImage = 'yes';  % There is no proton images 
-% MainInput.NoProtonImage = 'no';    % There is  proton images 
+% MainInput.NoProtonImage = 'yes';  % There is no proton images 
+MainInput.NoProtonImage = 'no';    % There is  proton images 
 
 MainInput.Institute = 'CCHMC'; 
 % MainInput.Institute = 'XeCTC'; 
@@ -96,7 +96,7 @@ end
 % figure; Global.imslice(Rotated)
 
 % Diffusion.Image = double(Rotated);
-% figure; Global.imslice(Diffusion.Image)
+figure; Global.imslice(Diffusion.Image)
 
 % figure; Global.imslice(Ventilation.Image)
 % 
@@ -261,39 +261,37 @@ clc
 cd(MainInput.XeDataLocation)
 
 % diary Log.txt
-%1) segment lungs
-MainInput.Segment = 'parenchyma'; % 'airway'; || 'parenchyma'
-MainInput.SegmentMethod = 'threshold'; % 'threshold' || 'manual'
+MainInput.SegmentationMethod = 'Manual'; % 'Threshold' || 'Manual' || 'Auto'
+MainInput.SegmentAnatomy = 'Parenchyma'; % 'Airway'; || 'parenchyma'
+MainInput.Imagestosegment = 'Xenon';  % 'Xe & Proton Registered' | 'Xenon' | 'Registered Proton'
 
-% 2) segment airways
-% MainInput.Segment = 'airway'; % 'airway'; || 'parenchyma'
-% MainInput.SegmentMethod = 'manual'; % 'threshold' || 'manual'
-
-MainInput.thresholdlevel = 0.8; % 'threshold' 
+MainInput.thresholdlevel = 1; % 'threshold' 
 MainInput.SE = 1; % 'threshold' 
 
-MainInput.SegmentManual = 'basic'; % 'advance' || 'basic'
-
+MainInput.SegmentManual = 'AppSegmenter'; % 'AppSegmenter' || 'Freehand'
+MainInput.SliceOrientation = 'coronal'; % 'transversal' || 'isotropic'
 [Proton,Ventilation,Diffusion,GasExchange] = Segmentation.PerformSegmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
+
+[Proton,Ventilation,Diffusion, GasExchange] = Segmentation.loadSegmentedMask(Proton,Ventilation,Diffusion,GasExchange,MainInput);
 % Ventilation.AirwayMask = zeros(size(Ventilation.LungMask));
 
 figure; Global.imslice(Ventilation.LungMask)
-% figure; Global.imslice(Ventilation.Image)
-% figure; Global.imslice(Proton.Image) 
-figure; Global.imslice(Diffusion.LungMask)
+% figure; Global.imslice(Images)
+% figure; Global.imslice(auto_segmented_mask) 
+% figure; Global.imslice(Diffusion.LungMask)
 % volumeSegmenter(Ventilation.Image) 
 % figure; Global.imslice(NormMR)
 % diary off 
 
-[preprocessed_data, MainInput] = Segmentation.preprocess_images_for_auto_segmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
-cd(MainInput.AutoSegmentPath)
-if strcmp(MainInput.NoProtonImage, 'no') == 1
-    system('predict_mask_Vent_w_H.exe')
-else 
-    system('predict_mask_Vent_wout_H.exe')           
-end
-
-cd(MainInput.XeDataLocation)
+% [preprocessed_data, MainInput] = Segmentation.preprocess_images_for_auto_segmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
+% cd(MainInput.AutoSegmentPath)
+% if strcmp(MainInput.NoProtonImage, 'no') == 1
+%     system('predict_mask_Vent_w_H.exe')
+% else 
+%     system('predict_mask_Vent_wout_H.exe')           
+% end
+% 
+% cd(MainInput.XeDataLocation)
 
 %% Ventilation analysis
 clc
@@ -389,10 +387,18 @@ fullPath = which(scriptName);
 clipboard('copy', fullPath);
 
 
-                     
+ %% 
+clc                     
+ppt = actxserver('PowerPoint.Application');
 
 
+presentation = ppt.Presentations.Open('D:\OneDrive - cchmc\Lab\Xe_App\testtingData\diffdata\Subject1\Diffusion Analysis\Diffusion_Analysis.pptx');
+outputPath = 'D:\OneDrive - cchmc\Lab\Xe_App\testtingData\diffdata\Subject1\Diffusion Analysis\\Diffusion_Analysis.pdf';
+presentation.SaveAs(outputPath, 32);
 
+presentation.Close();
+ppt.Quit();
+delete(ppt);
 
 
 
