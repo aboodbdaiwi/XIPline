@@ -127,6 +127,6 @@ Proton.ProtonRegisteredColored = permute(ProtonRegisteredColored,[1 2 4 3]);
 %Tiffs (movingRegisteredVolume)
 
 Global.write_imshowpair(ProtonRegistered,XeImage.Image,DataLocation)
-% figure; orthosliceViewer(Proton.ProtonRegisteredColored)
+figure; orthosliceViewer(Proton.ProtonRegisteredColored)
 
 end

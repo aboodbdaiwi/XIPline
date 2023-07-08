@@ -118,7 +118,7 @@ disData_avg = mean(disData,2);  % average of all dissolved
 disData1_avg = mean(disData1,2);  % average of dissolved after skipping
 calData = theFID(:,end-nCal+1:end); % the data left for flip angle calculations.
 t = double((0:(length(disData)-1))*dwell_time');
-
+noise_est = max(abs(disData(end-10:end,end)));
 %% Fit gas Spectrum
 
 fprintf('Analysis of Gas FID\n');
@@ -187,10 +187,11 @@ end %if
 flipCalAmps = max(abs(calData));
 
 % calculate flip angle
-fitfunct = @(coefs,xdata)coefs(1)*cos(coefs(2)).^(xdata-1)+coefs(3);   % cos theta decay
+fitfunct = @(coefs,xdata)coefs(1)*cos(coefs(2)).^(xdata-1) + noise_est;   % cos theta decay
+% fitfunct = @(coefs,xdata)coefs(1)*cos(coefs(2)).^(xdata-1)+coefs(3);   % cos theta decay
 guess(1)=max(flipCalAmps);
 guess(2)=20*pi/180;       % just guess 10 degrees
-guess(3)= 0;      
+% guess(3)= 0;      
 
 xdata=1:length(flipCalAmps);
 ydata = flipCalAmps;
@@ -318,7 +319,9 @@ CalResults.GasFit = gasfitObj;
 CalResults.te90 = te90/1000; %to ms
 CalResults.freq_target = freq_target;
 CalResults.Reference_Voltage = VRef*VRefScaleFactor;
-CalResults.dwell_time = dwell_time; 
+CalResults.dwell_time = dwell_time;  
+CalResults.noise_est = noise_est;  
+
 end
 
 

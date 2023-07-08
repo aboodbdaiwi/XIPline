@@ -154,8 +154,13 @@ cd(MainInput.XeDataLocation)
 % 
 % diary LogFile_LoadingData
 MainInput.RegistrationType = 'affine'; % 'translation' | 'rigid' | 'similarity' | 'affine'
-MainInput.SliceSelection = 0;
-
+MainInput.SliceSelection = 1;
+if MainInput.SliceSelection == 1
+    MainInput.Xestart = 1;
+    MainInput.Xeend = 13;
+    MainInput.Hstart = 1;
+    MainInput.Hend = 10;
+end
 
 if strcmp(MainInput.AnalysisType, 'Ventilation')
     Xesize = size(Ventilation.Image);
@@ -166,8 +171,6 @@ elseif strcmp(MainInput.AnalysisType, 'GasExchange')
     Hsize = size(Proton.Image);
     sizeRatio = Hsize./Xesize;
 end
-
-
 
 MainInput.XeVoxelInfo.PixelSize1 = sizeRatio(1);
 MainInput.XeVoxelInfo.PixelSize2 = sizeRatio(2);

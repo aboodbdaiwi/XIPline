@@ -74,9 +74,9 @@ disData1_avg = mean(disData1,2);  % average of dissolved after skipping
 calData = theFID(:,end-nCal+1:end); % the data left for flip angle calculations.
 t = double((0:(length(disData)-1))*dwell_time');
 noise_est = max(abs(disData(end-10:end,end)));
-figure; plot(abs(disData(:,end)))
-figure; plot(abs(gasData(:,end)))
-figure; imslice(abs(theFID))
+% figure; plot(abs(disData(:,end)))
+% figure; plot(abs(gasData(:,end)))
+% figure; imslice(abs(theFID))
 %% calculate frequency 
 
 % gasdata_fa = theFID(:,end-nCal+1:end);
@@ -170,15 +170,15 @@ flip_angle = abs(fitparams(2)*180/pi);
 flip_err = param_err(2)*180/pi;
 FlipScaleFactor = flip_angle/FlipTarget;
 
-figure('Name','Flip Angle Calibration');  % plot up the calibration data
-plot(xdata,ydata,'bo','MarkerFaceColor','b');
-hold on;
-plot(xdata,fitfunct(fitparams,xdata),'-r');
-legend('Acquired','Fit');
-xlabel('Acquisition Number');
-ylabel('Magnitude');
-a=sprintf('Flip Cal: %0.1f%c yields flip = %0.1f±%0.1f%c', FlipTarget,char(176),flip_angle,flip_err,char(176));
-title(a); %note degree symbol is char(176)
+% figure('Name','Flip Angle Calibration');  % plot up the calibration data
+% plot(xdata,ydata,'bo','MarkerFaceColor','b');
+% hold on;
+% plot(xdata,fitfunct(fitparams,xdata),'-r');
+% legend('Acquired','Fit');
+% xlabel('Acquisition Number');
+% ylabel('Magnitude');
+% a=sprintf('Flip Cal: %0.1f%c yields flip = %0.1f±%0.1f%c', FlipTarget,char(176),flip_angle,flip_err,char(176));
+% title(a); %note degree symbol is char(176)
 
 %% Provide Flip Angle Factor and Warnings
 fprintf('For flip angle calibration of %0.1f%c, the flip angle factor is %0.3f \n', FlipTarget,char(176),FlipScaleFactor);
