@@ -34,7 +34,7 @@ switch MainInput.AnalysisType
     case 'GasExchange'
         ReportTitle='GasExchange_Analysis';
         ppt_file_name = 'GasExchange_Analysis.pptx';
-        analysis_folder = '\GasExchange Analysis';
+        analysis_folder = '\Gas Exchange Analysis';
 end 
 outputpath = [MainInput.XeDataLocation,analysis_folder];
 cd(outputpath)

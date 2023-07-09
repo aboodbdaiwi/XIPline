@@ -41,8 +41,8 @@ RBCOscHealthyMean = GasExchange.RBCOscHealthyMean;
 RBCOscHealthyStd = GasExchange.RBCOscHealthyStd;
 DataLocation = MainInput.XeDataLocation;
 cd(DataLocation)
-mkdir([DataLocation '\Gax Exchange Analysis']);
-outputpath = [DataLocation '\Gax Exchange Analysis'];
+mkdir([DataLocation '\Gas Exchange Analysis']);
+outputpath = [DataLocation '\Gas Exchange Analysis'];
 cd(outputpath)
 %   Inputs:
 %      ProtonImage - 3D array:
@@ -786,7 +786,7 @@ Global.exportToPPTX('addslide'); %Signal Dynamics
 Global.exportToPPTX('addpicture',SigDynamics);
 Global.exportToPPTX('addtext',sprintf('Signal Dynamics'),'Position',[0 0 5 3]);
 
-cd([Proton.folder, '\Gax Exchange Analysis'])
+cd([Proton.folder, '\Gas Exchange Analysis'])
 ProtonMontage = openfig('ProtonMontage.fig');
 Global.exportToPPTX('addslide'); %Proton Image
 Global.exportToPPTX('addpicture',ProtonMontage);

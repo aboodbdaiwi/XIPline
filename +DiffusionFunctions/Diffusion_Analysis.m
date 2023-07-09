@@ -166,7 +166,7 @@ if strcmp(ADCLB_Analysis, 'yes') == 1 && strcmp(ADC_Analysis, 'yes') == 1
 
 end
 %% Morphometry Analysis
-if strcmp(MorphometryAnalysis, 'yes') == 1 && Nbvalues > 2
+if strcmp(MorphometryAnalysis, 'yes') == 1 && Nbvalues > 3
 % CM Morphometry analysis
 %     waitbar(.30,f,'Processing CM Morphometry Analysis ');
 %     pause(1)

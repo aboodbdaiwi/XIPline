@@ -7,16 +7,16 @@ GasExResults = [];
 %Results to Pass to Calibration information
 CalResults= [];
 
-% call functions 
-if strcmp(MainInput.XeDataext,'.data') == 1 && (strcmp(MainInput.Institute, 'XeCTC')==1 || strcmp(MainInput.Institute, 'CCHMC') == 1 )                 
-    [GasExResults, CalResults] = Calibration.XeCTC_Calibration(MainInput); 
-elseif strcmp(MainInput.XeDataext,'.dat') == 1 && (strcmp(MainInput.Institute, 'Duke') == 1 || strcmp(MainInput.Institute, 'UVA') == 1)
-    [GasExResults, CalResults] = Calibration.Xe_duke_UVA_calibration(MainInput); 
-    
-%-------------------- add new function here -------------------------------
-% elseif strcmp(DataType,'add DataType') == 1
-    %  [GasExResults, CalResults] = add your function (DataLocation); 
-end 
-
-
+    % call functions 
+    if strcmp(MainInput.XeDataext,'.data') == 1 && (strcmp(MainInput.Institute, 'XeCTC')==1 ||...
+            strcmp(MainInput.Institute, 'CCHMC') == 1 )                 
+        [GasExResults, CalResults] = Calibration.XeCTC_Calibration(MainInput); 
+    elseif strcmp(MainInput.XeDataext,'.dat') == 1 && (strcmp(MainInput.Institute, 'Duke') == 1 ||...
+            strcmp(MainInput.Institute, 'UVA') == 1)
+        [GasExResults, CalResults] = Calibration.Xe_duke_UVA_calibration(MainInput); 
+        
+    %-------------------- add new function here -------------------------------
+    % elseif strcmp(DataType,'add DataType') == 1
+        %  [GasExResults, CalResults] = add your function (DataLocation); 
+    end 
 end

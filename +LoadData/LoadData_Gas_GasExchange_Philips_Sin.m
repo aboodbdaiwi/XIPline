@@ -68,8 +68,8 @@ idcs = strfind(FunctionDirectory,filesep);%determine location of file separators
 FunctionDirectory = FunctionDirectory(1:idcs(end)-1);%remove file
 
 cd(GasDataLocation)
-mkdir([GasDataLocation '\Gax Exchange Analysis']);
-outputpath = [GasDataLocation '\Gax Exchange Analysis'];
+mkdir([GasDataLocation '\Gas Exchange Analysis']);
+outputpath = [GasDataLocation '\Gas Exchange Analysis'];
 
 ReconVersion = 'TEST';%If not connected to git, can't determine hash so state test
 NumPlotSlices = 7;%must be odd to work as expected
