@@ -185,7 +185,7 @@ MainInput.ProtonVoxelInfo.PixelSize2 = 1;
 MainInput.ProtonVoxelInfo.SliceThickness = 1;
 % 
 
-[Proton] = Registration.RegisterProton_to_Xenon(Proton,Ventilation,GasExchange,MainInput);
+[Proton] = Registration.PerformRegistration(Proton,Ventilation,GasExchange,MainInput);
 viewing_img = Proton.ProtonRegisteredColored;
 
 % viewing_img = Proton.ProtonRegistered;

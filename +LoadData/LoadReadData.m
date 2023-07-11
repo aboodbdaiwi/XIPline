@@ -121,7 +121,15 @@ elseif strcmp(MainInput.XeDataext,'.nii') == 1 || strcmp(MainInput.XeDataext,'.g
     elseif strcmp(MainInput.AnalysisType,'GasExchange') == 1 
         % not supported yet
     end
-    
+elseif (strcmp(MainInput.XeDataext,'.h5') == 1 || strcmp(MainInput.XeDataext,'.mrd') == 1) &&  strcmp(MainInput.SequenceType, '2D GRE') == 1             
+    [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
+    if strcmp(MainInput.AnalysisType,'Ventilation') == 1                 
+        Ventilation.Image = Image;  
+    elseif strcmp(MainInput.AnalysisType,'Diffusion') == 1 
+        Diffusion.Image = Image;
+    elseif strcmp(MainInput.AnalysisType,'GasExchange') == 1 
+        % not supported yet
+    end
 elseif strcmp(MainInput.XeDataext,'.data') == 1  && strcmp(MainInput.Scanner, 'Philips') == 1   
     if strcmp(MainInput.AnalysisType,'Ventilation') == 1 && strcmp(MainInput.SequenceType, '2D GRE') == 1 ...
             && (strcmp(MainInput.ScannerSoftware, '5.3.1') == 1 || strcmp(MainInput.ScannerSoftware, '5.6.1') == 1)

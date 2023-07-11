@@ -27,8 +27,8 @@ MainInput.AnalysisType = 'Ventilation';
 % MainInput.AnalysisType = 'GasExchange';
 
 % 2) Do you have protom images? 
-% MainInput.NoProtonImage = 'yes';  % There is no proton images 
-MainInput.NoProtonImage = 'no';    % There is  proton images 
+MainInput.NoProtonImage = 'yes';  % There is no proton images 
+% MainInput.NoProtonImage = 'no';    % There is  proton images 
 
 MainInput.Institute = 'CCHMC'; 
 % MainInput.Institute = 'XeCTC'; 
@@ -78,11 +78,18 @@ if strcmp(MainInput.AnalysisType, 'Ventilation') == 1
     end 
 end
 
+if strcmp(MainInput.AnalysisType,'Ventilation') == 1                 
+    figure; Global.imslice(Ventilation.Image) 
+elseif strcmp(MainInput.AnalysisType,'Diffusion') == 1 
+    figure; Global.imslice(Ventilation.Image)
+elseif strcmp(MainInput.AnalysisType,'GasExchange') == 1 
+    figure; Global.imslice(Ventilation.Image)
+end
 % Ventilation.Image = double(Ventilation.Image)
 % Proton.Image = double(Proton.Image)
 
 % Ventilation.Image = imrotate(Ventilation.Image,-180);
-% figure; Global.imslice(Ventilation.LungMask)
+% figure; Global.imslice(Ventilation.Image(:,:,1,1))
 % figure; Global.imslice(Proton.Image)
 % figure; Global.imslice(A) 
 % figure; Global.imslice(Proton.ProtonRegistered)
@@ -185,7 +192,7 @@ MainInput.ProtonVoxelInfo.PixelSize2 = 1;
 MainInput.ProtonVoxelInfo.SliceThickness = 1;
 % 
 
-[Proton] = Registration.RegisterProton_to_Xenon(Proton,Ventilation,GasExchange,MainInput);
+[Proton] = Registration.PerformRegistration(Proton,Ventilation,GasExchange,MainInput);
 viewing_img = Proton.ProtonRegisteredColored;
 
 % viewing_img = Proton.ProtonRegistered;
