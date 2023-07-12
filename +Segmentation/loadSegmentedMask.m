@@ -137,6 +137,5 @@ else
     MainInput.Status = 'Lung Mask does not exist...';                                          
 end
 
-  
 end
 
