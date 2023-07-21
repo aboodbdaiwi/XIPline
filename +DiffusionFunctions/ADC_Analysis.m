@@ -296,7 +296,7 @@ disp('Saving ADCmap Tiff...')
 Proton_Image = zeros(size(ADCmap));
 for slice=1:size(ADCmap,3) %repeat for rest of slices
     [~,~] = Global.imoverlay(squeeze(abs(Proton_Image(:,:,slice))),squeeze(ADCmap(:,:,slice)),[],[0,0.99*max(Proton_Image(:))],cmap,1,gca);
-    colormap(gca,cmap); caxis([0 0.14]);   
+    colormap(gca,cmap); clim([0 0.14]);   
 %     X = print('-RGBImage',['-r',num2str(size(ADCmap,2)/2)]);%2 inches
      Xdata = getframe(gcf);
      X = Xdata.cdata;    
@@ -333,7 +333,7 @@ montage(reshape(ADCmap,[size(ADCmap,1), size(ADCmap,2), 1, size(ADCmap,3)]),...
 % y = get(gcf,'position'); % get the figure position
 % set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
 % set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
-colormap(cmap); caxis([0 0.14]);
+colormap(cmap); clim([0 0.14]);
 xx = colorbar;
 xx.Label.String = ' (cm^2/s)';
 title_str1=['ADC maps-',ADCFittingType];
@@ -367,7 +367,7 @@ montage(reshape(ADCmap,[size(ADCmap,1), size(ADCmap,2), 1, size(ADCmap,3)]),...
 % y = get(gcf,'position'); % get the figure position
 % set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
 % set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
-colormap(cmap); caxis([0 0.14]);
+colormap(cmap); clim([0 0.14]);
 xx = colorbar;
 xx.Label.String = ' (cm^2/s)';
 title_str1=['ADC maps-',ADCFittingType];
