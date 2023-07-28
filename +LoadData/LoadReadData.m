@@ -43,14 +43,22 @@ if strcmp(MainInput.XeDataext,'.dcm') == 1
     elseif strcmp(MainInput.AnalysisType,'Diffusion') == 1 
         if length(size(Image)) == 3
             try 
-                for i = 1:length(FileNames)
-                    img = squeeze(Image(:,:,i));
-                    SignalMean(i) = mean(img(:));
-                end
-                [~,locs] =findpeaks(SignalMean);
-                Nb = length(locs)+1; 
-                Image = reshape(Image, [size(Image,1),size(Image,2),size(Image,3)/Nb,Nb]);
-                Image = permute(Image, [1 2 4 3]);
+                Nb = app.MainInput.Nbvalues;
+                switch MainInput.DiffAcqOrder 
+                    case 'b-value interleave'
+                    Image = reshape(Image, [size(Image,1),size(Image,2),size(Image,3)/Nb,Nb]);
+                    Image = permute(Image, [1 2 4 3]);
+                    case 'slice interleave'
+                    Image = reshape(Image, [size(Image,1),size(Image,2),size(Image,3)/Nb,Nb]);
+                end   
+%                 for i = 1:length(FileNames)
+%                     img = squeeze(Image(:,:,i));
+%                     SignalMean(i) = mean(img(:));
+%                 end
+%                 [~,locs] =findpeaks(SignalMean);
+%                 Nb = length(locs)+1; 
+%                 Image = reshape(Image, [size(Image,1),size(Image,2),size(Image,3)/Nb,Nb]);
+%                 Image = permute(Image, [1 2 4 3]);
             catch
                disp('b value dimension cannot be determined');
             end
