@@ -235,4 +235,12 @@ CalResults.freq_target = freq_target;
 CalResults.Reference_Voltage = 0;
 CalResults.dwell_time = dwell_time;  
 CalResults.noise_est = noise_est;
+CalResults.freq = freq; 
+CalResults.FlipTarget = FlipTarget;
+CalResults.te = te;  
+CalResults.nDis = nDis;
+CalResults.nCal = nCal;
+CalResults.VRefScaleFactor = VRefScaleFactor;
+CalResults.VRef = 0;
+
 end
