@@ -240,7 +240,7 @@ CalResults.FlipTarget = FlipTarget;
 CalResults.te = te;  
 CalResults.nDis = nDis;
 CalResults.nCal = nCal;
-CalResults.VRefScaleFactor = VRefScaleFactor;
+CalResults.VRefScaleFactor = 0;
 CalResults.VRef = 0;
 
 end

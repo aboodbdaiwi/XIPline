@@ -35,7 +35,6 @@ te = 120; %in us - TE used in Dissolved Phase flip cal sequence
 % dwell_time = 10/1024*1E-3;%ms to s
 % te = 450; %us
 
-
 %Basic Parameters
 FlipTarget = 20; % target flip angle from calibration
 nDis = 500;
@@ -221,7 +220,7 @@ CalResults.FlipTarget = FlipTarget;
 CalResults.te = te;  
 CalResults.nDis = nDis;
 CalResults.nCal = nCal;
-CalResults.VRefScaleFactor = VRefScaleFactor;
+CalResults.VRefScaleFactor = 0;
 CalResults.VRef = 0;
 
 end

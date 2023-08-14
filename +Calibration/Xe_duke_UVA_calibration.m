@@ -13,7 +13,7 @@ function [GasExResults, CalResults] = Xe_duke_UVA_calibration(MainInput)
 
 %% Define number of calibration, number to skip, number of gas, target flip
 FlipTarget = 20; % target flip angle from calibration
-nDis = 200;
+nDis = 500;
 nSkip = 100; % number of dissolved fids to skip to ensure steady-state
 nAvg = 50; % Dissolved fids to average. Set to 50 to match Elly's 1-sec static. Set to >600 to use all available
 nCal = 20; % number of flip angle calibration frames following, normally 20Voigt = 1; % Barrier lorentzian for 0, Voigt if 1. Requires Elly's NMR_fit_v, NMR_mix_v, and NMR_TimeFit_v for Voigt=1
