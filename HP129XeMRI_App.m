@@ -22,13 +22,13 @@ MainInput.PatientInfo = 'CF Perfusion|IRC668-005.V2|11y/o,M|04/01/2022|';
 
 
 % 1) choose the type of analysis
-MainInput.AnalysisType = 'Ventilation';
+% MainInput.AnalysisType = 'Ventilation';
 % MainInput.AnalysisType = 'Diffusion';
-% MainInput.AnalysisType = 'GasExchange';
+MainInput.AnalysisType = 'GasExchange';
 
 % 2) Do you have protom images? 
-MainInput.NoProtonImage = 'yes';  % There is no proton images 
-% MainInput.NoProtonImage = 'no';    % There is  proton images 
+% MainInput.NoProtonImage = 'yes';  % There is no proton images 
+MainInput.NoProtonImage = 'no';    % There is  proton images 
 
 MainInput.Institute = 'CCHMC'; 
 % MainInput.Institute = 'XeCTC'; 
@@ -37,8 +37,8 @@ MainInput.Scanner = 'Philips';
 % MainInput.ScannerSoftware = '5.3.1'; % R-scanner
 MainInput.ScannerSoftware = '5.9.0'; % R-scanner
 % MainInput.ScannerSoftware = '5.6.1'; % T1-scanner
-MainInput.SequenceType = '2D GRE';
-% MainInput.SequenceType = '3D Radial';
+% MainInput.SequenceType = '2D GRE';
+MainInput.SequenceType = '3D Radial';
 
 
 % diary Log.txt
@@ -81,16 +81,16 @@ end
 if strcmp(MainInput.AnalysisType,'Ventilation') == 1                 
     figure; Global.imslice(Ventilation.Image) 
 elseif strcmp(MainInput.AnalysisType,'Diffusion') == 1 
-    figure; Global.imslice(Ventilation.Image)
+    figure; Global.imslice(Diffusion.Image)
 elseif strcmp(MainInput.AnalysisType,'GasExchange') == 1 
-    figure; Global.imslice(Ventilation.Image)
+    figure; Global.imslice(GasExchange.VentImage)
 end
 % Ventilation.Image = double(Ventilation.Image)
 % Proton.Image = double(Proton.Image)
 
 % Ventilation.Image = imrotate(Ventilation.Image,-180);
 % figure; Global.imslice(Ventilation.Image(:,:,1,1))
-% figure; Global.imslice(Proton.Image)
+figure; Global.imslice(Proton.Image)
 % figure; Global.imslice(A) 
 % figure; Global.imslice(Proton.ProtonRegistered)
 % orthosliceViewer(Proton.ProtonRegisteredColored)
@@ -103,7 +103,7 @@ end
 % figure; Global.imslice(Rotated)
 
 % Diffusion.Image = double(Rotated);
-figure; Global.imslice(Diffusion.Image)
+% figure; Global.imslice(Diffusion.Image)
 
 % figure; Global.imslice(Ventilation.Image)
 % 
@@ -149,6 +149,7 @@ figure; Global.imslice(P_image);
 Prot_Test = permute(Ventilation.Image,[3 2 1]); %
 Test3 = flip(Prot_Test,1);
 Ventilation.Image = flipdim(Test3,3);
+figure; imslice(Ventilation.Image)
 %% Flip Z of Vent and Proton (optional)
 Ventilation.Image = flipdim(Ventilation.Image,3);
 Proton.Image = flipdim(Proton.Image,3); 
@@ -157,11 +158,11 @@ Proton.Image = flipdim(Proton.Image,3);
 clc
 cd(MainInput.XeDataLocation)
 
-% Proton.Image = P_image; % Use only for interpulation
+Proton.Image = P_image; % Use only for interpulation
 % 
 % diary LogFile_LoadingData
 MainInput.RegistrationType = 'affine'; % 'translation' | 'rigid' | 'similarity' | 'affine'
-MainInput.SliceSelection = 1;
+MainInput.SliceSelection = 0;
 if MainInput.SliceSelection == 1
     MainInput.Xestart = 1;
     MainInput.Xeend = 13;
@@ -205,6 +206,17 @@ S = orthosliceViewer(viewing_img,...
 % diary off
 % S = orthosliceViewer(Proton.ProtonRegisteredColored);
 
+% % Get the dimensions of the original image
+% original_image = double(LungMask);
+% [height, width, depth] = size(original_image);
+% 
+% % Calculate the cropping boundaries to obtain a centered crop of size 112x112x112
+% crop_start = [(height - 112) / 2 + 1, (width - 112) / 2 + 1, (depth - 112) / 2 + 1];
+% crop_end = crop_start + [111, 111, 111];
+% 
+% % Crop the image
+% cropped_image = original_image(crop_start(1):crop_end(1), crop_start(2):crop_end(2), crop_start(3):crop_end(3));
+% montage(cropped_image)
 %% Flip Mask for Coronal Slices (optional)
 % Read in Image:
 msgboxw('Please, Select Nifti Image File (Mask or Image)',14);
@@ -245,10 +257,12 @@ cd(path)
 Mask = LoadData.load_nii(filename);
 % Mask = LoadData.load_untouch_nii(filename);
 A = Mask.img;
+A = permute(A,[1 3 2]); 
 A = double(squeeze(A));
 A = imrotate(A,-90);
 A = flip(A,2);                   
 Mask = A;  
+figure; Global.imslice(A) 
 figure; Global.imslice(Mask) 
 %% 
 
@@ -315,7 +329,7 @@ Ventilation.RFCorrect = 0;
 Ventilation.CompleteThresh = 15;
 Ventilation.HyperventilatedThresh = 200;
 Ventilation.ThreshAnalysis = 'yes'; % 'yes'; || 'no'
-Ventilation.LB_Analysis = 'yes'; % 'yes'; || 'no'
+Ventilation.LB_Analysis = 'no'; % 'yes'; || 'no'
 Ventilation.GLRLM_Analysis = 'no'; % 'yes'; || 'no'
 
 if Ventilation.N4Analysis == 1

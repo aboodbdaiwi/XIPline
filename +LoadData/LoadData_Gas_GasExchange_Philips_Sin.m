@@ -83,7 +83,8 @@ if strcmp(ScanVersion,'CCHMC')%didn't find that sequence naming version; check f
     ScanVersion = 'CCHMC';
 end
 if strcmp(ScanVersion,'XeCTC')%didn't find that sequence version
-    XeSinFile = dir([GasDataLocation,'\*CTC_GasExchangeFunctions_Xe.sin']);
+    %XeSinFile = dir([GasDataLocation,'\*CTC_GasExchangeFunctions_Xe.sin']);
+    XeSinFile = dir([GasDataLocation,'\*XeCTC_Gas_Exchange.sin']);
     ScanVersion = 'XeCTC';
 end
 
@@ -347,7 +348,6 @@ while (converged == 0) %run until no change in shift
     end
 end
 disp('Determining Image Offset Completed.')
-
 
 %% Spectra
 disp('Fitting Spectrum...')
