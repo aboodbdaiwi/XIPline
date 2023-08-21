@@ -1,7 +1,29 @@
 
 function [GasExchange] = GasExchange_Analysis (GasExchange,Proton,MainInput)
-
-
+%   Inputs:
+%      ProtonImage - 3D array:
+%      UncorrectedVentImage:
+%      VentImage:
+%      H_RecMatrix:
+%      ProtonSignal:
+%      LungSignal:
+%      LungStd:
+%      NoiseMask:
+%      ProtonMax:
+%          
+%   Outputs:
+%      LungMask
+%
+%   Example: 
+%   LoadData_Proton_GasExchange_Philips_Sin('C:\Users\mwillmering\Documents\Subject1')
+%
+% 
+%   Package: https://github.com/cchmc-cpir/CCHMC-Gas-Exchange-Processing-Package
+%
+%   Author: Matthew Willmering
+%   Work email: matthew.willmering@cchmc.org
+%   Personal email: matt.willmering@gmail.com
+%   Website: https://cpir.cchmc.org/
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % f = waitbar(0,'Reading necessary variables...');
@@ -27,47 +49,31 @@ ActTE90 = GasExchange.ActTE90;
 freq_jump = GasExchange.freq_jump;
 Slices_Co = Proton.Slices_Co;
 Slices_Ax = Proton.Slices_Ax;
-VentHealthyMean = GasExchange.VentHealthyMean;
-VentHealthyStd = GasExchange.VentHealthyStd;
-DissolvedHealthyMean = GasExchange.DissolvedHealthyMean;
-DissolvedHealthyStd = GasExchange.DissolvedHealthyStd;
-BarrierHealthyMean = GasExchange.BarrierHealthyMean;
-BarrierHealthyStd = GasExchange.MembraneHealthyMean;
-RBCHealthyMean = GasExchange.RBCHealthyMean;
-RBCtHealthyStd = GasExchange.RBCtHealthyStd;
-RBCBarrHealthyMean = GasExchange.RBCBarrHealthyMean;
-RBCBarrHealthyStd = GasExchange.RBCBarrHealthyStd;
-RBCOscHealthyMean = GasExchange.RBCOscHealthyMean;
-RBCOscHealthyStd = GasExchange.RBCOscHealthyStd;
+try
+    HealthyCohortFullPath = GasExchange.HealthyCohortFullPath;
+    GasExchange.ImportHealthyCohort = 'yes';
+catch
+    GasExchange.ImportHealthyCohort = 'no';
+    VentHealthyMean = GasExchange.VentHealthyMean;
+    VentHealthyStd = GasExchange.VentHealthyStd;
+    DissolvedHealthyMean = GasExchange.DissolvedHealthyMean;
+    DissolvedHealthyStd = GasExchange.DissolvedHealthyStd;
+    BarrierHealthyMean = GasExchange.BarrierHealthyMean;
+    BarrierHealthyStd = GasExchange.MembraneHealthyMean;
+    RBCHealthyMean = GasExchange.RBCHealthyMean;
+    RBCtHealthyStd = GasExchange.RBCtHealthyStd;
+    RBCBarrHealthyMean = GasExchange.RBCBarrHealthyMean;
+    RBCBarrHealthyStd = GasExchange.RBCBarrHealthyStd;
+    RBCOscHealthyMean = GasExchange.RBCOscHealthyMean;
+    RBCOscHealthyStd = GasExchange.RBCOscHealthyStd;
+end
+
 DataLocation = MainInput.XeDataLocation;
 cd(DataLocation)
 mkdir([DataLocation '\Gas Exchange Analysis']);
 outputpath = [DataLocation '\Gas Exchange Analysis'];
 cd(outputpath)
-%   Inputs:
-%      ProtonImage - 3D array:
-%      UncorrectedVentImage:
-%      VentImage:
-%      H_RecMatrix:
-%      ProtonSignal:
-%      LungSignal:
-%      LungStd:
-%      NoiseMask:
-%      ProtonMax:
-%          
-%   Outputs:
-%      LungMask
-%
-%   Example: 
-%   LoadData_Proton_GasExchange_Philips_Sin('C:\Users\mwillmering\Documents\Subject1')
-%
-% 
-%   Package: https://github.com/cchmc-cpir/CCHMC-Gas-Exchange-Processing-Package
-%
-%   Author: Matthew Willmering
-%   Work email: matthew.willmering@cchmc.org
-%   Personal email: matt.willmering@gmail.com
-%   Website: https://cpir.cchmc.org/
+
 %% General information
 try
     ReconVersion = GasExchangeFunctions.get_git_hashobject;%use git to find hash of commit used
@@ -82,10 +88,11 @@ GasFlipAngle = 0.5; %Gas flip angle
 
 
 %% Import Healthy Distribution, If Available
-%Healthy Cohort
-if(exist([DataLocation,'\HealthyCohort.mat'],'file') == 2) %if Healthy cohort data exists, use
-    HealthyFile = dir([DataLocation,'\HealthyCohort.mat']);%get file info
-    HealthyData = load([HealthyFile.folder,'\',HealthyFile.name], '-regexp','^(?!Comb|Ind)...');%import all variable but figures
+%Healthy Cohort 
+% if(exist([DataLocation,'\HealthyCohort.mat'],'file') == 2) %if Healthy cohort data exists, use
+if strcmp(GasExchange.ImportHealthyCohort, 'yes') == 1 && MainInput.ImportHealthyCohort == 1
+%     HealthyFile = dir([DataLocation,'\HealthyCohort.mat']);%get file info
+    HealthyData = load(HealthyCohortFullPath);%import all variable but figures
     VentThresh = HealthyData.thresholds.Vent;
     DissolvedThresh = HealthyData.thresholds.Dissolved;
     BarrierThresh = HealthyData.thresholds.Barrier;
@@ -103,7 +110,6 @@ else %user input
     RBCOscThresh = [RBCOscHealthyMean-2*RBCOscHealthyStd,RBCOscHealthyMean-1*RBCOscHealthyStd,RBCOscHealthyMean,RBCOscHealthyMean+1*RBCOscHealthyStd,RBCOscHealthyMean+2*RBCOscHealthyStd,RBCOscHealthyMean+3*RBCOscHealthyStd,RBCOscHealthyMean+4*RBCOscHealthyStd];%8
     HealthyCohortNum = 'User Defind'; %Healthy Cohort Data
     HealthyDistPresent = 0;
-
 end
 
 %% Obtain Parameters of Interest from Spectrum

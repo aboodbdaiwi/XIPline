@@ -375,12 +375,24 @@ clc;
 cd(MainInput.XeDataLocation)
 % diary Log.txt
 
-GasExchange.VentHealthyMean = 0.51; GasExchange.VentHealthyStd = 0.19;%6
-GasExchange.DissolvedHealthyMean = 0.0075; GasExchange.DissolvedHealthyStd = 0.00125;%6
-GasExchange.BarrierHealthyMean = 0.0049; GasExchange.BarrierHealthyStd = 0.0015;%6
-GasExchange.RBCHealthyMean = 0.0026; GasExchange.RBCtHealthyStd = 0.0010;%6
-GasExchange.RBCBarrHealthyMean = 0.53; GasExchange.RBCBarrHealthyStd = 0.18;%6
-GasExchange.RBCOscHealthyMean = 8.9596; GasExchange.RBCOscHealthyStd = 10.5608;%6
+MainInput.ImportHealthyCohort = 1;
+if MainInput.ImportHealthyCohort == 1
+    GasExchange.ImportHealthyCohort = 'yes';
+    [filename, path] = uigetfile('*.mat*','Import Healthy Cohort');
+    GasExchange.HealthyCohortFullPath = [path,filename];
+    GasExchange.HealthyCohortDataLocation = path(1:end-1);
+    [~,~,HealthyCohort_ext] = fileparts(GasExchange.HealthyCohortFullPath);
+    GasExchange.HealthyCohortFileName = filename;
+    GasExchange.HealthyCohort_ext = HealthyCohort_ext;
+else
+    GasExchange.VentHealthyMean = 0.51; GasExchange.VentHealthyStd = 0.19;%6
+    GasExchange.DissolvedHealthyMean = 0.0075; GasExchange.DissolvedHealthyStd = 0.00125;%6
+    GasExchange.BarrierHealthyMean = 0.0049; GasExchange.BarrierHealthyStd = 0.0015;%6
+    GasExchange.RBCHealthyMean = 0.0026; GasExchange.RBCtHealthyStd = 0.0010;%6
+    GasExchange.RBCBarrHealthyMean = 0.53; GasExchange.RBCBarrHealthyStd = 0.18;%6
+    GasExchange.RBCOscHealthyMean = 8.9596; GasExchange.RBCOscHealthyStd = 10.5608;%6
+end
+
 
 
 [GasExchange] = GasExchangeFunctions.GasExchange_Analysis(GasExchange,Proton,MainInput);
