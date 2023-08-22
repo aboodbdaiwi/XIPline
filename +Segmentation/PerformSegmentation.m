@@ -32,7 +32,7 @@ switch MainInput.SegmentationMethod
 
     case 'Auto' % ============================================Auto================================================
 
-        [preprocessed_data, MainInput] = Segmentation.preprocess_images_for_auto_segmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
+        [~, MainInput] = Segmentation.preprocess_images_for_auto_segmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
         cd(MainInput.AutoSegmentPath)
 
         switch MainInput.AnalysisType

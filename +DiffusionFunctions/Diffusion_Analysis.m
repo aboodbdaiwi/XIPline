@@ -1,5 +1,5 @@
 
-function [Diffusion] = Diffusion_Analysis (Diffusion,MainInput)
+function [Diffusion] = Diffusion_Analysis(Diffusion,MainInput)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 %%%%%%%%%%%%%%%%%%%%%%% Diffusion Analysis  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 
@@ -29,7 +29,7 @@ WinBUGSPath = [WinBUGSPath,'\WinBUGS14'];
 
 Diffusion.WinBUGSPath = WinBUGSPath;  
 Diffusion.MA_WinBUGSPath = WinBUGSPath;
-PatientAge = MainInput.PatientAge;
+PatientAge = eval(MainInput.PatientAge);
 % ADC_Analysis = Diffusion.ADC_Analysis;
 ADC_Analysis = 'yes';
 ADCFittingType = Diffusion.ADCFittingType;
@@ -127,7 +127,8 @@ if strcmp(ADC_Analysis, 'yes') == 1
         ADCFittingType,...
         ADCAnalysisType,...
         WinBUGSPath,...
-        outputpath);
+        outputpath,...
+        PatientAge);
 
     % store result    
     Diffusion.ADCmap = ADCmap;

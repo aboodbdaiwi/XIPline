@@ -1,0 +1,7 @@
+## Ignore Visual Studio temporary files, build results
+
+## Added by Abood Bdaiwi
+*.png
+*.pyc
+*.h5
+*.mat

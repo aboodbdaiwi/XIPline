@@ -1,5 +1,5 @@
 
-function [ADCmap,ADCcoloredmap,SNR_table,meanADC,stdADC,ADC_hist] = ADC_Analysis (diffimg, lung_mask, airway_mask, bvalues, ADCFittingType,ADCAnalysisType, WinBUGSPath, outputpath)
+function [ADCmap,ADCcoloredmap,SNR_table,meanADC,stdADC,ADC_hist] = ADC_Analysis (diffimg, lung_mask, airway_mask, bvalues, ADCFittingType,ADCAnalysisType, WinBUGSPath, outputpath,PatientAge)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 %%%%%%%%%%%%%%%%%%%%%%% ADC Analysis  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 
@@ -91,7 +91,7 @@ for n = 1:length(bvalues)
         noise_vec(noise_mask==0)=[];       
         mean_noise(n) = mean(noise_vec);            %the mean of the noise               
         std_noise_n(n) = std(noise_vec);            %the standard deviation of the noise
-        SNR_vec(n) = round(signal_n_avg(n) / std_noise_n(n),2); %signal to noise ratio
+        SNR_vec(n) = round(signal_n_avg(n) / std_noise_n(n),2)*sqrt(2 - (pi/2)); %signal to noise ratio
 end
 SNR_vec=SNR_vec';
 weight_vec = zeros(1, length(SNR_vec));
@@ -268,6 +268,7 @@ str_stdADC=sprintf(', STD = %.3f', stdADC);
 str_CVADC=sprintf(', CV = %.3f', CVADC);
 str_legend=[str_meanADC,str_stdADC,str_CVADC];
 figure('position',[350 350 1000 500]);
+
 h=histogram(ADCmap(ADCmap>0),100); 
 histtitle_str1=['ADC Histogram-',ADCFittingType];
 title(histtitle_str1);
@@ -275,8 +276,26 @@ xlabel('ADC cm^2/sec','FontSize',12,'Color','k');
 ylabel('Pixel Count.','FontSize',12,'Color','k');
 xlim([0 0.14]);
 set(gca,'FontSize',12)
-legend(str_legend);
+% legend(str_legend);
 % print(histtitle_str1,'-dpng','-r300');
+
+% plot healthy dist.
+hold on
+ADCLB_RefMean = 0.0002*PatientAge+0.029; % 
+ADCLB_RefSD = 5e-5*PatientAge+0.0121; 
+Mean_Edges = linspace(0,0.14,100);
+ADC_vec = ADCmap;
+ADC_vec(final_mask==0)=[];
+[bin_count,~] = histcounts(ADC_vec,Mean_Edges);
+y = 0:0.001:1;
+f = exp(-(y-ADCLB_RefMean).^2./(2*ADCLB_RefSD^2))./(ADCLB_RefSD*sqrt(2*pi));
+f = f./max(f(:));
+f = f.*max(bin_count(:));
+plot(y,f,'k-.','LineWidth',2);
+str_MeanADC_Ref = sprintf('Ref: Mean = %.3f', ADCLB_RefMean);
+str_STDADC_Ref = sprintf(' ± %.3f', ADCLB_RefSD);
+str_legend2=[str_MeanADC_Ref,str_STDADC_Ref];
+legend(str_legend,str_legend2);
 saveas(gca,'ADC_Histogram.png')
 close all; 
 
