@@ -1,7 +1,11 @@
-## Ignore Visual Studio temporary files, build results
+## Ignore temporary files
 
 ## Added by Abood Bdaiwi
 *.png
 *.pyc
 *.h5
 *.mat
+*.hdf5
+*.exe
+*.spec
+*.asv

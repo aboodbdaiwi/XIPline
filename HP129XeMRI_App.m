@@ -340,7 +340,7 @@ elseif Ventilation.N4Analysis == 0
     Ventilation.LB_RefSD = 0.1509; % Default (non-N4 corrected, based on data up to Jan 2021)
 end
 
-[Ventilation] = VentilationFunctions.Ventilation_Analysis (Ventilation, Proton, MainInput);
+[Ventilation] = VentilationFunctions.Ventilation_Analysis(Ventilation, Proton, MainInput);
 
 %%  Diffusion analysis
 clc
@@ -367,7 +367,7 @@ Diffusion.Do = 0.14; % cm2/s
 Diffusion.Delta = 3.5; % ms
 
 
-[Diffusion] = DiffusionFunctions.Diffusion_Analysis (Diffusion,MainInput);
+[Diffusion] = DiffusionFunctions.Diffusion_Analysis(Diffusion,MainInput);
 
 % diary off
 %% Gas Exchange analysis
