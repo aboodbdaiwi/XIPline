@@ -106,7 +106,7 @@ switch settings.calculate_SNR
         waitbar(.20,f,'Calculating SNR...');
         pause(.1)        
         disp('Calculating SNR...')
-        [SNR_slice, Overall_SNR] = VentilationFunctions.calculate_SNR(MR, maskarray);
+        [SNR_slice, Overall_SNR] = VentilationFunctions.calculate_SNR(MR, maskarray, airwaymask);
         Ventilation.SNR_slice = SNR_slice;
         Ventilation.Overall_SNR = Overall_SNR;
     case "no"

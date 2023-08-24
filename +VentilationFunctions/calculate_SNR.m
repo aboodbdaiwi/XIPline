@@ -1,4 +1,4 @@
-function [SNR_slice, Overall_SNR] = calculate_SNR(MR, maskarray)
+function [SNR_slice, Overall_SNR] = calculate_SNR(MR, maskarray, airwaymask)
 %% MATLAB script to perform SNR calculation
 % This code uses the ventilation images (can be N4 corrected or
 % original), and the corresponding masks, to generate an array of SNR
@@ -30,7 +30,7 @@ maskarray_dilated = imdilate(maskarray, SE);
 
 % Take the complement of the dilated mask array and create a background
 % noise array:
-backgroundmask = imcomplement(maskarray_dilated);
+backgroundmask = imcomplement(maskarray_dilated).*~airwaymask;
 background1 = MR.*(backgroundmask);
 
 % % Label 0s in the background noise array as NaNs
