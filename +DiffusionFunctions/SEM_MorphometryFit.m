@@ -73,7 +73,7 @@ cd(Datapath);
 So_map=zeros(size(BNmask));
 DDC_map=zeros(size(BNmask));
 alpha_map=zeros(size(BNmask));
-sigma_n=zeros(size(BNmask,3),length(bvalues));
+sigma=zeros(size(BNmask,3),length(bvalues));
 So = zeros(size(BNmask,3),size(BNmask,1)*size(BNmask,2));
 DDC = zeros(size(BNmask,3),size(BNmask,1)*size(BNmask,2));
 alpha = zeros(size(BNmask,3),size(BNmask,1)*size(BNmask,2));
@@ -84,7 +84,7 @@ for slice_n=1:size(BNmask,3)
     for n = 1:nbvalues
         noise_vec=Ndiffimg(:,:,slice_n,n);
         noise_vec(noise_mask(:,:,slice_n)==0)=[];
-        sigma_n(n) = std(noise_vec(:));
+        sigma(n) = std(noise_vec(:));
 
         M1(:,:,n)=Ndiffimg(:,:,slice_n,n).*final_mask_slice;
     end
@@ -96,15 +96,22 @@ for slice_n=1:size(BNmask,3)
     S0_est = zeros(num_ones,1);
     DDC_est = size(S0_est);
     Alpha_est = size(S0_est);
-  
+    weights=1;
     for j= 1:num_ones      
 %         clc% adding noise to signal    
-%         disp(['pixel # = ',num2str(j)])% adding noise to signal    
-%         eestm = DiffusionFunctions.MLricianfitcon(M(j,:)',bvalues',sigma_n(1)^2,[0.1, 0.030 0.5],"strexp",1);       % This is the only code line needed + function MLricianfitcon 
+         disp(['pixel # = ',num2str(j)])%    
+%         eestm = DiffusionFunctions.MLricianfitcon(M(j,:)',bvalues',sigma_n(1)^2,[0.1, 0.030 0.5],"strexp",1);  
 %         S0_est(j)= eestm(1);
 %         DDC_est(j)=-eestm(2);
 %         Alpha_est(j)=eestm(3);
 
+% %         lb=[0.001 0.0001 0.5]; ub=[1.5 0.12 1.1];
+%         initialvalues=[0.1, 0.030 0.5];
+% %         [eestm,fval(j)]=DiffusionFunctions.MLfitRr2(M(j,:),bvalues,sigma(1)^2,initialvalues,"strexp",weights,lb,ub,Do,Delta);      
+%         [eestm,fval(j)]=DiffusionFunctions.MLfitRr2(M(j,:),bvalues,sigma(1)^2,initialvalues,"strexp");      
+%         S0_est(j)= eestm(1);
+%         DDC_est(j)=eestm(2);
+%         Alpha_est(j)=eestm(3);
 
         ydata = M(j,:);
         x0 = [ydata(1), 0.03 , 0.5];
@@ -116,9 +123,9 @@ for slice_n=1:size(BNmask,3)
 
     end
 
-        So(slice_n,1:num_ones) = S0_est;
-        DDC(slice_n,1:num_ones) = DDC_est;
-        alpha(slice_n,1:num_ones) = Alpha_est;
+    So(slice_n,1:num_ones) = S0_est;
+    DDC(slice_n,1:num_ones) = DDC_est;
+    alpha(slice_n,1:num_ones) = Alpha_est;
 end
 
 
@@ -151,9 +158,9 @@ alpha_map(alpha_map<0) = 0;
 alpha_map(alpha_map>2) = 0;
 % end
 fprintf('Completed\n');  
-% figure; imslice(So_map);
-% figure; imslice(DDC_map);  colormap("jet"); %clim([0 0.14])
-% figure; imslice(alpha_map);  colormap("jet"); %clim([0 1])
+figure; imslice(So_map);
+figure; imslice(DDC_map);  colormap("jet"); %clim([0 0.14])
+figure; imslice(alpha_map);  colormap("jet"); %clim([0 1])
 
 %%  % DDC and alpha fit (Least square fit)
 % DDC_map=zeros(size(BNmask));
@@ -241,6 +248,7 @@ for k = 1:size(BNmask,3)
     end
 end 
 fprintf('Completed\n');  
+LmD_map = LmD_map.*1000;
 figure; imslice(LmD_map);  colormap("jet"); %clim([0 400])
 %% Find mean and std of all maps
 DDC_mean = round(mean(DDC_map(DDC_map>0)),3); 
@@ -270,7 +278,7 @@ disp('Saving Morphometrymays into Tiff...')
 Proton_Image = zeros(size(DDC_map));
 for slice=1:size(DDC_map,3) %repeat for rest of slices
     [~,~] = Global.imoverlay(squeeze(abs(Proton_Image(:,:,slice))),squeeze(DDC_map(:,:,slice)),[],[0,0.99*max(Proton_Image(:))],cmap,1,gca);
-    colormap(gca,cmap); caxis([0 0.14]);   
+    colormap(gca,cmap); clim([0 0.14]);   
 %     X = print('-RGBImage',['-r',num2str(size(DDC_map,2)/2)]);%2 inches
      Xdata = getframe(gcf);
      X = Xdata.cdata;     
@@ -284,7 +292,7 @@ end
 %alpha_map 
 for slice=1:size(alpha_map,3) %repeat for rest of slices
     [~,~] = Global.imoverlay(squeeze(abs(Proton_Image(:,:,slice))),squeeze(alpha_map(:,:,slice)),[],[0,0.99*max(Proton_Image(:))],cmap,1,gca);
-    colormap(gca,cmap); caxis([0 1]);   
+    colormap(gca,cmap); clim([0 1]);   
 %     X = print('-RGBImage',['-r',num2str(size(alpha_map,2)/2)]);%2 inches
      Xdata = getframe(gcf);
      X = Xdata.cdata;   
@@ -298,7 +306,7 @@ end
 %LmD_map 
 for slice=1:size(LmD_map,3) %repeat for rest of slices
     [~,~] = Global.imoverlay(squeeze(abs(Proton_Image(:,:,slice))),squeeze(LmD_map(:,:,slice)),[],[0,0.99*max(Proton_Image(:))],cmap,1,gca);
-    colormap(gca,cmap); caxis([0 400]);   
+    colormap(gca,cmap); clim([0 400]);   
 %     X = print('-RGBImage',['-r',num2str(size(LmD_map,2)/2)]);%2 inches
      Xdata = getframe(gcf);
      X = Xdata.cdata;     
@@ -328,7 +336,7 @@ set(gcf,'units','pixels'); % set the figure units to pixels
 y = get(gcf,'position'); % get the figure position
 set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
-colormap(cmap); caxis([0 Do]); 
+colormap(cmap); clim([0 Do]); 
 xx = colorbar;
 xx.Label.String = ' (cm^2/S)';
 DDC_MontagePosition=get(gcf,'position');
@@ -343,10 +351,11 @@ set(gcf,'units','pixels'); % set the figure units to pixels
 y = get(gcf,'position'); % get the figure position
 set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
-colormap(cmap); caxis([0 1]);  colorbar;
+colormap(cmap); clim([0 1]);  colorbar;
 Alpha_MontagePosition=get(gcf,'position');
  
 %LmD maps
+LmD_map(isnan(LmD_map) | isinf(LmD_map)) = 0;
 LmD_Montage = figure('Name','LmD Images');set(LmD_Montage,'WindowState','minimized');
 montage(reshape(LmD_map,[size(LmD_map,1), size(LmD_map,2), 1, size(LmD_map,3)]),...
     'Size',[1 size(LmD_map,3)],'DisplayRange',[0 1]);
@@ -356,7 +365,7 @@ set(gcf,'units','pixels'); % set the figure units to pixels
 y = get(gcf,'position'); % get the figure position
 set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
-colormap(cmap); caxis([0 LmD_vec(end)]); colorbar;
+colormap(cmap); clim([0 300]); colorbar;
 xx = colorbar;
 xx.Label.String = ' (\mum)';
 LmD_MontagePosition=get(gcf,'position');

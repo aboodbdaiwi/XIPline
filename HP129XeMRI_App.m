@@ -23,12 +23,12 @@ MainInput.PatientInfo = 'CF Perfusion|IRC668-005.V2|11y/o,M|04/01/2022|';
 
 % 1) choose the type of analysis
 % MainInput.AnalysisType = 'Ventilation';
-% MainInput.AnalysisType = 'Diffusion';
-MainInput.AnalysisType = 'GasExchange';
+MainInput.AnalysisType = 'Diffusion';
+% MainInput.AnalysisType = 'GasExchange';
 
 % 2) Do you have protom images? 
-% MainInput.NoProtonImage = 'yes';  % There is no proton images 
-MainInput.NoProtonImage = 'no';    % There is  proton images 
+MainInput.NoProtonImage = 'yes';  % There is no proton images 
+% MainInput.NoProtonImage = 'no';    % There is  proton images 
 
 MainInput.Institute = 'CCHMC'; 
 % MainInput.Institute = 'XeCTC'; 
@@ -37,8 +37,8 @@ MainInput.Scanner = 'Philips';
 % MainInput.ScannerSoftware = '5.3.1'; % R-scanner
 MainInput.ScannerSoftware = '5.9.0'; % R-scanner
 % MainInput.ScannerSoftware = '5.6.1'; % T1-scanner
-% MainInput.SequenceType = '2D GRE';
-MainInput.SequenceType = '3D Radial';
+MainInput.SequenceType = '2D GRE';
+% MainInput.SequenceType = '3D Radial';
 
 
 % diary Log.txt
@@ -90,8 +90,8 @@ end
 
 % Ventilation.Image = imrotate(Ventilation.Image,-180);
 % figure; Global.imslice(Ventilation.Image(:,:,1,1))
-figure; Global.imslice(Proton.Image)
-% figure; Global.imslice(A) 
+% figure; Global.imslice(Proton.Image)
+% figure; Global.imslice(src_images) 
 % figure; Global.imslice(Proton.ProtonRegistered)
 % orthosliceViewer(Proton.ProtonRegisteredColored)
 % DiffusionDataImage = DiffusionData.Image;
@@ -286,23 +286,23 @@ cd(MainInput.XeDataLocation)
 
 % diary Log.txt
 MainInput.SegmentationMethod = 'Threshold'; % 'Threshold' || 'Manual' || 'Auto'
-MainInput.SegmentAnatomy = 'Airway'; % 'Airway'; || 'parenchyma'
+MainInput.SegmentAnatomy = 'Airway'; % 'Airway'; || 'Parenchyma'
 MainInput.Imagestosegment = 'Xenon';  % 'Xe & Proton Registered' | 'Xenon' | 'Registered Proton'
 
-MainInput.thresholdlevel = 1; % 'threshold' 
+MainInput.thresholdlevel = 0.5; % 'threshold' 
 MainInput.SE = 1; % 'threshold' 
 
 MainInput.SegmentManual = 'Freehand'; % 'AppSegmenter' || 'Freehand'
-MainInput.SliceOrientation = 'coronal'; % 'transversal' || 'isotropic'
+MainInput.SliceOrientation = 'transversal'; % 'transversal' || 'isotropic'
 [Proton,Ventilation,Diffusion,GasExchange] = Segmentation.PerformSegmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
 
 % [Proton,Ventilation,Diffusion, GasExchange] = Segmentation.loadSegmentedMask(Proton,Ventilation,Diffusion,GasExchange,MainInput);
 % Ventilation.AirwayMask = zeros(size(Ventilation.LungMask));
 
-figure; Global.imslice(Ventilation.LungMask)
+% figure; Global.imslice(Ventilation.LungMask)
 % figure; Global.imslice(Images)
 % figure; Global.imslice(auto_segmented_mask) 
-% figure; Global.imslice(Diffusion.LungMask)
+figure; Global.imslice(Diffusion.LungMask)
 % volumeSegmenter(Ventilation.Image) 
 % figure; Global.imslice(NormMR)
 % diary off 
@@ -347,21 +347,21 @@ clc
 cd(MainInput.XeDataLocation)
 % diary Log.txt
 
-MainInput.PatientAge = 11;
+MainInput.PatientAge = '17';
 Diffusion.ADCFittingType = 'Log Linear'; % 'Log Weighted Linear' | 'Log Linear' | 'Non-Linear' | 'Bayesian'
 Diffusion.ADCAnalysisType = 'human'; % human | animals;  % human | animals
-Diffusion.bvalues = '[0, 6.25, 12.5, 18.75, 25]';
+% Diffusion.bvalues = '[0, 6.25, 12.5, 18.75, 25]';
 % Diffusion.bvalues = '[0, 7.5, 15]';
-% Diffusion.bvalues = '[0, 10, 20, 30]'; % for T-Scanner
+Diffusion.bvalues = '[0, 10, 20, 30]'; % for T-Scanner
 
-Diffusion.ADCLB_Analysis = 'no'; % 'yes'; || 'no'
+Diffusion.ADCLB_Analysis = 'yes'; % 'yes'; || 'no'
 Diffusion.ADCLB_RefMean = '0.0002*age+0.029'; 
 Diffusion.ADCLB_RefSD = '5e-5*age+0.0121'; 
 
-Diffusion.MorphometryAnalysis = 'yes';  % yes || no
+Diffusion.MorphometryAnalysis = 'no';  % yes || no
 Diffusion.MorphometryAnalysisType = 'human'; % human | animals
 Diffusion.MA_WinBUGSPath = 'C:\Users\BAS8FL\Desktop\WinBUGS14';
-Diffusion.CMMorphometry = 'yes';  % yes || no
+Diffusion.CMMorphometry = 'no';  % yes || no
 Diffusion.SEMMorphometry = 'no';  % yes || no
 Diffusion.Do = 0.14; % cm2/s
 Diffusion.Delta = 3.5; % ms

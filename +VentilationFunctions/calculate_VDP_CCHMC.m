@@ -265,16 +265,19 @@ d_Hyper_rgb = (defectArray == 4)*255;
 d_Normal_rgb = (defectArray == 0)*255;
 
 % Define colormaps:
+% cm_incomplete = [0 0 0
+%     1 1 0]; % yellow
 cm_incomplete = [0 0 0
-    1 1 0];
+    1 0 0];
 array4dincomplete = zeros(size(d_Incomplete_rgb,1), size(d_Incomplete_rgb,2),3,...
     size(d_Incomplete_rgb,3));
 for slice = 1:size(d_Incomplete_rgb,3)
     array4dincomplete(:,:,:,slice) =  ind2rgb(d_Incomplete_rgb(:,:,slice),cm_incomplete);
 end
-
+% cm_complete=[0 0 0
+%     0 0 1]; % blue
 cm_complete=[0 0 0
-    0 0 1];
+    1 0 0];
 array4dcomplete = zeros(size(d_Complete_rgb,1), size(d_Complete_rgb,2),3,...
     size(d_Complete_rgb,3));
 for slice = 1:size(d_Complete_rgb,3)
@@ -522,8 +525,13 @@ DefectArrayMontagePosition=get(gcf,'position');
 
 protonarrayimg = Proton.ProtonRegistered(:,:,sl_1:sl_end);
 ProtonImages = figure('Name','Mask');set(ProtonImages,'WindowState','minimized');
-montage(reshape(protonarrayimg,[size(protonarrayimg,1), size(protonarrayimg,2), size(protonarrayimg,3), size(protonarrayimg,4)]),...
-    'Size',[1 size(protonarrayimg,3)],'DisplayRange',[0 max(Proton.ProtonRegistered(:))/2]);
+if sum(protonarrayimg(:)) > 0
+    montage(reshape(protonarrayimg,[size(protonarrayimg,1), size(protonarrayimg,2), size(protonarrayimg,3), size(protonarrayimg,4)]),...
+        'Size',[1 size(protonarrayimg,3)],'DisplayRange',[0 max(Proton.ProtonRegistered(:))/2]);
+else
+    montage(reshape(protonarrayimg,[size(protonarrayimg,1), size(protonarrayimg,2), size(protonarrayimg,3), size(protonarrayimg,4)]),...
+        'Size',[1 size(protonarrayimg,3)],'DisplayRange',[]);
+end
 set(gca,'units','pixels'); % set the axes units to pixels
 x = get(gca,'position'); % get the position of the axes
 set(gcf,'units','pixels'); % set the figure units to pixels

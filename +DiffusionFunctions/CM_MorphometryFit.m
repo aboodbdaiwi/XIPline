@@ -92,9 +92,9 @@ L2=sqrt(4*delta*Do);
 
 bvalues(1) = 1e-5;
 
-h=zeros(size(Images,3),size(Images,1)*size(Images,2));
 So=zeros(size(Images,3),size(Images,1)*size(Images,2));
 R=zeros(size(Images,3),size(Images,1)*size(Images,2));
+r=zeros(size(Images,3),size(Images,1)*size(Images,2));
 
 disp('start morphometery fitting, please wait......')
 for i=1:size(Images,3)
@@ -137,48 +137,37 @@ for i=1:size(Images,3)
     num_ones=sum(num_ones(:)); % for loopping    
     S0_est = zeros(num_ones,1);
     R_est = size(S0_est);
-    H_est = size(S0_est);
+    r_est = size(S0_est);
 
-    if strcmp(fitType,'human') == 1
-        for j= 1:num_ones  
-        %disp(['pixel # = ',num2str(j)])
-        eestm = DiffusionFunctions.MLricianfitcon(M(j,:),bvalues,sigma(1)^2,[0.1, 0.030 0.015],"cylRandH",1,Do,delta);       % This is the only code line needed + function MLricianfitcon 
-        S0_est(j) = eestm(1);
-        R_est(j)  = eestm(2);
-        H_est(j)  = eestm(3);
-%         L_est=0.765*eestm(2);
-%         Lm_est(i)=pi*L_est*R_est(i)^2/(0.5*pi*R_est(i)*L_est+0.5*pi*H_est(i)*(2*R_est(i)-H_est(i))+4*H_est(i)*L_est);
-
-%         ydata = M(j,:);
-%         x0 = [ydata(1), 0.03 , 0.015];
-%         fun = @(x)DiffusionFunctions.cylM(x,bvalues,ydata,Do,delta);
-%         bestx2 = fminsearch(fun,x0);
-%         S0_est(j)=bestx2(1);
-%         R_est(j)=bestx2(2);
-%         H_est(j)=bestx2(3);   
+    weights=1; 
+    for j= 1:num_ones 
+        if strcmp(fitType,'human') == 1
+            lb=[0.0280 0.0090 0.5*M(j,1)]; ub=[0.0400 0.0350 1.5*M(j,1)];
+            initialvalues=[0.0300 0.0140 M(j,1)];
+            [eestm,fval(j)]=DiffusionFunctions.MLfitRr2(M(j,:),bvalues,sigma(1)^2,initialvalues,"cylRandr",weights,lb,ub,Do,delta);       % This is the only code line needed + function MLfitconloc1 
+        elseif strcmp(fitType,'animals') == 1
+            lb=[0.00001 0.005 0.5]; ub=[M(j,1)+3*sqrt(s2) 0.12 1.1];
+            lb=[0.060 0.0010 0.5*M(j,1)]; ub=[0.0140 0.0090 1.5*M(j,1)];
+            initialvalues=[0.0100 0.0050 M(j,1)];
+            [eestm,fval(j)]=DiffusionFunctions.MLfitRr2(M(j,:),bvalues,sigma(1)^2,initialvalues,"cylRandrAnimal",weights,lb,ub,Do,delta);       % This is the only code line needed + function MLfitconloc1 
         end
-    elseif strcmp(fitType,'animals') == 1
-        for j= 1:num_ones  
-        eestm = DiffusionFunctions.MLricianfitcon(M(j,:),bvalues,sigma(1)^2,[0.1, 0.010 0.015],"cylRandHfunAnimal",1,Do,delta);       % This is the only code line needed + function MLricianfitcon 
-        S0_est(j) = eestm(1);
-        R_est(j)  = eestm(2);
-        H_est(j)  = eestm(3); 
-        end
+        R_est(j)=eestm(1);
+        r_est(j)=eestm(2);
+        S0_est(j)=eestm(3);
     end
-
 
     So(i,1:num_ones) = S0_est;
     R(i,1:num_ones) = R_est*10000;
-    h(i,1:num_ones) = H_est*10000;
+    r(i,1:num_ones) = r_est*10000;
 end
 
 %%%%%%%%%%%%%%%%%%%%convert vector to 2D image  %%%%%%%%%%%%%%%%%%%%%%%%%%% 
 pixel_location=find(final_mask); %to find pixel location 
 num_ones2=sum(final_mask(:)); 
 
-Bayes_h_2=h';
-Bayes_h_2=reshape(Bayes_h_2,[size(final_mask,1)*size(final_mask,2)*size(final_mask,3),1]);
-Bayes_h_2 = Bayes_h_2(any(Bayes_h_2,2),:);
+Bayes_r_2=r';
+Bayes_r_2=reshape(Bayes_r_2,[size(final_mask,1)*size(final_mask,2)*size(final_mask,3),1]);
+Bayes_r_2 = Bayes_r_2(any(Bayes_r_2,2),:);
 
 Bayes_So_from_R2=So';
 Bayes_So_from_R2=reshape(Bayes_So_from_R2,[size(final_mask,1)*size(final_mask,2)*size(final_mask,3),1]);
@@ -188,26 +177,26 @@ Bayes_R_2=R';
 Bayes_R_2=reshape(Bayes_R_2,[size(final_mask,1)*size(final_mask,2)*size(final_mask,3),1]);
 Bayes_R_2 = Bayes_R_2(any(Bayes_R_2,2),:);
 
-h_map=zeros(size(final_mask));
+r_map=zeros(size(final_mask));
 So_map=zeros(size(final_mask));
 R_map=zeros(size(final_mask));
 
 for loc = 1:numel(pixel_location)
     if loc <= num_ones2
         choosen_pixel = pixel_location(loc);
-        h_map(choosen_pixel) = Bayes_h_2(loc);
+        r_map(choosen_pixel) = Bayes_r_2(loc);
         So_map(choosen_pixel) = Bayes_So_from_R2(loc);
         R_map(choosen_pixel) = Bayes_R_2(loc);
     end
 end 
 %h_map = h_map.*10;
-figure; imslice(R_map); colormap(jet)
-figure; imslice(h_map); colormap(jet)
+% figure; imslice(R_map); colormap(jet)
+% figure; imslice(r_map); colormap(jet)
 
 
 %%%%%%%%%%%%%%%%%% DL, r, L, SVR, Lm and Na  %%%%%%
 
-r_map=R_map-h_map;
+h_map=R_map-r_map;
 L_map = 0.765.*R_map; 
 
 SVR_map=((2*pi.*R_map.*L_map)+2*pi.*((R_map.^2)-(r_map.^2))+16.*h_map.*L_map)./(pi.*(R_map.^2).*L_map);

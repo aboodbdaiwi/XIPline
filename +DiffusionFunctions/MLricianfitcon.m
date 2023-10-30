@@ -72,7 +72,7 @@ elseif mymodel=="cylRandH"
 
 elseif mymodel=="cylRandHfunAnimal"
     options = optimoptions(@fmincon,'Display','off');
-    fun=@cylRandHfun;
+    fun=@cylRandHfunAnimal;
     ld=sqrt(2*D0*deltaT);  % Diffusion length
     ld2=sqrt(2)*ld;
 
