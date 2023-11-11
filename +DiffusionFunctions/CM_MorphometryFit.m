@@ -50,6 +50,14 @@ function ...
 % (https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3184317/)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 tic
+% denoise images using bm3d
+Images = Images./max(Images(:));
+for i = 1:size(Images,3)
+    for j = 1:size(Images,4)
+        Images(:,:,i,j) = Global.bm3d.BM3D(squeeze(Images(:,:,i,j)), 0.01);
+    end
+end
+%  figure; imslice(Images)
 %normalize images
 Images = (Images./max(Images(:))).*100;
 Images (Images < 0.0001) = 0.0001; % to avoid having zeros 
@@ -95,6 +103,7 @@ bvalues(1) = 1e-5;
 So=zeros(size(Images,3),size(Images,1)*size(Images,2));
 R=zeros(size(Images,3),size(Images,1)*size(Images,2));
 r=zeros(size(Images,3),size(Images,1)*size(Images,2));
+%% 
 
 disp('start morphometery fitting, please wait......')
 for i=1:size(Images,3)
@@ -140,7 +149,7 @@ for i=1:size(Images,3)
     r_est = size(S0_est);
 
     weights=1; 
-    for j= 1:num_ones 
+    parfor j= 1:num_ones 
         if strcmp(fitType,'human') == 1
             lb=[0.0280 0.0090 0.5*M(j,1)]; ub=[0.0400 0.0350 1.5*M(j,1)];
             initialvalues=[0.0300 0.0140 M(j,1)];
@@ -193,6 +202,11 @@ end
 % figure; imslice(R_map); colormap(jet)
 % figure; imslice(r_map); colormap(jet)
 
+% Check if a parallel pool is open
+if ~isempty(gcp('nocreate'))
+    % If a parallel pool is open, delete it
+    delete(gcp('nocreate'));
+end
 
 %%%%%%%%%%%%%%%%%% DL, r, L, SVR, Lm and Na  %%%%%%
 
@@ -519,7 +533,7 @@ r_histFig = figure; histogram(r_map(r_map>0),100);
 set(r_histFig,'Name','r_histFig'); title(r_histFig.CurrentAxes,r_title);ylabel(r_histFig.CurrentAxes,'Pixel Cont.');xlabel(r_histFig.CurrentAxes,'r (um)');
 set(gca,'FontSize',13,'FontWeight','bold'); xlim([0 400]);
 % print(r_histFig,[Datapath , '\','r_histFig'],'-dpng','-r300');
-saveas(gca,'r_histFig.png');
+saveas(gca,'r_histFig2.png');
 Global.exportToPPTX('addpicture',r_histFig,'Position',[0 4.5 7 4.5]);
 
 Lm_histFig = figure; histogram(Lm_map(Lm_map>0),100); 

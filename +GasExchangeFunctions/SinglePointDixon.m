@@ -3,6 +3,7 @@ function [BarrierImage, RBCImage, Delta_angle_deg, B0PhaseMap] = SinglePointDixo
 % Iterate until mean phase is zero
 iterCount = 0;
 meanphase = inf;
+LungMask = LungMask > 0;
 while((abs(meanphase) > 1E-7) && iterCount < 101)
     if(iterCount > 10)
         warning('Could not get zero mean phase within 10 iterations...');
@@ -15,6 +16,7 @@ while((abs(meanphase) > 1E-7) && iterCount < 101)
     meanphase = mean(diffphase(LungMask(:)));
     GasImage = GasImage*exp(-1i*meanphase);
 end
+% imslice(diffphase)
 diffphase = angle(GasImage);
 B0CorrectedDissolvedImage = DissolvedImage.*exp(1i*-diffphase);
 

@@ -54,7 +54,7 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
             end
             Xe_Img = Xe_Img./max(Xe_Img(:));
             % resize proton images
-            if strcmp(MainInput.NoProtonImage, 'no') == 1
+            if MainInput.NoProtonImage == 0
                 % resize
                 if size(Proton.ProtonRegistered,1) ~= 112
                     H_Img = zeros(112,112,112);
@@ -68,7 +68,7 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
                 H_Img = H_Img./max(H_Img(:));
             end
             % make stacks 
-            if strcmp(MainInput.NoProtonImage, 'no') == 1
+            if MainInput.NoProtonImage == 0
                 Images = zeros(1,112,112,112,2);
             else
                 Images = zeros(1,112,112,112,1);
@@ -76,12 +76,11 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
             
             for j = 1:size(Ventilation.Image,3)
                 Images(1,:,:,:,1) = Xe_Img;
-                if strcmp(MainInput.NoProtonImage, 'no') == 1
+                if MainInput.NoProtonImage == 0
                     Images(1,:,:,:,2) = H_Img;
                 end
             end
-
-            
+            % imslice(squeeze(Images(1,:,:,:,:)))
     end
     save([MainInput.XeDataLocation '\Mat2Py_preprocessing.mat'],'Images');
     scriptLocation = fileparts(mfilename('fullpath'));

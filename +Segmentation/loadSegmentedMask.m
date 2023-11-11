@@ -54,7 +54,8 @@ switch MainInput.SegmentationMethod
         % load mask               
         if isfile('auto_segmented_mask.mat')                                
             Mask = load([MainInput.XeDataLocation,'\auto_segmented_mask.mat']);
-            Mask= double(Mask.auto_segmented_mask);
+            Mask = double(Mask.auto_segmented_mask);
+            Mask = squeeze(Mask(1,:,:,:));
             switch MainInput.AnalysisType
                 case 'Ventilation'
                     if size(Mask,1) ~= size(Ventilation.Image,1)
@@ -71,10 +72,12 @@ switch MainInput.SegmentationMethod
                 case 'GasExchange'
                     if size(Mask,1) ~= size(GasExchange.VentImage,1)
                         temp_mask = zeros(size(GasExchange.VentImage,1),size(GasExchange.VentImage,2),size(GasExchange.VentImage,3));
-                        for i = 1:size(GasExchange.VentImage3)
+                        for i = 1:size(GasExchange.VentImage)
                             temp_mask(:,:,i) = imresize(Mask(:,:,i),[size(GasExchange.VentImage,1),size(GasExchange.VentImage,2)]);
                         end
-                        temp_mask = temp_mask > 0.95;
+                        temp_mask = temp_mask > 0.5;
+                    else
+                        temp_mask = Mask;
                     end
                     Mask = double(temp_mask);
                     mask_existing = 1;                       
@@ -109,6 +112,7 @@ if mask_existing == 1
            GasExchange.Mask = Mask;
            GasExchange.LungMask = lungmask;
            Proton.LungMask = lungmask;
+           Proton.ProtonMaskRegistred = lungmask;
            GasExchange.AirwayMask = airwaymask;                           
     end    
     

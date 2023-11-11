@@ -61,6 +61,15 @@ Ndiffimg = Images1;
 BNmask = Nfinal_mask;
 noise_mask = Nnoise_mask;
 
+% denoise images using bm3d
+Ndiffimg = Ndiffimg./max(Ndiffimg(:));
+for i = 1:size(Ndiffimg,3)
+    for j = 1:size(Ndiffimg,4)
+        Ndiffimg(:,:,i,j) = Global.bm3d.BM3D(squeeze(Ndiffimg(:,:,i,j)), 0.01);
+    end
+end
+% figure; imslice(Ndiffimg)
+
 %normalize images
 Ndiffimg=(Ndiffimg./max(Ndiffimg(:)))*100;
 Ndiffimg (Ndiffimg < 0.0001) = 0.0001; % to avoid having zeros 
@@ -99,7 +108,7 @@ for slice_n=1:size(BNmask,3)
     weights=1;
     for j= 1:num_ones      
 %         clc% adding noise to signal    
-         disp(['pixel # = ',num2str(j)])%    
+%          disp(['pixel # = ',num2str(j)])%    
 %         eestm = DiffusionFunctions.MLricianfitcon(M(j,:)',bvalues',sigma_n(1)^2,[0.1, 0.030 0.5],"strexp",1);  
 %         S0_est(j)= eestm(1);
 %         DDC_est(j)=-eestm(2);
@@ -158,9 +167,9 @@ alpha_map(alpha_map<0) = 0;
 alpha_map(alpha_map>2) = 0;
 % end
 fprintf('Completed\n');  
-figure; imslice(So_map);
-figure; imslice(DDC_map);  colormap("jet"); %clim([0 0.14])
-figure; imslice(alpha_map);  colormap("jet"); %clim([0 1])
+% figure; imslice(So_map);
+% figure; imslice(DDC_map);  colormap("jet"); %clim([0 0.14])
+% figure; imslice(alpha_map);  colormap("jet"); %clim([0 1])
 
 %%  % DDC and alpha fit (Least square fit)
 % DDC_map=zeros(size(BNmask));
@@ -220,36 +229,90 @@ fD=zeros(size(BNmask,1),size(BNmask,2),size(BNmask,3),length(Do_vec));
 PD=zeros(size(fD));
 % maxPD_loc=zeros(size(BNmask));
 LmD_map=zeros(size(BNmask));
-for k = 1:size(BNmask,3)
-    for i = 1:size(BNmask,1)
-        for j = 1:size(BNmask,2)
-            if BNmask(i,j,k) == 1
-                B(i,j,k) = interp1(alpha_vec,B_vec,alpha_map_thurshed(i,j,k));
-                C(i,j,k) = interp1(alpha_vec,C_vec,alpha_map_thurshed(i,j,k));
-                if alpha_map_thurshed(i,j,k)<=0.5
-                    fD(i,j,k,:)=1./(  1+C(i,j,k).*((Do_vec.*tau(i,j,k)).^(fD_delta1(i,j,k)))  );
-                elseif alpha_map_thurshed(i,j,k)>0.5
-                    fD(i,j,k,:) = (1+C(i,j,k)*((Do_vec.*tau(i,j,k)).^(fD_delta2(i,j,k))));                
+parfor k = 1:size(BNmask, 3)
+    disp(['processing slice = ', num2str(k)]);
+    
+    B_slice = zeros(size(BNmask, 1), size(BNmask, 2));
+    C_slice = zeros(size(BNmask, 1), size(BNmask, 2));
+    fD_slice = zeros(size(BNmask, 1), size(BNmask, 2), length(Do_vec));
+    PD_slice = zeros(size(BNmask, 1), size(BNmask, 2), length(Do_vec));
+    LmD_map_slice = zeros(size(BNmask, 1), size(BNmask, 2));
+
+    for i = 1:size(BNmask, 1)
+        for j = 1:size(BNmask, 2)
+            if BNmask(i, j, k) == 1
+                B_slice(i, j) = interp1(alpha_vec, B_vec, alpha_map_thurshed(i, j, k));
+                C_slice(i, j) = interp1(alpha_vec, C_vec, alpha_map_thurshed(i, j, k));
+
+                if alpha_map_thurshed(i, j, k) <= 0.5
+                    fD_slice(i, j, :) = 1 ./ (1 + C_slice(i, j) .* ((Do_vec .* tau(i, j, k)).^(fD_delta1(i, j, k))));
+                elseif alpha_map_thurshed(i, j, k) > 0.5
+                    fD_slice(i, j, :) = (1 + C_slice(i, j) * ((Do_vec .* tau(i, j, k)).^(fD_delta2(i, j, k))));
                 end
-                PD(i,j,k,:) = tau(i,j,k).*B(i,j,k).*(1./((Do_vec.* tau(i,j,k)).^PD_power1(i,j,k))).*...
-                           (exp((-(1-alpha_map_thurshed(i,j,k)).*alpha_map_thurshed(i,j,k).^PD_power2(i,j,k))./((Do_vec.* tau(i,j,k)).^PD_power2(i,j,k)))).*...
-                            squeeze(fD(i,j,k,:))';
-    %             maxPD_loc(i,j)=find(PD(i,j,:)==max(PD(i,j,:)));       
-    %             LmD_map(i,j)=LmD_vec(maxPD_loc(i,j));
-                PD(isinf(PD)|isnan(PD)) = 0;
-                PD_pixel = squeeze(PD(i,j,k,:));
+
+                PD_slice(i, j, :) = tau(i, j, k) .* B_slice(i, j) .* (1 ./ ((Do_vec .* tau(i, j, k)).^PD_power1(i, j, k))) .* ...
+                    (exp((-(1 - alpha_map_thurshed(i, j, k)) .* alpha_map_thurshed(i, j, k).^PD_power2(i, j, k)) ./ ((Do_vec .* tau(i, j, k)).^PD_power2(i, j, k)))) .* ...
+                    squeeze(fD_slice(i, j, :))';
+
+                PD_slice(isinf(PD_slice) | isnan(PD_slice)) = 0;
+
+                PD_pixel = squeeze(PD_slice(i, j, :));
                 counts = PD_pixel(1:end-1);
-                histfig=figure;
-                H_LmD=histogram('BinEdges',LmD_vec,'BinCounts',counts); 
-                counts = H_LmD.Values; close(histfig);
-                LmD_map(i,j,k) = sum(LmD_vec(1:end-1) .* counts) / sum(counts);
-            end      
+                histfig = figure;
+                H_LmD = histogram('BinEdges', LmD_vec, 'BinCounts', counts); 
+                counts = H_LmD.Values;
+                close(histfig);
+                LmD_map_slice(i, j) = sum(LmD_vec(1:end-1) .* counts) / sum(counts);
+            end
         end
     end
-end 
-fprintf('Completed\n');  
-LmD_map = LmD_map.*1000;
-figure; imslice(LmD_map);  colormap("jet"); %clim([0 400])
+
+    % Accumulate results for this slice
+    B(:, :, k) = B_slice;
+    C(:, :, k) = C_slice;
+    fD(:, :, k, :) = fD_slice;
+    PD(:, :, k, :) = PD_slice;
+    LmD_map(:, :, k) = LmD_map_slice;
+end
+% figure; imslice(LmD_map);  colormap("jet"); %clim([0 400])
+% Check if a parallel pool is open
+if ~isempty(gcp('nocreate'))
+    % If a parallel pool is open, delete it
+    delete(gcp('nocreate'));
+end
+
+% for k = 1:size(BNmask,3)
+%     disp(['processing slice = ',num2str(k)]);
+%     for i = 1:size(BNmask,1)
+%         for j = 1:size(BNmask,2)
+%             if BNmask(i,j,k) == 1
+%                 B(i,j,k) = interp1(alpha_vec,B_vec,alpha_map_thurshed(i,j,k));
+%                 C(i,j,k) = interp1(alpha_vec,C_vec,alpha_map_thurshed(i,j,k));
+%                 if alpha_map_thurshed(i,j,k)<=0.5
+%                     fD(i,j,k,:)=1./(  1+C(i,j,k).*((Do_vec.*tau(i,j,k)).^(fD_delta1(i,j,k)))  );
+%                 elseif alpha_map_thurshed(i,j,k)>0.5
+%                     fD(i,j,k,:) = (1+C(i,j,k)*((Do_vec.*tau(i,j,k)).^(fD_delta2(i,j,k))));                
+%                 end
+%                 PD(i,j,k,:) = tau(i,j,k).*B(i,j,k).*(1./((Do_vec.* tau(i,j,k)).^PD_power1(i,j,k))).*...
+%                            (exp((-(1-alpha_map_thurshed(i,j,k)).*alpha_map_thurshed(i,j,k).^PD_power2(i,j,k))./((Do_vec.* tau(i,j,k)).^PD_power2(i,j,k)))).*...
+%                             squeeze(fD(i,j,k,:))';
+%     %             maxPD_loc(i,j)=find(PD(i,j,:)==max(PD(i,j,:)));       
+%     %             LmD_map(i,j)=LmD_vec(maxPD_loc(i,j));
+%                 PD(isinf(PD)|isnan(PD)) = 0;
+%                 PD_pixel = squeeze(PD(i,j,k,:));
+%                 counts = PD_pixel(1:end-1);
+%                 histfig=figure;
+%                 H_LmD=histogram('BinEdges',LmD_vec,'BinCounts',counts); 
+%                 counts = H_LmD.Values; close(histfig);
+%                 LmD_map(i,j,k) = sum(LmD_vec(1:end-1) .* counts) / sum(counts);
+%             end      
+%         end
+%     end
+% end 
+% fprintf('Completed\n');  
+% % LmD_map = LmD_map.*1000;
+% % figure; imslice(LmD_map);  colormap("jet"); %clim([0 400])
+
 %% Find mean and std of all maps
 DDC_mean = round(mean(DDC_map(DDC_map>0)),3); 
 alpha_mean = round(mean(alpha_map(alpha_map>0)),2); 
