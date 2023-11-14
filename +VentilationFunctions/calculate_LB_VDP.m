@@ -52,7 +52,7 @@ maskarray4 = logical(maskarraytrachea);
 
 %% 3) Generate bins for the linear binned data:
 % Divide the lungs up into percentiles based on the trachea signal:
-VentMax2 = prctile((NormMR2(maskarray4(:))),99.5); % 99.5th percentile
+VentMax2 = prctile((NormMR2(maskarray4(:))),99.0); % 99.5th percentile
 
 % Re-scale the images:
 ScaledVentImage2 = NormMR2/VentMax2;

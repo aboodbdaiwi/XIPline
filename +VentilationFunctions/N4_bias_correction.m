@@ -23,41 +23,33 @@ function [N4, Bias] = N4_bias_correction(MR, maskarray, parentPath)
 % Default settings are chosen as optimized during the 2018-2020 period. As
 % the field progresses, we may want to change these parameters.
 %
-% Author: Joseph Plummer.
+% Author: Joseph Plummer and Abdullah Bdaiwi
 % Date: 05/05/2021.
+
 %% Potential Inputs
-Image = MR;
-% Mask = ones(size(Image)); % ones mask
-Mask = imbinarize(maskarray); % simple binary mask
-% Mask = imdilate(Mask, strel('sphere',2)); % dilated binary mask
-% Weight = ones(size(Image)); % ones weights
-Weight = double(Image); % weight on image intensity
-% Weight = double(Image).^2; % weight on intensity cubed
-% Weight(Image>prctile(Image(:),99.9)) = 0; %Not indcluding airway
-
-% %% View Inputs
-% figure('Name','Input Image')
-% montage(Image, 'DisplayRange', [0 0.5*max(Image(:))])
-% figure('Name','Mask')
-% montage(Mask, 'DisplayRange', [0 max(Mask(:))])
-% figure('Name','Weights')
-% montage(Weight, 'DisplayRange', [0 max(Weight(:))])
-
-
-%% Set location of exe and temp images
-% Location of N4BiasFieldCorrection.exe
-% N4bias_location = 'C:\Work_LAB\Xe_App\Main App functions\+VentilationFunctions\';
-%% Set location of exe and temp images
+% Set location of exe and temp images
 %location of N4BiasFieldCorrection
 N4Path = mfilename('fullpath');
 idcs = strfind(N4Path,filesep);%determine location of file separators
 N4Path = [N4Path(1:idcs(end)-1),filesep];%remove file
-%% Export Image and Mask temporarily for use in N4
-niftiwrite(abs(Image),[parentPath,'Image.nii']); % Image
-niftiwrite(abs(Mask),[parentPath,'Mask.nii']); % Mask
-niftiwrite(abs(Weight),[parentPath,'Weight.nii']); % Weight
+% maskarray = flip(maskarray,3);
+if ~exist('maskarray','var')
+    maskarray = Segmentation.SegmentLungthresh(MR,1,1); 
+else
+    Ostumask = Segmentation.SegmentLungthresh(MR,1,1); 
+    maskarray = maskarray + Ostumask;
+    maskarray = maskarray > 0;
+end
 
-%% Run Bias Correction
+% Dilate the mask arrary according to the structuring element:
+SE = strel('square', 28);
+maskarray_dilated = imdilate(maskarray, SE);
+% Export Image and Mask temporarily for use in N4
+niftiwrite(abs(MR),[parentPath,'Image.nii']); % Image
+niftiwrite(abs(maskarray_dilated),[parentPath,'Mask.nii']); % Mask
+niftiwrite(abs(maskarray),[parentPath,'Weight.nii']); % Weight
+
+% Run Bias Correction
 % Default settings:
 % cmd = ['"',parentPath,'N4BiasFieldCorrection.exe" ',...% run bias correction
 %     '-d 3 ',... % set to 3 dimensions
@@ -70,17 +62,52 @@ niftiwrite(abs(Weight),[parentPath,'Weight.nii']); % Weight
 %     '-t [0.15,0.01,200] ',... % histogram settings
 %     '-o ["',parentPath,'CorrectedImage.nii","',parentPath,'Bias.nii"]']; % output corrected image and bias field
 
-% Chosen settings:
-cmd = ['"',N4Path,'N4BiasFieldCorrection.exe" ',...%run bias correction
-    '-d 3 ',... % set to 3 dimensions - MUST MATCH DIMENSIONS OF IMAGE
-    '-i "',parentPath,'Image.nii" ',... % input image called of Image.nii
-    '-x "',parentPath,'Mask.nii" ',... % import mask called Mask.nii
-    '-w "',parentPath,'Weight.nii" ',... % import mask called Weight.nii
-    '-s 1 ',... % shrink factor
-    '-c [50,0.001] ',... % convergence
-    '-b [5,3] ',... % spline settings
-    '-t [0.15,0.01,200] ',... % histogram settings
-    '-o ["',parentPath,'CorrectedImage.nii","',parentPath,'Bias.nii"]']; % output corrected image and bias field
+% % Chosen settings:
+% cmd = ['"',N4Path,'N4BiasFieldCorrection.exe" ',...%run bias correction
+%     '-d 3 ',... % set to 3 dimensions - MUST MATCH DIMENSIONS OF IMAGE
+%     '-i "',parentPath,'Image.nii" ',... % input image called of Image.nii
+%     '-x "',parentPath,'Mask.nii" ',... % import mask called Mask.nii
+%     '-w "',parentPath,'Weight.nii" ',... % import mask called Weight.nii
+%     '-s 1 ',... % shrink factor
+%     '-c [50,0.001] ',... % convergence
+%     '-b [5,3] ',... % spline settings
+%     '-t [0.15,0.01,200] ',... % histogram settings
+%     '-o ["',parentPath,'CorrectedImage.nii","',parentPath,'Bias.nii"]']; % output corrected image and bias field
+% system(cmd);
+%% new settings (Abdullah)
+%Main issue is drop off at top of lungs (dual loop) and RL edges (Polarean)
+% Z Correction
+cmd = ['"',N4Path,'N4BiasFieldCorrection.exe"',...%run bias correction
+    ' -d 3 -i "',parentPath,'Image.nii"',... % set to 3 dimensions and input image of Image.nii
+    ' -s 1',... % shrink by factor of 1
+    ' -x "',parentPath,'Mask.nii" ',... % import mask called Mask.nii
+    ' -w "',parentPath,'Weight.nii" ',... % import mask called Weight.nii
+    ' -c [25,0]',... % convergence
+    ' -b [1x1x14,3]',... % spline settings %hf, lr, ap
+    ' -t [0.75,0.01,100]',... % histogram settings
+    ' -o ["',parentPath,'CorrectedImage.nii","',parentPath,'Bias.nii"]']; % output corrected image and bias field
+system(cmd);
+% X Correction
+cmd = ['"',N4Path,'N4BiasFieldCorrection.exe"',...%run bias correction
+    ' -d 3 -i "',parentPath,'CorrectedImage.nii"',... % set to 3 dimensions and input image of Image.nii
+    ' -s 1',... % shrink by factor of 1
+    ' -x "',parentPath,'Mask.nii" ',... % import mask called Mask.nii
+    ' -w "',parentPath,'Weight.nii" ',... % import mask called Weight.nii
+    ' -c [25,0]',... % convergence
+    ' -b [1x14x1,3]',... % spline settings %hf, lr, ap
+    ' -t [0.75,0.01,100]',... % histogram settings
+    ' -o ["',parentPath,'CorrectedImage.nii","',parentPath,'Bias.nii"]']; % output corrected image and bias field
+system(cmd);
+% Y Correction
+cmd = ['"',N4Path,'N4BiasFieldCorrection.exe"',...%run bias correction
+    ' -d 3 -i "',parentPath,'CorrectedImage.nii"',... % set to 3 dimensions and input image of Image.nii
+    ' -s 1',... % shrink by factor of 1
+    ' -x "',parentPath,'Mask.nii" ',... % import mask called Mask.nii
+    ' -w "',parentPath,'Weight.nii" ',... % import mask called Weight.nii
+    ' -c [25,0]',... % convergence
+    ' -b [14x1x1,3]',... % spline settings %hf, lr, ap
+    ' -t [0.75,0.01,100]',... % histogram settings
+    ' -o ["',parentPath,'CorrectedImage.nii","',parentPath,'Bias.nii"]']; % output corrected image and bias field
 system(cmd);
 
 %% Import Results
