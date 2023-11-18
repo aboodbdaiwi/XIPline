@@ -11,7 +11,7 @@ function [Proton,Ventilation,Diffusion, GasExchange] = PerformSegmentation(Proto
 %   Author: Abdullah Bdaiwi 
 %   Work email: abdullah.bdaiwi@cchmc.org
 %   Personal email: abdaiwi89@gmail.com
-%   Website: https://cpir.cchmc.org/
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
 %% perform segmention
 switch MainInput.SegmentationMethod
     case 'Manual' % ===========================================Manual=================================================  
@@ -31,43 +31,207 @@ switch MainInput.SegmentationMethod
         [Proton,Ventilation,Diffusion,GasExchange] = Segmentation.PerformManualThresholdSegmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
 
     case 'Auto' % ============================================Auto================================================
+        automasking_folder = 'HPXeAnalysisApp';
+        destinationFolderPath = join(['C:\',automasking_folder]);
+        cd('C:\');
+        if ~exist(automasking_folder, 'dir')
+            mkdir(destinationFolderPath);
+        else        
+            disp('HPXeAnalysisApp folder already exists in the destination folder.');
+        end 
+        cd(destinationFolderPath)
+        models_folder = '\models';
+        modelsFolderPath = join([destinationFolderPath,models_folder]);
+        if ~exist(modelsFolderPath, 'dir')
+            mkdir(modelsFolderPath);
+        else
+            disp('models folder already exists in the destination folder.');
+        end
+    
+        % copy model to the HPXeAnalysisApp folder
+        FunctionDirectory = which('HPXeAnalysisApp');
+        idcs = strfind(FunctionDirectory,filesep);%determine location of file separators
+        FunctionDirectory = FunctionDirectory(1:idcs(end)-1);%remove file
+    
+        sourcemodel1Path = [FunctionDirectory,'\+Segmentation\AutoSegment_2DVent_Xe_axial_2000e.hdf5'];
+        sourcemodel2Path = [FunctionDirectory,'\+Segmentation\AutoSegment_2DVent_Xe_coronal_2000e.hdf5'];
+        sourcemodel3Path = [FunctionDirectory,'\+Segmentation\AutoSegment_2DVent_Xe_H_coronal_1000e.hdf5'];
+        sourcemodel4Path = [FunctionDirectory,'\+Segmentation\AutoSegment_3DGasExchange_Xe_200e.hdf5'];
+        sourcemodel5Path = [FunctionDirectory,'\+Segmentation\AutoSegment_3DGasExchange_Xe_H_1000e.hdf5'];
+        sourcemodel6Path = [FunctionDirectory,'\+Segmentation\AutoSegmentation.py'];
+        cd(modelsFolderPath);
+        if ~exist(fullfile(modelsFolderPath, 'AutoSegment_2DVent_Xe_axial_2000e.hdf5'), 'file') ||...
+            ~exist(fullfile(modelsFolderPath, 'AutoSegment_2DVent_Xe_coronal_2000e.hdf5'), 'file') ||...
+            ~exist(fullfile(modelsFolderPath, 'AutoSegment_2DVent_Xe_H_coronal_1000e.hdf5'), 'file') ||...
+            ~exist(fullfile(modelsFolderPath, 'AutoSegment_3DGasExchange_Xe_200e.hdf5'), 'file') ||...
+            ~exist(fullfile(modelsFolderPath, 'AutoSegment_3DGasExchange_Xe_H_1000e.hdf5'), 'file') ||...
+            ~exist(fullfile(destinationFolderPath, 'AutoSegmentation.py'), 'file')
+                                
+            copyfile(sourcemodel1Path, modelsFolderPath);
+            copyfile(sourcemodel2Path, modelsFolderPath);
+            copyfile(sourcemodel3Path, modelsFolderPath);
+            copyfile(sourcemodel4Path, modelsFolderPath);
+            copyfile(sourcemodel5Path, modelsFolderPath);
+            copyfile(sourcemodel6Path, destinationFolderPath);
+            disp('File copied successfully.');
+        else
+            disp('models files already exist in the models folder.');
+        end
 
+        fileName1 = 'AutoMask.mat';
+        fileName2 = 'AutoMask.nii.gz';
+        fullFilePath1 = fullfile(destinationFolderPath, fileName1);
+        fullFilePath2 = fullfile(destinationFolderPath, fileName2);
+        if exist(fullFilePath1, 'file') == 2
+            delete(fullFilePath1);
+            disp(['File ' fileName1 ' has been deleted successfully.']);
+        else
+            disp(['File ' fileName1 ' does not exist in the specified folder.']);
+        end
+        if exist(fullFilePath2, 'file') == 2
+            delete(fullFilePath2);
+            disp(['File ' fileName2 ' has been deleted successfully.']);
+        else
+            disp(['File ' fileName2 ' does not exist in the specified folder.']);
+        end
+        fileName = 'InputImage.mat';
+        fullFilePath = fullfile(destinationFolderPath, fileName);
+        if exist(fullFilePath, 'file') == 2
+            delete(fullFilePath);
+            disp(['File ' fileName ' has been deleted successfully.']);
+        else
+            disp(['File ' fileName ' does not exist in the specified folder.']);
+        end
         [~, MainInput] = Segmentation.preprocess_images_for_auto_segmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
         cd(MainInput.AutoSegmentPath)
 
+        %============================Making Lung Mask==========================
+        disp('Making Lung Mask (trained ML model method)...');
+
+%         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%         %Need a raw CPython installation (NOT anaconda).  These commands below
+%         % shouldn't need to be called if everthing is set up properly.
+%         terminate(pyenv)
+%         pyenv('Version','C:\Users\bda5ik\AppData\Local\Programs\Python\Python310\pythonw.exe'); %Call Python 3.9
+%         system('pip install numpy')
+%         system('pip install keras')
+%         system('pip install tensorflow')
+%         system('pip install nibabel')
+%         system('pip install scipy') 
+%         system('pip install os') 
+%         terminate(pyenv)
+%         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        cd(FunctionDirectory)
+        pathToMod = fileparts(fullfile(destinationFolderPath, 'AutoSegmentation.py'));
+        if count(py.sys.path,pathToMod)==0
+            insert(py.sys.path,int32(0),pathToMod)
+            disp('Uploaded AutoSegmentation')
+        end
+        % segmentation type
         switch MainInput.AnalysisType
             case 'Ventilation'                            
                switch MainInput.SliceOrientation
                     case 'coronal' 
-                        if strcmp(MainInput.NoProtonImage, 'no') == 1
-                            system('predict_mask_2DVent_w_H_coronal.exe')
-                        else 
-                            system('predict_mask_2DVent_wout_H_coronal.exe')           
+                        if MainInput.NoProtonImage == 0 && strcmp(MainInput.Imagestosegment, 'Xe & Proton Registered') == 1
+                            SegmentType = 'vent_2D_2ch_cor'; %system('predict_mask_2DVent_w_H_coronal.exe')
+                        elseif strcmp(MainInput.Imagestosegment, 'Xenon') == 1
+                            SegmentType = 'vent_2D_1ch_cor'; 
+                        else
+                            SegmentType = 'vent_2D_1ch_cor'; %system('predict_mask_2DVent_wout_H_coronal.exe')           
                         end                       
                     case 'transversal'
-                        % not supported yet
-
+                        SegmentType = 'vent_2D_1ch_axi'; % 2ch is not supported yet
                     case 'isotropic'
                         % not supported yet
                 end 
             case 'Diffusion'
-               % not supported yet
+                        SegmentType = 'not_supported'; % not supported yet
             case 'GasExchange'
                switch MainInput.SliceOrientation
                     case 'coronal' 
-                        % not supported yet
+                        SegmentType = 'not_supported'; % not supported yet
                     case 'transversal'
-                        % not supported yet
+                        SegmentType = 'not_supported'; % not supported yet
                     case 'isotropic'
-                        if MainInput.NoProtonImage == 0
-                            system('predict_mask_3DGasExchange_w_H_isotropic.exe')
+                        if MainInput.NoProtonImage == 0 && strcmp(MainInput.Imagestosegment, 'Xe & Proton Registered') == 1
+                            SegmentType = 'gx_3D_2ch_iso'; %system('predict_mask_3DGasExchange_w_H_isotropic.exe')
+                        elseif strcmp(MainInput.Imagestosegment, 'Xenon') == 1
+                            SegmentType = 'vent_2D_1ch_cor'; 
                         else 
-                            system('predict_mask_3DGasExchange_wout_H_isotropic.exe')           
+                            SegmentType = 'gx_3D_1ch_iso'; %system('predict_mask_3DGasExchange_wout_H_isotropic.exe')           
                         end  
-                end 
-                                    
+                end                                     
         end 
-        
+        if strcmp(SegmentType, 'not_supported') == 0
+            % run python script 
+            cd(destinationFolderPath)
+            command = string(strcat('python AutoSegmentation.py',{' '},SegmentType));
+            LungMask = system(command);
+            % load auto mask
+            cd(destinationFolderPath);
+            if exist('AutoMask.mat')
+                load([destinationFolderPath,'\AutoMask.mat']);
+                Mask = AutoMask > 0;
+                disp('auto mask process Completed.')
+
+                switch MainInput.AnalysisType
+                    case 'Ventilation'
+                        if size(Mask,1) ~= size(Ventilation.Image,1)
+                            temp_mask = zeros(size(Ventilation.Image,1),size(Ventilation.Image,2),size(Ventilation.Image,3));
+                            for i = 1:size(Ventilation.Image,3)
+                                temp_mask(:,:,i) = imresize(Mask(:,:,i),[size(Ventilation.Image,1),size(Ventilation.Image,2)]);
+                            end
+                            temp_mask = temp_mask > 0.95;
+                        end
+                        Mask = double(temp_mask);
+                        mask_existing = 1;
+                    case 'Diffusion'    
+                    case 'GasExchange'
+                        if size(Mask,1) ~= size(GasExchange.VentImage,1)
+                            temp_mask = zeros(size(GasExchange.VentImage,1),size(GasExchange.VentImage,2),size(GasExchange.VentImage,3));
+                            for i = 1:size(GasExchange.VentImage)
+                                temp_mask(:,:,i) = imresize(Mask(:,:,i),[size(GasExchange.VentImage,1),size(GasExchange.VentImage,2)]);
+                            end
+                            temp_mask = temp_mask > 0.5;
+                        else
+                            temp_mask = Mask;
+                        end
+                        Mask = double(temp_mask);
+                        mask_existing = 1;                       
+                end                             
+                % store mask
+                if mask_existing == 1
+                    % assign lung and airway mask
+                    Mask(isinf(Mask)|isnan(Mask)) = 0;
+                    lungmask = zeros(size(Mask));
+                    lungmask(Mask == 1)= 1;
+                    airwaymask = zeros(size(Mask));
+                    airwaymask(Mask == 2)= 1;  
+                    
+                    % store mask
+                    switch MainInput.AnalysisType
+                        case 'Ventilation'
+                           Ventilation.Mask = Mask;
+                           Ventilation.LungMask = lungmask;
+                           Ventilation.AirwayMask = airwaymask;                       
+                        case 'Diffusion'
+                           Diffusion.Mask = Mask;
+                           Diffusion.LungMask = lungmask;
+                           Diffusion.AirwayMask = airwaymask;
+                        case 'GasExchange'
+                           GasExchange.Mask = Mask;
+                           GasExchange.LungMask = lungmask;
+                           Proton.LungMask = lungmask;
+                           Proton.ProtonMaskRegistred = lungmask;
+                           GasExchange.AirwayMask = airwaymask;                           
+                    end    
+                end
+            else
+                disp('Auto mask does not exist in the destination folder.');
+            end
+        else
+            disp('Auto segmentation is not supported for the selected settings')
+        end
         cd(MainInput.XeDataLocation)
 end 
 

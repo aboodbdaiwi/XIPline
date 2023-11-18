@@ -2,7 +2,10 @@
 function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput)
 %% MATLAB script to preprocess_images_for_auto_segmentation
 %
-% Authors: Abdullah S. Bdaiwi
+%   Author: Abdullah Bdaiwi 
+%   Work email: abdullah.bdaiwi@cchmc.org
+%   Personal email: abdaiwi89@gmail.com
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
 %         
 % Date: 06/21/2023.
 
@@ -38,9 +41,7 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
                 if strcmp(MainInput.NoProtonImage, 'no') == 1
                     Images(j,:,:,2) = H_Img(:,:,j);
                 end
-            end
-            
-        
+            end     
         case 'Diffusion'
         case 'GasExchange'
             % resize xenon images
@@ -82,9 +83,13 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
             end
             % imslice(squeeze(Images(1,:,:,:,:)))
     end
-    save([MainInput.XeDataLocation '\Mat2Py_preprocessing.mat'],'Images');
-    scriptLocation = fileparts(mfilename('fullpath'));
-    MainInput.AutoSegmentPath = scriptLocation;
+%     save([MainInput.XeDataLocation '\Mat2Py_preprocessing.mat'],'Images');
+    automasking_folder = 'HPXeAnalysisApp';
+    destinationFolderPath = join(['C:\',automasking_folder]);
+    cd(destinationFolderPath)
+    save([destinationFolderPath '\InputImage.mat'],'Images');
+%     scriptLocation = fileparts(mfilename('fullpath'));
+    MainInput.AutoSegmentPath = destinationFolderPath;
     %disp(scriptLocation)
 disp('preprocessing completed')
 end
