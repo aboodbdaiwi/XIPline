@@ -470,6 +470,7 @@ end
 % the above code and add this line (,'Indices', sl_1:sl_end) to the end of
 % each Montage. 
 %%% get rid of the gray frame in each montage
+close all;
 VentscaledImage = scaledImage2(:,:,sl_1:sl_end);
 VentMontage = figure('Name','Vent Image');set(VentMontage,'WindowState','minimized');
 montage(reshape(VentscaledImage,[size(VentscaledImage,1), size(VentscaledImage,2), 1, size(VentscaledImage,3)]),...
@@ -481,7 +482,7 @@ y = get(gcf,'position'); % get the figure position
 set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
 VentMontagePosition=get(gcf,'position'); 
-
+close all;
 ProtonRegisteredMontage = figure('Name','Proton Image');set(ProtonRegisteredMontage,'WindowState','minimized');
 if strcmp(MainInput.NoProtonImage,'yes') == 1 
     ProtonImage = Proton.ProtonRegisteredColored(:,:,sl_1:sl_end);
@@ -499,7 +500,7 @@ set(gcf,'units','pixels'); % set the figure units to pixels
 y = get(gcf,'position'); % get the figure position
 set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
-
+close all;
 maskarrayimg = MaskRegistered(:,:,:,sl_1:sl_end);
 MaskMontage = figure('Name','Mask');set(MaskMontage,'WindowState','minimized');
 montage(reshape(maskarrayimg,[size(maskarrayimg,1), size(maskarrayimg,2), size(maskarrayimg,3), size(maskarrayimg,4)]),...
@@ -511,7 +512,7 @@ y = get(gcf,'position'); % get the figure position
 set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
 MaskMontagePosition = get(gcf,'position'); 
-
+close all;
 DefectArray = array4dMRrgb4(:,:,:,sl_1:sl_end);
 DefectArrayMontage = figure('Name','Defects');set(DefectArrayMontage,'WindowState','minimized');
 montage(reshape(DefectArray,[size(DefectArray,1), size(DefectArray,2),size(DefectArray,3),...
@@ -523,7 +524,7 @@ y = get(gcf,'position'); % get the figure position
 set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
 DefectArrayMontagePosition=get(gcf,'position'); 
-
+close all;
 protonarrayimg = Proton.ProtonRegistered(:,:,sl_1:sl_end);
 ProtonImages = figure('Name','Mask');set(ProtonImages,'WindowState','minimized');
 if sum(protonarrayimg(:)) > 0
@@ -540,7 +541,7 @@ y = get(gcf,'position'); % get the figure position
 set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
 ProtonMontagePosition = get(gcf,'position');
-
+close all;
 Mask_Vent_Regarrayimg = Mask_Vent_Reg(:,:,:,sl_1:sl_end);
 Mask_Vent_RegMontage = figure('Name','Mask');set(Mask_Vent_RegMontage,'WindowState','minimized');
 montage(reshape(Mask_Vent_Regarrayimg,[size(Mask_Vent_Regarrayimg,1), size(Mask_Vent_Regarrayimg,2), size(Mask_Vent_Regarrayimg,3), size(Mask_Vent_Regarrayimg,4)]),...

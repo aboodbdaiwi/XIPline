@@ -181,7 +181,9 @@ switch MainInput.SegmentationMethod
                             for i = 1:size(Ventilation.Image,3)
                                 temp_mask(:,:,i) = imresize(Mask(:,:,i),[size(Ventilation.Image,1),size(Ventilation.Image,2)]);
                             end
-                            temp_mask = temp_mask > 0.95;
+                            temp_mask = temp_mask > 0.5;
+                        else
+                            temp_mask = Mask;
                         end
                         Mask = double(temp_mask);
                         mask_existing = 1;

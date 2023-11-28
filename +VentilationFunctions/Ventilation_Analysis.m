@@ -12,8 +12,8 @@ function [Ventilation] = Ventilation_Analysis (Ventilation,Proton,MainInput)
 % We shall use a custom 'input_params' function to define the initial
 % settings:
 close all;
-f = waitbar(0,'Processing ventilation analysis...');
-pause(.1)
+% f = waitbar(0,'Processing ventilation analysis...');
+% pause(.1)
 
 settings = VentilationFunctions.input_params(...
 1,... % Median filter
@@ -126,9 +126,9 @@ end
 % on the mask regions. This dependency will be contained within the
 % calculate_VDP function.
 if strcmp(Ventilation.ThreshAnalysis,'yes') == 1   % 'yes'; || 'no'
-    f = waitbar(.20,'Calculating SNR...');
-    waitbar(.50,f,'Performing Thershold Analysis ...');
-    pause(.1)    
+%     f = waitbar(.20,'Calculating SNR...');
+%     waitbar(.50,f,'Performing Thershold Analysis ...');
+%     pause(.1)    
     medfilter = settings.Median_Filter;
     complete = settings.Complete_threshold;
     incomplete = settings.Incomplete_threshold;
@@ -156,9 +156,9 @@ end
 close all;
 %%  Perform linear binning ventilation analysis:
 if strcmp(Ventilation.LB_Analysis,'yes') == 1 
-    f = waitbar(.50,'Performing Thershold Analysis ...');
-    waitbar(.75,f,'Performing Linear Binning Analysis ...');
-    pause(.1)     
+%     f = waitbar(.50,'Performing Thershold Analysis ...');
+%     waitbar(.75,f,'Performing Linear Binning Analysis ...');
+%     pause(.1)     
     % Note: This section is highly dependent on whether N4 bias correction is
     % applied. N4 bias correction is applied in this case INSIDE the
     % calculate_LB_VDP() function. It uses the same optimization parameters as
@@ -201,9 +201,9 @@ end
 close all;
 %% GLRLM analysis
 if Ventilation.GLRLM_Analysis == "yes" % 'yes'; || 'no'
-    f = waitbar(.75,'Performing Linear Binning Analysis ...');
-    waitbar(.90,f,'Performing Texture Analysis ...');
-    pause(.1)     
+%     f = waitbar(.75,'Performing Linear Binning Analysis ...');
+%     waitbar(.90,f,'Performing Texture Analysis ...');
+%     pause(.1)     
     cd(parentPath)
     if settings.N4_bias_analysis == "yes"
        VentImage = N4.*maskarray;        

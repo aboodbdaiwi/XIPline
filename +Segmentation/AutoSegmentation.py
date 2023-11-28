@@ -10,7 +10,7 @@ import numpy as np
 from keras.models import load_model
 import nibabel as nib
 from scipy.io import savemat, loadmat
-import os
+#import os
 #from matplotlib import pyplot
 
 
