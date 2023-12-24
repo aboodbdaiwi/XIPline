@@ -49,9 +49,16 @@ if num_files > 1
     % generate 3D volume
     imag_size = size(all_slices{1});
     imag_vol = zeros(imag_size(1),imag_size(2),num_slices);
-
+    % Check if the variable is empty
+    if isempty(imag_vol)
+%         nonEmptyCount = sum(~cellfun('isempty', all_slices));
+        imag_size = size(all_slices{num_files});
+        imag_vol = zeros(imag_size(1),imag_size(2),num_files);       
+    end
     for slice = 1:num_slices
-        imag_vol(:,:,slice) = all_slices{slice};
+        if ~isempty(all_slices{slice})
+            imag_vol(:,:,slice) = all_slices{slice};
+        end
     end
 elseif num_files == 1
     imag_vol = squeeze(dicomread(FileNames{1}));     

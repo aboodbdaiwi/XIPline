@@ -42,7 +42,7 @@ else
 end
 
 % Dilate the mask arrary according to the structuring element:
-SE = strel('square', 28);
+SE = strel('square', 10);
 maskarray_dilated = imdilate(maskarray, SE);
 % Export Image and Mask temporarily for use in N4
 niftiwrite(abs(MR),[parentPath,'Image.nii']); % Image

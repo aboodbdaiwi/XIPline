@@ -194,6 +194,29 @@ elseif strcmp(MainInput.XeDataext,'.data') == 1  && strcmp(MainInput.Scanner, 'P
 %     elseif strcmp(MainInput.AnalysisType,'GasExchange') == 1 
 %       %  add load/read function here  
 %     end    
+
+    % apply denoising 
+    if strcmp(MainInput.denoiseXe,'yes')
+        if strcmp(MainInput.AnalysisType,'Ventilation')
+            Ventilation.Image = (Ventilation.Image - min(Ventilation.Image(:)))/(max(Ventilation.Image(:)) - min(Ventilation.Image(:)));
+            for i = 1:size(Ventilation.Image,3)
+                    Ventilation.Image(:,:,i) = Global.bm3d.BM3D(squeeze(Ventilation.Image(:,:,i)), 0.02);
+            end
+        elseif strcmp(MainInput.AnalysisType,'Diffusion')
+            Diffusion.Image = (Diffusion.Image - min(Diffusion.Image(:)))/(max(Diffusion.Image(:)) - min(Diffusion.Image(:)));
+            for i = 1:size(Diffusion.Image,3)
+                for j = 1:size(Diffusion.Images,4)
+                    Diffusion.Image(:,:,i,j) = Global.bm3d.BM3D(squeeze(Diffusion.Image(:,:,i,j)), 0.02);
+                end
+            end
+        elseif strcmp(MainInput.AnalysisType,'GasExchange')
+    % we can't apply denoising on complex data         
+    %             GasExchange.VentImage
+    %             GasExchange.GasImage
+    %             GasExchange.DissolvedImage
+        
+        end
+    end
 end 
 
 

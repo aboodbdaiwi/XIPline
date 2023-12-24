@@ -4,9 +4,13 @@ function airway_mask = SegmentAirway(Image)
 b1img = Image(:,:,:,1);
 szimg = size(b1img);
 airway_mask = zeros(szimg);
-
+if length(szimg) < 3
+    z_size = 1;
+else
+    z_size = szimg(3);
+end
 % Airway segmentation
-for slice_num = 1:szimg(3)
+for slice_num = 1:z_size
 
     airway = 1;
     airway_slice_mask = zeros(szimg(1),szimg(2));
@@ -40,7 +44,7 @@ for slice_num = 1:szimg(3)
     airway_slice_mask(airway_slice_mask>0)=1; 
     airway_mask(:,:,slice_num) = airway_slice_mask;
 
-    if slice_num == szimg(3)
+    if slice_num == z_size
         disp('Segmenting airways complete.'); 
     end
 end

@@ -51,15 +51,15 @@ function ...
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 tic
 % denoise images using bm3d
-Images = Images./max(Images(:));
+Images = (Images - min(Images(:)))/(max(Images(:)) - min(Images(:)));
 for i = 1:size(Images,3)
     for j = 1:size(Images,4)
-        Images(:,:,i,j) = Global.bm3d.BM3D(squeeze(Images(:,:,i,j)), 0.01);
+        Images(:,:,i,j) = Global.bm3d.BM3D(squeeze(Images(:,:,i,j)), 0.02);
     end
 end
 %  figure; imslice(Images)
 %normalize images
-Images = (Images./max(Images(:))).*100;
+Images = (Images - min(Images(:)))/(max(Images(:)) - min(Images(:))).*100;
 Images (Images < 0.0001) = 0.0001; % to avoid having zeros 
 Datapath = char(Datapath);
 % get rid of any slice that has no signal (un-segmented)
@@ -128,10 +128,10 @@ for i=1:size(Images,3)
         noise_vec=Image_toFit(:,:,n).*noise_mask_slice; %Calculating the noise vector
         noise_vec(noise_mask_slice==0)=[];
         std_noise_n (n)= std(noise_vec);            %the standard deviation of the noise
-        SNR_vec(n) = signal_n_avg(n) / std_noise_n(n); %signal to noise ratio
-        sigma(n) = std_noise_n(1);
-    end
 
+    end
+    SNR_vec = signal_n_avg ./ mean(std_noise_n); %signal to noise ratio
+    sigma = mean(std_noise_n);
     %%%%%%%%%%%%%%%%%%%%%   R and h fit  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     M1 = zeros(size(Image_toFit,1),size(Image_toFit,2),nbvalues);
@@ -151,14 +151,14 @@ for i=1:size(Images,3)
     weights=1; 
     parfor j= 1:num_ones 
         if strcmp(fitType,'human') == 1
-            lb=[0.0280 0.0090 0.5*M(j,1)]; ub=[0.0400 0.0350 1.5*M(j,1)];
-            initialvalues=[0.0300 0.0140 M(j,1)];
-            [eestm,fval(j)]=DiffusionFunctions.MLfitRr2(M(j,:),bvalues,sigma(1)^2,initialvalues,"cylRandr",weights,lb,ub,Do,delta);       % This is the only code line needed + function MLfitconloc1 
+            lb=[0.0280 0.0090 0.5*M(j,1)]; ub=[0.0600 0.0500 1.5*M(j,1)];
+            initialvalues = [0.0300 0.0140 M(j,1)];
+            [eestm,fval(j)] = DiffusionFunctions.MLfitRr2(M(j,:),bvalues,sigma^2,initialvalues,"cylRandr",weights,lb,ub,Do,delta);       % This is the only code line needed + function MLfitconloc1 
         elseif strcmp(fitType,'animals') == 1
             lb=[0.00001 0.005 0.5]; ub=[M(j,1)+3*sqrt(s2) 0.12 1.1];
             lb=[0.060 0.0010 0.5*M(j,1)]; ub=[0.0140 0.0090 1.5*M(j,1)];
             initialvalues=[0.0100 0.0050 M(j,1)];
-            [eestm,fval(j)]=DiffusionFunctions.MLfitRr2(M(j,:),bvalues,sigma(1)^2,initialvalues,"cylRandrAnimal",weights,lb,ub,Do,delta);       % This is the only code line needed + function MLfitconloc1 
+            [eestm,fval(j)] = DiffusionFunctions.MLfitRr2(M(j,:),bvalues,sigma^2,initialvalues,"cylRandrAnimal",weights,lb,ub,Do,delta);       % This is the only code line needed + function MLfitconloc1 
         end
         R_est(j)=eestm(1);
         r_est(j)=eestm(2);
@@ -207,7 +207,7 @@ if ~isempty(gcp('nocreate'))
     % If a parallel pool is open, delete it
     delete(gcp('nocreate'));
 end
-
+% figure; imslice(R_map); colormap(jet); colorbar; clim([0 600]);
 %%%%%%%%%%%%%%%%%% DL, r, L, SVR, Lm and Na  %%%%%%
 
 h_map=R_map-r_map;
@@ -353,7 +353,7 @@ close all;
 cmap = colormap (jet);
 cmap(1,:)=0;
 close all
-
+colorbarlimit = 400;
 %R maps
 R_Montage = figure('Name','R Images');set(R_Montage,'WindowState','minimized');
 montage(reshape(R_map,[size(R_map,1), size(R_map,2), 1, size(R_map,3)]),...
@@ -365,9 +365,9 @@ y = get(gcf,'position'); % get the figure position
 set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
 if strcmp(fitType,'human') == 1
-    colormap(cmap); clim([0 400]); colorbar;
+    colormap(cmap); clim([0 colorbarlimit]); colorbar;
 elseif strcmp(fitType,'animals') == 1
-    colormap(cmap); clim([0 150]); colorbar;
+    colormap(cmap); clim([0 400]); colorbar;
 end
 xx = colorbar;
 xx.Label.String = ' (\mum)';
@@ -384,7 +384,7 @@ y = get(gcf,'position'); % get the figure position
 set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
 if strcmp(fitType,'human') == 1
-    colormap(cmap); clim([0 400]); colorbar;
+    colormap(cmap); clim([0 colorbarlimit]); colorbar;
 elseif strcmp(fitType,'animals') == 1
     colormap(cmap); clim([0 150]); colorbar;
 end
@@ -403,7 +403,7 @@ y = get(gcf,'position'); % get the figure position
 set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
 if strcmp(fitType,'human') == 1
-    colormap(cmap); clim([0 400]); colorbar;
+    colormap(cmap); clim([0 colorbarlimit]); colorbar;
 elseif strcmp(fitType,'animals') == 1
     colormap(cmap); clim([0 150]); colorbar;
 end
@@ -423,7 +423,7 @@ y = get(gcf,'position'); % get the figure position
 set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
 if strcmp(fitType,'human') == 1
-    colormap(cmap); clim([0 400]); colorbar;
+    colormap(cmap); clim([0 colorbarlimit]); colorbar;
 elseif strcmp(fitType,'animals') == 1
     colormap(cmap); clim([0 150]); colorbar;
 end
@@ -443,7 +443,7 @@ y = get(gcf,'position'); % get the figure position
 set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
 if strcmp(fitType,'human') == 1
-    colormap(cmap); clim([0 400]); colorbar;
+    colormap(cmap); clim([0 colorbarlimit]); colorbar;
 elseif strcmp(fitType,'animals') == 1
     colormap(cmap); clim([0 2000]); colorbar;
 end
@@ -463,7 +463,7 @@ y = get(gcf,'position'); % get the figure position
 set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
 if strcmp(fitType,'human') == 1
-    colormap(cmap); clim([0 400]); colorbar;
+    colormap(cmap); clim([0 colorbarlimit]); colorbar;
 elseif strcmp(fitType,'animals') == 1
     colormap(cmap); clim([0 20000]); colorbar;
 end
@@ -517,28 +517,28 @@ Global.exportToPPTX('addtext',Lm_title,'Position',[0 6 6 1],'Color','r','FontSiz
 Global.exportToPPTX('addslide'); %R/h/r/Lm Histogram
 R_histFig = figure; histogram(R_map(R_map>0),100); 
 set(R_histFig,'Name','R_histFig'); title(R_histFig.CurrentAxes,R_title);ylabel(R_histFig.CurrentAxes,'Pixel Cont.');xlabel(R_histFig.CurrentAxes,'R (um)');
-set(gca,'FontSize',13,'FontWeight','bold'); xlim([0 400]);
+set(gca,'FontSize',13,'FontWeight','bold'); xlim([0 colorbarlimit]);
 % print(R_histFig,[Datapath , '\','R_histFig'],'-dpng','-r300');
 saveas(gca,'R_histFig.png');
 Global.exportToPPTX('addpicture',R_histFig,'Position',[0 0 7 4.5]);
 
 h_histFig = figure; histogram(h_map(h_map>0),100); 
 set(h_histFig,'Name','h_histFig'); title(h_histFig.CurrentAxes,h_title);ylabel(h_histFig.CurrentAxes,'Pixel Cont.');xlabel(h_histFig.CurrentAxes,'h (um)');
-set(gca,'FontSize',13,'FontWeight','bold'); xlim([0 400]);
+set(gca,'FontSize',13,'FontWeight','bold'); xlim([0 colorbarlimit]);
 % print(h_histFig,[Datapath , '\','h_histFig'],'-dpng','-r300');
 saveas(gca,'h_histFig.png');
 Global.exportToPPTX('addpicture',h_histFig,'Position',[7.5 0 7 4.5]);
 
 r_histFig = figure; histogram(r_map(r_map>0),100); 
 set(r_histFig,'Name','r_histFig'); title(r_histFig.CurrentAxes,r_title);ylabel(r_histFig.CurrentAxes,'Pixel Cont.');xlabel(r_histFig.CurrentAxes,'r (um)');
-set(gca,'FontSize',13,'FontWeight','bold'); xlim([0 400]);
+set(gca,'FontSize',13,'FontWeight','bold'); xlim([0 colorbarlimit]);
 % print(r_histFig,[Datapath , '\','r_histFig'],'-dpng','-r300');
 saveas(gca,'r_histFig2.png');
 Global.exportToPPTX('addpicture',r_histFig,'Position',[0 4.5 7 4.5]);
 
 Lm_histFig = figure; histogram(Lm_map(Lm_map>0),100); 
 set(Lm_histFig,'Name','Lm_histFig'); title(Lm_histFig.CurrentAxes,Lm_title);ylabel(Lm_histFig.CurrentAxes,'Pixel Cont.');xlabel(Lm_histFig.CurrentAxes,'Lm (um)');
-set(gca,'FontSize',13,'FontWeight','bold'); xlim([0 400]);
+set(gca,'FontSize',13,'FontWeight','bold'); xlim([0 colorbarlimit]);
 % print(Lm_histFig,[Datapath , '\','Lm_histFig'],'-dpng','-r300');
 saveas(gca,'Lm_histFig.png');
 Global.exportToPPTX('addpicture',Lm_histFig,'Position',[7.5 4.5 7 4.5]);

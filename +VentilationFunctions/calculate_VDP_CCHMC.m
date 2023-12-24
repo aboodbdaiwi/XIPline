@@ -6,6 +6,7 @@ function [Ventilation] = calculate_VDP_CCHMC(MR, maskarray, complete, incomplete
 % Date: 05/09/2021.
 %% VDP Calculation Code:
 cd(DataPath)
+close all; 
 warning('off','all') % Suppress all the tiff warnings
 % Define output folder names based on whether the images are corrected or not:
 % if N4_bias_analysis == 'no'
@@ -87,6 +88,11 @@ if isempty(dcnts) % 91-95 added due to lower Hypervent values/#of pixels causing
     dcnts = 1;
 elseif ((dcnts < 1) && (length(find(d_Hyper)) < 5))
     dcnts = 1;
+end 
+if isempty(ccnts)
+    ccnts = 1;
+elseif ((dcnts < 1) && (length(find(d_Complete)) < 5))
+    ccnts = 1;
 end 
 % Create histogram figure of ventilation defects and print/save figure
 figure('position',[350 350 750 350]);
@@ -470,7 +476,7 @@ end
 % the above code and add this line (,'Indices', sl_1:sl_end) to the end of
 % each Montage. 
 %%% get rid of the gray frame in each montage
-close all;
+
 VentscaledImage = scaledImage2(:,:,sl_1:sl_end);
 VentMontage = figure('Name','Vent Image');set(VentMontage,'WindowState','minimized');
 montage(reshape(VentscaledImage,[size(VentscaledImage,1), size(VentscaledImage,2), 1, size(VentscaledImage,3)]),...
@@ -482,7 +488,7 @@ y = get(gcf,'position'); % get the figure position
 set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
 VentMontagePosition=get(gcf,'position'); 
-close all;
+
 ProtonRegisteredMontage = figure('Name','Proton Image');set(ProtonRegisteredMontage,'WindowState','minimized');
 if strcmp(MainInput.NoProtonImage,'yes') == 1 
     ProtonImage = Proton.ProtonRegisteredColored(:,:,sl_1:sl_end);
@@ -500,7 +506,7 @@ set(gcf,'units','pixels'); % set the figure units to pixels
 y = get(gcf,'position'); % get the figure position
 set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
-close all;
+
 maskarrayimg = MaskRegistered(:,:,:,sl_1:sl_end);
 MaskMontage = figure('Name','Mask');set(MaskMontage,'WindowState','minimized');
 montage(reshape(maskarrayimg,[size(maskarrayimg,1), size(maskarrayimg,2), size(maskarrayimg,3), size(maskarrayimg,4)]),...
@@ -512,7 +518,7 @@ y = get(gcf,'position'); % get the figure position
 set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
 MaskMontagePosition = get(gcf,'position'); 
-close all;
+
 DefectArray = array4dMRrgb4(:,:,:,sl_1:sl_end);
 DefectArrayMontage = figure('Name','Defects');set(DefectArrayMontage,'WindowState','minimized');
 montage(reshape(DefectArray,[size(DefectArray,1), size(DefectArray,2),size(DefectArray,3),...
@@ -524,7 +530,7 @@ y = get(gcf,'position'); % get the figure position
 set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
 DefectArrayMontagePosition=get(gcf,'position'); 
-close all;
+
 protonarrayimg = Proton.ProtonRegistered(:,:,sl_1:sl_end);
 ProtonImages = figure('Name','Mask');set(ProtonImages,'WindowState','minimized');
 if sum(protonarrayimg(:)) > 0
@@ -532,7 +538,7 @@ if sum(protonarrayimg(:)) > 0
         'Size',[1 size(protonarrayimg,3)],'DisplayRange',[0 max(Proton.ProtonRegistered(:))/2]);
 else
     montage(reshape(protonarrayimg,[size(protonarrayimg,1), size(protonarrayimg,2), size(protonarrayimg,3), size(protonarrayimg,4)]),...
-        'Size',[1 size(protonarrayimg,3)],'DisplayRange',[]);
+        'Size',[1 size(protonarrayimg,3)]);
 end
 set(gca,'units','pixels'); % set the axes units to pixels
 x = get(gca,'position'); % get the position of the axes
@@ -541,7 +547,7 @@ y = get(gcf,'position'); % get the figure position
 set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
 ProtonMontagePosition = get(gcf,'position');
-close all;
+
 Mask_Vent_Regarrayimg = Mask_Vent_Reg(:,:,:,sl_1:sl_end);
 Mask_Vent_RegMontage = figure('Name','Mask');set(Mask_Vent_RegMontage,'WindowState','minimized');
 montage(reshape(Mask_Vent_Regarrayimg,[size(Mask_Vent_Regarrayimg,1), size(Mask_Vent_Regarrayimg,2), size(Mask_Vent_Regarrayimg,3), size(Mask_Vent_Regarrayimg,4)]),...

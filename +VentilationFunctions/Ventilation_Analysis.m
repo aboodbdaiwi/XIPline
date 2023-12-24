@@ -65,8 +65,8 @@ end
 
 switch settings.N4_bias_analysis
     case "yes"    
-        waitbar(.10,f,'Performing N4 bias analysis...');
-        pause(.1)
+        %waitbar(.10,f,'Performing N4 bias analysis...');
+%         pause(.1)
         disp('Running N4 bias field correction...')
         [N4, Bias] = VentilationFunctions.N4_bias_correction(MR, maskarray, parentPath);
         Ventilation.Bias = Bias;       
@@ -103,8 +103,8 @@ end
 %% 7) Calculate SNR:
 switch settings.calculate_SNR
     case "yes"
-        waitbar(.20,f,'Calculating SNR...');
-        pause(.1)        
+%         waitbar(.20,f,'Calculating SNR...');
+%         pause(.1)        
         disp('Calculating SNR...')
         [SNR_slice, Overall_SNR] = VentilationFunctions.calculate_SNR(MR, maskarray, airwaymask);
         Ventilation.SNR_slice = SNR_slice;
@@ -116,9 +116,9 @@ switch settings.calculate_SNR
 end
 close all;
 %% Proton image
-if strcmp(MainInput.NoProtonImage,'yes') == 1 
-        Proton.ProtonRegistered = zeros(size(MR));
-        Proton.ProtonRegisteredColored = zeros(size(MR));
+if MainInput.NoProtonImage == 1 
+    Proton.ProtonRegistered = zeros(size(MR));
+    Proton.ProtonRegisteredColored = zeros(size(MR));
 end
 
 %% 8) Calculate VDP:

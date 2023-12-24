@@ -286,7 +286,7 @@ cd(MainInput.XeDataLocation)
 
 % diary Log.txt
 MainInput.SegmentationMethod = 'Threshold'; % 'Threshold' || 'Manual' || 'Auto'
-MainInput.SegmentAnatomy = 'Airway'; % 'Airway'; || 'Parenchyma'
+MainInput.SegmentAnatomy = 'Parenchyma'; % 'Airway'; || 'Parenchyma'
 MainInput.Imagestosegment = 'Xenon';  % 'Xe & Proton Registered' | 'Xenon' | 'Registered Proton'
 
 MainInput.thresholdlevel = 0.5; % 'threshold' 
@@ -350,19 +350,19 @@ cd(MainInput.XeDataLocation)
 MainInput.PatientAge = '17';
 Diffusion.ADCFittingType = 'Log Linear'; % 'Log Weighted Linear' | 'Log Linear' | 'Non-Linear' | 'Bayesian'
 Diffusion.ADCAnalysisType = 'human'; % human | animals;  % human | animals
-% Diffusion.bvalues = '[0, 6.25, 12.5, 18.75, 25]';
+Diffusion.bvalues = '[0, 6.25, 12.5, 18.75, 25]';
 % Diffusion.bvalues = '[0, 7.5, 15]';
-Diffusion.bvalues = '[0, 10, 20, 30]'; % for T-Scanner
+% Diffusion.bvalues = '[0, 10, 20, 30]'; % for T-Scanner
 
 Diffusion.ADCLB_Analysis = 'yes'; % 'yes'; || 'no'
 Diffusion.ADCLB_RefMean = '0.0002*age+0.029'; 
 Diffusion.ADCLB_RefSD = '5e-5*age+0.0121'; 
 
-Diffusion.MorphometryAnalysis = 'no';  % yes || no
+Diffusion.MorphometryAnalysis = 'yes';  % yes || no
 Diffusion.MorphometryAnalysisType = 'human'; % human | animals
 Diffusion.MA_WinBUGSPath = 'C:\Users\BAS8FL\Desktop\WinBUGS14';
-Diffusion.CMMorphometry = 'no';  % yes || no
-Diffusion.SEMMorphometry = 'no';  % yes || no
+Diffusion.CMMorphometry = 'yes';  % yes || no
+Diffusion.SEMMorphometry = 'yes';  % yes || no
 Diffusion.Do = 0.14; % cm2/s
 Diffusion.Delta = 3.5; % ms
 
