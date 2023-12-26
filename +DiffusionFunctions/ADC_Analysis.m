@@ -287,10 +287,11 @@ Mean_Edges = linspace(0,0.14,100);
 ADC_vec = ADCmap;
 ADC_vec(final_mask==0)=[];
 [bin_count,~] = histcounts(ADC_vec,Mean_Edges);
+
 y = 0:0.001:1;
 f = exp(-(y-ADCLB_RefMean).^2./(2*ADCLB_RefSD^2))./(ADCLB_RefSD*sqrt(2*pi));
 f = f./max(f(:));
-f = f.*max(bin_count(:));
+f = f.*(max(bin_count(:)));
 plot(y,f,'k-.','LineWidth',2);
 str_MeanADC_Ref = sprintf('Ref: Mean = %.3f', ADCLB_RefMean);
 str_STDADC_Ref = sprintf(' ± %.3f', ADCLB_RefSD);

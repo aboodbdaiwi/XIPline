@@ -49,23 +49,34 @@ ActTE90 = GasExchange.ActTE90;
 freq_jump = GasExchange.freq_jump;
 Slices_Co = Proton.Slices_Co;
 Slices_Ax = Proton.Slices_Ax;
-try
-    HealthyCohortFullPath = GasExchange.HealthyCohortFullPath;
-    GasExchange.ImportHealthyCohort = 'yes';
-catch
-    GasExchange.ImportHealthyCohort = 'no';
-    VentHealthyMean = GasExchange.VentHealthyMean;
-    VentHealthyStd = GasExchange.VentHealthyStd;
-    DissolvedHealthyMean = GasExchange.DissolvedHealthyMean;
-    DissolvedHealthyStd = GasExchange.DissolvedHealthyStd;
-    BarrierHealthyMean = GasExchange.BarrierHealthyMean;
-    BarrierHealthyStd = GasExchange.MembraneHealthyMean;
-    RBCHealthyMean = GasExchange.RBCHealthyMean;
-    RBCtHealthyStd = GasExchange.RBCtHealthyStd;
-    RBCBarrHealthyMean = GasExchange.RBCBarrHealthyMean;
-    RBCBarrHealthyStd = GasExchange.RBCBarrHealthyStd;
-    RBCOscHealthyMean = GasExchange.RBCOscHealthyMean;
-    RBCOscHealthyStd = GasExchange.RBCOscHealthyStd;
+
+switch MainInput.HealthyReferenceType
+    case 'Default' 
+        MainInput.ImportHealthyCohort = 0;
+        GasExchange.ImportHealthyCohort = 'yes';
+        Scriptlocation = mfilename('fullpath');
+        idcs = strfind(Scriptlocation,filesep);%determine location of file separators
+        Scriptlocation = [Scriptlocation(1:idcs(end)-1),filesep];%remove file
+        HealthyCohortFullPath = fullfile(Scriptlocation, 'HealthyCohort.mat');
+    case 'Import' 
+        MainInput.ImportHealthyCohort = 1;
+        HealthyCohortFullPath = GasExchange.HealthyCohortFullPath;
+        GasExchange.ImportHealthyCohort = 'yes';
+    case 'Manual' 
+        MainInput.ImportHealthyCohort = 2;
+        GasExchange.ImportHealthyCohort = 'no';
+        VentHealthyMean = GasExchange.VentHealthyMean;
+        VentHealthyStd = GasExchange.VentHealthyStd;
+        DissolvedHealthyMean = GasExchange.DissolvedHealthyMean;
+        DissolvedHealthyStd = GasExchange.DissolvedHealthyStd;
+        BarrierHealthyMean = GasExchange.BarrierHealthyMean;
+        BarrierHealthyStd = GasExchange.MembraneHealthyMean;
+        RBCHealthyMean = GasExchange.RBCHealthyMean;
+        RBCtHealthyStd = GasExchange.RBCtHealthyStd;
+        RBCBarrHealthyMean = GasExchange.RBCBarrHealthyMean;
+        RBCBarrHealthyStd = GasExchange.RBCBarrHealthyStd;
+        RBCOscHealthyMean = GasExchange.RBCOscHealthyMean;
+        RBCOscHealthyStd = GasExchange.RBCOscHealthyStd;
 end
 
 DataLocation = MainInput.XeDataLocation;
@@ -90,7 +101,7 @@ GasFlipAngle = 0.5; %Gas flip angle
 %% Import Healthy Distribution, If Available
 %Healthy Cohort 
 % if(exist([DataLocation,'\HealthyCohort.mat'],'file') == 2) %if Healthy cohort data exists, use
-if strcmp(GasExchange.ImportHealthyCohort, 'yes') == 1 && MainInput.ImportHealthyCohort == 1
+if strcmp(GasExchange.ImportHealthyCohort, 'yes') == 1 && (MainInput.ImportHealthyCohort == 0 || MainInput.ImportHealthyCohort == 1)
 %     HealthyFile = dir([DataLocation,'\HealthyCohort.mat']);%get file info
     HealthyData = load(HealthyCohortFullPath);%import all variable but figures
     VentThresh = HealthyData.thresholds.Vent;

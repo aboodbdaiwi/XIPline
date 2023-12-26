@@ -26,7 +26,7 @@ Ventilation.CompleteThresh,... % Complete threshold
 Ventilation.HyperventilatedThresh); % Hyperventilated threshold
 % Usage: settings = Functions.input_params(medfilter, RFcorrection,
 % savedata, calculateSNR, N4, incomplete, complete, hyper)
-
+Ventilation.Image = double(Ventilation.Image);
 MR = Ventilation.Image;
 mkdir([MainInput.XeDataLocation '\Ventilation Analysis']);
 parentPath = [MainInput.XeDataLocation '\Ventilation Analysis\'];
@@ -93,7 +93,8 @@ switch settings.N4_bias_analysis
         NameN4 = Name + "N4";
 %         niftiwrite(abs(N4_2),[parentPath,char(NameN4)]);
         niftiwrite(abs(N4_2),[parentPath + "Ventilation_ImagesN4"]); % Or do this until we have a naming convention
-        MR = N4;
+        MR = double(N4);
+        Ventilation.Image = MR;
     case "no"
         disp('N4 bias field correction has been skipped.')
     otherwise

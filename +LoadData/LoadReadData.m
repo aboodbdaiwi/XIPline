@@ -43,13 +43,13 @@ if strcmp(MainInput.XeDataext,'.dcm') == 1
     elseif strcmp(MainInput.AnalysisType,'Diffusion') == 1 
         if length(size(Image)) == 3
             try 
-                Nb = app.MainInput.Nbvalues;
+                Nb = MainInput.Nbvalues;
                 switch MainInput.DiffAcqOrder 
                     case 'b-value interleave'
-                    Image = reshape(Image, [size(Image,1),size(Image,2),size(Image,3)/Nb,Nb]);
-                    Image = permute(Image, [1 2 4 3]);
+                        Image = reshape(Image, [size(Image,1),size(Image,2),Nb,size(Image,3)/Nb]);
+                        Image = permute(Image, [1 2 4 3]);
                     case 'slice interleave'
-                    Image = reshape(Image, [size(Image,1),size(Image,2),size(Image,3)/Nb,Nb]);
+                        Image = reshape(Image, [size(Image,1),size(Image,2),size(Image,3)/Nb,Nb]);
                 end   
 %                 for i = 1:length(FileNames)
 %                     img = squeeze(Image(:,:,i));
@@ -198,88 +198,96 @@ elseif strcmp(MainInput.XeDataext,'.data') == 1  && strcmp(MainInput.Scanner, 'P
     % apply denoising 
     if strcmp(MainInput.denoiseXe,'yes')
         if strcmp(MainInput.AnalysisType,'Ventilation')
-            Ventilation.Image = (Ventilation.Image - min(Ventilation.Image(:)))/(max(Ventilation.Image(:)) - min(Ventilation.Image(:)));
+            Ventilation.Image = (Ventilation.Image - min(Ventilation.Image(:)))./(max(Ventilation.Image(:)) - min(Ventilation.Image(:)));
             for i = 1:size(Ventilation.Image,3)
-                    Ventilation.Image(:,:,i) = Global.bm3d.BM3D(squeeze(Ventilation.Image(:,:,i)), 0.02);
+                    Ventilation.Image(:,:,i) = Global.bm3d.BM3D(squeeze(Ventilation.Image(:,:,i)), MainInput.denoiseSD);
             end
         elseif strcmp(MainInput.AnalysisType,'Diffusion')
-            Diffusion.Image = (Diffusion.Image - min(Diffusion.Image(:)))/(max(Diffusion.Image(:)) - min(Diffusion.Image(:)));
-            for i = 1:size(Diffusion.Image,3)
-                for j = 1:size(Diffusion.Images,4)
-                    Diffusion.Image(:,:,i,j) = Global.bm3d.BM3D(squeeze(Diffusion.Image(:,:,i,j)), 0.02);
+            Image = Diffusion.Image;
+            Image = (Image - min(Image(:)))./(max(Image(:)) - min(Image(:)));
+            for i = 1:size(Image,3)
+                for j = 1:size(Image,4)
+                    Image(:,:,i,j) = Global.bm3d.BM3D(squeeze(Image(:,:,i,j)), 0.01);
                 end
             end
+            Diffusion.Image = Image;
         elseif strcmp(MainInput.AnalysisType,'GasExchange')
     % we can't apply denoising on complex data         
     %             GasExchange.VentImage
     %             GasExchange.GasImage
-    %             GasExchange.DissolvedImage
+    %             GasExchange.Dissolved Image
         
         end
     end
+
+
 end 
 
 
 %% Load/Read Proton data 
 %% 
 if strcmp(MainInput.NoProtonImage, 'no') == 1    
-    if strcmp(MainInput.HDataext,'.dcm') == 1                 
-        [HImage, file_folder, file_name] = LoadData.DICOM_Load(MainInput.HDataLocation);
-        Proton.Image = double(HImage);
-        Proton.filename = file_name;
-        Proton.folder = file_folder;
-        
-    elseif strcmp(MainInput.HDataext,'.mat') == 1 
-        DataFiles = dir([MainInput.HDataLocation,'\*.mat']);
-        file_name = DataFiles.name;
-        file_folder = DataFiles.folder;
-        file_with_path = strcat(file_folder,'\',file_name);  % join path and filename to open
-        load(file_with_path);
-        file_name2 = file_name; 
-        file_name2(end-3:end)=[];    
-        Proton.Image = eval(file_name2);
-        Proton.filename = file_name;
-        Proton.folder = file_folder;
-        
-    elseif strcmp(MainInput.HDataext,'.nii') == 1 || strcmp(MainInput.HDataext,'.gz') == 1 
-        DataFiles = dir([MainInput.HDataLocation,'\*.nii.gz']); 
-        if length(DataFiles) == 1
-            DataFiles = dir([MainInput.HDataLocation,'\*.nii.gz']); 
-        else 
-           DataFiles = dir([MainInput.HDataLocation,'\*.nii']); 
-        end        
-        file_name = DataFiles.name;
-        file_folder = DataFiles.folder;
-        A1 = LoadData.load_nii([file_folder ,'\',file_name]); % Original
-        A=A1.img;
-        A = double(squeeze(A));
-        I90=imrotate(A,90);
-        Ifv=flip(I90,2); % Original                   
-        HImage=Ifv;        
-        Proton.Image = HImage;
-        Proton.filename = file_name;
-        Proton.folder = file_folder;
-
-    elseif strcmp(MainInput.HDataext,'.data') == 1 && strcmp(MainInput.Scanner, 'Philips') == 1 &&...
-           strcmp(MainInput.SequenceType, '3D Radial') == 1         
-            PixelShift = GasExchange.PixelShift; 
-            if sum(PixelShift) > 1
-                PixelShift = GasExchange.PixelShift;
-            else
-                PixelShift = [0; 0; 0];
-            end
-            [ProtonImage,H_RecMatrix,ProtonMax,file_name] = LoadData.LoadData_Proton_GasExchange_Philips_Sin(MainInput.HDataLocation,PixelShift,MainInput.Institute);
-            Proton.Image = double(ProtonImage);
+    try 
+        if strcmp(MainInput.HDataext,'.dcm') == 1                 
+            [HImage, file_folder, file_name] = LoadData.DICOM_Load(MainInput.HDataLocation);
+            Proton.Image = double(HImage);
             Proton.filename = file_name;
-            Proton.folder = MainInput.HDataLocation;
-            Proton.H_RecMatrix = H_RecMatrix;
-            Proton.ProtonMax = ProtonMax;
-%--------------------- add new read load function here --------------------
+            Proton.folder = file_folder;
             
-%     elseif strcmp(MainInput.HDataext,'add DataType') == 1
-        %  add load/read function here 
-    end 
+        elseif strcmp(MainInput.HDataext,'.mat') == 1 
+            DataFiles = dir([MainInput.HDataLocation,'\*.mat']);
+            file_name = DataFiles.name;
+            file_folder = DataFiles.folder;
+            file_with_path = strcat(file_folder,'\',file_name);  % join path and filename to open
+            load(file_with_path);
+            file_name2 = file_name; 
+            file_name2(end-3:end)=[];    
+            Proton.Image = eval(file_name2);
+            Proton.filename = file_name;
+            Proton.folder = file_folder;
+            
+        elseif strcmp(MainInput.HDataext,'.nii') == 1 || strcmp(MainInput.HDataext,'.gz') == 1 
+            DataFiles = dir([MainInput.HDataLocation,'\*.nii.gz']); 
+            if length(DataFiles) == 1
+                DataFiles = dir([MainInput.HDataLocation,'\*.nii.gz']); 
+            else 
+               DataFiles = dir([MainInput.HDataLocation,'\*.nii']); 
+            end        
+            file_name = DataFiles.name;
+            file_folder = DataFiles.folder;
+            A1 = LoadData.load_nii([file_folder ,'\',file_name]); % Original
+            A=A1.img;
+            A = double(squeeze(A));
+            I90=imrotate(A,90);
+            Ifv=flip(I90,2); % Original                   
+            HImage=Ifv;        
+            Proton.Image = HImage;
+            Proton.filename = file_name;
+            Proton.folder = file_folder;
     
+        elseif strcmp(MainInput.HDataext,'.data') == 1 && strcmp(MainInput.Scanner, 'Philips') == 1 &&...
+               strcmp(MainInput.SequenceType, '3D Radial') == 1         
+                PixelShift = GasExchange.PixelShift; 
+                if sum(PixelShift) > 1
+                    PixelShift = GasExchange.PixelShift;
+                else
+                    PixelShift = [0; 0; 0];
+                end
+                [ProtonImage,H_RecMatrix,ProtonMax,file_name] = LoadData.LoadData_Proton_GasExchange_Philips_Sin(MainInput.HDataLocation,PixelShift,MainInput.Institute);
+                Proton.Image = double(ProtonImage);
+                Proton.filename = file_name;
+                Proton.folder = MainInput.HDataLocation;
+                Proton.H_RecMatrix = H_RecMatrix;
+                Proton.ProtonMax = ProtonMax;
+    %--------------------- add new read load function here --------------------
+                
+    %     elseif strcmp(MainInput.HDataext,'add DataType') == 1
+            %  add load/read function here 
+        end 
+    catch
+        disp('no proton images is selected')
+        MainInput.NoProtonImage =  'yes';
+    end
 end % end of Load/Read Proton data 
 
 close all;

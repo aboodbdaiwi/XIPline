@@ -24,14 +24,15 @@ function [SNR_slice, Overall_SNR] = calculate_SNR(MR, maskarray, airwaymask)
 % The structuring element size '28' can be changed as needed to remove
 % partial volume pixels and the trachea.
 SE = strel('square', 28);
-
+maskarray = double(maskarray);
+MR = double(MR);
 % Dilate the mask arrary according to the structuring element:
 maskarray_dilated = imdilate(maskarray, SE);
 
 % Take the complement of the dilated mask array and create a background
 % noise array:
-backgroundmask = imcomplement(maskarray_dilated).*~airwaymask;
-background1 = MR.*(backgroundmask);
+backgroundmask = double(imcomplement(maskarray_dilated).*~airwaymask);
+background1 = (MR).*(backgroundmask);
 
 % % Label 0s in the background noise array as NaNs
 % background1(background1 == 0) = NaN;

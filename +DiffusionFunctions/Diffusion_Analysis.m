@@ -40,7 +40,11 @@ MorphometryAnalysis = Diffusion.MorphometryAnalysis;
 ADCAnalysisType = 'human';
 diffimg = Diffusion.Image;
 lung_mask = Diffusion.LungMask;
-airway_mask = Diffusion.AirwayMask;
+try
+    airway_mask = Diffusion.AirwayMask;
+catch
+    airway_mask = zeros(size(lung_mask));
+end
 
 
 % create a final mask

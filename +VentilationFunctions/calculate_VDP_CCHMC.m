@@ -18,6 +18,8 @@ warning('off','all') % Suppress all the tiff warnings
 % end
 foldername = "VDP Analysis\";
 % Ensure only useful signal is operated on:
+maskarray = double(maskarray);
+MR = double(MR);
 NormMR = MR.*(maskarray>0);
 
 % Redefine thresholds to fit within 0-1 limits:
