@@ -9,15 +9,13 @@ function [Proton,MainInput] = GeneralRegisterProton_to_Xenon(...
 %      LungMask
 %    'translation' | 'rigid' | 'similarity' | 'affine'
 %   Example: 
-
 %
-% 
 %   Package: 
 %
 %   Author: Abdullah Bdaiwi 
 %   Work email: abdullah.bdaiwi@cchmc.org
 %   Personal email: abdaiwi89@gmail.com
-%   Website: https://cpir.cchmc.org/
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
 
 %% match number of slices 
 ProtonVoxelInfo = MainInput.ProtonVoxelInfo;

@@ -10,13 +10,12 @@ function [LungMask,ProtonSignal,LungSignal,LungStd,NoiseMask] = GasExchange_Make
 %   Example: 
 %   LoadData_Proton_GasExchange_Philips_Sin('C:\Users\mwillmering\Documents\Subject1')
 %
-% 
 %   Package: https://github.com/cchmc-cpir/CCHMC-Gas-Exchange-Processing-Package
 %
 %   Author: Matthew Willmering
 %   Work email: matthew.willmering@cchmc.org
 %   Personal email: matt.willmering@gmail.com
-%   Website: https://cpir.cchmc.org/
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
 %% Make Proton Mask
 if(NewMask==1)
     disp('Making Lung Mask...')

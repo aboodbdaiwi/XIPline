@@ -1,5 +1,17 @@
 
 function [Image, parentPath, FileNames] = LoadData_Gas_VentDiff_Philips_GRE(DataLocation)
+%   Inputs:
+%      
+%   Outputs:
+%                   
+%   Package: https://github.com/aboodbdaiwi/HP129Xe_Analysis_App
+%
+%   Author: Abdullah S. Bdaiwi
+%   Work email: abdullah.bdaiwi@cchmc.org
+%   Personal email: abdaiwi89@gmail.com
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
+%
+%   Please add updates at the end. Ex: 3/10/24 - ASB: update .... 
 
     DataFiles = dir([DataLocation,'\*.data']);
     FileNames = DataFiles.name;
@@ -11,7 +23,6 @@ function [Image, parentPath, FileNames] = LoadData_Gas_VentDiff_Philips_GRE(Data
     filename(end-4:end)=[];
     [ImgK,NoiK,kx_oversample_factor] = LoadData.load_philips_extr1_2D(filename,ch_range);
     diffK = ImgK(:,:,:,:);
-    
     
     if  length(size(diffK)) == 4
         data_size = size(diffK);
@@ -60,7 +71,5 @@ function [Image, parentPath, FileNames] = LoadData_Gas_VentDiff_Philips_GRE(Data
             end
             
             Image = rot90(rot90(diffimg));  
-            
     end
-    
 end

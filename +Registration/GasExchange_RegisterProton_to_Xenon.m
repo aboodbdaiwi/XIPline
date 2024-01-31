@@ -16,15 +16,16 @@ function [Proton,GasExchange] = GasExchange_RegisterProton_to_Xenon(Proton,GasEx
 %   Example: 
 %   LoadData_Proton_GasExchange_Philips_Sin('C:\Users\mwillmering\Documents\Subject1')
 %
-% 
 %   Package: https://github.com/cchmc-cpir/CCHMC-Gas-Exchange-Processing-Package
 %
 %   Author: Matthew Willmering
 %   Work email: matthew.willmering@cchmc.org
 %   Personal email: matt.willmering@gmail.com
-%   Website: https://cpir.cchmc.org/
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
+
 %% Register Proton to Xenon
 ProtonImage = Proton.Image;
+ProtonImageHR = Proton.ProtonImageHR;
 UncorrectedVentImage = GasExchange.UncorrectedVentImage;
 VentImage = GasExchange.VentImage;
 H_RecMatrix = Proton.H_RecMatrix;
@@ -38,11 +39,11 @@ cd(outputpath)
 NewMask=1;
 [LungMask,ProtonSignal,LungSignal,LungStd,NoiseMask] = Registration.GasExchange_MakeProtonMask(ProtonImage,NewMask);
 %View
-ProtonMaskMontage = figure('Name','Lung Mask');set(ProtonMaskMontage,'WindowState','minimized');
-montage(LungMask(H_RecMatrix:2*H_RecMatrix,H_RecMatrix:2*H_RecMatrix,H_RecMatrix:2*H_RecMatrix),'DisplayRange',[])%unregistered for these
-disp('Lung Mask Completed.')
-savefig('ProtonMaskMontage.fig')
-close(gcf)
+% ProtonMaskMontage = figure('Name','Lung Mask');set(ProtonMaskMontage,'WindowState','minimized');
+% montage(LungMask(H_RecMatrix:2*H_RecMatrix,H_RecMatrix:2*H_RecMatrix,H_RecMatrix:2*H_RecMatrix),'DisplayRange',[])%unregistered for these
+% disp('Lung Mask Completed.')
+% savefig('ProtonMaskMontage.fig')
+% close(gcf)
 
 
 NumPlotSlices = 7;%must be odd to work as expected
@@ -77,7 +78,9 @@ optimizer.InitialRadius = 0.00005;
 optimizer.MaximumIterations = 500;
 tform = imregtform(abs(ProtonReg), abs(VentReg), 'affine', optimizer, metric,'InitialTransformation',tformSimilarity,'PyramidLevels',4); %affine transform using inital similarity transform
 ProtonRegistered = imwarp(abs(ProtonImage), tform,'OutputView',imref3d(size(abs(VentImage))));
+ProtonHRRegistered = imwarp(abs(ProtonImageHR), tform,'OutputView',imref3d(size(abs(VentImage))));
 ProtonMaskRegistred = logical(imwarp(abs(LungMask), tform,'OutputView',imref3d(size(abs(VentImage)))));
+
 disp('Registering Proton Image to Gas Image Completed.')
 
 %Determine Slices to Plot
@@ -138,6 +141,7 @@ Proton.Slices_Co = Slices_Co;
 Proton.Slices_Ax = Slices_Ax; 
 Proton.optimizer = optimizer;
 Proton.ProtonRegistered = ProtonRegistered;
+Proton.ProtonHRRegistered = ProtonHRRegistered;
 Proton.ProtonMaskRegistred = ProtonMaskRegistred;
 Proton.ProtonRegisteredColored = permute(ProtonRegisteredColored,[1 2 4 3]);
 GasExchange.LungMask = LungMask;

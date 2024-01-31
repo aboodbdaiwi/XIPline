@@ -18,8 +18,14 @@ function [GasExResults, CalResults] = CCHMC_Calibration(MainInput)
 %   Author: Matthew Willmering
 %   Work email: matthew.willmering@cchmc.org
 %   Personal email: matt.willmering@gmail.com
-%   Website: https://cpir.cchmc.org/
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
 
+%   Author: Abdullah S. Bdaiwi
+%   Work email: abdullah.bdaiwi@cchmc.org
+%   Personal email: abdaiwi89@gmail.com
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
+
+%   Please add updates at the end. Ex: 3/10/24 - ASB: updated flip angle caluclation for spiral diffusion
 % clc; 
 % clearvars -except DataFile;
 % close all;

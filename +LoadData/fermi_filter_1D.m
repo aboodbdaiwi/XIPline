@@ -1,4 +1,17 @@
 function filter_vec = fermi_filter_1D(window_size,Wf)
+%   Inputs:
+%      
+%   Outputs:
+%                   
+%   Package: https://github.com/aboodbdaiwi/HP129Xe_Analysis_App
+%
+%   Author: Abdullah S. Bdaiwi
+%   Work email: abdullah.bdaiwi@cchmc.org
+%   Personal email: abdaiwi89@gmail.com
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
+%
+%   Please add updates at the end. Ex: 3/10/24 - ASB: update .... 
+
 %GE default for Wf is 10
 % Centering corrected to window_size/2 on 10/16/17 by ZIC.
 

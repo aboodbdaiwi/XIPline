@@ -20,6 +20,7 @@ function [GasExResults, CalResults] = XeCTC_Calibration(MainInput)
 %   Personal email: matt.willmering@gmail.com
 %   Website: https://cpir.cchmc.org/
 
+%   Please add updates at the end. Ex: 3/10/24 - ASB: updated flip angle caluclation for spiral diffusion
 % clc; 
 % clearvars -except DataFile;
 % close all;

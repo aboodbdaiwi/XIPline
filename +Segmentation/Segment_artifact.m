@@ -1,12 +1,21 @@
 function artifact_mask = Segment_artifact(airway_segment,awcof,diffimg);
-% function to sement airways from ADC maps
-%%
+%   Inputs:
+%      
+%   Outputs:
+%                   
+%   Package: https://github.com/aboodbdaiwi/HP129Xe_Analysis_App
+%
+%   Author: Abdullah S. Bdaiwi
+%   Work email: abdullah.bdaiwi@cchmc.org
+%   Personal email: abdaiwi89@gmail.com
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
+%
+%   Please add updates at the end. Ex: 3/10/24 - ASB: update .... 
+
 b1img = diffimg(:,:,:,1);
 szimg = size(b1img);
 artifact_mask = zeros(szimg);
 
-%%
-%% Airway segmentation
 % Quick and dirty trick for removing airways
 if strcmp(airway_segment,'quicknEZ') == 1;
     b5img = diffimg(:,:,:,5);

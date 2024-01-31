@@ -1,5 +1,18 @@
 
 function R_So_Model_Animal_1D=LM_Model_R_So_Human_1D_h(ky,num_bavlue)
+%   Inputs:
+%      
+%   Outputs:
+%                   
+%   Package: https://github.com/aboodbdaiwi/HP129Xe_Analysis_App
+%
+%   Author: Abdullah S. Bdaiwi
+%   Work email: abdullah.bdaiwi@cchmc.org
+%   Personal email: abdaiwi89@gmail.com
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
+%
+%   Please add updates at the end. Ex: 3/10/24 - ASB: update .... 
+    
     formatSpec_y = '    for (i in 1:%d){';
     formatSpec_b = '        for (l in 1:%d){';
     formatSpec_b2 = '            MSR[i] <- sum(residual.sq[i,])/%d';

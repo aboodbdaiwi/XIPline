@@ -1,4 +1,12 @@
 function [D,ldd,Bi,Ci]=LmSEMXeStart(Do,diftime)
+%   Inputs:
+%      
+%   Outputs:
+%                   
+%   Package: https://github.com/aboodbdaiwi/HP129Xe_Analysis_App
+%
+%   Please add updates at the end. Ex: 3/10/24 - ASB: update .... 
+
 % calculates coefficients, diffusion times and diffusion lenghts before
 % looping to speed up fit of image data (avoid unnecessary recalculations)
 

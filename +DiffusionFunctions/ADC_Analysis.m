@@ -13,14 +13,15 @@ function [ADCmap,ADCcoloredmap,SNR_table,meanADC,stdADC,ADC_hist] = ADC_Analysis
 %       WinBUGSPath = string: WinBUGS .exe file location
 %       outputpath = string containing the path of the folder to store the output
 %
-
-%   Package: 
+%   Package: https://github.com/aboodbdaiwi/HP129Xe_Analysis_App
+%
 %
 %   Author: Abdullah S. Bdaiwi
 %   Work email: abdullah.bdaiwi@cchmc.org
 %   Personal email: abdaiwi89@gmail.com
-%   Website: https://cpir.cchmc.org/
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
 %
+%   Please add updates at the end. Ex: 3/10/24 - ASB: updated flip angle caluclation for spiral diffusion
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 tic

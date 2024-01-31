@@ -39,13 +39,16 @@ function ...
 %       DL_map = longitudinal diffusion coefficient map
 %       Dmean_map = mean diffusion coefficient map
 %       So_map 
-%   Package: 
+
+%   Package: https://github.com/aboodbdaiwi/HP129Xe_Analysis_App
 %
 %   Author: Abdullah S. Bdaiwi
 %   Work email: abdullah.bdaiwi@cchmc.org
 %   Personal email: abdaiwi89@gmail.com
-%   Website: https://cpir.cchmc.org/
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
 %
+%   Please add updates at the end. Ex: 3/10/24 - ASB: updated flip angle caluclation for spiral diffusion
+
 % This code is based on the cylinder model by A. L. Sukstanskii1 and D. A. Yablonskiy
 % (https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3184317/)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

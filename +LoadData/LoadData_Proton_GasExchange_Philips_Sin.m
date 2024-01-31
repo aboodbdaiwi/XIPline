@@ -1,5 +1,5 @@
 
-function [ProtonImage,H_RecMatrix,ProtonMax,file_name] = LoadData_Proton_GasExchange_Philips_Sin(ProtonDataLocation,PixelShift,Institute)
+function [Proton] = LoadData_Proton_GasExchange_Philips_Sin(ProtonDataLocation,PixelShift,Institute,Proton)
 %   Will process the resulting proton mri data
 %   for V3 and XeCTC versions of the data
 %   Requires a folder with the Dissolved_Xe raw/lab/sin files,
@@ -18,18 +18,17 @@ function [ProtonImage,H_RecMatrix,ProtonMax,file_name] = LoadData_Proton_GasExch
 %   Example: 
 %   LoadData_Proton_GasExchange_Philips_Sin('C:\Users\mwillmering\Documents\Subject1')
 %
-% 
 %   Package: https://github.com/cchmc-cpir/CCHMC-Gas-Exchange-Processing-Package
 %
 %   Author: Matthew Willmering
 %   Work email: matthew.willmering@cchmc.org
 %   Personal email: matt.willmering@gmail.com
-%   Website: https://cpir.cchmc.org/
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
 %
 %   Co-Author: Abdullah Bdaiwi
 %   Work email: abdullah.bdaiwi@cchmc.org
 %   Personal email: abdaiwi89@gmail.com
-%   Website: https://cpir.cchmc.org/
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
 
 %% Determine files to use
 if strcmp(Institute,'XeCTC') == 1    
@@ -207,7 +206,7 @@ for i = 1:H_coils
 end
 ProtonImage = GasExchangeFunctions.SOS_Coil_Combine(ProtonImage);%Combine Coils
 disp('Reconstructing UTE Image Competed.')
-
+ProtonImageHR = ProtonImage;
 %Correct Bias
 disp('Correcting Proton Bias...')
 ProtonImage = medfilt3(ProtonImage, [7 7 7]);%remove undersampling artifacts
@@ -221,10 +220,15 @@ disp('Proton Bias Corrected.')
 cd(outputpath)
 %View
 ProtonMontage = figure('Name','Proton Image');set(ProtonMontage,'WindowState','minimized');
-montage(abs(ProtonImage(H_RecMatrix:2*H_RecMatrix,H_RecMatrix:2*H_RecMatrix,H_RecMatrix:2*H_RecMatrix)),'DisplayRange',[0 ProtonMax])%unregistered for these
+montage(abs(ProtonImageHR(H_RecMatrix:2*H_RecMatrix,H_RecMatrix:2*H_RecMatrix,H_RecMatrix:2*H_RecMatrix)),'DisplayRange',[0 ProtonMax])%unregistered for these
 savefig('ProtonMontage.fig')
 close(gcf)
 
-
+Proton.Image = double(ProtonImage);
+Proton.ProtonImageHR = double(ProtonImageHR);
+Proton.filename = file_name;
+Proton.folder = MainInput.HDataLocation;
+Proton.H_RecMatrix = H_RecMatrix;
+Proton.ProtonMax = ProtonMax;
 
 end

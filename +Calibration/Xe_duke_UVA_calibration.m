@@ -1,15 +1,19 @@
 function [GasExResults, CalResults] = Xe_duke_UVA_calibration(MainInput)
-
-% 5/10/17 - updated to report key values to scanner tech more clearly
-% 5/11/17 - Add red warnings for frequency, TE90, SNR, and Vref
-% 6/29/17 - Added the option to fit barrier to voigt lineshape instead
-% 6/30/17 - fix bug in TE90 calculation associated with negative deltaF
-% 7/27/17 - fix additional TE90 bug if inital delta phase is negative
-% 10/10/18 - update to use combined dynamic/calibration data
-% 01/08/21 - updated to accept either Duke or UVA twix files
-% 01/14/21 - updated to accept Duke, Duke/UVA, or UVA twix files
-% clc; clear all; close all;
-
+%   Inputs:
+%      
+%
+%   Outputs:
+%                   
+%
+%   Package: https://github.com/aboodbdaiwi/HP129Xe_Analysis_App
+%
+%
+%   Author: Abdullah S. Bdaiwi
+%   Work email: abdullah.bdaiwi@cchmc.org
+%   Personal email: abdaiwi89@gmail.com
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
+%
+%   Please add updates at the end. Ex: 3/10/24 - ASB: updated flip angle caluclation for spiral diffusion
 
 %% Define number of calibration, number to skip, number of gas, target flip
 FlipTarget = 20; % target flip angle from calibration
@@ -331,6 +335,7 @@ CalResults.VRef = VRef;
 
 end
 
+%   Please add updates:
 
 
 

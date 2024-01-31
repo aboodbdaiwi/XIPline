@@ -4,6 +4,14 @@ function [Ventilation] = calculate_VDP(MR, maskarray, complete, incomplete, hype
 % Authors: Joseph Plummer
 %         Abdullah Bdaiwi
 % Date: 05/09/2021.
+
+%   Package: https://github.com/aboodbdaiwi/HP129Xe_Analysis_App
+%
+%   Author: Abdullah S. Bdaiwi
+%   Work email: abdullah.bdaiwi@cchmc.org
+%   Personal email: abdaiwi89@gmail.com
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
+
 %% VDP Calculation Code:
 cd(DataPath)
 warning('off','all') % Suppress all the tiff warnings

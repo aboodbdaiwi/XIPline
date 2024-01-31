@@ -14,12 +14,14 @@ function [BinnedADCmap,DiffMean,DiffStd,LBADC_hist,BinTable] = LinearBinningADC(
 %   Outputs:
 %       success - 1 if ran successfully, 0 if not
 
-%   Package: 
+%   Package: https://github.com/aboodbdaiwi/HP129Xe_Analysis_App
 %
 %   Author: Abdullah S. Bdaiwi
 %   Work email: abdullah.bdaiwi@cchmc.org
 %   Personal email: abdaiwi89@gmail.com
-%   Website: https://cpir.cchmc.org/
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
+%
+%   Please add updates at the end. Ex: 3/10/24 - ASB: update .... 
 %
 % This code is based on the linear Binning Method by Ziyi Wang
 % (https://pubmed.ncbi.nlm.nih.gov/30024058/)

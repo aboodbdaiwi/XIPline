@@ -4,6 +4,14 @@ function [Ventilation] = calculate_VDP_CCHMC(MR, maskarray, complete, incomplete
 % Authors: Joseph Plummer
 %         Abdullah Bdaiwi
 % Date: 05/09/2021.
+
+%   Package: https://github.com/aboodbdaiwi/HP129Xe_Analysis_App
+%
+%   Author: Abdullah S. Bdaiwi
+%   Work email: abdullah.bdaiwi@cchmc.org
+%   Personal email: abdaiwi89@gmail.com
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
+
 %% VDP Calculation Code:
 cd(DataPath)
 close all; 
@@ -106,8 +114,8 @@ hist(d_Hyper(d_Hyper>0),dcnts)
 
 % Image settings:
 h = findobj(gcf,'Type','patch');
-set(h(1),'FaceColor','r','EdgeColor','k','facealpha',0.5);
-set(h(2),'FaceColor','b','EdgeColor','k','facealpha',0.5);
+set(h(1),'FaceColor','b','EdgeColor','k','facealpha',0.5);
+set(h(2),'FaceColor','r','EdgeColor','k','facealpha',0.5);
 set(h(3),'FaceColor','y','EdgeColor','k','facealpha',0.5);
 set(h(4),'FaceColor','w','EdgeColor','k','facealpha',0.5);
 legend1 = sprintf('Normal: %0.2f±%0.2f (%0.1f%%)',md_Normal, sd_Normal, Normal);
@@ -273,33 +281,31 @@ d_Hyper_rgb = (defectArray == 4)*255;
 d_Normal_rgb = (defectArray == 0)*255;
 
 % Define colormaps:
-% cm_incomplete = [0 0 0
-%     1 1 0]; % yellow
 cm_incomplete = [0 0 0
-    1 0 0];
+    1 1 0]; % yellow
+% cm_incomplete = [0 0 0
+%     1 0 0];
 array4dincomplete = zeros(size(d_Incomplete_rgb,1), size(d_Incomplete_rgb,2),3,...
     size(d_Incomplete_rgb,3));
 for slice = 1:size(d_Incomplete_rgb,3)
     array4dincomplete(:,:,:,slice) =  ind2rgb(d_Incomplete_rgb(:,:,slice),cm_incomplete);
 end
-% cm_complete=[0 0 0
-%     0 0 1]; % blue
 cm_complete=[0 0 0
-    1 0 0];
+    1 0 0]; % red
+% cm_complete=[0 0 0
+%     1 0 0];
 array4dcomplete = zeros(size(d_Complete_rgb,1), size(d_Complete_rgb,2),3,...
     size(d_Complete_rgb,3));
 for slice = 1:size(d_Complete_rgb,3)
     array4dcomplete(:,:,:,slice) =  ind2rgb(d_Complete_rgb(:,:,slice),cm_complete);
 end
-
 cm_hyper=[0 0 0
-    1 0 0];
+    0 0 1]; % blue
 array4dhyper = zeros(size(d_Hyper_rgb,1), size(d_Hyper_rgb,2),3,...
     size(d_Hyper_rgb,3));
 for slice = 1:size(d_Hyper_rgb,3)
     array4dhyper(:,:,:,slice) =  ind2rgb(d_Hyper_rgb(:,:,slice),cm_hyper);
 end
-
 cm_normal=[0 0 0
     1 1 1];
 array4dnormal = zeros(size(d_Normal_rgb,1), size(d_Normal_rgb,2),3, size(d_Normal_rgb,3));
@@ -635,6 +641,7 @@ legend4 = sprintf('%0.2f±%0.2f (%0.1f%%)',md_Hyper,sd_Hyper, Hyper);
 Ventilation.VDP = VDP;
 Ventilation.VentscaledImage = VentscaledImage;
 Ventilation.DefectArray = DefectArray;
+Ventilation.defectArray = defectArray;
 Ventilation.VDP_hist = VDP_hist;
 Ventilation.VentDefectmap = VentDefectmap;
 Ventilation.legend1 = legend1;

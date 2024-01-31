@@ -1,17 +1,17 @@
 
 function [Proton,Ventilation,Diffusion, GasExchange] = loadSegmentedMask(Proton,Ventilation,Diffusion,GasExchange,MainInput)
 %   Inputs:
-%          
+%      
 %   Outputs:
-%      LungMask
+%                   
+%   Package: https://github.com/aboodbdaiwi/HP129Xe_Analysis_App
 %
-%   Example: 
-%   Package: 
-%
-%   Author: Abdullah Bdaiwi 
+%   Author: Abdullah S. Bdaiwi
 %   Work email: abdullah.bdaiwi@cchmc.org
 %   Personal email: abdaiwi89@gmail.com
-%   Website: https://cpir.cchmc.org/
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
+%
+%   Please add updates at the end. Ex: 3/10/24 - ASB: update .... 
 
 cd(MainInput.XeDataLocation);
 mask_existing1 = exist('mask','var');

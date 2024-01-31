@@ -1,17 +1,17 @@
 
 function PatientReport(MainInput)
 %   Inputs:
-%          
+%      
 %   Outputs:
-%     
+%                   
+%   Package: https://github.com/aboodbdaiwi/HP129Xe_Analysis_App
 %
-%   Example: 
-%   Package: 
-%
-%   Author: Abdullah Bdaiwi 
+%   Author: Abdullah S. Bdaiwi
 %   Work email: abdullah.bdaiwi@cchmc.org
 %   Personal email: abdaiwi89@gmail.com
-%   Website: https://cpir.cchmc.org/
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
+%
+%   Please add updates at the end. Ex: 3/10/24 - ASB: update .... 
 
 %%
 
@@ -83,7 +83,6 @@ Global.exportToPPTX('addtext',sprintf(MainInput.summaryofFindings),'Position', [
 Global.exportToPPTX('addtext',sprintf(MainInput.notes),'Position',          [4 7 10 0.5],'Color','k','FontSize',25);
 Global.exportToPPTX('addtext',sprintf(MainInput.dataAnalyst),'Position',    [4 7.5 10 0.5],'Color','k','FontSize',25);
 Global.exportToPPTX('addtext',sprintf(MainInput.processingDate),'Position', [4 8 10 0.5],'Color','k','FontSize',25);
-
 
 % save all
 Global.exportToPPTX('save',fullfile(outputpath, ReportTitle));

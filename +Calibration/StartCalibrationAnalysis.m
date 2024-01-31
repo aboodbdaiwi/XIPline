@@ -1,5 +1,18 @@
 
 function [GasExResults, CalResults] = StartCalibrationAnalysis(MainInput)
+%   Inputs:
+%      
+%
+%   Outputs:
+%                   
+%
+%   Package: https://github.com/aboodbdaiwi/HP129Xe_Analysis_App
+%
+%
+%   Author: Abdullah S. Bdaiwi
+%   Work email: abdullah.bdaiwi@cchmc.org
+%   Personal email: abdaiwi89@gmail.com
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
 
 % Initialize output variables
 %Results to Pass to Gas Exchange Recon

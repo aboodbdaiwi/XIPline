@@ -52,32 +52,38 @@ switch MainInput.SegmentationMethod
         FunctionDirectory = which('HPXeAnalysisApp');
         idcs = strfind(FunctionDirectory,filesep);%determine location of file separators
         FunctionDirectory = FunctionDirectory(1:idcs(end)-1);%remove file
-    
-        sourcemodel1Path = [FunctionDirectory,'\+Segmentation\AutoSegment_2DVent_Xe_axial_2000e.hdf5'];
-        sourcemodel2Path = [FunctionDirectory,'\+Segmentation\AutoSegment_2DVent_Xe_coronal_2000e.hdf5'];
-        sourcemodel3Path = [FunctionDirectory,'\+Segmentation\AutoSegment_2DVent_Xe_H_coronal_1000e.hdf5'];
-        sourcemodel4Path = [FunctionDirectory,'\+Segmentation\AutoSegment_3DGasExchange_Xe_200e.hdf5'];
-        sourcemodel5Path = [FunctionDirectory,'\+Segmentation\AutoSegment_3DGasExchange_Xe_H_1000e.hdf5'];
-        sourcemodel6Path = [FunctionDirectory,'\+Segmentation\AutoSegmentation.py'];
+
+        sourcemodel1Path = [FunctionDirectory,'\+Segmentation\AutoSegmentation.py'];
+        sourcemodel2Path = [FunctionDirectory,'\+Segmentation\AutoSegment_2DVent_Xe_axial_2000e.hdf5'];
+        sourcemodel3Path = [FunctionDirectory,'\+Segmentation\AutoSegment_2DVent_Xe_coronal_2000e.hdf5'];
+        sourcemodel4Path = [FunctionDirectory,'\+Segmentation\AutoSegment_2DVent_Xe_H_coronal_1000e.hdf5'];
+        sourcemodel5Path = [FunctionDirectory,'\+Segmentation\AutoSegment_3DGasExchange_Xe_200e.hdf5'];
+        sourcemodel6Path = [FunctionDirectory,'\+Segmentation\AutoSegment_3DGasExchange_Xe_H_1000e.hdf5'];
+        sourcemodel7Path = [FunctionDirectory,'\+Segmentation\AutoSegment_2DDiff_Xe_axial_2000e.hdf5'];
+
+
         cd(modelsFolderPath);
         if ~exist(fullfile(modelsFolderPath, 'AutoSegment_2DVent_Xe_axial_2000e.hdf5'), 'file') ||...
             ~exist(fullfile(modelsFolderPath, 'AutoSegment_2DVent_Xe_coronal_2000e.hdf5'), 'file') ||...
             ~exist(fullfile(modelsFolderPath, 'AutoSegment_2DVent_Xe_H_coronal_1000e.hdf5'), 'file') ||...
             ~exist(fullfile(modelsFolderPath, 'AutoSegment_3DGasExchange_Xe_200e.hdf5'), 'file') ||...
             ~exist(fullfile(modelsFolderPath, 'AutoSegment_3DGasExchange_Xe_H_1000e.hdf5'), 'file') ||...
+            ~exist(fullfile(modelsFolderPath, 'AutoSegment_2DDiff_Xe_axial_2000e.hdf5'), 'file') ||...~exist(fullfile(modelsFolderPath, 'AutoSegment_3DGasExchange_Xe_H_1000e.hdf5'), 'file') ||...
             ~exist(fullfile(destinationFolderPath, 'AutoSegmentation.py'), 'file')
-                                
-            copyfile(sourcemodel1Path, modelsFolderPath);
+                      
+            copyfile(sourcemodel1Path, destinationFolderPath);
             copyfile(sourcemodel2Path, modelsFolderPath);
             copyfile(sourcemodel3Path, modelsFolderPath);
             copyfile(sourcemodel4Path, modelsFolderPath);
             copyfile(sourcemodel5Path, modelsFolderPath);
-            copyfile(sourcemodel6Path, destinationFolderPath);
+            copyfile(sourcemodel6Path, modelsFolderPath);
+            copyfile(sourcemodel7Path, modelsFolderPath);
+            
             disp('File copied successfully.');
         else
             disp('models files already exist in the models folder.');
         end
-
+        % delete old files
         fileName1 = 'AutoMask.mat';
         fileName2 = 'AutoMask.nii.gz';
         fullFilePath1 = fullfile(destinationFolderPath, fileName1);
@@ -118,7 +124,6 @@ switch MainInput.SegmentationMethod
 %         system('pip install tensorflow')
 %         system('pip install nibabel')
 %         system('pip install scipy') 
-%         system('pip install os') 
 %         terminate(pyenv)
 %         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         cd(FunctionDirectory)
@@ -141,22 +146,35 @@ switch MainInput.SegmentationMethod
                         end                       
                     case 'transversal'
                         SegmentType = 'vent_2D_1ch_axi'; % 2ch is not supported yet
+                    case 'sagittal'
+                        SegmentType = 'not_supported'; % not supported yet
                     case 'isotropic'
-                        % not supported yet
+                        SegmentType = 'not_supported'; % not supported yet
                 end 
             case 'Diffusion'
+               switch MainInput.SliceOrientation
+                    case 'coronal' 
                         SegmentType = 'not_supported'; % not supported yet
+                    case 'transversal'
+                        SegmentType = 'diff_2D_1ch_axi'; % 2ch is not supported yet
+                   case 'sagittal'
+                        SegmentType = 'not_supported'; % not supported yet
+                    case 'isotropic'
+                        SegmentType = 'not_supported'; % not supported yet
+               end 
             case 'GasExchange'
                switch MainInput.SliceOrientation
                     case 'coronal' 
                         SegmentType = 'not_supported'; % not supported yet
                     case 'transversal'
                         SegmentType = 'not_supported'; % not supported yet
+                    case 'sagittal'
+                        SegmentType = 'not_supported'; % not supported yet                        
                     case 'isotropic'
-                        if MainInput.NoProtonImage == 0 && strcmp(MainInput.Imagestosegment, 'Xe & Proton Registered') == 1
+                        if (MainInput.NoProtonImage == 0) && (strcmp(MainInput.Imagestosegment, 'Xe & Proton Registered'))
                             SegmentType = 'gx_3D_2ch_iso'; %system('predict_mask_3DGasExchange_w_H_isotropic.exe')
                         elseif strcmp(MainInput.Imagestosegment, 'Xenon') == 1
-                            SegmentType = 'vent_2D_1ch_cor'; 
+                            SegmentType = 'gx_3D_1ch_iso'; 
                         else 
                             SegmentType = 'gx_3D_1ch_iso'; %system('predict_mask_3DGasExchange_wout_H_isotropic.exe')           
                         end  
@@ -188,18 +206,26 @@ switch MainInput.SegmentationMethod
                         Mask = double(temp_mask);
                         mask_existing = 1;
                     case 'Diffusion'    
-                    case 'GasExchange'
-                        if size(Mask,1) ~= size(GasExchange.VentImage,1)
-                            temp_mask = zeros(size(GasExchange.VentImage,1),size(GasExchange.VentImage,2),size(GasExchange.VentImage,3));
-                            for i = 1:size(GasExchange.VentImage)
-                                temp_mask(:,:,i) = imresize(Mask(:,:,i),[size(GasExchange.VentImage,1),size(GasExchange.VentImage,2)]);
+                        if size(Mask,1) ~= size(Diffusion.Image,1)
+                            temp_mask = zeros(size(Diffusion.Image,1),size(Diffusion.Image,2),size(Diffusion.Image,3));
+                            for i = 1:size(Diffusion.Image,3)
+                                temp_mask(:,:,i) = imresize(Mask(:,:,i),[size(Diffusion.Image,1),size(Diffusion.Image,2)]);
                             end
                             temp_mask = temp_mask > 0.5;
                         else
                             temp_mask = Mask;
                         end
                         Mask = double(temp_mask);
-                        mask_existing = 1;                       
+                        mask_existing = 1;                        
+                    case 'GasExchange'
+                        if size(Mask,1) ~= size(GasExchange.VentImage,1)
+                            temp_mask = imresize3(Mask, [size(GasExchange.VentImage,1),size(GasExchange.VentImage,2),size(GasExchange.VentImage,3)]);
+                            temp_mask = temp_mask > 0.5;
+                        else
+                            temp_mask = Mask;
+                        end
+                        Mask = double(temp_mask);
+                        mask_existing = 1;    
                 end                             
                 % store mask
                 if mask_existing == 1
@@ -225,7 +251,14 @@ switch MainInput.SegmentationMethod
                            GasExchange.LungMask = lungmask;
                            Proton.LungMask = lungmask;
                            Proton.ProtonMaskRegistred = lungmask;
-                           GasExchange.AirwayMask = airwaymask;                           
+                           GasExchange.AirwayMask = airwaymask;  
+                            %View
+                            cd(GasExchange.outputpath);
+                            ProtonMaskMontage = figure('Name','Lung Mask');set(ProtonMaskMontage,'WindowState','minimized');
+                            montage(GasExchange.Mask,'DisplayRange',[0 1])%unregistered for these
+                            disp('Lung Mask Completed.')
+                            savefig('ProtonMaskMontage.fig')
+                            close(gcf)                           
                     end    
                 end
             else
@@ -236,8 +269,6 @@ switch MainInput.SegmentationMethod
         end
         cd(MainInput.XeDataLocation)
 end 
-
-
   
 end
 

@@ -19,6 +19,14 @@ function [SNR_slice, Overall_SNR] = calculate_SNR(MR, maskarray, airwaymask)
 %
 % Author: Joseph Plummer.
 % Date: 05/09/2021.
+
+%   Package: https://github.com/aboodbdaiwi/HP129Xe_Analysis_App
+%
+%   Author: Abdullah S. Bdaiwi
+%   Work email: abdullah.bdaiwi@cchmc.org
+%   Personal email: abdaiwi89@gmail.com
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
+
 %% Calculate SNR
 % Create a structuring element to dilate the Xe mask array.
 % The structuring element size '28' can be changed as needed to remove

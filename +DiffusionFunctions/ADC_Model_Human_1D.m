@@ -1,5 +1,18 @@
 
 function ADC_Model_1D=ADC_Model_Human_1D(ky,num_bavlue)
+%   Inputs:
+%      
+%   Outputs:
+%                   
+%   Package: https://github.com/aboodbdaiwi/HP129Xe_Analysis_App
+%
+%   Author: Abdullah S. Bdaiwi
+%   Work email: abdullah.bdaiwi@cchmc.org
+%   Personal email: abdaiwi89@gmail.com
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
+%
+%   Please add updates at the end. Ex: 3/10/24 - ASB: updated flip angle caluclation for spiral diffusion
+
     formatSpec_y = '    for (i in 1:%d){';
     formatSpec_b = '                for (l in 1:%d){';
     str_y = sprintf(formatSpec_y,ky);

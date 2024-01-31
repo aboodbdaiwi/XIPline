@@ -1,20 +1,5 @@
 
-function [UncorrectedVentImage,...
-          VentImage,...
-          GasImage,...
-          DissolvedImage,...
-          CorrDissolvedImage,...
-          AppendedDissolvedNMRFit,...
-          RBC2Bar_struct,...
-          RBCOsc_High_Image,...
-          RBCOsc_Low_Image,...
-          RBCOsc_Normalization,...
-          ActTE90,...
-          DisFlipAngle,...
-          PixelShift,...
-          freq_jump,...
-          DissolvedNMR,...
-          SigDynamics] = LoadData_Gas_GasExchange_Philips_Sin(GasDataLocation,Institute)
+function [GasExchange] = LoadData_Gas_GasExchange_Philips_Sin(GasDataLocation,Institute,GasExchange)
 %Will process the resulting gas exchange mri data
 %   for V3 and XeCTC versions of the data
 %   Requires a folder with the Dissolved_Xe raw/lab/sin files,
@@ -47,19 +32,18 @@ function [UncorrectedVentImage,...
 %
 %   Example: 
 %   GasExchangeFunctions_ProcessSingleSubject('C:\Users\mwillmering\Documents\Subject1')
-%
 % 
 %   Package: https://github.com/cchmc-cpir/CCHMC-Gas-Exchange-Processing-Package
 %
 %   Author: Matthew Willmering
 %   Work email: matthew.willmering@cchmc.org
 %   Personal email: matt.willmering@gmail.com
-%   Website: https://cpir.cchmc.org/
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
 %
 %   Co-Author: Abdullah Bdaiwi
 %   Work email: abdullah.bdaiwi@cchmc.org
 %   Personal email: abdaiwi89@gmail.com
-%   Website: https://cpir.cchmc.org/
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
 %% Define Fixed Variables, Subject to Change with Sequence
 %General information
 NewImages = 1; %1 forces new images to be made
@@ -596,6 +580,24 @@ RBCOsc_High_Image = GasExchangeFunctions.Dissolved_RBCOscImageRecon(Xe_RecMatrix
 RBCOsc_Low_Image = GasExchangeFunctions.Dissolved_RBCOscImageRecon(Xe_RecMatrix,RBCOsc_Low_Key,XeTraj_SS/2,PixelShift);%2x Resolution
 RBCOsc_Normalization = GasExchangeFunctions.Dissolved_RBCOscImageRecon(Xe_RecMatrix,DissolvedKSpace_SS_Detrend_Normalized,XeTraj_SS/2,PixelShift);%2x Resolution
 disp('Reconstructing RBC keyhole Images Completed.')
+
+%% store avriables
+GasExchange.UncorrectedVentImage = UncorrectedVentImage;
+GasExchange.VentImage = VentImage;
+GasExchange.GasImage = GasImage;
+GasExchange.DissolvedImage = DissolvedImage;
+GasExchange.CorrDissolvedImage = CorrDissolvedImage;
+GasExchange.AppendedDissolvedNMRFit = AppendedDissolvedNMRFit;
+GasExchange.RBC2Bar_struct = RBC2Bar_struct;
+GasExchange.RBCOsc_High_Image = RBCOsc_High_Image;
+GasExchange.RBCOsc_Low_Image = RBCOsc_Low_Image;
+GasExchange.RBCOsc_Normalization = RBCOsc_Normalization;
+GasExchange.ActTE90 = ActTE90;
+GasExchange.DisFlipAngle = DisFlipAngle;
+GasExchange.PixelShift = PixelShift;
+GasExchange.freq_jump = freq_jump;
+GasExchange.DissolvedNMR = DissolvedNMR;
+GasExchange.SigDynamics = SigDynamics;
 
 
 close all;

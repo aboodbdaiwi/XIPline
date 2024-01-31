@@ -1,5 +1,18 @@
 
 function [Ventilation, Diffusion, GasExchange, Proton] = LoadReadData(MainInput)
+%   Inputs:
+%      
+%   Outputs:
+%                   
+%   Package: https://github.com/aboodbdaiwi/HP129Xe_Analysis_App
+%
+%   Author: Abdullah S. Bdaiwi
+%   Work email: abdullah.bdaiwi@cchmc.org
+%   Personal email: abdaiwi89@gmail.com
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
+%
+%   Please add updates at the end. Ex: 3/10/24 - ASB: update .... 
+
 % Initialize output variables
 Ventilation.Image = [];
 Ventilation.filename = [];
@@ -33,6 +46,20 @@ Proton.H_RecMatrix = [];
 Proton.ProtonMax = [];
 
 %% Load/Read Xenon data 
+cd(MainInput.XeDataLocation)
+if strcmp(MainInput.AnalysisType,'Ventilation')                 
+    mkdir([MainInput.XeDataLocation '\Ventilation Analysis']);
+    outputpath = [MainInput.XeDataLocation '\Ventilation Analysis'];
+    Ventilation.outputpath = outputpath;    
+elseif strcmp(MainInput.AnalysisType,'Diffusion')
+    mkdir([MainInput.XeDataLocation '\Diffusion Analysis']);
+    outputpath = [MainInput.XeDataLocation '\Diffusion Analysis'];
+    Diffusion.outputpath = outputpath;
+elseif strcmp(MainInput.AnalysisType,'GasExchange')
+    mkdir([MainInput.XeDataLocation '\Gas Exchange Analysis']);
+    outputpath = [MainInput.XeDataLocation '\Gas Exchange Analysis'];
+    GasExchange.outputpath = outputpath;
+end
 
 if strcmp(MainInput.XeDataext,'.dcm') == 1         
     [Image, file_folder, FileNames] = LoadData.DICOM_Load(MainInput.XeDataLocation);    
@@ -129,14 +156,15 @@ elseif strcmp(MainInput.XeDataext,'.nii') == 1 || strcmp(MainInput.XeDataext,'.g
     elseif strcmp(MainInput.AnalysisType,'GasExchange') == 1 
         % not supported yet
     end
-elseif (strcmp(MainInput.XeDataext,'.h5') == 1 || strcmp(MainInput.XeDataext,'.mrd') == 1) &&  strcmp(MainInput.SequenceType, '2D GRE') == 1             
-    [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
-    if strcmp(MainInput.AnalysisType,'Ventilation') == 1                 
+elseif (strcmp(MainInput.XeDataext,'.h5') == 1 || strcmp(MainInput.XeDataext,'.mrd') == 1) 
+    if strcmp(MainInput.AnalysisType,'Ventilation') == 1   
+        [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
         Ventilation.Image = Image;  
     elseif strcmp(MainInput.AnalysisType,'Diffusion') == 1 
+        [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
         Diffusion.Image = Image;
-    elseif strcmp(MainInput.AnalysisType,'GasExchange') == 1 
-        % not supported yet
+    elseif strcmp(MainInput.AnalysisType,'GasExchange') && strcmp(MainInput.Institute,'XeCTC') && strcmp(MainInput.SequenceType, '3D Radial')
+        [GasExchange] = LoadData.ismrmrd.radial_3D_XeCTC_gx_recon(MainInput,GasExchange);
     end
 elseif strcmp(MainInput.XeDataext,'.data') == 1  && strcmp(MainInput.Scanner, 'Philips') == 1   
     if strcmp(MainInput.AnalysisType,'Ventilation') == 1 && strcmp(MainInput.SequenceType, '2D GRE') == 1 ...
@@ -168,22 +196,7 @@ elseif strcmp(MainInput.XeDataext,'.data') == 1  && strcmp(MainInput.Scanner, 'P
     elseif strcmp(MainInput.XeDataext,'.data') && strcmp(MainInput.AnalysisType,'GasExchange')  && strcmp(MainInput.SequenceType, '3D Radial')  ...
             && (strcmp(MainInput.ScannerSoftware, '5.6.1')  || strcmp(MainInput.ScannerSoftware, '5.9.0')) &&...
             (strcmp(MainInput.Institute,'CCHMC')  || strcmp(MainInput.Institute,'XeCTC')   )
-           [GasExchange.UncorrectedVentImage,...
-            GasExchange.VentImage,...
-            GasExchange.GasImage,...
-            GasExchange.DissolvedImage,...
-            GasExchange.CorrDissolvedImage,...
-            GasExchange.AppendedDissolvedNMRFit,...
-            GasExchange.RBC2Bar_struct,...
-            GasExchange.RBCOsc_High_Image,...
-            GasExchange.RBCOsc_Low_Image,...
-            GasExchange.RBCOsc_Normalization,...
-            GasExchange.ActTE90,...
-            GasExchange.DisFlipAngle,...
-            GasExchange.PixelShift,...
-            GasExchange.freq_jump,...
-            GasExchange.DissolvedNMR,...
-            GasExchange.SigDynamics] = LoadData.LoadData_Gas_GasExchange_Philips_Sin(MainInput.XeDataLocation,MainInput.Institute);                      
+           [GasExchange] = LoadData.LoadData_Gas_GasExchange_Philips_Sin(MainInput.XeDataLocation,MainInput.Institute,GasExchange);                      
     end
 %--------------------- add new read load function here --------------------
 % elseif strcmp(MainInput.XeDataType,'add DataType') == 1
@@ -212,21 +225,20 @@ elseif strcmp(MainInput.XeDataext,'.data') == 1  && strcmp(MainInput.Scanner, 'P
             end
             Diffusion.Image = Image;
         elseif strcmp(MainInput.AnalysisType,'GasExchange')
-    % we can't apply denoising on complex data         
-    %             GasExchange.VentImage
-    %             GasExchange.GasImage
-    %             GasExchange.Dissolved Image
+        % we can't apply denoising on complex data         
+        %             GasExchange.VentImage
+        %             GasExchange.GasImage
+        %             GasExchange.Dissolved Image
         
         end
     end
-
 
 end 
 
 
 %% Load/Read Proton data 
 %% 
-if strcmp(MainInput.NoProtonImage, 'no') == 1    
+if MainInput.NoProtonImage == 0    
     try 
         if strcmp(MainInput.HDataext,'.dcm') == 1                 
             [HImage, file_folder, file_name] = LoadData.DICOM_Load(MainInput.HDataLocation);
@@ -273,12 +285,17 @@ if strcmp(MainInput.NoProtonImage, 'no') == 1
                 else
                     PixelShift = [0; 0; 0];
                 end
-                [ProtonImage,H_RecMatrix,ProtonMax,file_name] = LoadData.LoadData_Proton_GasExchange_Philips_Sin(MainInput.HDataLocation,PixelShift,MainInput.Institute);
-                Proton.Image = double(ProtonImage);
-                Proton.filename = file_name;
-                Proton.folder = MainInput.HDataLocation;
-                Proton.H_RecMatrix = H_RecMatrix;
-                Proton.ProtonMax = ProtonMax;
+                [Proton] = LoadData.LoadData_Proton_GasExchange_Philips_Sin(MainInput.HDataLocation,PixelShift,MainInput.Institute);
+        elseif (strcmp(MainInput.XeDataext,'.h5') == 1 || strcmp(MainInput.XeDataext,'.mrd') == 1)              
+            if strcmp(MainInput.AnalysisType,'Ventilation') == 1   
+                [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
+                Ventilation.Image = Image;  
+            elseif strcmp(MainInput.AnalysisType,'Diffusion') == 1 
+                [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
+                Diffusion.Image = Image;
+            elseif strcmp(MainInput.AnalysisType,'GasExchange') && strcmp(MainInput.Institute,'XeCTC') && strcmp(MainInput.SequenceType, '3D Radial')
+                [Proton] = LoadData.ismrmrd.radial_3D_XeCTC_H_recon(MainInput, GasExchange, Proton);
+            end
     %--------------------- add new read load function here --------------------
                 
     %     elseif strcmp(MainInput.HDataext,'add DataType') == 1
@@ -286,9 +303,15 @@ if strcmp(MainInput.NoProtonImage, 'no') == 1
         end 
     catch
         disp('no proton images is selected')
-        MainInput.NoProtonImage =  'yes';
+        MainInput.NoProtonImage = 1;
     end
 end % end of Load/Read Proton data 
 
 close all;
 end
+
+% Please add updates here
+% 
+% 
+% 
+% 

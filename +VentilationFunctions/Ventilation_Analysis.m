@@ -3,11 +3,20 @@ function [Ventilation] = Ventilation_Analysis (Ventilation,Proton,MainInput)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%% Matlab script for processing VDP Analysis  %%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
+%   Inputs:
+%      
+%   Outputs:
+%                   
+%   Package: https://github.com/aboodbdaiwi/HP129Xe_Analysis_App
+%
+%   Author: Abdullah S. Bdaiwi
+%   Work email: abdullah.bdaiwi@cchmc.org
+%   Personal email: abdaiwi89@gmail.com
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
+%
+%   Please add updates at the end. Ex: 3/10/24 - ASB: update ....
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
- 
 %% 1) Apply the settings:
 % We shall use a custom 'input_params' function to define the initial
 % settings:
@@ -28,6 +37,7 @@ Ventilation.HyperventilatedThresh); % Hyperventilated threshold
 % savedata, calculateSNR, N4, incomplete, complete, hyper)
 Ventilation.Image = double(Ventilation.Image);
 MR = Ventilation.Image;
+Ventilation.UncorrectedImage = MR;
 mkdir([MainInput.XeDataLocation '\Ventilation Analysis']);
 parentPath = [MainInput.XeDataLocation '\Ventilation Analysis\'];
 %parentPath = [MainInput.XeDataLocation,'\'];
@@ -92,7 +102,7 @@ switch settings.N4_bias_analysis
         % Save images as Nifti.
         NameN4 = Name + "N4";
 %         niftiwrite(abs(N4_2),[parentPath,char(NameN4)]);
-        niftiwrite(abs(N4_2),[parentPath + "Ventilation_ImagesN4"]); % Or do this until we have a naming convention
+        niftiwrite(abs(N4_2),[parentPath + "Ventilation_ImagesN4"]); % Or do this until we have a naming convention        
         MR = double(N4);
         Ventilation.Image = MR;
     case "no"
@@ -198,6 +208,11 @@ if strcmp(Ventilation.LB_Analysis,'yes') == 1
     
     [Ventilation] = VentilationFunctions.calculate_LB_VDP(MR, maskarray, maskarraytrachea, ventmean, ventstd, parentPath, N4_bias_analysis, Overall_SNR,Ventilation,Proton,MainInput);    
 
+end
+close all;
+%% K-means VDP
+if strcmp(Ventilation.Kmeans,'yes')
+    [Ventilation] = VentilationFunctions.calculate_kMeans_VDP(Ventilation,Proton,MainInput);
 end
 close all;
 %% GLRLM analysis

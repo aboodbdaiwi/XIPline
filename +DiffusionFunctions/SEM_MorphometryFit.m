@@ -20,12 +20,15 @@ function [DDC_map,alpha_map,So_map,LmD_map,LungSEMMorphometrySummary]=SEM_Morpho
 %       alpha_map = alveolar sleeve depth 
 %       So_map = internal Acinar duct radius map
 %       LmD_map = mean linear intercept map
-%   Package: 
+
+%   Package: https://github.com/aboodbdaiwi/HP129Xe_Analysis_App
 %
 %   Author: Abdullah S. Bdaiwi
 %   Work email: abdullah.bdaiwi@cchmc.org
 %   Personal email: abdaiwi89@gmail.com
-%   Website: https://cpir.cchmc.org/
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
+%
+%   Please add updates at the end. Ex: 3/10/24 - ASB: update .... 
 %
 % This code is based on the stretched exponential model
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

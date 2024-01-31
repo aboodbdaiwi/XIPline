@@ -36,13 +36,15 @@ def Segment3D(SegmentType):
         model = load_model(modelFolder+'AutoSegment_2DVent_Xe_H_coronal_1000e.hdf5',compile=False) 
     elif SegmentType == 'vent_2D_1ch_axi':
         model = load_model(modelFolder+'AutoSegment_2DVent_Xe_axial_2000e.hdf5',compile=False) 
+    elif SegmentType == 'diff_2D_1ch_axi':
+        model = load_model(modelFolder+'AutoSegment_2DDiff_Xe_axial_2000e.hdf5',compile=False)         
     elif SegmentType == 'gx_3D_1ch_iso':
         model = load_model(modelFolder+'AutoSegment_3DGasExchange_Xe_200e.hdf5',compile=False) 
     elif SegmentType == 'gx_3D_2ch_iso':
         model = load_model(modelFolder+'AutoSegment_3DGasExchange_Xe_H_1000e.hdf5',compile=False) 
             
     #% predict mask for each slice
-    if SegmentType == 'vent_2D_1ch_cor' or SegmentType == 'vent_2D_2ch_cor' or SegmentType == 'vent_2D_1ch_axi':
+    if SegmentType == 'vent_2D_1ch_cor' or SegmentType == 'vent_2D_2ch_cor' or SegmentType == 'vent_2D_1ch_axi' or SegmentType == 'diff_2D_1ch_axi':
         gen_masks = np.zeros((X_test.shape[1],X_test.shape[2],X_test.shape[0]))
         for i in range(0, X_test.shape[0]):   
             test_img = X_test[i]
