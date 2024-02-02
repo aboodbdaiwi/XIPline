@@ -135,7 +135,9 @@ VDPmap(VDPmap>2) = 1;
 
 cmap = [0 0 0;  0 1 0; 1 0 0];
 for slice = 1:size(VDPmap,3)
-    imshow(VDPmap(:,:,slice).*2, cmap, 'DisplayRange', [0 4]);
+    [~,~] = Global.imoverlay(squeeze(abs(Proton.ProtonRegistered(:,:,slice))),squeeze(VDPmap(:,:,slice).*2),[1,4],[0,0.8*max(Proton.ProtonRegistered(:))],cmap,1,gca);
+    colormap(gca,cmap) 
+%     imshow(VDPmap(:,:,slice).*2, cmap, 'DisplayRange', [0 4]);
     Xdata = getframe(gcf);
     X = Xdata.cdata; 
     if (slice == 1)
@@ -232,7 +234,7 @@ Global.exportToPPTX('addpicture',VentMontage,'Position',...
 
 Global.exportToPPTX('addpicture',KmeansVDPMontage,'Position',...
     [0 2 NumSliceView*scalefactor scalefactor*NumSliceView*(KmeansVDPMontagePosition(4)/KmeansVDPMontagePosition(3))]);
-Global.exportToPPTX('addtext',['K-mean VDP = ',num2str(round(VDP,2))],'Position',[0 2 4 0.4],'Color','r','FontSize',20,'BackgroundColor','k');
+Global.exportToPPTX('addtext',['K-mean VDP = ',num2str(round(VDP,2)),'%'],'Position',[0 2 4 0.4],'Color','r','FontSize',20,'BackgroundColor','k');
 
 Global.exportToPPTX('save',fullfile(parentPath, ReportTitle));
 Global.exportToPPTX('close');

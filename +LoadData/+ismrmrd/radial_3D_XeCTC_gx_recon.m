@@ -242,7 +242,8 @@ disp('Determining Image Offset Completed.')
 
 %% Spectra
 disp('Fitting Spectrum...')
-MainInput.CalXeFileName = '20220414_095530_Duke_Calibration.h5';
+MainInput.CalXeFileName = dir(fullfile(MainInput.XeDataLocation, '*Calibration.h5'));
+MainInput.CalXeFileName = MainInput.CalXeFileName.name;
 if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
     try
         [GasExResults, ~] = GasExchangeFunctions.XeCTC_Calibration_MRD(MainInput);

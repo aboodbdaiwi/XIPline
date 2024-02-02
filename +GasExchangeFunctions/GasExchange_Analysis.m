@@ -85,6 +85,12 @@ mkdir([DataLocation '\Gas Exchange Analysis']);
 outputpath = [DataLocation '\Gas Exchange Analysis'];
 cd(outputpath)
 
+ProtonMaskMontage = figure('Name','Lung Mask');set(ProtonMaskMontage,'WindowState','minimized');
+montage(ProtonMaskRegistered,'DisplayRange',[0 1])%unregistered for these
+disp('Lung Mask Completed.')
+savefig('ProtonMaskMontage.fig')
+close(gcf) 
+
 %% General information
 try
     ReconVersion = GasExchangeFunctions.get_git_hashobject;%use git to find hash of commit used

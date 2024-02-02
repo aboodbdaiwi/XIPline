@@ -136,7 +136,7 @@ end
 % Note: VDP can be calculated with or without the median filter performed
 % on the mask regions. This dependency will be contained within the
 % calculate_VDP function.
-if strcmp(Ventilation.ThreshAnalysis,'yes') == 1   % 'yes'; || 'no'
+if strcmp(Ventilation.ThreshAnalysis,'yes')   % 'yes'; || 'no'
 %     f = waitbar(.20,'Calculating SNR...');
 %     waitbar(.50,f,'Performing Thershold Analysis ...');
 %     pause(.1)    
@@ -213,6 +213,33 @@ close all;
 %% K-means VDP
 if strcmp(Ventilation.Kmeans,'yes')
     [Ventilation] = VentilationFunctions.calculate_kMeans_VDP(Ventilation,Proton,MainInput);
+end
+close all;
+%% DDI
+if strcmp(Ventilation.DDI2D,'yes') || strcmp(Ventilation.DDI3D,'yes')
+    switch Ventilation.DDIDefectMap
+        case 'Threshold'
+            defect_mask = Ventilation.defectArray;
+            defect_mask(defect_mask > 2) = 0;
+            defect_mask = double(defect_mask > 0);
+            defectMap = double(Ventilation.LungMask) + defect_mask;  
+        case 'Linear Binning'
+            defect_mask = Ventilation.VentBinMap2;
+            defect_mask(defect_mask > 1) = 0;
+            defectMap = double(Ventilation.LungMask) + defect_mask; 
+        case 'Kmeans'
+            defect_mask = Ventilation.Kmeans_segmentation;
+            defect_mask(defect_mask > 0 & defect_mask < 3) = 1;
+            defect_mask(defect_mask > 1) = 0;
+            defectMap = double(Ventilation.LungMask) + defect_mask; 
+    end
+    Ventilation.defectMap_forDDI = defectMap;
+end
+if strcmp(Ventilation.DDI2D,'yes')
+    [Ventilation] = VentilationFunctions.calculateDDI_2D(Ventilation,Proton,MainInput);
+end
+if strcmp(Ventilation.DDI3D,'yes')
+    [Ventilation] = VentilationFunctions.calculateDDI_3D(Ventilation,Proton,MainInput);
 end
 close all;
 %% GLRLM analysis

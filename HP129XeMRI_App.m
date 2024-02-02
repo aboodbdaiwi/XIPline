@@ -42,15 +42,15 @@ MainInput.RegistrationType = '';
 MainInput.PatientInfo = '';
 
 % 1) choose the type of analysis
-MainInput.AnalysisType = 'GasExchange';  % 'Ventilation', 'Diffusion', 'GasExchange'
+MainInput.AnalysisType = 'Ventilation';  % 'Ventilation', 'Diffusion', 'GasExchange'
 
 % 2) Do you have protom images? 
-MainInput.NoProtonImage = 0;  % yes: There is no proton images  % no: There is  proton images   
+MainInput.NoProtonImage = 0;  % 1: There is no proton images  % 0: There is  proton images   
 
 MainInput.Institute = 'XeCTC';  % 'CCHMC', 'XeCTC', 'Duke'
 MainInput.Scanner = 'Philips'; 
 MainInput.ScannerSoftware = '5.9.0'; % '5.3.1', '5.6.1','5.9.0'
-MainInput.SequenceType = '3D Radial'; % '2D GRE', '3D Radial'
+MainInput.SequenceType = '2D GRE'; % '2D GRE', '3D Radial'
 
 % diary Log.txt
 [filename, path] = uigetfile('*.*','Select xenon data file');
@@ -65,7 +65,7 @@ MainInput.XeDataext = xe_ext;
 cd(MainInput.XeDataLocation)
 
 % select proton
-if strcmp(MainInput.NoProtonImage, 'no') == 1
+if MainInput.NoProtonImage == 0
     [filename, path] = uigetfile('*.*','Select proton data file');
     HFullPath = [path,filename];
     HDataLocation = path(1:end-1);
@@ -169,18 +169,18 @@ clc
 cd(MainInput.XeDataLocation)
 
 % diary Log.txt
-MainInput.SegmentationMethod = 'Auto'; % 'Threshold' || 'Manual' || 'Auto'
-MainInput.SegmentAnatomy = 'Parenchyma'; % 'Airway'; || 'Parenchyma'
+MainInput.SegmentationMethod = 'Threshold'; % 'Threshold' || 'Manual' || 'Auto'
+MainInput.SegmentAnatomy = 'Airway'; % 'Airway'; || 'Parenchyma'
 MainInput.Imagestosegment = 'Xenon';  % 'Xe & Proton Registered' | 'Xenon' | 'Registered Proton'
 
 MainInput.thresholdlevel = 1; % 'threshold' 
 MainInput.SE = 1;
 
 MainInput.SegmentManual = 'Freehand'; % 'AppSegmenter' || 'Freehand'
-MainInput.SliceOrientation = 'isotropic'; % 'coronal' ||'transversal' || 'sagittal' ||'isotropic'
+MainInput.SliceOrientation = 'coronal'; % 'coronal' ||'transversal' || 'sagittal' ||'isotropic'
 [Proton,Ventilation,Diffusion,GasExchange] = Segmentation.PerformSegmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
 
-% figure; Global.imslice(GasExchange.LungMask)
+figure; Global.imslice(Ventilation.LungMask)
 
 %% Ventilation analysis
 clc
@@ -195,7 +195,13 @@ Ventilation.CompleteThresh = 15;
 Ventilation.HyperventilatedThresh = 200;
 Ventilation.ThreshAnalysis = 'yes'; % 'yes'; || 'no'
 Ventilation.LB_Analysis = 'no'; % 'yes'; || 'no'
-app.Ventilation.Kmeans = 'yes';  % 'yes'; || 'no'
+Ventilation.Kmeans = 'no';  % 'yes'; || 'no'
+Ventilation.DDI2D = 'yes';  % 'yes'; || 'no'
+Ventilation.DDI3D = 'no';  % 'yes'; || 'no'
+Ventilation.DDI3Dx = 3;
+Ventilation.DDI3Dy = 3;
+Ventilation.DDI3Dz = 3;
+Ventilation.DDIDefectMap = 'Threshold';  % 'Threshold'; || 'Linear Binning' || 'Kmeans'
 Ventilation.GLRLM_Analysis = 'no'; % 'yes'; || 'no'
 
 if Ventilation.N4Analysis == 1

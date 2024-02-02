@@ -252,13 +252,13 @@ switch MainInput.SegmentationMethod
                            Proton.LungMask = lungmask;
                            Proton.ProtonMaskRegistred = lungmask;
                            GasExchange.AirwayMask = airwaymask;  
-                            %View
-                            cd(GasExchange.outputpath);
-                            ProtonMaskMontage = figure('Name','Lung Mask');set(ProtonMaskMontage,'WindowState','minimized');
-                            montage(GasExchange.Mask,'DisplayRange',[0 1])%unregistered for these
-                            disp('Lung Mask Completed.')
-                            savefig('ProtonMaskMontage.fig')
-                            close(gcf)                           
+%                             %View
+%                             cd(GasExchange.outputpath);
+%                             ProtonMaskMontage = figure('Name','Lung Mask');set(ProtonMaskMontage,'WindowState','minimized');
+%                             montage(GasExchange.Mask,'DisplayRange',[0 1])%unregistered for these
+%                             disp('Lung Mask Completed.')
+%                             savefig('ProtonMaskMontage.fig')
+%                             close(gcf)                           
                     end    
                 end
             else

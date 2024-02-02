@@ -43,20 +43,23 @@ LB_outputpath = [parentPath, LB_outputpath];
 cd(LB_outputpath)
 
 %% 2) Perform N4 bias correction OR RF correction:
-if N4_bias_analysis == "no"
-    % Perform RF correction on the lungs using the trachea as the max signal:
-    NormMR = VentilationFunctions.rfCorrection(MR,maskarraytrachea);
-    NormMR2 = NormMR.*(maskarraytrachea > 0); % Normalize
-    VentImage = MR;
-elseif N4_bias_analysis == "yes"
-    % Run the N4 bias correction on the images WITH the trachea:
-    [N4, Bias] = VentilationFunctions.N4_bias_correction(MR, maskarraytrachea, parentPath);
-    NormMR2 = N4.*(maskarraytrachea > 0); % Normalize
-    VentImage = N4;
-end
+% moved outside the function
+% if N4_bias_analysis == "no"
+%     % Perform RF correction on the lungs using the trachea as the max signal:
+%     NormMR = VentilationFunctions.rfCorrection(MR,maskarraytrachea);
+%     NormMR2 = NormMR.*(maskarraytrachea > 0); % Normalize
+%     VentImage = MR;
+% elseif N4_bias_analysis == "yes"
+%     % Run the N4 bias correction on the images WITH the trachea:
+%     [N4, Bias] = VentilationFunctions.N4_bias_correction(MR, maskarraytrachea, parentPath);
+%     NormMR2 = N4.*(maskarraytrachea > 0); % Normalize
+%     VentImage = N4;
+% end
 
 % Make a logical array of the trachea:
 maskarray4 = logical(maskarraytrachea);
+VentImage = MR;
+NormMR2 = VentImage.*(maskarraytrachea > 0); % Normalize
 
 %% 3) Generate bins for the linear binned data:
 % Divide the lungs up into percentiles based on the trachea signal:
@@ -221,7 +224,7 @@ title('Linear Binning VDP')
 savedLinearBinningVDPMontage = get(LinearBinningVDPMontage,'CData');
 
 % Write out the montage using the input details above:
-FileName = [foldername + "Linear_Binning_Ventilation_Defect_Montage_with_Trachea.png"];
+FileName = [foldername + "Linear_Binning_VDPmap.png"];
 fullFileName = fullfile(parentPath,FileName);
 imwrite(savedLinearBinningVDPMontage,fullFileName,'png');
 %% Output mask images with proton overlays:
@@ -269,7 +272,7 @@ for ii = 2 : size(tiff_info, 1)
 end
 MaskRegistered = permute(MaskRegistered,[1 2 4 3]);
 
-S = orthosliceViewer((MaskRegistered)); %colormap(SixBinMap);
+% S = orthosliceViewer((MaskRegistered)); %colormap(SixBinMap);
 
 
 %% 6) Calculate Histograms:
@@ -283,7 +286,7 @@ healthy_std_Osc=ventstd;
 norm_lim_high = healthy_mean_Osc + healthy_std_Osc;
 norm_lim_low = healthy_mean_Osc - healthy_std_Osc;
 Mean_Edges = linspace(0,1,100);
-[bin_count,edges] = histcounts(Vent_vec,Mean_Edges);
+[bin_count,~] = histcounts(Vent_vec,Mean_Edges);
 Norm_Factor_1 = sum(bin_count);
 
 Healthy_Mean_Dist = normpdf(Mean_Edges,healthy_mean_Osc,healthy_std_Osc);
@@ -301,7 +304,6 @@ Bin2 = All_Bins(2);
 Bin3 = All_Bins(3);
 Bin4 = All_Bins(4);
 Bin5 = All_Bins(5);
-
 
 pos = [1 1 10 6];
 HistogramFig_Health = figure('Name','Siemens 2101 Histogram');
@@ -564,7 +566,8 @@ writetable(Vent_BinTable,[LB_outputpath,excel_file_name],'Sheet',1)
 Ventilation.LB_VDP = LB_VDP;
 Ventilation.LB_mean = LB_mean;
 Ventilation.LB_std = LB_std;
-Ventilation.VentscaledImage = VentscaledImage;
+Ventilation.VentscaledImage = VentscaledImage; 
+Ventilation.VentBinMap2 = VentBinMap2; 
 Ventilation.Ventcolormap = Ventcolormap;
 Ventilation.LB_Venthist = LB_Venthist;
 Ventilation.VentLow1Percent = round(VentLow1Percent,2);
