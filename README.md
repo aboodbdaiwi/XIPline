@@ -1,4 +1,4 @@
-![Capture2_prev_ui (1)](https://github.com/aboodbdaiwi/HP129Xe_Analysis_App/assets/36932337/1df8432c-7498-4bf1-ad60-a0552e776fbd)
+![XIPline_MainLogo](https://github.com/aboodbdaiwi/HP129Xe_Analysis_App/assets/36932337/a666d94b-f610-432c-941d-72b8bac9de61)
 
 # ACKNOWLEDGMENTS:
 ### Please cite this paper: TBA
