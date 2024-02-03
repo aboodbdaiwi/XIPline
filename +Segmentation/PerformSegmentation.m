@@ -215,6 +215,9 @@ switch MainInput.SegmentationMethod
                         else
                             temp_mask = Mask;
                         end
+                        for i = 1:size(temp_mask,3)
+                            temp_mask(:,:,i) = imerode(temp_mask(:,:,i), strel('square', 3));
+                        end
                         Mask = double(temp_mask);
                         mask_existing = 1;                        
                     case 'GasExchange'
