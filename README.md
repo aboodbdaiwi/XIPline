@@ -20,12 +20,14 @@ Download the MATLAB runtime compatible with the application's MATLAB version (R2
 
 You can also clone the application to your local directory for future releases.
 ```
-git clone https://github.com/joeyplum/slice-selective.git
+git clone https://github.com/aboodbdaiwi/HP129Xe_Analysis_App.git
 ```
 
 #### auto-segmentation: Downloading the h5 models for machine learning
 1 - Download the h5 models for auto segmentation from [here](https://drive.google.com/drive/folders/1gcwT14_6Tl_2zkLZ_MHsm-pAYHXWtVOA?usp=sharing).
+
 2 - Create this path `C:\XIPline\models` in your local `C:\` drive and add the downloaded h5 files in the `models` folder. 
+
 3 - Install [Python](https://www.python.org/downloads/) 3.10 and install these packages: 
 ```
 pip install numpy
@@ -43,13 +45,13 @@ When implementing new features, or debugging, we recommend using the debugging M
 ## Usage
 These are a few analysis demos (please refer to the user's manual for step-by-step quid on performing all analysis)
 1 - Calibration Analysis demo:
-
+video
 2 - Ventilation Analysis demo:
-
+video
 3 - Diffusion Analysis demo:
-
+video
 4 - Gas Exchange Analysis demo:
-
+video
 
 ## Acknowledgments:
 Author: Abdullah S. Bdaiwi
