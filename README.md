@@ -55,8 +55,11 @@ video
 
 ## Acknowledgments:
 Author: Abdullah S. Bdaiwi
+
 Work email: abdullah.bdaiwi@cchmc.org
+
 Personal email: abdaiwi89@gmail.com
+
 Website: [CPIR](https://www.cincinnatichildrens.org/research/divisions/c/cpir)
 
 please cite this paper: TBA
