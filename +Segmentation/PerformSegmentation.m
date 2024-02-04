@@ -31,7 +31,7 @@ switch MainInput.SegmentationMethod
         [Proton,Ventilation,Diffusion,GasExchange] = Segmentation.PerformManualThresholdSegmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
 
     case 'Auto' % ============================================Auto================================================
-        automasking_folder = 'HPXeAnalysisApp';
+        automasking_folder = 'XIPline';
         destinationFolderPath = join(['C:\',automasking_folder]);
         cd('C:\');
         if ~exist(automasking_folder, 'dir')
