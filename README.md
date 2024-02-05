@@ -1,6 +1,6 @@
 ![XIPlineMainLogo_noBackground](https://github.com/aboodbdaiwi/HP129Xe_Analysis_App/assets/36932337/ee751c64-065b-4d8c-94b3-5edc89e14ac1)
 
-# 129Xenon Image Analysis Pipeline (XIPline)
+# 129Xenon Image Processing Pipeline (XIPline)
 
 XIPline application is developed at the [CPIR](https://www.cincinnatichildrens.org/research/divisions/c/cpir). 
 
