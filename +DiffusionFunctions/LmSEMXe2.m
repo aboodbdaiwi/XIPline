@@ -11,11 +11,11 @@ function [Lm,Hk]=LmSEMXe2(DDC,alpha,D,ldd,Bi,Ci)
 % parameters DDC and alpha.
 % Use after running LmSEMXeStart outside loops for speed
 
-if alpha>0.9,
+if alpha>0.9
     alpha=0.9;
     %disp('alpha is larger than 0.9, estimating Lm for alpha=0.9 instead')
-elseif alpha<0.1,
-    alpha=0.1;
+elseif alpha<0.5
+    alpha=0.5;
     %disp('alpha is less than 0.1, estimating Lm for alpha=0.1 instead')
 end
 

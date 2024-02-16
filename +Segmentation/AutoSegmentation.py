@@ -22,8 +22,8 @@ def save_NIBnifti(file,outpath):
     savemat(outpath+'AutoMask.mat', {"AutoMask":file} )
     
 def Segment3D(SegmentType):
-    inoutImgFolder = 'C:/HPXeAnalysisApp/'
-    modelFolder = 'C:/HPXeAnalysisApp/models/'
+    inoutImgFolder = 'C:/XIPline/'
+    modelFolder = 'C:/XIPline/models/'
     InputImg = 'InputImage.mat'
     imgarray = loadmat(inoutImgFolder+InputImg)
     imgarray = imgarray["Images"]
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     #denoise = (sys.argv[4])
     #outname = 'AutoMask.nii.gz' #(sys.argv[4])
     MaskOut = Segment3D(SegmentType)
-    outpath = 'C:/HPXeAnalysisApp/' #os.path.dirname(InputImg)
+    outpath = 'C:/XIPline/' #os.path.dirname(InputImg)
     save_NIBnifti(MaskOut,outpath)
     
 #InputImg = 'Mat2Py_MLvars.csv'

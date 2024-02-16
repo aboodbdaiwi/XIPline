@@ -105,7 +105,7 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
             % imslice(squeeze(Images(1,:,:,:,:)))
     end
 %     save([MainInput.XeDataLocation '\Mat2Py_preprocessing.mat'],'Images');
-    automasking_folder = 'HPXeAnalysisApp';
+    automasking_folder = 'XIPline';
     destinationFolderPath = join(['C:\',automasking_folder]);
     cd(destinationFolderPath)
     save([destinationFolderPath '\InputImage.mat'],'Images');

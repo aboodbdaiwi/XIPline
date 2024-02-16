@@ -39,6 +39,10 @@ maskarray_dilated = imdilate(maskarray, SE);
 
 % Take the complement of the dilated mask array and create a background
 % noise array:
+% if ~exist(airwaymask, 'var')
+if sum(airwaymask(:)) == 0
+    airwaymask = Segmentation.SegmentLungthresh(MR,1,1);
+end
 backgroundmask = double(imcomplement(maskarray_dilated).*~airwaymask);
 background1 = (MR).*(backgroundmask);
 
@@ -82,10 +86,10 @@ for n = 1:size(MR,3)
         std_noise(isnan(std_noise))=0;
 
         SNR_slice(n) = round(signal_n_avg(n) / std_noise(n),2)*sqrt(2 - (pi/2)); %signal to noise ratio
-        SNR_slice(isnan(SNR_slice))=0;
 end
-
-% List the overall average SNR of the image set in the Matlab workspace
+SNR_slice(isnan(SNR_slice))=0;
+SNR_slice(isinf(SNR_slice)) = 0;
+SNR_slice = SNR_slice(SNR_slice ~= 0);
 Overall_SNR = mean(SNR_slice);
 disp(['Mean SNR for all masked ventilation slices = ',num2str(Overall_SNR)])
 
