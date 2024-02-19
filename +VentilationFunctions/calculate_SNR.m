@@ -1,4 +1,4 @@
-function [SNR_slice, Overall_SNR] = calculate_SNR(MR, maskarray, airwaymask)
+function [SNR_slice, Overall_SNR] = calculate_SNR(Ventilation)
 %% MATLAB script to perform SNR calculation
 % This code uses the ventilation images (can be N4 corrected or
 % original), and the corresponding masks, to generate an array of SNR
@@ -32,17 +32,22 @@ function [SNR_slice, Overall_SNR] = calculate_SNR(MR, maskarray, airwaymask)
 % The structuring element size '28' can be changed as needed to remove
 % partial volume pixels and the trachea.
 SE = strel('square', 28);
-maskarray = double(maskarray);
-MR = double(MR);
+MR = double(Ventilation.Image);
+maskarray = double(Ventilation.LungMask);
+% airwaymask = double(Ventilation.AirwayMask);
+
 % Dilate the mask arrary according to the structuring element:
 maskarray_dilated = imdilate(maskarray, SE);
 
 % Take the complement of the dilated mask array and create a background
 % noise array:
 % if ~exist(airwaymask, 'var')
-if sum(airwaymask(:)) == 0
-    airwaymask = Segmentation.SegmentLungthresh(MR,1,1);
-end
+% if sum(airwaymask(:)) == 0
+%     airwaymask = Segmentation.SegmentLungthresh(MR,1,1);
+% end
+% force airway mask
+airwaymask = Segmentation.SegmentLungthresh(MR,1,1);
+
 backgroundmask = double(imcomplement(maskarray_dilated).*~airwaymask);
 background1 = (MR).*(backgroundmask);
 

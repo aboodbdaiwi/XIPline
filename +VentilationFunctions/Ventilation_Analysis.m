@@ -23,6 +23,9 @@ function [Ventilation] = Ventilation_Analysis (Ventilation,Proton,MainInput)
 close all;
 % f = waitbar(0,'Processing ventilation analysis...');
 % pause(.1)
+Ventilation.Image = double(Ventilation.Image);
+Ventilation.LungMask = double(Ventilation.LungMask);
+Ventilation.AirwayMask = double(Ventilation.AirwayMask);
 
 settings = VentilationFunctions.input_params(...
 1,... % Median filter
@@ -44,9 +47,9 @@ parentPath = [MainInput.XeDataLocation '\Ventilation Analysis\'];
 FileNames = Ventilation.filename;
 maskarray = double(Ventilation.LungMask);
 try
-    airwaymask = double(Ventilation.AirwayMask);
+    Ventilation.AirwayMask = double(Ventilation.AirwayMask);
 catch
-    airwaymask = zeros(size(Ventilation.LungMask));
+    Ventilation.AirwayMask = zeros(size(Ventilation.LungMask));
 end
 ventmean = Ventilation.LB_RefMean; % Defined by data collected up to Jan 2021.
 ventstd =  Ventilation.LB_RefSD; % Defined by data collected up to Jan 2021.
@@ -117,7 +120,7 @@ switch settings.calculate_SNR
 %         waitbar(.20,f,'Calculating SNR...');
 %         pause(.1)        
         disp('Calculating SNR...')
-        [SNR_slice, Overall_SNR] = VentilationFunctions.calculate_SNR(MR, maskarray, airwaymask);
+        [SNR_slice, Overall_SNR] = VentilationFunctions.calculate_SNR(Ventilation);
         Ventilation.SNR_slice = SNR_slice;
         Ventilation.Overall_SNR = Overall_SNR;
     case "no"
