@@ -108,19 +108,19 @@ switch MainInput.SegmentationMethod
         %============================Making Lung Mask==========================
         disp('Making Lung Mask (trained ML model method)...');
 
-%         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%         %Need a raw CPython installation (NOT anaconda).  These commands below
-%         % shouldn't need to be called if everthing is set up properly.
-%         terminate(pyenv)
-%         pyenv('Version','C:\Users\bda5ik\AppData\Local\Programs\Python\Python310\pythonw.exe'); %Call Python 3.9
-%         system('pip install numpy')
-%         system('pip install keras')
-%         system('pip install tensorflow')
-%         system('pip install nibabel')
-%         system('pip install scipy') 
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %Need a raw CPython installation (NOT anaconda).  These commands below
+        % shouldn't need to be called if everthing is set up properly.
+        terminate(pyenv)
+        pyenv('Version','C:\Users\MCM5BK\AppData\Local\Programs\Python\Python39\pythonw.exe'); %Call Python 3.9
+        system('pip install numpy')
+        system('pip install keras')
+        system('pip install tensorflow')
+        system('pip install nibabel')
+        system('pip install scipy') 
 %         system('pip install os') 
-%         terminate(pyenv)
-%         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        terminate(pyenv)
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         cd(FunctionDirectory)
         pathToMod = fileparts(fullfile(destinationFolderPath, 'AutoSegmentation.py'));
         if count(py.sys.path,pathToMod)==0
