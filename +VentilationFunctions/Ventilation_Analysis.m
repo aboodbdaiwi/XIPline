@@ -48,8 +48,10 @@ FileNames = Ventilation.filename;
 maskarray = double(Ventilation.LungMask);
 try
     Ventilation.AirwayMask = double(Ventilation.AirwayMask);
+    airwaymask = Ventilation.AirwayMask;
 catch
     Ventilation.AirwayMask = zeros(size(Ventilation.LungMask));
+    airwaymask = Ventilation.AirwayMask;
 end
 ventmean = Ventilation.LB_RefMean; % Defined by data collected up to Jan 2021.
 ventstd =  Ventilation.LB_RefSD; % Defined by data collected up to Jan 2021.

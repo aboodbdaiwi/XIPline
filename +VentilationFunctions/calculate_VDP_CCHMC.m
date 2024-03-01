@@ -109,7 +109,7 @@ figure('position',[350 350 750 350]);
 hist(d_Normal(d_Normal>0),acnts);
 hold on
 hist(d_Incomplete(d_Incomplete>0),bcnts);
-hist(d_Complete(d_Complete>0));
+hist(d_Complete(d_Complete>0),ccnts);
 hist(d_Hyper(d_Hyper>0),dcnts)
 
 % Image settings:

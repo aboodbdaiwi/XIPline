@@ -42,12 +42,12 @@ MainInput.RegistrationType = '';
 MainInput.PatientInfo = '';
 
 % 1) choose the type of analysis
-MainInput.AnalysisType = 'Diffusion';  % 'Ventilation', 'Diffusion', 'GasExchange'
+MainInput.AnalysisType = 'Ventilation';  % 'Ventilation', 'Diffusion', 'GasExchange'
 
 % 2) Do you have protom images? 
 MainInput.NoProtonImage = 0;  % 1: There is no proton images  % 0: There is  proton images   
 
-MainInput.Institute = 'XeCTC';  % 'CCHMC', 'XeCTC', 'Duke'
+MainInput.Institute = 'CCHMC';  % 'CCHMC', 'XeCTC', 'Duke'
 MainInput.Scanner = 'Philips'; 
 MainInput.ScannerSoftware = '5.9.0'; % '5.3.1', '5.6.1','5.9.0'
 MainInput.SequenceType = '2D GRE'; % '2D GRE', '3D Radial'

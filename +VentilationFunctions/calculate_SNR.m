@@ -95,7 +95,11 @@ end
 SNR_slice(isnan(SNR_slice))=0;
 SNR_slice(isinf(SNR_slice)) = 0;
 SNR_slice = SNR_slice(SNR_slice ~= 0);
-Overall_SNR = mean(SNR_slice);
+
+overall_mean = mean(MR(maskarray == 1), "all", 'omitnan');
+overall_std = std(MR(backgroundmask == 1), 0,"all", 'omitnan');
+Overall_SNR = round((overall_mean/overall_std), 2)*sqrt(2 - (pi/2));
+
 disp(['Mean SNR for all masked ventilation slices = ',num2str(Overall_SNR)])
 
 % Generate a text file with the SNR of each slice
