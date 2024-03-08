@@ -139,7 +139,12 @@ elseif strcmp(MainInput.XeDataext,'.nii') == 1 || strcmp(MainInput.XeDataext,'.g
 %         end     
         file_name = MainInput.XeFileName;
         file_folder = MainInput.XeDataLocation;
-        A1 = LoadData.load_nii(MainInput.XeFullPath); % Original
+        try
+            A1 = LoadData.load_nii(MainInput.XeFullPath); % Original
+        catch
+            A1 = LoadData.load_untouch_nii(MainInput.XeFullPath); % Original
+        end
+        
         A=A1.img;
         A = double(squeeze(A));
         A=imrotate(A,90);
@@ -198,6 +203,25 @@ elseif strcmp(MainInput.XeDataext,'.data') == 1  && strcmp(MainInput.Scanner, 'P
             (strcmp(MainInput.Institute,'CCHMC')  || strcmp(MainInput.Institute,'XeCTC')   )
            [GasExchange] = LoadData.LoadData_Gas_GasExchange_Philips_Sin(MainInput.XeDataLocation,MainInput.Institute,GasExchange);                      
     end
+
+elseif strcmp(MainInput.XeDataext,'.dat') && strcmp(MainInput.Scanner,'Siemens') 
+            XeFullPath = MainInput.XeFullPath;
+            XeDataLocation = MainInput.XeDataLocation;
+            filename = MainInput.XeFileName;
+            Xe_name = MainInput.Xe_name;
+            ext = MainInput.XeDataext;
+            cd(XeDataLocation)
+        if strcmp(MainInput.AnalysisType,'Ventilation') == 1     
+            LoadData.ismrmrd.Siemens.gre_to_ismrmrd(filename,Xe_name,fullfile(XeDataLocation,[Xe_name '.h5']));
+            MainInput.XeFileName = [Xe_name '.h5'];
+            [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
+
+            Ventilation.Image = Image;  
+        elseif strcmp(MainInput.AnalysisType,'Diffusion') == 1 
+            Diffusion.Image = Image;
+        elseif strcmp(MainInput.AnalysisType,'GasExchange') == 1 
+            % not supported yet
+        end
 %--------------------- add new read load function here --------------------
 % elseif strcmp(MainInput.XeDataType,'add DataType') == 1
 %     if strcmp(MainInput.AnalysisType,'Ventilation') == 1                 

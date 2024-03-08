@@ -30,7 +30,7 @@ if ~contains(mrdfile,'.')
     mrdfile = [mrdfile '.h5'];
 end
 %% Get UTE Data (trajectories and raw)
-[data,traj] = DataImport.get_ute_data(ute_file);
+[data,traj] = LoadData.ismrmrd.DataImport.get_ute_data(ute_file);
 
 
 %% Create an empty ismrmrd dataset
@@ -45,12 +45,12 @@ end
 % kz = h5read('OUTPUT/MRI_Raw.h5','/Kdata/KZ_E0');
 
 
-dset = ismrmrd.Dataset(mrdfile);
+dset = LoadData.ismrmrd.Dataset(mrdfile);
 
 
 nX = size(data,1);
 nY = size(data,2);
-acqblock = ismrmrd.Acquisition(nY);
+acqblock = LoadData.ismrmrd.Acquisition(nY);
 
 acqblock.head.version(:) = 1;
 acqblock.head.number_of_samples(:) = nX;
@@ -141,7 +141,7 @@ header.encoding.encodingLimits.repetition.maximum = 0;
 header.encoding.encodingLimits.repetition.center = 0;
 
 %% Serialize and write to the data set
-xmlstring = ismrmrd.xml.serialize(header);
+xmlstring = LoadData.ismrmrd.xml.serialize(header);
 dset.writexml(xmlstring);
 
 

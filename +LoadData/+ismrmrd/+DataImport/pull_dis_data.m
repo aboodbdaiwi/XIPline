@@ -27,7 +27,7 @@ idcs = strfind(parent_path,filesep);%determine location of file separators
 parent_path = parent_path(1:idcs(end-1)-1);%remove file
 
 
-Xe_Dat_twix = DataImport.mapVBVD(Xe_file,'ignoreSeg');
+Xe_Dat_twix = LoadData.ismrmrd.DataImport.mapVBVD(Xe_file,'ignoreSeg');
 Xe_Dat_twix.flagIgnoreSeg = 1;
 Xe_Dat_twix.image.flagIgnoreSeg = 1;
 Xe_Dat_twix.image.flagAverageReps = 1;
@@ -60,7 +60,7 @@ Post_Cal = nan;
 switch Ver
     case 'Mugler_spec'
             %Issues with memory using the twix object. Use this one instead
-        Xe_Raw = DataImport.ReadSiemensMeasVD13_idea(Xe_file);
+        Xe_Raw = LoadData.ismrmrd.DataImport.ReadSiemensMeasVD13_idea(Xe_file);
         fid = Xe_Raw.rawdata;
         loop = Xe_Raw.loopcounters;
         %Relevant Columns are 1, 5, and 7 - Reshape data to be in the shape
@@ -85,8 +85,8 @@ switch Ver
         Dis_Fid = transpose(Xe_Raw(:,:,2));
         Gas_Fid = transpose(Xe_Raw(:,:,1));
         Post_Cal = Spec_Post;
-        Gas_Traj = DataImport.gas_exchange_traj_gen(size(Gas_Fid,1),size(Gas_Fid,2),Xe_Dat_twix);
-        Dis_Traj = DataImport.gas_exchange_traj_gen(size(Dis_Fid,1),size(Dis_Fid,2),Xe_Dat_twix);
+        Gas_Traj = LoadData.ismrmrd.DataImport.gas_exchange_traj_gen(size(Gas_Fid,1),size(Gas_Fid,2),Xe_Dat_twix);
+        Dis_Traj = LoadData.ismrmrd.DataImport.gas_exchange_traj_gen(size(Dis_Fid,1),size(Dis_Fid,2),Xe_Dat_twix);
         Params.imsize = Xe_Dat_twix.hdr.MeasYaps.sKSpace.lBaseResolution;
         Params.TR = (Xe_Dat_twix.hdr.MeasYaps.alTR{1}/1000)*2;
         Params.TE = (Xe_Dat_twix.hdr.MeasYaps.alTE{1}/1000);
@@ -110,8 +110,8 @@ switch Ver
         Xe_Raw = double(squeeze(Xe_Dat_twix.image()));
         Dis_Fid = Xe_Raw(:,:,2);
         Gas_Fid = Xe_Raw(:,:,1);
-        Gas_Traj = DataImport.gas_exchange_traj_gen(size(Xe_Raw,1),size(Xe_Raw,2),Xe_Dat_twix);
-        Dis_Traj = DataImport.gas_exchange_traj_gen(size(Xe_Raw,1),size(Xe_Raw,2),Xe_Dat_twix);
+        Gas_Traj = LoadData.ismrmrd.DataImport.gas_exchange_traj_gen(size(Xe_Raw,1),size(Xe_Raw,2),Xe_Dat_twix);
+        Dis_Traj = LoadData.ismrmrd.DataImport.gas_exchange_traj_gen(size(Xe_Raw,1),size(Xe_Raw,2),Xe_Dat_twix);
         
         Params.imsize = Xe_Dat_twix.hdr.MeasYaps.sKSpace.lBaseResolution;
         Params.TR = (Xe_Dat_twix.hdr.MeasYaps.alTR{1}/1000)*2;
@@ -131,18 +131,18 @@ switch Ver
         Params.GE_Voxel = 6.25;    
         Params.Ramp_Time = Xe_Dat_twix.hdr.MeasYaps.sWipMemBlock.alFree{9};
     case 'Niedbalski_basic'
-        Xe_Raw = DataImport.ReadSiemensMeasVD13_idea(Xe_file);
+        Xe_Raw = LoadData.ismrmrd.DataImport.ReadSiemensMeasVD13_idea(Xe_file);
         fid = Xe_Raw.rawdata;
         Dis_Fid = fid(1:2:(end-1),:);
         Dis_Fid(:,65:end) = [];
         Dis_Fid = Dis_Fid';
         Gas_Fid = fid(2:2:end,:);
         Gas_Fid = Gas_Fid';
-        Dis_Traj = DataImport.get_allinone_distraj(Dis_Fid);
+        Dis_Traj = LoadData.ismrmrd.DataImport.get_allinone_distraj(Dis_Fid);
         traj_file = fullfile(parent_path,'\Traj\Vent_GasExchange_20210819_Traj.dat');
-        traj_twix = DataImport.mapVBVD(traj_file);
+        traj_twix = LoadData.ismrmrd.DataImport.mapVBVD(traj_file);
 
-        Gas_Traj = DataImport.spiral_coords_from_dat(traj_twix,Xe_Dat_twix);
+        Gas_Traj = LoadData.ismrmrd.DataImport.spiral_coords_from_dat(traj_twix,Xe_Dat_twix);
         
         Params.imsize = Xe_Dat_twix.hdr.MeasYaps.sKSpace.lBaseResolution;
         Params.TR = ((Xe_Dat_twix.hdr.MeasYaps.alTR{1}+Xe_Dat_twix.hdr.MeasYaps.alTR{2})/1000);
@@ -161,10 +161,10 @@ switch Ver
         Params.scale_factor = Xe_Dat_twix.hdr.MeasYaps.sWipMemBlock.adFree{6};
         Params.GE_Voxel = Params.GE_FOV/Params.imsize;
         Params.Vent_Voxel = Params.GE_FOV/(Params.imsize*Params.scale_factor);
-        [Gas_Fid,Gas_Traj] = DataImport.truncate_spirals(Gas_Fid,Gas_Traj,Params.scale_factor);
+        [Gas_Fid,Gas_Traj] = LoadData.ismrmrd.DataImport.truncate_spirals(Gas_Fid,Gas_Traj,Params.scale_factor);
         Params.Ramp_Time = 100;
     case 'Niedbalski_spec'
-        Xe_Raw = DataImport.ReadSiemensMeasVD13_idea(Xe_file);
+        Xe_Raw = LoadData.ismrmrd.DataImport.ReadSiemensMeasVD13_idea(Xe_file);
         fid = Xe_Raw.rawdata;
         Dis_Fid = fid(1:2:(end-1),:);
         %Again could do something more elegant, but start with easy
@@ -173,12 +173,12 @@ switch Ver
         Gas_Fid = fid(2:2:end,:);
         Gas_Fid = Gas_Fid';
         Post_Cal = fid(end,1:512);
-        Dis_Traj = DataImport.get_allinone_distraj(Dis_Fid);
+        Dis_Traj = LoadData.ismrmrd.DataImport.get_allinone_distraj(Dis_Fid);
         %Need to fix this path so it's more generic!
         traj_file = fullfile(parent_path,'\Traj\Vent_GasExchange_20210819_Traj.dat');
-        traj_twix = DataImport.mapVBVD(traj_file);
+        traj_twix = LoadData.ismrmrd.DataImport.mapVBVD(traj_file);
 
-        Gas_Traj = DataImport.spiral_coords_from_dat(traj_twix,Xe_Dat_twix);
+        Gas_Traj = LoadData.ismrmrd.DataImport.spiral_coords_from_dat(traj_twix,Xe_Dat_twix);
         Params.imsize = Xe_Dat_twix.hdr.MeasYaps.sKSpace.lBaseResolution;
         Params.TR = ((Xe_Dat_twix.hdr.MeasYaps.alTR{1}+Xe_Dat_twix.hdr.MeasYaps.alTR{2})/1000);
         Params.TE = (Xe_Dat_twix.hdr.MeasYaps.alTE{1}/1000);
@@ -198,6 +198,6 @@ switch Ver
         Params.GE_Voxel = Params.GE_FOV/Params.imsize;
         Params.Vent_Voxel = Params.GE_FOV/(Params.imsize*Params.scale_factor);
         
-        [Gas_Fid,Gas_Traj] = DataImport.truncate_spirals(Gas_Fid,Gas_Traj,Params.scale_factor);
+        [Gas_Fid,Gas_Traj] = LoadData.ismrmrd.DataImport.truncate_spirals(Gas_Fid,Gas_Traj,Params.scale_factor);
         Params.Ramp_Time = 100;
 end

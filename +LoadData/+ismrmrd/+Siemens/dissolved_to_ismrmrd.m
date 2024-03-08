@@ -31,13 +31,13 @@ if ~contains(mrdfile,'.')
 end
 
 %% Read in twix file:
-Xe_Dat_twix = DataImport.mapVBVD(Xe_file,'ignoreSeg');
+Xe_Dat_twix = LoadData.ismrmrd.DataImport.mapVBVD(Xe_file,'ignoreSeg');
 Xe_Dat_twix.flagIgnoreSeg = 1;
 Xe_Dat_twix.image.flagIgnoreSeg = 1;
 Xe_Dat_twix.image.flagAverageReps = 1;
 Xe_Dat_twix.flagAverageReps = 1;
 %% Function to pull data from twix files of standard methods (Mugler and Niedbalski-built) at KUMC 
-[Dis_Fid,Gas_Fid,Dis_Traj,Gas_Traj,Params,Post_Cal] = DataImport.pull_dis_data(Xe_file);
+[Dis_Fid,Gas_Fid,Dis_Traj,Gas_Traj,Params,Post_Cal] = LoadData.ismrmrd.DataImport.pull_dis_data(Xe_file);
 
 %% Should have all data, can move forward with writing: 
 %% Create an empty ismrmrd dataset
@@ -50,7 +50,7 @@ end
 % load(calmat,'te90');
 % load(calmat,'targetAX');
 
-dset = ismrmrd.Dataset(mrdfile);
+dset = LoadData.ismrmrd.Dataset(mrdfile);
 
 %% Need to handle the fact that for Niedbalski Single-Breath Method, Dis and Gas data aren't same size;
 if size(Gas_Fid,1) ~= size(Dis_Fid,1)
@@ -71,7 +71,7 @@ end
 nX = size(Gas_Fid,1);
 nY = size(Gas_Fid,2);
 tsp = Params.Dwell * 1e6; %need this in us %1e6/bw;
-acqblock = ismrmrd.Acquisition(2*nY);
+acqblock = LoadData.ismrmrd.Acquisition(2*nY);
 
 acqblock.head.version(:) = 1;
 acqblock.head.number_of_samples(:) = nX;
@@ -219,7 +219,7 @@ header.encoding.trajectoryDescription.userParameterLong = [];
 header.userParameters.userParameterLong = up;
 
 %% Serialize and write to the data set
-xmlstring = ismrmrd.xml.serialize(header);
+xmlstring = LoadData.ismrmrd.xml.serialize(header);
 dset.writexml(xmlstring);
 
 dset.close();

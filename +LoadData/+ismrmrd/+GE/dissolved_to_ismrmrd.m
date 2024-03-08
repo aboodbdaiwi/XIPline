@@ -32,13 +32,13 @@ load(calmat,'targetAX');
 tmp = read_fdl('/Users/ahahn/Work/Iowa/mns-xe/xe_dissolved/Genentech/ME_Sheffield/radial3D_129Xe_fov400_mtx64_intlv2000_kdt20_gmax30_smax118_dur4_coca_rew1_G_freq.fdl');
 freq_off = tmp(2); clear tmp;
 
-dset = ismrmrd.Dataset(mrdfile);
+dset = LoadData.ismrmrd.Dataset(mrdfile);
 
 
 nX = size(k_dp,1);
 nY = size(k_dp,2);
 tsp = 1e6/bw;
-acqblock = ismrmrd.Acquisition(2*nY);
+acqblock = LoadData.ismrmrd.Acquisition(2*nY);
 
 acqblock.head.version(:) = 1;
 acqblock.head.number_of_samples(:) = nX;
@@ -156,7 +156,7 @@ header.encoding.trajectoryDescription.userParameterDouble = up;
 header.encoding.trajectoryDescription.userParameterLong = [];
 
 %% Serialize and write to the data set
-xmlstring = ismrmrd.xml.serialize(header);
+xmlstring = LoadData.ismrmrd.xml.serialize(header);
 dset.writexml(xmlstring);
 
 

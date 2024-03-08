@@ -154,8 +154,10 @@ classdef NMR_TimeFit < Calibration.NMR_Fit
             %                         fitoptions.Display = 'final-detailed';
             fitoptions.Display = 'off';
             fitoptions.MaxIter = 10000;
-            fitoptions.TolFun=1E-900;
-            fitoptions.TolX = 1E-15;
+%             fitoptions.TolFun=1E-900;
+%             fitoptions.TolX = 1E-15;
+            fitoptions.TolFun=1E-9;
+            fitoptions.TolX = 1E-15;            
             fitoptions.FinDiffType = 'central';
             fitoptions.Algorithm = 'trust-region-reflective';
             fitoptions.MaxFunEvals = 5000;

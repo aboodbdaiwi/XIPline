@@ -45,10 +45,10 @@ MainInput.PatientInfo = '';
 MainInput.AnalysisType = 'Ventilation';  % 'Ventilation', 'Diffusion', 'GasExchange'
 
 % 2) Do you have protom images? 
-MainInput.NoProtonImage = 0;  % 1: There is no proton images  % 0: There is  proton images   
+MainInput.NoProtonImage = 1;  % 1: There is no proton images  % 0: There is  proton images   
 
 MainInput.Institute = 'CCHMC';  % 'CCHMC', 'XeCTC', 'Duke'
-MainInput.Scanner = 'Philips'; 
+MainInput.Scanner = 'Philips'; % Siemens, Philips
 MainInput.ScannerSoftware = '5.9.0'; % '5.3.1', '5.6.1','5.9.0'
 MainInput.SequenceType = '2D GRE'; % '2D GRE', '3D Radial'
 
@@ -56,11 +56,12 @@ MainInput.SequenceType = '2D GRE'; % '2D GRE', '3D Radial'
 [filename, path] = uigetfile('*.*','Select xenon data file');
 XeFullPath = [path,filename];
 XeDataLocation = path(1:end-1);
-[~,~,xe_ext] = fileparts(XeFullPath);
+[~,Xe_name,xe_ext] = fileparts(XeFullPath);
 
 MainInput.XeFullPath = XeFullPath;
 MainInput.XeDataLocation = XeDataLocation;
 MainInput.XeFileName = filename;
+MainInput.Xe_name = Xe_name;
 MainInput.XeDataext = xe_ext;
 cd(MainInput.XeDataLocation)
 
@@ -69,11 +70,12 @@ if MainInput.NoProtonImage == 0
     [filename, path] = uigetfile('*.*','Select proton data file');
     HFullPath = [path,filename];
     HDataLocation = path(1:end-1);
-    [~,~,H_ext] = fileparts(HFullPath);
+    [~,H_name,H_ext] = fileparts(HFullPath);
 
     MainInput.HFullPath = HFullPath;
     MainInput.HDataLocation = HDataLocation;
     MainInput.HFileName = filename;
+    MainInput.H_name = H_name;    
     MainInput.HDataext = H_ext;
 end
 
@@ -86,7 +88,9 @@ elseif strcmp(MainInput.AnalysisType,'Diffusion') == 1
 elseif strcmp(MainInput.AnalysisType,'GasExchange') == 1 
     figure; Global.imslice(GasExchange.VentImage)
 end
-figure; Global.imslice(Proton.Image)
+if MainInput.NoProtonImage == 0
+    figure; Global.imslice(Proton.Image)
+end
 % Ventilation.Image = flipdim(Ventilation.Image,3); 
 % Ventilation.Image = permute(Ventilation.Image,[3 2 1]); % 
 % Rotated = imrotate(Diffusion.Image,-90);

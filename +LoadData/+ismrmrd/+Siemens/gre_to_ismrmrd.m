@@ -21,10 +21,10 @@ if exist(mrdfile,'file')
   %  error(['File ' mrdfile ' already exists.  Please remove first'])
 end
 
-dset = ismrmrd.Dataset(mrdfile);
+dset = LoadData.ismrmrd.Dataset(mrdfile);
 
 %Read in gre data
-GRE_twix = DataImport.mapVBVD(gre_file,'ignoreSeg');
+GRE_twix = LoadData.ismrmrd.DataImport.mapVBVD(gre_file,'ignoreSeg');
 
 if length(GRE_twix) > 1
     GRE_twix = GRE_twix{end};
@@ -44,7 +44,7 @@ data = double(GRE_twix.image());
 %nX = size(data,1);
 %nY = size(data,2);
 
-acqblock = ismrmrd.Acquisition(GRE_twix.image.NAcq);
+acqblock = LoadData.ismrmrd.Acquisition(GRE_twix.image.NAcq);
 
 acqblock.head.version(:) = 1;
 acqblock.head.number_of_samples(:) = GRE_twix.image.NCol;
@@ -138,7 +138,7 @@ header.encoding.encodingLimits.repetition.maximum = 0;
 header.encoding.encodingLimits.repetition.center = 0;
 
 %% Serialize and write to the data set
-xmlstring = ismrmrd.xml.serialize(header);
+xmlstring = LoadData.ismrmrd.xml.serialize(header);
 dset.writexml(xmlstring);
 
 dset.close();

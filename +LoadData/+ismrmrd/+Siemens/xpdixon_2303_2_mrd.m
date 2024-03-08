@@ -3,14 +3,14 @@ function xpdixon_2303_2_mrd(Xe_file,Subj_ID,mrdfile)
 % de-identified sharing of data
 
 %% Read data
-twix_obj = DataImport.mapVBVD(Xe_file);
+twix_obj = LoadData.ismrmrd.DataImport.mapVBVD(Xe_file);
 
 %I really prefer using the twix object, but there are memory issues when
 %doing it this way.
 %xe_data = double(squeeze(twix_obj.image()));
 
 %test = twix_obj.image(:,:,1,:,:,:,:,:,:,:,:);
-xe_data = DataImport.ReadSiemensMeasVD13_idea(Xe_file);
+xe_data = LoadData.ismrmrd.DataImport.ReadSiemensMeasVD13_idea(Xe_file);
 
 raw = xe_data.rawdata;
 loops = xe_data.loopcounters;
@@ -51,21 +51,21 @@ for i = 1:size(loops,1)
 end
     
 % Get Trajectories - Same trajectories for all contrasts
-Traj = DataImport.gx_traj(size(Dis,1),size(Dis,2),twix_obj);
+Traj = LoadData.ismrmrd.DataImport.gx_traj(size(Dis,1),size(Dis,2),twix_obj);
 
 %% Create an empty ismrmrd dataset
 if exist(mrdfile,'file')
     delete(mrdfile);
 end
 
-dset = ismrmrd.Dataset(mrdfile);
+dset = LoadData.ismrmrd.Dataset(mrdfile);
 
 %% Prepare Imaging Acquisition Block and write to dataset
 nX = size(Gas,1);
 nY = size(Gas,2);
 Dwell = twix_obj.hdr.MeasYaps.sRXSPEC.alDwellTime{1,1}*1e-9;
 tsp = Dwell * 1e6; %need this in us %1e6/bw;
-acqblock = ismrmrd.Acquisition((size(Gas,3) + size(Dis,3))*nY); 
+acqblock = LoadData.ismrmrd.Acquisition((size(Gas,3) + size(Dis,3))*nY); 
 acqblock.head.version(:) = 1;
 acqblock.head.number_of_samples(:) = nX;
 acqblock.head.sample_time_us(:) = tsp;
@@ -126,7 +126,7 @@ end
 dset.appendAcquisition(acqblock);
 
 %% Prepare Post Dissolved spectroscopy and add to acquisition block
-acqblock = ismrmrd.Acquisition(size(PostDis,2));
+acqblock = LoadData.ismrmrd.Acquisition(size(PostDis,2));
 
 acqblock.head.version(:) = 1;
 acqblock.head.number_of_samples(:) = length(PostDis);
@@ -160,7 +160,7 @@ end
 dset.appendAcquisition(acqblock);
 
 %% Prepare Post Gas spectroscopy and add to acquisition block
-acqblock = ismrmrd.Acquisition(size(PostGas,2));
+acqblock = LoadData.ismrmrd.Acquisition(size(PostGas,2));
 
 acqblock.head.version(:) = 1;
 acqblock.head.number_of_samples(:) = length(PostGas);
@@ -269,7 +269,7 @@ header.encoding.trajectoryDescription.userParameterLong = [];
 header.userParameters.userParameterLong = up;
 
 %% Serialize and write to the data set
-xmlstring = ismrmrd.xml.serialize(header);
+xmlstring = LoadData.ismrmrd.xml.serialize(header);
 dset.writexml(xmlstring);
 
 dset.close();

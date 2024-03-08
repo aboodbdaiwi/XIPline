@@ -10,7 +10,7 @@ if exist(mrdfile,'file')
     error(['File ' filename ' already exists.  Please remove first'])
 end
 
-dset = ismrmrd.Dataset(mrdfile);
+dset = LoadData.ismrmrd.Dataset(mrdfile);
 
 [data,h] = read_p(calfile);
 

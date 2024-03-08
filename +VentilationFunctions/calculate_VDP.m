@@ -96,13 +96,21 @@ ccnts = length(a)*(max(d_Complete(d_Complete>0))- ...
     min(d_Complete(d_Complete>0)))/(max(d_Normal(d_Normal>0))-min(d_Normal(d_Normal>0)));
 dcnts = length(a)*(max(d_Hyper(d_Hyper>0))- ...
     min(d_Hyper(d_Hyper>0)))/(max(d_Normal(d_Normal>0))-min(d_Normal(d_Normal>0)));
-
+if isempty(ccnts)
+    ccnts = 1;
+elseif ((dcnts < 1) && (length(find(d_Complete)) < 5))
+    ccnts = 1;
+end 
 % Create histogram figure of ventilation defects and print/save figure
 figure('position',[350 350 750 350]);
 hist(d_Normal(d_Normal>0),acnts);
 hold on
 hist(d_Incomplete(d_Incomplete>0),bcnts);
-hist(d_Complete(d_Complete>0));
+try
+    hist(d_Complete(d_Complete>0),ccnts);
+catch
+    hist(d_Complete(d_Complete>0));
+end
 hist(d_Hyper(d_Hyper>0),dcnts);
 
 % Image settings:

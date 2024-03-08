@@ -142,6 +142,17 @@ function [Image] = cartesian_2D_recon(MainInput)
                 % Chop if needed
                 if (enc_Nx == rec_Nx)
                     im = K;
+                elseif enc_Nx < rec_Nx
+%                      centerIndex = size(K, 1) / 2;                    
+%                     ind1 = round(centerIndex - enc_Ny/2) + 1;
+%                     ind2 = round(centerIndex + enc_Ny/2);                    
+%                     im = K(ind1:ind2,:);
+                    crop_factor = round(enc_Ny*0.75);
+                    ind1 = crop_factor + 1;
+                    ind2 = crop_factor + enc_Ny;                    
+                    im = K(ind1:ind2,:,:,:);
+                    im = flip(im,1);
+                    im = flip(im,2);
                 else
                     ind1 = floor((enc_Nx - rec_Nx)/2)+1;
                     ind2 = floor((enc_Nx - rec_Nx)/2)+rec_Nx;
@@ -168,14 +179,24 @@ function [Image] = cartesian_2D_recon(MainInput)
 %     colormap gray
 %     imagesc(reconImages{2}); axis image; axis off; colorbar;
     Img1 = double(reconImages{1,2});
-    Image = zeros(size(Img1,1),size(Img1,2),size(reconImages,1),size(reconImages,2),size(reconImages,3));
+%     Image = zeros(size(Img1,1),size(Img1,2),size(reconImages,1),size(reconImages,2),size(reconImages,3));
+    Image = zeros(rec_Nx,rec_Nx,size(reconImages,1),size(reconImages,2),size(reconImages,3));
     for i = 1:size(reconImages,1)
         for j = 1:size(reconImages,2)
             for k = 1:size(reconImages,3)
-                Image(:,:,i,j,k) = double(reconImages{i,j,k});
+%                 Image(:,:,i,j,k) = double(reconImages{i,j,k});
+
+                Img = double(reconImages{i,j,k});
+                Image(:,:,i,j,k) = imresize(Img, [rec_Nx,rec_Nx]);
             end
         end
     end
     Image = squeeze(Image);
-%     figure; imslice(Image)
+    if length(size(Image)) == 3
+        Image = squeeze(Image(:,:,1:nSlices));
+    elseif length(size(Image)) == 4
+        Image = squeeze(Image(:,:,1:nSlices,:));
+    end
+     figure; imslice(Image)
+
 end

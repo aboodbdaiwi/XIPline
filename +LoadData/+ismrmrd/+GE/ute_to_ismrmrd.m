@@ -17,11 +17,11 @@ kx = h5read(ute_file,'/Kdata/KX_E0');
 ky = h5read(ute_file,'/Kdata/KY_E0');
 kz = h5read(ute_file,'/Kdata/KZ_E0');
 
-dset = ismrmrd.Dataset(mrdfile);
+dset = LoadData.ismrmrd.Dataset(mrdfile);
 
 nX = size(K,1);
 nY = size(K,2);
-acqblock = ismrmrd.Acquisition(nY);
+acqblock = LoadData.ismrmrd.Acquisition(nY);
 
 acqblock.head.version(:) = 1;
 acqblock.head.number_of_samples(:) = nX;
@@ -96,7 +96,7 @@ header.encoding.encodingLimits.repetition.maximum = 0;
 header.encoding.encodingLimits.repetition.center = 0;
 
 %% Serialize and write to the data set
-xmlstring = ismrmrd.xml.serialize(header);
+xmlstring = LoadData.ismrmrd.xml.serialize(header);
 dset.writexml(xmlstring);
 
 

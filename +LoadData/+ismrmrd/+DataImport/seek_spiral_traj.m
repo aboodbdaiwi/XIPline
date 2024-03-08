@@ -9,7 +9,7 @@ function traj = seek_spiral_traj(twix_obj)
 %It will work best if each trajectory file name is sensibly named as 
 %(name of protocol the traj are for)_traj, or something similar.
 %Get Parent path
-parent_path = which('DataImport.seek_spiral_traj');
+parent_path = which('LoadData.ismrmrd.DataImport.seek_spiral_traj');
 idcs = strfind(parent_path,filesep);%determine location of file separators
 parent_path = parent_path(1:idcs(end-1)-1);%remove file
 
@@ -57,7 +57,7 @@ end
 %no longer nan, so we can read in trajectories. Otherwise, we'll have to
 %calculate theoretical
 if ~isnan(proper_traj)
-    traj_twix = DataImport.mapVBVD(fullfile(parent_path,'Traj',all_traj(proper_traj).name));
+    traj_twix = LoadData.ismrmrd.DataImport.mapVBVD(fullfile(parent_path,'Traj',all_traj(proper_traj).name));
     if length(traj_twix)>1
         traj_twix = traj_twix{2};
     end

@@ -34,10 +34,10 @@ if exist(mrdfile,'file')
     delete(mrdfile);
 end
 
-dset = ismrmrd.Dataset(mrdfile);
+dset = LoadData.ismrmrd.Dataset(mrdfile);
 
 %Read in calibration data
-Cal_Dat_twix = DataImport.mapVBVD(Cal_file,'ignoreSeg');
+Cal_Dat_twix = LoadData.ismrmrd.DataImport.mapVBVD(Cal_file,'ignoreSeg');
 
 % Get various scan parameters
 dwell_time = Cal_Dat_twix.hdr.MeasYaps.sRXSPEC.alDwellTime{1,1};
@@ -82,7 +82,7 @@ data = squeeze(double(Cal_Dat_twix.image()));
 nX = size(data,1); % Number of points
 nY = size(data,2); % Number of FIDs
 %tsp = 1e6/2/h.rdb_hdr.bw/1000;
-acqblock = ismrmrd.Acquisition(nY);
+acqblock = LoadData.ismrmrd.Acquisition(nY);
 
 acqblock.head.version(:) = 1;
 acqblock.head.number_of_samples(:) = nX;
@@ -183,7 +183,7 @@ header.userParameters.userParameterLong = up;
 
 
 %% Serialize and write to the data set
-xmlstring = ismrmrd.xml.serialize(header);
+xmlstring = LoadData.ismrmrd.xml.serialize(header);
 dset.writexml(xmlstring);
 
 dset.close();
