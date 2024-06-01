@@ -40,11 +40,18 @@ GasDataLocation = MainInput.XeDataLocation;
 % We need to check if optional fields exists before trying to read them
 
 hdr = LoadData.ismrmrd.xml.deserialize(dset.readxml);
-
+%% Read all the data
+clc
+% Reading can be done one acquisition (or chunk) at a time, 
+% but this is much faster for data sets that fit into RAM.
+D = dset.readAcquisition();
 %% Encoding and reconstruction information
 % Matrix size
 enc_Nx = hdr.encoding.encodedSpace.matrixSize.x;
 enc_Ny = hdr.encoding.encodedSpace.matrixSize.y;
+if strcmp(MainInput.Scanner,'Siemens')
+    enc_Ny = 5000/2;
+end
 enc_Nz = hdr.encoding.encodedSpace.matrixSize.z;
 rec_Nx = hdr.encoding.reconSpace.matrixSize.x;
 rec_Ny = hdr.encoding.reconSpace.matrixSize.y;
@@ -57,42 +64,6 @@ enc_FOVz = hdr.encoding.encodedSpace.fieldOfView_mm.z;
 rec_FOVx = hdr.encoding.reconSpace.fieldOfView_mm.x;
 rec_FOVy = hdr.encoding.reconSpace.fieldOfView_mm.y;
 rec_FOVz = hdr.encoding.reconSpace.fieldOfView_mm.z;
-
-% Number of slices, coils, repetitions, contrasts etc.
-% We have to wrap the following in a try/catch because a valid xml header may
-% not have an entry for some of the parameters
-
-try
-  nSlices = hdr.encoding.encodingLimits.slice.maximum + 1;
-catch
-    nSlices = 1;
-end
-
-try 
-    nCoils = hdr.acquisitionSystemInformation.receiverChannels;
-catch
-    nCoils = 1;
-end
-
-try
-    nReps = hdr.encoding.encodingLimits.repetition.maximum + 1;
-catch
-    nReps = 1;
-end
-
-try
-    nContrasts = hdr.encoding.encodingLimits.contrast.maximum + 1 + 1;
-catch
-    nContrasts = 1;
-end
-
-% TODO add the other possibilities
-
-%% Read all the data
-clc
-% Reading can be done one acquisition (or chunk) at a time, 
-% but this is much faster for data sets that fit into RAM.
-D = dset.readAcquisition();
 
 %% Define Fixed Variables, Subject to Change with Sequence
 %General information
@@ -109,7 +80,7 @@ ScanVersion = 'XeCTC';
 extraOvs = false;
 OvsFactor = 1.0;
 % dwell_ms = 0.64/68; %in ms - for 64 points with 0.64ms readout   
-dwell_ms = D.head.sample_time_us / 1000;
+dwell_ms = D.head.sample_time_us(1) / 1000;
 % if (exist('XeSin','var') && XeSin.non_cart_max_encoding_nrs.vals(1) ~= 63) %R59 oversampling
 %     extraOvs = true;
 %     OvsFactor = (XeSin.non_cart_max_encoding_nrs.vals(1)+1)/64;
@@ -117,17 +88,32 @@ dwell_ms = D.head.sample_time_us / 1000;
 pw = 0.65; %pulse width in ms
 DisFlipAngle = hdr.sequenceParameters.flipAngle_deg(2); %Dissolved flip angle
 GasFlipAngle = hdr.sequenceParameters.flipAngle_deg(1); %Gas flip angle
-freq_jump = 7702; %change in freqeuncy for dissolved and off-res
-
-
+try
+    freq_jump = hdr.userParameters.userParameterLong(2);
+    freq_jump = freq_jump.value;
+catch
+    try
+        freq_jump = hdr.userParameters.userParameterDouble.value/0.02830;
+    catch
+        freq_jump = 7702; %change in freqeuncy for dissolved and off-res
+    end
+end
+    
 %% Import Acquisition Information
 disp('Importing Acquisition Information...')
 dwell_s = dwell_ms / 1000; %convert to s
 Subject = 'Subject: ';   %folderName{1,2:end};
 Notes = '';
-ScanDate = hdr.measurementInformation.seriesDate;
-XeTR = hdr.sequenceParameters.TR*2/1000;%account for 2 acqs, convert to s
-TE90 = hdr.sequenceParameters.TE;
+try
+    ScanDate = hdr.measurementInformation.seriesDate;
+catch
+    ScanDate = hdr.studyInformation.studyDate;
+end
+XeTR = hdr.sequenceParameters.TR(1)*2/1000;%account for 2 acqs, convert to s
+if strcmp(MainInput.Scanner,'Siemens')
+    XeTR = hdr.sequenceParameters.TR(1)*2/1000000;
+end
+TE90 = hdr.sequenceParameters.TE(1);
 ActTE90 = TE90; %TE90 from center of pulse
 Scanner = [hdr.acquisitionSystemInformation.systemVendor,'-',num2str(hdr.acquisitionSystemInformation.systemFieldStrength_T),'T'];
 Xe_AcqMatrix = enc_Nx;
@@ -242,8 +228,8 @@ disp('Determining Image Offset Completed.')
 
 %% Spectra
 disp('Fitting Spectrum...')
-MainInput.CalXeFileName = dir(fullfile(MainInput.XeDataLocation, '*Calibration.h5'));
-MainInput.CalXeFileName = MainInput.CalXeFileName.name;
+MainInput.CalFileName = dir(fullfile(MainInput.XeDataLocation, '*Calibration.h5'));
+MainInput.CalFileName = MainInput.CalFileName.name;
 if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
     try
         [GasExResults, ~] = GasExchangeFunctions.XeCTC_Calibration_MRD(MainInput);
@@ -307,6 +293,7 @@ if(NewImages == 1)
     end
     disp('Removing Gas Phase Contamination Completed.')
 end
+%        CorrectedDissKSpace_SS = GasExchangeFunctions.GasPhaseContaminationRemoval(DissolvedKSpace_SS,GasKSpace_SS,dwell_s,-freq_jump,AppendedDissolvedNMRFit.phase(3),AppendedDissolvedNMRFit.area(3),GasFlipAngle);
 
 
 %% View k0 dynamics
@@ -365,6 +352,13 @@ if(NewImages == 1)
     %Vent Image
     disp('Reconstructing Ventilation Image...')
     UncorrectedVentImage = GasExchangeFunctions.Dissolved_HighResImageRecon(Xe_RecMatrix,GasKSpace_SS,XeTraj_SS/2,PixelShift); %2x Resolution
+    if strcmp(MainInput.Scanner,'Siemens')
+        for i = 1:size(UncorrectedVentImage,1)
+            img = UncorrectedVentImage(:,:,i);
+            img = imrotate(img,90);
+            UncorrectedVentImage(:,:,i) = flip(img,2);
+        end
+    end
     disp('Reconstructing Ventilation Image Completed.')
     disp('Correcting Ventilation Bias...')
     VentMask = (abs(UncorrectedVentImage))>(prctile(abs(UncorrectedVentImage(:)),95)/3);
@@ -391,11 +385,25 @@ if(NewImages == 1)
     %Gas Image
     disp('Reconstructing Gas Image...')
     GasImage = GasExchangeFunctions.Dissolved_LowResImageRecon(Xe_RecMatrix,GasKSpace_SS,XeTraj_SS/2,PixelShift); %2x Resolution
+    if strcmp(MainInput.Scanner,'Siemens')
+        for i = 1:size(GasImage,1)
+            img = GasImage(:,:,i);
+            img = imrotate(img,90);
+            GasImage(:,:,i) = flip(img,2);
+        end
+    end
     disp('Reconstructing Gas Image Completed.')
 
     %Dissolved Image
     disp('Reconstructing Dissolved Image...')
     DissolvedImage = GasExchangeFunctions.Dissolved_LowResImageRecon(Xe_RecMatrix,DissolvedKSpace_SS,XeTraj_SS/2,PixelShift); %2x Resolution
+    if strcmp(MainInput.Scanner,'Siemens')
+        for i = 1:size(DissolvedImage,1)
+            img = DissolvedImage(:,:,i);
+            img = imrotate(img,90);
+            DissolvedImage(:,:,i) = flip(img,2);
+        end
+    end    
     disp('Reconstructing Dissolved Image Completed.')
     disp('Reconstructing Corrected Dissolved Image...')
     CorrDissolvedImage = GasExchangeFunctions.Dissolved_LowResImageRecon(Xe_RecMatrix,CorrectedDissKSpace_SS,XeTraj_SS/2,PixelShift); %2x Resolution

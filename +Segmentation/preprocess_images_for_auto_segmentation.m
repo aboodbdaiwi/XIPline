@@ -46,7 +46,7 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
                 Images(j,:,:,1) = Xe_Img(:,:,j);
                 Images(j,:,:,2) = Xe_Img(:,:,j);
                 Images(j,:,:,3) = Xe_Img(:,:,j);
-                if strcmp(MainInput.NoProtonImage, 'no') == 1
+                if strcmp(MainInput.NoProtonImage, 'no') == 1 && strcmp(MainInput.SliceOrientation, 'coronal') && strcmp(MainInput.Imagestosegment, 'Xe & Proton Registered') 
                     Images(j,:,:,2) = H_Img(:,:,j);
                 end
             end     

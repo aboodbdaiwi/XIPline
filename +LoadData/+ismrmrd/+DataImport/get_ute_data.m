@@ -1,6 +1,6 @@
 function [data,traj] = get_ute_data(ute_file)
 
-parent_path = which('DataImport.get_ute_data');
+parent_path = which('LoadData.ismrmrd.DataImport.get_ute_data');
 idcs = strfind(parent_path,filesep);%determine location of file separators
 parent_path = parent_path(1:idcs(end-1)-1);
 

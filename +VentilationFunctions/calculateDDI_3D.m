@@ -77,6 +77,7 @@ function [Ventilation] = calculateDDI_3D(Ventilation,Proton,MainInput)
     DRtemp= zeros(1,length(defectIndicesX));
     Ctemp = zeros(1,length(defectIndicesX));
     
+    delete(gcp('nocreate'));
     maxWorkers = maxNumCompThreads;
     parpool('local', maxWorkers); % Change this depending on your CPU
 
@@ -87,7 +88,7 @@ function [Ventilation] = calculateDDI_3D(Ventilation,Proton,MainInput)
 %         disp(['processing slice= ',num2str(z),' defect=',num2str(i),'/',num2str(length(defectIndicesX))])
         
         r = 0; radius = 0; v = 0; d = 0; c = 0; dr = 0; n = 0; volume = 0;
-        rad_incrm = 1;
+        rad_incrm = 0.5;
 
         while true
             r = r + 1;
@@ -145,12 +146,14 @@ function [Ventilation] = calculateDDI_3D(Ventilation,Proton,MainInput)
         stdSlice_DDI(j) = std(ddi_slice(ddi_slice ~= 0));
     end
     delete(gcp('nocreate'))
+    DDIStat = regionprops3(DDI > 0.01);
     Ventilation.DDI3D_DDImap = DDI;
     Ventilation.DDI3D_meanSlice = meanSlice_DDI;
     Ventilation.DDI3D_stdSlice = stdSlice_DDI;
     Ventilation.DDI3D_mean = mean(DDI(DDI ~=0));
     Ventilation.DDI3D_std = std(DDI(DDI ~=0)); 
     Ventilation.DDI3D_max = max(DDI(:));
+    Ventilation.DDI3D_Stat = DDIStat;
         %% %% write tiff and read back BinnedVent maps
     DDI_outputpath = [Ventilation.outputpath, '\VDP Analysis\'];
     mkdir(DDI_outputpath);

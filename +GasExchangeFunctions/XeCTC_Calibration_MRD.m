@@ -44,8 +44,8 @@ SNR_tol = 25; % allowable
 
 %% Import Data File
 cd(MainInput.XeDataLocation)
-if exist(MainInput.CalXeFileName, 'file')
-    dsetCal = LoadData.ismrmrd.Dataset(MainInput.CalXeFileName, 'dataset');
+if exist(MainInput.CalFileName, 'file')
+    dsetCal = LoadData.ismrmrd.Dataset(MainInput.CalFileName, 'dataset');
 else
     error(['File ' MainInput.XeFileName ' does not exist.  Please generate it.'])
 end

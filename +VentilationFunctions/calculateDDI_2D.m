@@ -39,6 +39,7 @@ function [Ventilation] = calculateDDI_2D(Ventilation,Proton,MainInput)
     Alung = sum(lungmap(:)) / dimZ;
     
     % Get the indices of voxels with value 2 (lung defects)
+    delete(gcp('nocreate'));
     maxWorkers = maxNumCompThreads;
     parpool('local', maxWorkers);
     
@@ -119,13 +120,14 @@ function [Ventilation] = calculateDDI_2D(Ventilation,Proton,MainInput)
     
     % Close the parallel pool
     delete(gcp);
-
+    DDIStat = regionprops3(DDI > 0.01);
     Ventilation.DDI2D_DDImap = DDI;
     Ventilation.DDI2D_meanSlice = meanSlice_DDI;
     Ventilation.DDI2D_stdSlice = stdSlice_DDI;
     Ventilation.DDI2D_mean = mean(DDI(DDI ~=0));
     Ventilation.DDI2D_std = std(DDI(DDI ~=0)); 
     Ventilation.DDI2D_max = max(DDI(:));
+    Ventilation.DDI2D_Stat = DDIStat;
     %% %% write tiff and read it back 
     DDI_outputpath = [Ventilation.outputpath, '\VDP Analysis\'];
     mkdir(DDI_outputpath);

@@ -108,7 +108,6 @@ for slice_n=1:size(BNmask,3)
         noise_vec=Ndiffimg(:,:,slice_n,n);
         noise_vec(noise_mask(:,:,slice_n)==0)=[];
         sigma(n) = std(noise_vec(:));
-
         M1(:,:,n)=Ndiffimg(:,:,slice_n,n).*final_mask_slice;
     end
 
@@ -120,7 +119,7 @@ for slice_n=1:size(BNmask,3)
     DDC_est = size(S0_est);
     Alpha_est = size(S0_est);
     LmD_est = size(S0_est);
-    weights=1;
+    weights = 1;
     for j= 1:num_ones      
         %lb=[0.001 0.0001 0.5]; ub=[1.5 0.12 1.1];
         initialvalues=[0.1, 0.030 0.5];

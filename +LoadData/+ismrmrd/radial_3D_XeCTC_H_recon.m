@@ -29,11 +29,16 @@ ProtonDataLocation = MainInput.HDataLocation;
 % We need to check if optional fields exists before trying to read them
 
 hdr = LoadData.ismrmrd.xml.deserialize(dset.readxml);
-
+%% Read all the data
+clc
+D = dset.readAcquisition();
 %% Encoding and reconstruction information
 % Matrix size
 enc_Nx = hdr.encoding.encodedSpace.matrixSize.x;
 enc_Ny = hdr.encoding.encodedSpace.matrixSize.y;
+if strcmp(MainInput.Scanner,'Siemens')
+    enc_Ny = size(D.data,2);
+end
 enc_Nz = hdr.encoding.encodedSpace.matrixSize.z;
 rec_Nx = hdr.encoding.reconSpace.matrixSize.x;
 rec_Ny = hdr.encoding.reconSpace.matrixSize.y;
@@ -47,39 +52,7 @@ rec_FOVx = hdr.encoding.reconSpace.fieldOfView_mm.x;
 rec_FOVy = hdr.encoding.reconSpace.fieldOfView_mm.y;
 rec_FOVz = hdr.encoding.reconSpace.fieldOfView_mm.z;
 
-% Number of slices, coils, repetitions, contrasts etc.
-% We have to wrap the following in a try/catch because a valid xml header may
-% not have an entry for some of the parameters
 
-try
-  nSlices = hdr.encoding.encodingLimits.slice.maximum + 1;
-catch
-    nSlices = 1;
-end
-
-try 
-    nCoils = hdr.acquisitionSystemInformation.receiverChannels;
-catch
-    nCoils = 1;
-end
-
-try
-    nReps = hdr.encoding.encodingLimits.repetition.maximum + 1;
-catch
-    nReps = 1;
-end
-
-try
-    nContrasts = hdr.encoding.encodingLimits.contrast.maximum + 1 + 1;
-catch
-    nContrasts = 1;
-end
-
-% TODO add the other possibilities
-
-%% Read all the data
-clc
-D = dset.readAcquisition();
 %% Determine files to use
 if strcmp(Institute,'XeCTC') == 1    
     ScanVersion = 'XeCTC';
@@ -228,7 +201,13 @@ for i = 1:H_coils
 end
 ProtonImage = GasExchangeFunctions.SOS_Coil_Combine(ProtonImage);%Combine Coils
 disp('Reconstructing UTE Image Competed.')
+if strcmp(MainInput.Scanner,'Siemens')
+    ProtonImage = permute(ProtonImage, [2,1,3]);
+    ProtonImage = flip(ProtonImage,1);
+    ProtonImage = flip(ProtonImage,2);
+end
 ProtonImageHR = ProtonImage;
+% figure; imslice(ProtonImageHR)
 %Correct Bias
 disp('Correcting Proton Bias...')
 ProtonImage = medfilt3(ProtonImage, [7 7 7]);%remove undersampling artifacts

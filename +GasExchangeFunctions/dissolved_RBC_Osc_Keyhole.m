@@ -24,7 +24,7 @@ RBC2Bar.meanAngle = mean(angle(Sh_DisFID(1,:)));
 RBC2Bar.InitAngle = mean(angle(DisFID(1,:)));
 RBC2Bar.GasAngle = mean(angle(GasFID(1,:)));
 RBC2Bar.PhaseChange = RBC2Bar.meanAngle-RBC2Bar.InitAngle+RBC2Bar.GasAngle;
-Time_Axis = (0:(NProj-1))*TR; 
+Time_Axis = (0:(NProj-1))*TR(1); 
 
 
 %% Smooth and Detrend Data

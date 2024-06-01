@@ -1,10 +1,13 @@
 function [Lm,Hk]=LmSEMXe2(DDC,alpha,D,ldd,Bi,Ci)
+
 %   Inputs:
 %      
 %   Outputs:
 %                   
 %   Package: https://github.com/aboodbdaiwi/HP129Xe_Analysis_App
-%
+%   Juan Parra-Robles, CPIR-CCHMC, 09/17/2023
+%   Edited by Abood Bdaiwi, CPIR-CCHMC, 011/10/2023
+
 %   Please add updates at the end. Ex: 3/10/24 - ASB: update .... 
 
 % Calculates Lm and diffusion lenght distribution Hk for a pixel with

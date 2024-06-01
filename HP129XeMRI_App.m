@@ -65,6 +65,21 @@ MainInput.Xe_name = Xe_name;
 MainInput.XeDataext = xe_ext;
 cd(MainInput.XeDataLocation)
 
+% select calibration
+if strcmp(MainInput.Institute,'XeCTC') && (strcmp(MainInput.XeDataext,'.dat') || strcmp(MainInput.XeDataext,'.p'))
+    [filename, path] = uigetfile('*.*','Select calibration data file');
+    CalFullPath = [path,filename];
+    CalDataLocation = path(1:end-1);
+    [~,Cal_name,Cal_ext] = fileparts(CalFullPath);
+
+    MainInput.CalFullPath = CalFullPath;
+    MainInput.CalDataLocation = CalDataLocation;
+    MainInput.CalFileName = filename;
+    MainInput.Cal_name = Cal_name;    
+    MainInput.CalDataext = Cal_ext;
+end
+
+
 % select proton
 if MainInput.NoProtonImage == 0
     [filename, path] = uigetfile('*.*','Select proton data file');
@@ -174,7 +189,7 @@ cd(MainInput.XeDataLocation)
 
 % diary Log.txt
 MainInput.SegmentationMethod = 'Threshold'; % 'Threshold' || 'Manual' || 'Auto'
-MainInput.SegmentAnatomy = 'Airway'; % 'Airway'; || 'Parenchyma'
+MainInput.SegmentAnatomy = 'Parenchyma'; % 'Airway'; || 'Parenchyma'
 MainInput.Imagestosegment = 'Xenon';  % 'Xe & Proton Registered' | 'Xenon' | 'Registered Proton'
 
 MainInput.thresholdlevel = 1; % 'threshold' 
@@ -295,6 +310,9 @@ MainInput.dataAnalyst = 'ASB';
 MainInput.processingDate = '7/6/2023';
 
 Global.PatientReport(MainInput)
+
+
+%% 
 
 
 

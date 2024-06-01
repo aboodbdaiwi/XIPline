@@ -94,7 +94,7 @@ header = [];
 % Experimental Conditions (Required)
 header.experimentalConditions.H1resonanceFrequency_Hz = 128000000; % 3T
 
-twix = DataImport.mapVBVD(ute_file);
+twix = LoadData.ismrmrd.DataImport.mapVBVD(ute_file);
 if length(twix) > 1
     twix = twix{end};
 end
