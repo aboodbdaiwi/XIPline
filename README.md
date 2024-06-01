@@ -16,7 +16,7 @@ XIPline application is developed at the [CPIR](https://www.cincinnatichildrens.o
 ## Setup
 ### Run Standalone Application
 To run the standalone application, download the `XIPline.exe` file. This step doesn't require additional steps except downloading the pre-trained deep-learning models for auto-segmentation (see below) and the MATLAB runtime. 
-Download the MATLAB runtime compatible with the application's MATLAB version (R2022b) from [here](https://www.mathworks.com/products/compiler/matlab-runtime.html)
+Download the MATLAB runtime compatible with the application's MATLAB version (R2023b) from [here](https://www.mathworks.com/products/compiler/matlab-runtime.html)
 
 You can also clone the application to your local directory for future releases.
 ```
@@ -39,7 +39,7 @@ pip install scipy
 Please refer to `User_Manual.pdf` document for more detailed steps. 
 
 ### Run Developer Mode 
-To customize the application, the user will need MATLAB version R2022b or newer. Start by adding the local folder in the MATLAB path and execute the `XIPline.mlapp` file. 
+To customize the application, the user will need MATLAB version R2023b or newer. Start by adding the local folder in the MATLAB path and execute the `XIPline.mlapp` file. 
 When implementing new features, or debugging, we recommend using the debugging MATLAB script `XIPline.m`. This script can run the entire application but without the graphical user interface (GUI). 
 
 ## Usage
