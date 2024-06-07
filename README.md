@@ -24,7 +24,7 @@ git clone https://github.com/aboodbdaiwi/HP129Xe_Analysis_App.git
 ```
 
 #### auto-segmentation: Downloading the h5 models for machine learning
-1 - Download the h5 models for auto segmentation from [here](https://drive.google.com/drive/folders/1gcwT14_6Tl_2zkLZ_MHsm-pAYHXWtVOA?usp=sharing).
+1 - Download the h5 models for auto segmentation from [here](https://drive.google.com/drive/folders/1CIFWiEEHiJ0wWNwVQTAFq40OrirYuE7q?usp=sharing).
 
 2 - Create this path `C:\XIPline\models` in your local `C:\` drive and add the downloaded h5 files in the `models` folder. 
 
