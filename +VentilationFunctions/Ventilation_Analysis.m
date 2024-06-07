@@ -86,17 +86,19 @@ switch settings.N4_bias_analysis
         [N4, Bias] = VentilationFunctions.N4_bias_correction(MR, maskarray, parentPath);
         Ventilation.Bias = Bias;       
         % Output Nifti file of N4 corrected images to save for later use.
+        if isempty(FileNames)
+            FileNames = 'Ventilation_Image.nii.gz';
+        end
         [~,Name,ext] = fileparts(FileNames);
         if iscell(ext) == 0 % Deal with multiple dicom vs single dicom/nifti upload.
-            ext = ext;
-            Name = Name;
+            % skip
         else
             ext = ext{1};
             Name = Name{1};
         end
         
         if ext == ".gz"
-            [~,Name,ext] = fileparts(Name); % Deal with double extension (.nii.gz)
+            [~,Name,~] = fileparts(Name); % Deal with double extension (.nii.gz)
         else
         end
         

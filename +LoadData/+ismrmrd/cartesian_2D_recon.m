@@ -33,12 +33,20 @@ function [Image] = cartesian_2D_recon(MainInput)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
     cd(MainInput.XeDataLocation)
-    if exist(MainInput.XeFileName, 'file')
-        dset = LoadData.ismrmrd.Dataset(MainInput.XeFileName, 'dataset');
-    else
-        error(['File ' MainInput.XeFileName ' does not exist.  Please generate it.'])
+
+    if strcmp(MainInput.ReconImageMode,'xenon')
+        if exist(MainInput.XeFileName, 'file')
+            dset = LoadData.ismrmrd.Dataset(MainInput.XeFileName, 'dataset');
+        else
+            error(['File ' MainInput.XeFileName ' does not exist.  Please generate it.'])
+        end
+    elseif strcmp(MainInput.ReconImageMode,'proton')
+        if exist(MainInput.HFileName, 'file')
+            dset = LoadData.ismrmrd.Dataset(MainInput.HFileName, 'dataset');
+        else
+            error(['File ' MainInput.HFileName ' does not exist.  Please generate it.'])
+        end
     end
-    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% Read some fields from the XML header %%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -142,12 +150,7 @@ function [Image] = cartesian_2D_recon(MainInput)
                 % Chop if needed
                 if (enc_Nx == rec_Nx)
                     im = K;
-                else
-                    ind1 = floor((enc_Nx - rec_Nx)/2)+1;
-                    ind2 = floor((enc_Nx - rec_Nx)/2)+rec_Nx;
-                    im = K(ind1:ind2,:,:,:);
-                end
-                if strcmp(MainInput.Scanner,'Siemens')
+                elseif strcmp(MainInput.Scanner,'Siemens')
                     if strcmp(MainInput.AnalysisType,'Ventilation') 
     %                      centerIndex = size(K, 1) / 2;                    
     %                     ind1 = round(centerIndex - enc_Ny/2) + 1;
@@ -171,6 +174,10 @@ function [Image] = cartesian_2D_recon(MainInput)
                         im = flip(im,1);
                         im = flip(im,2);  
                     end
+                else
+                    ind1 = floor((enc_Nx - rec_Nx)/2)+1;
+                    ind2 = floor((enc_Nx - rec_Nx)/2)+rec_Nx;
+                    im = K(ind1:ind2,:,:,:);
                 end
 
                 % Reconstruct in y then z

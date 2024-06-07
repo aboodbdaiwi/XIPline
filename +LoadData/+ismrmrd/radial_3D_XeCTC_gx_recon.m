@@ -158,7 +158,7 @@ disp('Importing Data Completed.')
 %% Calculate Trajectories
 disp('Calculating Trajectories...')
 if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
-    del = 2.25;
+    del = 1.25;
     if (extraOvs)
         del = del * OvsFactor;
     end

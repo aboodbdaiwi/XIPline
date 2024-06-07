@@ -163,9 +163,11 @@ elseif strcmp(MainInput.XeDataext,'.nii') == 1 || strcmp(MainInput.XeDataext,'.g
     end
 elseif (strcmp(MainInput.XeDataext,'.h5') == 1 || strcmp(MainInput.XeDataext,'.mrd') == 1) 
     if strcmp(MainInput.AnalysisType,'Ventilation') == 1   
+        MainInput.ReconImageMode = 'xenon';
         [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
         Ventilation.Image = Image;  
     elseif strcmp(MainInput.AnalysisType,'Diffusion') == 1 
+        MainInput.ReconImageMode = 'xenon';
         [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
         Diffusion.Image = Image;
     elseif strcmp(MainInput.AnalysisType,'GasExchange') && strcmp(MainInput.Institute,'XeCTC') && strcmp(MainInput.SequenceType, '3D Radial')
@@ -212,14 +214,15 @@ elseif strcmp(MainInput.XeDataext,'.dat') && strcmp(MainInput.Scanner,'Siemens')
             ext = MainInput.XeDataext;
             cd(XeDataLocation)
         if strcmp(MainInput.AnalysisType,'Ventilation') == 1    
-            MainInput.ReconImageMode = 'xenon';
             LoadData.ismrmrd.Siemens.gre_to_ismrmrd(filename,Xe_name,fullfile(XeDataLocation,[Xe_name '.h5']));
             MainInput.XeFileName = [Xe_name '.h5'];
+            MainInput.ReconImageMode = 'xenon';
             [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
             Ventilation.Image = Image;  
         elseif strcmp(MainInput.AnalysisType,'Diffusion') == 1 
             LoadData.ismrmrd.Siemens.diff_to_ismrmrd(filename,Xe_name,fullfile(XeDataLocation,[Xe_name '.h5']));
             MainInput.XeFileName = [Xe_name '.h5'];
+            MainInput.ReconImageMode = 'xenon';
             [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
             Diffusion.Image = Image;
         elseif strcmp(MainInput.AnalysisType,'GasExchange') == 1 
@@ -245,11 +248,13 @@ elseif strcmp(MainInput.XeDataext,'.p') && strcmp(MainInput.Scanner,'GE')
             MainInput.ReconImageMode = 'xenon';
             LoadData.ismrmrd.GE.gre_to_ismrmrd(filename,Xe_name,fullfile(XeDataLocation,[Xe_name '.h5']));
             MainInput.XeFileName = [Xe_name '.h5'];
+            MainInput.ReconImageMode = 'xenon';
             [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
             Ventilation.Image = Image;  
         elseif strcmp(MainInput.AnalysisType,'Diffusion') == 1 
             LoadData.ismrmrd.GE.diff_to_ismrmrd(filename,Xe_name,fullfile(XeDataLocation,[Xe_name '.h5']));
             MainInput.XeFileName = [Xe_name '.h5'];
+            MainInput.ReconImageMode = 'xenon';
             [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
             Diffusion.Image = Image;
         elseif strcmp(MainInput.AnalysisType,'GasExchange') == 1 
@@ -338,7 +343,6 @@ if MainInput.NoProtonImage == 0
             Proton.Image = HImage;
             Proton.filename = file_name;
             Proton.folder = file_folder;
-    
         elseif strcmp(MainInput.HDataext,'.data') == 1 && strcmp(MainInput.Scanner, 'Philips') == 1 &&...
                strcmp(MainInput.SequenceType, '3D Radial') == 1         
                 PixelShift = GasExchange.PixelShift; 
@@ -350,11 +354,11 @@ if MainInput.NoProtonImage == 0
                 [Proton] = LoadData.LoadData_Proton_GasExchange_Philips_Sin(MainInput.HDataLocation,PixelShift,MainInput.Institute);
         elseif (strcmp(MainInput.XeDataext,'.h5') == 1 || strcmp(MainInput.XeDataext,'.mrd') == 1)              
             if strcmp(MainInput.AnalysisType,'Ventilation') == 1   
+                MainInput.ReconImageMode = 'proton';
                 [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
-                Ventilation.Image = Image;  
+                Proton.Image = Image;  
             elseif strcmp(MainInput.AnalysisType,'Diffusion') == 1 
-                [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
-                Diffusion.Image = Image;
+                %
             elseif strcmp(MainInput.AnalysisType,'GasExchange') && strcmp(MainInput.Institute,'XeCTC') && strcmp(MainInput.SequenceType, '3D Radial')
                 [Proton] = LoadData.ismrmrd.radial_3D_XeCTC_H_recon(MainInput, GasExchange, Proton);
             end
@@ -366,11 +370,11 @@ if MainInput.NoProtonImage == 0
                     H_ext = MainInput.HDataext;
                     cd(HDataLocation)                  
                 if strcmp(MainInput.AnalysisType,'Ventilation')    
-                    MainInput.ReconImageMode = 'proton';
                     LoadData.ismrmrd.Siemens.gre_to_ismrmrd(HFileName,H_name,fullfile(HDataLocation,[H_name '.h5']));
                     MainInput.HFileName = [H_name '.h5'];
+                    MainInput.ReconImageMode = 'proton';
                     [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
-                    Ventilation.Image = Image;  
+                    Proton.Image = Image;  
                 elseif strcmp(MainInput.AnalysisType,'Diffusion') 
                     % not supported yet
                 elseif strcmp(MainInput.AnalysisType,'GasExchange')
@@ -386,11 +390,11 @@ if MainInput.NoProtonImage == 0
                     H_ext = MainInput.HDataext;
                     cd(HDataLocation) 
                 if strcmp(MainInput.AnalysisType,'Ventilation') == 1    
-                    MainInput.ReconImageMode = 'xenon';
+                    MainInput.ReconImageMode = 'proton';
                     LoadData.ismrmrd.GE.gre_to_ismrmrd(HFileName,H_name,fullfile(HDataLocation,[H_name '.h5']));
                     MainInput.HFileName = [H_name '.h5'];
                     [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
-                    Ventilation.Image = Image;  
+                    Proton.Image  = Image;  
                 elseif strcmp(MainInput.AnalysisType,'Diffusion') == 1 
                 % not supported yet
                 elseif strcmp(MainInput.AnalysisType,'GasExchange') == 1 
@@ -398,7 +402,6 @@ if MainInput.NoProtonImage == 0
                     MainInput.HFileName = [H_name '.h5'];         
                     [GasExchange] = LoadData.ismrmrd.radial_3D_XeCTC_H_recon(MainInput,GasExchange);
                 end
-
 
     %--------------------- add new read load function here --------------------
                 
