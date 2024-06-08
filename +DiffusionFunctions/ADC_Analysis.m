@@ -58,14 +58,12 @@ for find_sl=1:length(find_slice_checker)
 end
 % figure; imslice(Ndiffimg)
 % figure; imslice(Nfinal_mask)
-diffimg=Ndiffimg;
+Ndiffimg = (Ndiffimg - min(Ndiffimg(:)))/(max(Ndiffimg(:)) - min(Ndiffimg(:)));
 final_mask=Nfinal_mask;
 noise_mask=Nnoise_mask;
 slices=length(find_slice_checker);
 
 %% Normalize the intensity of the original image to fall between [0,100].
-% Ndiffimg=diffimg-min(diffimg(:));
-Ndiffimg=diffimg/max(diffimg(:));
 Ndiffimg=Ndiffimg*100;
 
 final_mask_size=size(final_mask);
@@ -121,6 +119,17 @@ ADCmap = zeros(final_mask_size);
 Rmap = zeros(final_mask_size);
 Somap = zeros(final_mask_size);
 
+% Specify the folder name
+XIPlinefolder = 'C:\XIPline';
+
+% Check if the folder exists
+if ~exist(XIPlinefolder, 'dir')
+    % If the folder does not exist, create it
+    mkdir(XIPlinefolder);
+    disp(['Folder "', XIPlinefolder, '" created.']);
+else
+    disp(['Folder "', XIPlinefolder, '" already exists.']);
+end
 
 switch ADCFittingType
     case 'Log Linear'
@@ -170,7 +179,7 @@ switch ADCFittingType
         for nonl_loop=1:num_ones
             ydata=Data_vec(nonl_loop,:);
             x0 = [ydata(1),0.35];
-            fun2 = @(x)sseval(x,bvalues,ydata);
+            fun2 = @(x)DiffusionFunctions.sseval(x,bvalues,ydata);
             bestx2 = fminsearch(fun2,x0);
             Sovec(nonl_loop)=bestx2(1);
             ADCvec(nonl_loop)=bestx2(2);
@@ -204,11 +213,16 @@ switch ADCFittingType
                 sigma_n(slice_n,n)=std_slice_n;
                 M(:,:,n)=((Ndiffimg(:,:,slice_n,n).*final_mask(:,:,slice_n)).^2)/(std_slice_n^2);
             end
+            % sigma = ones(size(bvalues));
+            % sigma = sigma.*sigma_n(slice_n,1);
             M_Data_vec=reshape(M,[final_mask_size(1)*final_mask_size(2),length(bvalues)]);
             M = M_Data_vec(any(M_Data_vec,2),:);
             dataStruct= struct('M', M, 'b', bvalues, 'sigma', sigma_n(slice_n,:));
+            % dataStruct= struct('M', M, 'b', bvalues, 'sigma', sigma);
             num_ones=final_mask(:,:,slice_n);
             num_ones=sum(num_ones(:)); % for loopping 
+
+            cd(XIPlinefolder)
             if strcmp(ADCAnalysisType, 'human') == 1  
                 Bayes_Model_1D = DiffusionFunctions.ADC_Model_Human_1D(num_ones,Nbvalues); % Write Bayes Model
                 b_int=0.14;
@@ -228,8 +242,9 @@ switch ADCFittingType
             nburnin  = 3000; % How Many Burn-in Samples?
             nsamples = 2000;  % How Many Recorded Samples?
             fprintf( 'Running WinBUGS for Bayesian Fit...\n' );
-            [samples, stats] =  DiffusionFunctions.matbugs(dataStruct, ...
-                                fullfile(outputpath, ADC_Model), ...
+            %fullfile(outputpath, ADC_Model), ...
+            [samples, stats] =  DiffusionFunctions.matbugs(dataStruct, ...                                
+                                fullfile('C:\XIPline\', ADC_Model), ...
                                 'init', initStructs, ...
                                 'nChains', nchains, ...
                                 'view', 0, 'nburnin', nburnin, 'nsamples', nsamples, ...
@@ -239,7 +254,7 @@ switch ADCFittingType
         Bayes_nu0(slice_n,1:num_ones) =stats.mean.nu0;
         Bayes_alpha(slice_n,1:num_ones) =stats.mean.alpha;
         end
-
+        cd(outputpath);
         pixel_location=find(final_mask); % find pixel location to convert the array back to 3D image
         num_ones=sum(final_mask(:)); % for loopping 
         Bayes_nu0_2=Bayes_nu0';

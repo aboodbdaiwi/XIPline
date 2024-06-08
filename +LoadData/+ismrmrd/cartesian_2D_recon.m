@@ -148,9 +148,7 @@ function [Image] = cartesian_2D_recon(MainInput)
                 % Reconstruct in x
                 K = fftshift(ifft(fftshift(K,1),[],1),1);
                 % Chop if needed
-                if (enc_Nx == rec_Nx)
-                    im = K;
-                elseif strcmp(MainInput.Scanner,'Siemens')
+                if strcmp(MainInput.Scanner,'Siemens')
                     if strcmp(MainInput.AnalysisType,'Ventilation') 
     %                      centerIndex = size(K, 1) / 2;                    
     %                     ind1 = round(centerIndex - enc_Ny/2) + 1;
@@ -166,6 +164,7 @@ function [Image] = cartesian_2D_recon(MainInput)
                         im = K(ind1:ind2,:,:,:);
                         im = flip(im,1);
                         im = flip(im,2);  
+                        %disp('true 2')
                     elseif strcmp(MainInput.AnalysisType,'Diffusion') 
                         crop_factor = round(enc_Ny*1.3);
                         ind1 = crop_factor + 1;
@@ -173,11 +172,15 @@ function [Image] = cartesian_2D_recon(MainInput)
                         im = K(ind1:ind2,:,:,:);
                         im = flip(im,1);
                         im = flip(im,2);  
+                        %disp('true 3')
                     end
+                elseif (enc_Nx == rec_Nx)
+                    im = K;
                 else
                     ind1 = floor((enc_Nx - rec_Nx)/2)+1;
                     ind2 = floor((enc_Nx - rec_Nx)/2)+rec_Nx;
                     im = K(ind1:ind2,:,:,:);
+                    %disp('true 4')
                 end
 
                 % Reconstruct in y then z
@@ -212,10 +215,11 @@ function [Image] = cartesian_2D_recon(MainInput)
             end
         end
     end
+
     if strcmp(MainInput.Scanner,'Siemens')
         if nContrasts > 1
             Image = squeeze(Image);
-            Image = reshape(Image, rec_Nx,rec_Nx,nSlices,nContrasts);
+            Image = reshape(Image, [rec_Nx,rec_Nx,nSlices,nContrasts]);
         else
             Image = squeeze(Image);
             if length(size(Image)) == 3

@@ -21,11 +21,11 @@ GasExResults = [];
 CalResults= [];
 
     % call functions 
-    if strcmp(MainInput.XeDataext,'.data') == 1 && (strcmp(MainInput.Institute, 'XeCTC')==1 ||...
+    if strcmp(MainInput.XeDataext,'.data') && (strcmp(MainInput.Institute, 'XeCTC') ||...
             strcmp(MainInput.Institute, 'CCHMC') == 1 )                 
         [GasExResults, CalResults] = Calibration.XeCTC_Calibration(MainInput); 
-    elseif strcmp(MainInput.XeDataext,'.dat') == 1 && (strcmp(MainInput.Institute, 'Duke') == 1 ||...
-            strcmp(MainInput.Institute, 'UVA') == 1)
+    elseif strcmp(MainInput.XeDataext,'.dat') && (strcmp(MainInput.Institute, 'Duke') ||...
+            strcmp(MainInput.Institute, 'UVA')  || strcmp(MainInput.Institute, 'XeCTC')) 
         [GasExResults, CalResults] = Calibration.Xe_duke_UVA_calibration(MainInput); 
     elseif strcmp(MainInput.XeDataext,'.h5') || strcmp(MainInput.XeDataext,'.MRD') 
         [GasExResults, CalResults] = Calibration.XeCTC_Calibration_MRD(MainInput);         

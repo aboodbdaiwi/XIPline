@@ -29,7 +29,7 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
             % normalize
             Xe_Img = Xe_Img./max(Xe_Img(:));
             % resize proton images
-            if strcmp(MainInput.NoProtonImage, 'no') == 1
+            if strcmp(MainInput.NoProtonImage, 'no') || MainInput.NoProtonImage == 0
                 % resize
                 if size(Proton.Image,1) ~= Im_size
                     H_Img = zeros(Im_size,Im_size,size(Proton.Image,3));
@@ -46,7 +46,7 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
                 Images(j,:,:,1) = Xe_Img(:,:,j);
                 Images(j,:,:,2) = Xe_Img(:,:,j);
                 Images(j,:,:,3) = Xe_Img(:,:,j);
-                if strcmp(MainInput.NoProtonImage, 'no') == 1 && strcmp(MainInput.SliceOrientation, 'coronal') && strcmp(MainInput.Imagestosegment, 'Xe & Proton Registered') 
+                if (strcmp(MainInput.NoProtonImage, 'no') || MainInput.NoProtonImage == 0) && strcmp(MainInput.SliceOrientation, 'coronal') && strcmp(MainInput.Imagestosegment, 'Proton & Xe Registered') 
                     Images(j,:,:,2) = H_Img(:,:,j);
                 end
             end     
@@ -71,11 +71,12 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
             end        
         case 'GasExchange'
             % resize xenon images
-            if strcmp(MainInput.Institute, 'CCHMC')
-                Im_size = [11, 112, 112];
-            else
-                Im_size = [112, 112, 112];
-            end
+            % if strcmp(MainInput.Institute, 'CCHMC')
+            %     Im_size = [112, 112, 112];
+            % else
+            %     Im_size = [112, 112, 112];
+            % end
+            Im_size = [112, 112, 112];
             if size(GasExchange.VentImage,1) ~= Im_size
                 Xe_Img = imresize3(GasExchange.VentImage, Im_size);
             else
@@ -83,7 +84,7 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
             end
             Xe_Img = double(Xe_Img./max(Xe_Img(:)));
             % resize proton images
-            if strcmp(MainInput.NoProtonImage, 'no')
+            if strcmp(MainInput.NoProtonImage, 'no') || MainInput.NoProtonImage == 0
                 % resize
                 if size(Proton.ProtonRegistered,1) ~= Im_size
                     H_Img = imresize3(Proton.ProtonRegistered, Im_size);
@@ -94,7 +95,7 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
                 H_Img = double(H_Img./max(H_Img(:)));
             end
             % make stacks 
-            if strcmp(MainInput.NoProtonImage, 'no')
+            if (strcmp(MainInput.NoProtonImage, 'no') || MainInput.NoProtonImage == 0) && strcmp(MainInput.SegmentType, 'gx_3D_2ch_iso')
                 Images = zeros(1,Im_size(1),Im_size(2),Im_size(3),2);
                 Images(1,:,:,:,1) = Xe_Img;
                 Images(1,:,:,:,2) = H_Img;

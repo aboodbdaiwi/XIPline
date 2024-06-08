@@ -4,7 +4,7 @@ classdef BM3DProfile
         NO_VALUE = -1;
         HARD_THRESHOLDING = int8(1);
         WIENER_FILTERING = int8(2);
-        ALL_STAGES = BM3DProfile.HARD_THRESHOLDING + BM3DProfile.WIENER_FILTERING;
+        ALL_STAGES = Global.bm3d.BM3DProfile.HARD_THRESHOLDING + Global.bm3d.BM3DProfile.WIENER_FILTERING;
     end
     properties
         
@@ -43,9 +43,9 @@ classdef BM3DProfile
         % threshold parameter for the hard-thresholding in 3D transform domain
         % NO_VALUE in lambda or lamdba_wiener means automatic selection.
         
-        lambda_thr3D        = BM3DProfile.NO_VALUE; %2.7;
+        lambda_thr3D        = Global.bm3d.BM3DProfile.NO_VALUE; %2.7;
         % Refiltering
-        lambda_thr3D_re       = BM3DProfile.NO_VALUE;
+        lambda_thr3D_re       = Global.bm3d.BM3DProfile.NO_VALUE;
         
         %%%% Wiener filtering parameters:
         N1_wiener           = 8;%4;%
@@ -55,8 +55,8 @@ classdef BM3DProfile
         tau_match_wiener    = 400;
         beta_wiener         = 2.0;
         
-        mu2       = BM3DProfile.NO_VALUE %1.0;
-        mu2_re      = BM3DProfile.NO_VALUE;
+        mu2       = Global.bm3d.BM3DProfile.NO_VALUE %1.0;
+        mu2_re      = Global.bm3d.BM3DProfile.NO_VALUE;
         
         decLevel = 0;        %% dec. levels of the dyadic wavelet 2D transform for blocks (0 means full decomposition, higher values decrease the dec. number)
     

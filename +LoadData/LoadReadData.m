@@ -57,6 +57,8 @@ elseif strcmp(MainInput.AnalysisType,'Diffusion')
     Diffusion.outputpath = outputpath;
 elseif strcmp(MainInput.AnalysisType,'GasExchange')
     mkdir([MainInput.XeDataLocation '\Gas Exchange Analysis']);
+
+    mkdir([MainInput.XeDataLocation '\Gas Exchange Analysis']);
     outputpath = [MainInput.XeDataLocation '\Gas Exchange Analysis'];
     GasExchange.outputpath = outputpath;
 end
@@ -307,6 +309,13 @@ end
 %% 
 if MainInput.NoProtonImage == 0    
     try 
+        % cd(MainInput.XeDataLocation)
+        % if strcmp(MainInput.AnalysisType,'Ventilation')                 
+        %     mkdir([MainInput.HDataLocation '\Ventilation Analysis']);  
+        % elseif strcmp(MainInput.AnalysisType,'Diffusion')
+        % elseif strcmp(MainInput.AnalysisType,'GasExchange')          
+        %     mkdir([MainInput.HDataLocation '\Gas Exchange Analysis']);
+        % end
         if strcmp(MainInput.HDataext,'.dcm') == 1                 
             [HImage, file_folder, file_name] = LoadData.DICOM_Load(MainInput.HDataLocation);
             Proton.Image = double(HImage);

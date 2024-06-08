@@ -151,7 +151,32 @@ if abs(deltaPhase)> deltaPhase1_tol
 end
 
 %% Calculate True Flip Angle
-flipCalAmps = max(abs(calData)); % Add code to avoid saturation?
+% calData = data size 2048x20
+flipCalAmps = max(abs(calData)); 
+
+% Add code to avoid saturation?
+% find the difference between the first 10 points
+firstpoints_diff = zeros(1,10);
+for i = 1:10
+    firstpoints_diff(i) = (flipCalAmps(i) - flipCalAmps(i+1));
+end
+
+% Define the threshold for detecting a significant drop
+avrg_diff = mean(abs(firstpoints_diff)) * 3; % 3 times the difference between points
+
+% find the difference between the first 10 points
+lastpoints_diff = zeros(1,10);
+for i = 1:9
+    lastpoints_diff(i) = (flipCalAmps(i+10) - flipCalAmps(i+11));
+end
+max_diff = max(lastpoints_diff(:)); % 3 times the difference between points
+
+% Check if the drop is significant
+if max_diff > avrg_diff
+    Npoint = size(calData,1);
+    flipCalAmps = max(abs(calData(floor(Npoint/2):end,:))); % use 1/2 of the point
+    disp('1/2 of the point were used to avoid saturation.');
+end
 
 % calculate flip angle
 fitfunct = @(coefs,xdata)coefs(1)*cos(coefs(2)).^(xdata-1) + noise_est;   % cos theta decay

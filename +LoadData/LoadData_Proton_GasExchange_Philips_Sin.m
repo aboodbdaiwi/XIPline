@@ -51,9 +51,8 @@ file_name = DataFiles.name;
 HDataFile = DataFiles(1);
 disp('Looking For Necessary Files Completed.')
 
-
 cd(ProtonDataLocation)
-mkdir([ProtonDataLocation '\Gax Exchange Analysis']);
+mkdir([ProtonDataLocation '\Gas Exchange Analysis']);
 outputpath = [ProtonDataLocation '\Gax Exchange Analysis'];
 cd(outputpath)
 Proton.outputfolder = outputpath;
@@ -227,7 +226,7 @@ close(gcf)
 Proton.Image = double(ProtonImage);
 Proton.ProtonImageHR = double(ProtonImageHR);
 Proton.filename = file_name;
-Proton.folder = MainInput.HDataLocation;
+Proton.folder = ProtonDataLocation;
 Proton.H_RecMatrix = H_RecMatrix;
 Proton.ProtonMax = ProtonMax;
 

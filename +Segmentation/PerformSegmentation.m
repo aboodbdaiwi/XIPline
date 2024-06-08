@@ -108,8 +108,6 @@ switch MainInput.SegmentationMethod
         else
             disp(['File ' fileName ' does not exist in the specified folder.']);
         end
-        [~, MainInput] = Segmentation.preprocess_images_for_auto_segmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
-        cd(MainInput.AutoSegmentPath)
 
         %============================Making Lung Mask==========================
         disp('Making Lung Mask (trained ML model method)...');
@@ -171,15 +169,18 @@ switch MainInput.SegmentationMethod
                     case 'sagittal'
                         SegmentType = 'not_supported'; % not supported yet                        
                     case 'isotropic'
-                        if (MainInput.NoProtonImage == 0) && (strcmp(MainInput.Imagestosegment, 'Xe & Proton Registered'))
+                        if (MainInput.NoProtonImage == 0) && (strcmp(MainInput.Imagestosegment, 'Proton & Xe Registered'))
                             SegmentType = 'gx_3D_2ch_iso'; %system('predict_mask_3DGasExchange_w_H_isotropic.exe')
-                        elseif strcmp(MainInput.Imagestosegment, 'Xenon') == 1
+                        elseif strcmp(MainInput.Imagestosegment, 'Xenon')
                             SegmentType = 'gx_3D_1ch_iso'; 
                         else 
                             SegmentType = 'gx_3D_1ch_iso'; %system('predict_mask_3DGasExchange_wout_H_isotropic.exe')           
                         end  
                 end                                     
         end 
+        MainInput.SegmentType = SegmentType;
+        [~, MainInput] = Segmentation.preprocess_images_for_auto_segmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
+        cd(MainInput.AutoSegmentPath)        
         if strcmp(SegmentType, 'not_supported') == 0
             % run python script 
             cd(destinationFolderPath)
