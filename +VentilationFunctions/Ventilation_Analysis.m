@@ -163,11 +163,13 @@ if strcmp(Ventilation.ThreshAnalysis,'yes')   % 'yes'; || 'no'
 %         disp('Neither original or N4 bias corrected images were declared. Declare these in the input_params() function.')
 %      end
 
-    if strcmp(MainInput.Institute,'XeCTC') == 1 || strcmp(MainInput.Institute,'CCHMC') == 1
-        [Ventilation] = VentilationFunctions.calculate_VDP_CCHMC(MR, maskarray, complete, incomplete, hyper, medfilter, N4_bias_analysis, parentPath,Overall_SNR,Ventilation,Proton,MainInput);    
-    else    
-        [Ventilation] = VentilationFunctions.calculate_VDP(MR, maskarray, complete, incomplete, hyper, medfilter, N4_bias_analysis, parentPath,Overall_SNR,Ventilation,Proton,MainInput);    
-    end
+    [Ventilation] = VentilationFunctions.calculate_VDP_CCHMC(MR, maskarray, complete, incomplete, hyper, medfilter, N4_bias_analysis, parentPath,Overall_SNR,Ventilation,Proton,MainInput);    
+
+    % if strcmp(MainInput.Institute,'XeCTC') == 1 || strcmp(MainInput.Institute,'CCHMC') == 1
+    %     [Ventilation] = VentilationFunctions.calculate_VDP_CCHMC(MR, maskarray, complete, incomplete, hyper, medfilter, N4_bias_analysis, parentPath,Overall_SNR,Ventilation,Proton,MainInput);    
+    % else    
+    %     [Ventilation] = VentilationFunctions.calculate_VDP(MR, maskarray, complete, incomplete, hyper, medfilter, N4_bias_analysis, parentPath,Overall_SNR,Ventilation,Proton,MainInput);    
+    % end
     % Display the final VDP:
     disp(['The overall ventilation defect percentage is: ',num2str(Ventilation.VDP),'%'])
 end 

@@ -1,17 +1,12 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="2754615772" file="G:\GitHub\HP129XeAnalysisApp\HPXeAnalysisApp.prj" location="G:\GitHub\HP129XeAnalysisApp" name="HPXeAnalysisApp" preferred-package-location="G:\GitHub\HP129XeAnalysisApp\HPXeAnalysisApp\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
-    <param.appname>HP129XeAnalysisApp</param.appname>
-    <param.icon>${PROJECT_ROOT}\HPXeAnalysisApp_resources\icon.ico</param.icon>
-    <param.icons>
-      <file>${PROJECT_ROOT}\HPXeAnalysisApp_resources\icon_48.png</file>
-      <file>${PROJECT_ROOT}\HPXeAnalysisApp_resources\icon_32.png</file>
-      <file>${PROJECT_ROOT}\HPXeAnalysisApp_resources\icon_24.png</file>
-      <file>${PROJECT_ROOT}\HPXeAnalysisApp_resources\icon_16.png</file>
-    </param.icons>
+  <configuration file="D:\Github\HP_Xe_Analysis_App\XIPline.prj" location="D:\Github\HP_Xe_Analysis_App" name="XIPline" target="target.ezdeploy.standalone" target-name="Application Compiler">
+    <param.appname>XIPline</param.appname>
+    <param.icon />
+    <param.icons />
     <param.version>1.1</param.version>
     <param.authnamewatermark>CCHMC-CPIR</param.authnamewatermark>
-    <param.email />
-    <param.company />
+    <param.email>abdullah.bdaiwi@cchmc.org</param.email>
+    <param.company>CCHMC</param.company>
     <param.summary>A MATLAB-based user interface application was developed to analyze hyperpolarized 129Xe MRI data. This open source, research tool provides b</param.summary>
     <param.description>Introduction: The high signal intensity and unique contrast provided by hyperpolarized (HP) 129Xe MRI enables regional changes in pulmonary ventilation, alveolar microstructure size, and gas exchange to be assessed. Recent years have seen advances in coil hardware6, sequence design, and image reconstruction, and in parallel with ongoing technical advances, the number of sites able to perform routine 129Xe MRI in humans continues to expand. As acquisition options and the number of 129Xe sites grow, it will become increasingly feasible to perform large, multi-site clinical trials using metrics derived from 129Xe MRI as endpoints. For multi-site 129Xe trials to be impactful, however, it will be vital to standardize data acquisition and analysis in manner that can be implemented by sites lacking decades of HP gas experience. Here, we develop an executable application in MATLAB, to provide a user-friendly, graphical user interface-based pipeline to analyze and visualize 129Xe MRI data, including calibration scans, ventilation, diffusion, and gas exchange images. This application is designed for modular implementation of analysis methods, in an open-source platform to allow new methods and custom analyses to be implemented efficiently as 129Xe technology continues to evolve.
 
@@ -21,17 +16,17 @@ To analyze ventilation-MRI data, 4 clusters and linear-binning thresholding meth
 Discussion: This HP 129Xe MRI Analysis Application provides user-friendly interface tools to reconstruct and analyze 129Xe data. The application is designed in MATLAB, and therefore enables rapid implementation of new functions and code changes. These MATLAB applications are easily compiled as stand-alone installers that require no MATLAB license. 
 This ongoing development of this application aims to reduce redundant effort and enable the streamlined analyses required to implement new techniques across multiple sites by providing an open-source framework for developers to implement and share methods and best practices. This optimize improve workflow across sites and reduced the training required for new and inexperienced users to perform analyses. 
 Finally, the functionality of the application can readily be expanded to include data processing for different sequences and scanners vendors; customized analysis reports that can be interpreted easily by clinicians; and new types of MRI contrast such as pulmonary capillary dynamics. Of particular utility for higher through-put scanning, a 129Xe hyperpolarization model based on fundamental polarization physics and practical polarizer engineering considerations will also be implemented to allow polarizer operators to assess tradeoffs between 129Xe polarization, subject dosing, and production rate.</param.description>
-    <param.screenshot>${PROJECT_ROOT}\Icons\Main.PNG</param.screenshot>
+    <param.screenshot />
     <param.guid />
-    <param.installpath.string>\HP129XeAnalysisApp\</param.installpath.string>
+    <param.installpath.string>\CCHMC\XIPline\</param.installpath.string>
     <param.installpath.combo>option.installpath.programfiles</param.installpath.combo>
     <param.logo />
     <param.install.notes />
     <param.target.install.notes />
-    <param.intermediate>${PROJECT_ROOT}\HPXeAnalysisApp\for_testing</param.intermediate>
-    <param.files.only>${PROJECT_ROOT}\HPXeAnalysisApp\for_redistribution_files_only</param.files.only>
-    <param.output>${PROJECT_ROOT}\HPXeAnalysisApp\for_redistribution</param.output>
-    <param.logdir>${PROJECT_ROOT}\HPXeAnalysisApp</param.logdir>
+    <param.intermediate>${PROJECT_ROOT}\XIPline\for_testing</param.intermediate>
+    <param.files.only>${PROJECT_ROOT}\XIPline\for_redistribution_files_only</param.files.only>
+    <param.output>${PROJECT_ROOT}\XIPline\for_redistribution</param.output>
+    <param.logdir>${PROJECT_ROOT}\XIPline</param.logdir>
     <param.enable.clean.build>false</param.enable.clean.build>
     <param.user.defined.mcr.options />
     <param.target.type>subtarget.standalone</param.target.type>
@@ -48,15 +43,14 @@ Finally, the functionality of the application can readily be expanded to include
     <param.native.matlab>false</param.native.matlab>
     <param.checkbox>false</param.checkbox>
     <param.example />
-    <param.help.text>Syntax 
-	  -? 
-	 
- Input Arguments 
-	 -?  print help on how to use the application 
-	 input arguments</param.help.text>
+    <param.help.text />
     <unset>
+      <param.icon />
+      <param.icons />
+      <param.authnamewatermark />
       <param.email />
       <param.company />
+      <param.screenshot />
       <param.guid />
       <param.installpath.string />
       <param.installpath.combo />
@@ -83,57 +77,22 @@ Finally, the functionality of the application can readily be expanded to include
       <param.native.matlab />
       <param.checkbox />
       <param.example />
+      <param.help.text />
     </unset>
     <fileset.main>
-      <file>${PROJECT_ROOT}\HPXeAnalysisApp.mlapp</file>
+      <file>${PROJECT_ROOT}\XIPline.mlapp</file>
     </fileset.main>
-    <fileset.resources>
-      <file>${PROJECT_ROOT}\+Calibration</file>
-      <file>${PROJECT_ROOT}\+DiffusionFunctions</file>
-      <file>${PROJECT_ROOT}\+GasExchangeFunctions</file>
-      <file>${PROJECT_ROOT}\+Global</file>
-      <file>${PROJECT_ROOT}\+LoadData</file>
-      <file>${PROJECT_ROOT}\+Registration</file>
-      <file>${PROJECT_ROOT}\+Segmentation</file>
-      <file>${PROJECT_ROOT}\+VentilationFunctions</file>
-      <file>${PROJECT_ROOT}\app_manual</file>
-      <file>${PROJECT_ROOT}\HPXeAnalysisApp_resources</file>
-      <file>${PROJECT_ROOT}\Icons</file>
-      <file>${PROJECT_ROOT}\V3 Scan Info</file>
-      <file>${PROJECT_ROOT}\XeCTC Scan Info</file>
-    </fileset.resources>
+    <fileset.resources />
     <fileset.package />
-    <fileset.depfun>
-      <file>${MATLAB_ROOT}\toolbox\matlab\demos\ngc6543a.jpg</file>
-      <file>P:\OneDrive - cchmc\Lab\Philips_ADC\ADC_Airway_Segment.m</file>
-      <file>P:\OneDrive - cchmc\Lab\Philips_ADC\ADC_Bayesian_Model_1D.m</file>
-      <file>P:\OneDrive - cchmc\Lab\Philips_ADC\ADC_Bayesian_Model_3D.m</file>
-      <file>P:\OneDrive - cchmc\Lab\Philips_ADC\ADC_lung_parenchyma_Segment.m</file>
-      <file>P:\OneDrive - cchmc\Lab\Philips_ADC\ADC_thresh.m</file>
-      <file>P:\OneDrive - cchmc\Lab\Philips_ADC\calcImageSlice.m</file>
-      <file>P:\OneDrive - cchmc\Lab\Philips_ADC\DICOM_Load.m</file>
-      <file>P:\OneDrive - cchmc\Lab\Philips_ADC\fermi_filter_1D.m</file>
-      <file>P:\OneDrive - cchmc\Lab\Philips_ADC\fermi_filter_1D_test.m</file>
-      <file>P:\OneDrive - cchmc\Lab\Philips_ADC\fermi_filter_2D_AB.m</file>
-      <file>P:\OneDrive - cchmc\Lab\Philips_ADC\imslice.m</file>
-      <file>P:\OneDrive - cchmc\Lab\Philips_ADC\imVolume.m</file>
-      <file>P:\OneDrive - cchmc\Lab\Philips_ADC\load_philips_extr1_2D.m</file>
-      <file>P:\OneDrive - cchmc\Lab\Philips_ADC\polyfitweighted.m</file>
-      <file>P:\OneDrive - cchmc\Lab\Philips_ADC\showImageSlice.m</file>
-      <file>P:\OneDrive - cchmc\Lab\Philips_ADC\Volume.m</file>
-      <file>P:\OneDrive - cchmc\Lab\Philips_ADC\weightedcorrs.m</file>
-      <file>P:\OneDrive - cchmc\Lab\Xe_App\Main App functions\+GasExchangeFunctions\+GasExchange_Recon\+SysModel\@ExactSystemModel\ExactSystemModel.m</file>
-      <file>P:\OneDrive - cchmc\Lab\Xe_App\Main App functions\+GasExchangeFunctions\+GasExchange_Recon\+SysModel\@MatrixSystemModel\MatrixSystemModel.m</file>
-      <file>P:\OneDrive - cchmc\Lab\Xe_App\Main App functions\+GasExchangeFunctions\+GasExchange_Recon\+SysModel\@SystemModel\SystemModel.m</file>
-    </fileset.depfun>
+    <fileset.depfun />
     <build-deliverables>
-      <file location="${PROJECT_ROOT}\HPXeAnalysisApp\for_testing" name="readme.txt" optional="true">G:\GitHub\HP129XeAnalysisApp\HPXeAnalysisApp\for_testing\readme.txt</file>
-      <file location="${PROJECT_ROOT}\HPXeAnalysisApp\for_testing" name="splash.png" optional="false">G:\GitHub\HP129XeAnalysisApp\HPXeAnalysisApp\for_testing\splash.png</file>
-      <file location="${PROJECT_ROOT}\HPXeAnalysisApp\for_testing" name="HP129XeAnalysisApp.exe" optional="false">G:\GitHub\HP129XeAnalysisApp\HPXeAnalysisApp\for_testing\HP129XeAnalysisApp.exe</file>
+      <file location="${PROJECT_ROOT}\XIPline\for_testing" name="splash.png" optional="false">D:\Github\HP_Xe_Analysis_App\XIPline\for_testing\splash.png</file>
+      <file location="${PROJECT_ROOT}\XIPline\for_testing" name="XIPline.exe" optional="false">D:\Github\HP_Xe_Analysis_App\XIPline\for_testing\XIPline.exe</file>
+      <file location="${PROJECT_ROOT}\XIPline\for_testing" name="readme.txt" optional="true">D:\Github\HP_Xe_Analysis_App\XIPline\for_testing\readme.txt</file>
     </build-deliverables>
     <workflow />
     <matlab>
-      <root>C:\Program Files\MATLAB\R2021b</root>
+      <root>C:\Program Files\MATLAB\R2023b</root>
       <toolboxes>
         <toolbox name="neuralnetwork" />
       </toolboxes>

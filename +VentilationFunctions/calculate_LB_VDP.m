@@ -217,9 +217,37 @@ colorVentmap = array4dVentDefect + array4dLowVent + array4dNormalVent1 + ...
     array4dNormalVent2 + array4dHighVent1 + array4dHighVent2;
 
 % Make a montage:
+% check images size, 2D or 3D
+if size(Ventilation.Image,3) > 30
+    Image_3D = 1;
+    nrow = ceil(sqrt(size(Ventilation.Image,3)));
+    % Initialize an empty vector to store indices of slices with no zeros
+    slices_with_no_zeros = zeros(1,size(Ventilation.LungMask,3));    
+    % Loop through each slice
+    for slice_idx = 1:size(Ventilation.LungMask,3)
+        % Extract the current slice
+        current_slice = Ventilation.LungMask(:, :, slice_idx);
+        
+        % Check if all elements in the current slice are non-zero
+        if sum(current_slice(:)) > 0
+            % Append the slice index to the vector if all elements are non-zero
+            slices_with_no_zeros(slice_idx) = 1;
+        end
+    end
+    nonZeroSlices = find(slices_with_no_zeros);
+    nonZeroSlice_lng = nonZeroSlices(end) - nonZeroSlices(1);
+    nonZeroSlice_space = floor(nonZeroSlice_lng/16);
+    slice_indices = nonZeroSlices(1):nonZeroSlice_space:nonZeroSlices(end);
+end 
+if Image_3D == 1
+LinearBinningVDPMontage = montage(reshape(colorVentmap,[size(colorVentmap,1),...
+    size(colorVentmap,2),size(colorVentmap,3),size(colorVentmap,4)]),...
+    'Size',[nrow nrow],'DisplayRange',[]);
+else
 LinearBinningVDPMontage = montage(reshape(colorVentmap,[size(colorVentmap,1),...
     size(colorVentmap,2),size(colorVentmap,3),size(colorVentmap,4)]),...
     'Size',[1 size(colorVentmap,4)],'DisplayRange',[]);
+end
 title('Linear Binning VDP')
 savedLinearBinningVDPMontage = get(LinearBinningVDPMontage,'CData');
 
@@ -436,11 +464,14 @@ NumSliceView = length(sl_include);
 if NumSliceView > 16
     NumSliceView = 16;
 end
+if Image_3D ~= 1
+    slice_indices = sl_1:1:sl_end;
+end
 % if you want the un-segemted slices not to show up on the powepoint, run
 % the above code and add this line (,'Indices', sl_1:sl_end) to the end of
 % each Montage. 
 %%% get rid of the gray frame in each montage
-VentscaledImage = VentImage2(:,:,sl_1:sl_end);
+VentscaledImage = VentImage2(:,:,slice_indices);
 VentMontage = figure('Name','Vent Image');set(VentMontage,'WindowState','minimized');
 montage(reshape(VentscaledImage,[size(VentscaledImage,1), size(VentscaledImage,2), 1, size(VentscaledImage,3)]),...
     'Size',[1 size(VentscaledImage,3)],'DisplayRange',[0 max(VentscaledImage(:))]);
@@ -454,12 +485,12 @@ VentMontagePosition=get(gcf,'position');
 
 ProtonMontage = figure('Name','Proron Image');set(ProtonMontage,'WindowState','minimized');
 if strcmp(MainInput.NoProtonImage,'yes') == 1 
-    ProtonImage = Proton.ProtonRegisteredColored(:,:,sl_1:sl_end);
+    ProtonImage = Proton.ProtonRegisteredColored(:,:,slice_indices);
     montage(reshape(ProtonImage,[size(ProtonImage,1), size(ProtonImage,2), 1, size(ProtonImage,3)]),...
     'Size',[1 size(ProtonImage,3)],'DisplayRange',[0 1]);
 else 
     ProtonImage = permute(Proton.ProtonRegisteredColored, [1 2 4 3]);
-    ProtonImage = ProtonImage(:,:,:,sl_1:sl_end);
+    ProtonImage = ProtonImage(:,:,:,slice_indices);
     montage(reshape(ProtonImage,[size(ProtonImage,1), size(ProtonImage,2),size(ProtonImage,3),...
     size(ProtonImage,4)]),'Size',[1 size(ProtonImage,4)],'DisplayRange',[]);
 end
@@ -469,9 +500,10 @@ set(gcf,'units','pixels'); % set the figure units to pixels
 y = get(gcf,'position'); % get the figure position
 set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
+ProtonMontagePosition = get(gcf,'position'); 
 
 MaskRegistered = permute(MaskRegistered,[1 2 4 3]);
-maskarrayimg = MaskRegistered(:,:,:,sl_1:sl_end);
+maskarrayimg = MaskRegistered(:,:,:,slice_indices);
 MaskMontage = figure('Name','Mask');set(MaskMontage,'WindowState','minimized');
 montage(reshape(maskarrayimg,[size(maskarrayimg,1), size(maskarrayimg,2), size(maskarrayimg,3), size(maskarrayimg,4)]),...
     'Size',[1 size(maskarrayimg,4)],'DisplayRange',[]);
@@ -481,10 +513,10 @@ set(gcf,'units','pixels'); % set the figure units to pixels
 y = get(gcf,'position'); % get the figure position
 set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
-% MaskMontagePosition = get(gcf,'position'); 
+MaskMontagePosition = get(gcf,'position'); 
 
 % BinnedVentmap = permute(BinnedVentmap,[1 2 4 3]);
-Ventcolormap = BinnedVentmap(:,:,:,sl_1:sl_end);
+Ventcolormap = BinnedVentmap(:,:,:,slice_indices);
 DefectArrayMontage = figure('Name','Defects');set(DefectArrayMontage,'WindowState','minimized');
 montage(reshape(Ventcolormap,[size(Ventcolormap,1), size(Ventcolormap,2),size(Ventcolormap,3),...
     size(Ventcolormap,4)]),'Size',[1 size(Ventcolormap,4)],'DisplayRange',[]);
@@ -494,7 +526,7 @@ set(gcf,'units','pixels'); % set the figure units to pixels
 y = get(gcf,'position'); % get the figure position
 set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
-% DefectArrayMontagePosition=get(gcf,'position'); 
+DefectArrayMontagePosition=get(gcf,'position'); 
 
 % save ppt 
 ReportTitle = 'Ventilation_Analysis';
@@ -519,11 +551,11 @@ Global.exportToPPTX('addtext',sprintf(char(foldername)),'Position',[5 0 7 1],'Co
 Global.exportToPPTX('addpicture',VentMontage,'Position',...
     [0 0.4 NumSliceView NumSliceView*(VentMontagePosition(4)/VentMontagePosition(3))]);
 Global.exportToPPTX('addpicture',ProtonMontage,'Position',...
-    [0 1.6 NumSliceView NumSliceView*(VentMontagePosition(4)/VentMontagePosition(3))]);
+    [0 1.6 NumSliceView NumSliceView*(ProtonMontagePosition(4)/ProtonMontagePosition(3))]);
 Global.exportToPPTX('addpicture',MaskMontage,'Position',...
-    [0 2.8 NumSliceView NumSliceView*(VentMontagePosition(4)/VentMontagePosition(3))]);
+    [0 2.8 NumSliceView NumSliceView*(MaskMontagePosition(4)/MaskMontagePosition(3))]);
 Global.exportToPPTX('addpicture',DefectArrayMontage,'Position',...
-    [0 4 NumSliceView NumSliceView*(VentMontagePosition(4)/VentMontagePosition(3))]);
+    [0 4 NumSliceView NumSliceView*(DefectArrayMontagePosition(4)/DefectArrayMontagePosition(3))]);
 LB_Venthist = imread([parentPath , char(foldername) ,'LB_Ventilation_Histogram.png']);    
 Global.exportToPPTX('addpicture',LB_Venthist,'Position',[0 5 6.8 6.8*(size(LB_Venthist,1)/size(LB_Venthist,2))]);
 

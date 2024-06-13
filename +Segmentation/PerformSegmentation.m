@@ -49,40 +49,40 @@ switch MainInput.SegmentationMethod
         end
     
         % copy model to the HPXeAnalysisApp folder
-        FunctionDirectory = which('HPXeAnalysisApp');
+        FunctionDirectory = which('XIPline');
         idcs = strfind(FunctionDirectory,filesep);%determine location of file separators
         FunctionDirectory = FunctionDirectory(1:idcs(end)-1);%remove file
 
-        sourcemodel1Path = [FunctionDirectory,'\+Segmentation\AutoSegmentation.py'];
-        sourcemodel2Path = [FunctionDirectory,'\+Segmentation\AutoSegment_2DVent_Xe_axial_2000e.hdf5'];
-        sourcemodel3Path = [FunctionDirectory,'\+Segmentation\AutoSegment_2DVent_Xe_coronal_2000e.hdf5'];
-        sourcemodel4Path = [FunctionDirectory,'\+Segmentation\AutoSegment_2DVent_Xe_H_coronal_1000e.hdf5'];
-        sourcemodel5Path = [FunctionDirectory,'\+Segmentation\AutoSegment_3DGasExchange_Xe_200e.hdf5'];
-        sourcemodel6Path = [FunctionDirectory,'\+Segmentation\AutoSegment_3DGasExchange_Xe_H_1000e.hdf5'];
-        sourcemodel7Path = [FunctionDirectory,'\+Segmentation\AutoSegment_2DDiff_Xe_axial_2000e.hdf5'];
-
-
-        cd(modelsFolderPath);
-        if ~exist(fullfile(modelsFolderPath, 'AutoSegment_2DVent_Xe_axial_2000e.hdf5'), 'file') ||...
-            ~exist(fullfile(modelsFolderPath, 'AutoSegment_2DVent_Xe_coronal_2000e.hdf5'), 'file') ||...
-            ~exist(fullfile(modelsFolderPath, 'AutoSegment_2DVent_Xe_H_coronal_1000e.hdf5'), 'file') ||...
-            ~exist(fullfile(modelsFolderPath, 'AutoSegment_3DGasExchange_Xe_200e.hdf5'), 'file') ||...
-            ~exist(fullfile(modelsFolderPath, 'AutoSegment_3DGasExchange_Xe_H_1000e.hdf5'), 'file') ||...
-            ~exist(fullfile(modelsFolderPath, 'AutoSegment_2DDiff_Xe_axial_2000e.hdf5'), 'file') ||...~exist(fullfile(modelsFolderPath, 'AutoSegment_3DGasExchange_Xe_H_1000e.hdf5'), 'file') ||...
-            ~exist(fullfile(destinationFolderPath, 'AutoSegmentation.py'), 'file')
-                      
-            copyfile(sourcemodel1Path, destinationFolderPath);
-            copyfile(sourcemodel2Path, modelsFolderPath);
-            copyfile(sourcemodel3Path, modelsFolderPath);
-            copyfile(sourcemodel4Path, modelsFolderPath);
-            copyfile(sourcemodel5Path, modelsFolderPath);
-            copyfile(sourcemodel6Path, modelsFolderPath);
-            copyfile(sourcemodel7Path, modelsFolderPath);
-            
-            disp('File copied successfully.');
-        else
-            disp('models files already exist in the models folder.');
-        end
+        % sourcemodel1Path = [FunctionDirectory,'\+Segmentation\AutoSegmentation.py'];
+        % sourcemodel2Path = [FunctionDirectory,'\+Segmentation\AutoSegment_2DVent_Xe_axial_2000e.hdf5'];
+        % sourcemodel3Path = [FunctionDirectory,'\+Segmentation\AutoSegment_2DVent_Xe_coronal_2000e.hdf5'];
+        % sourcemodel4Path = [FunctionDirectory,'\+Segmentation\AutoSegment_2DVent_Xe_H_coronal_1000e.hdf5'];
+        % sourcemodel5Path = [FunctionDirectory,'\+Segmentation\AutoSegment_3DGasExchange_Xe_200e.hdf5'];
+        % sourcemodel6Path = [FunctionDirectory,'\+Segmentation\AutoSegment_3DGasExchange_Xe_H_1000e.hdf5'];
+        % sourcemodel7Path = [FunctionDirectory,'\+Segmentation\AutoSegment_2DDiff_Xe_axial_2000e.hdf5'];
+        % 
+        % 
+        % cd(modelsFolderPath);
+        % if ~exist(fullfile(modelsFolderPath, 'AutoSegment_2DVent_Xe_axial_2000e.hdf5'), 'file') ||...
+        %     ~exist(fullfile(modelsFolderPath, 'AutoSegment_2DVent_Xe_coronal_2000e.hdf5'), 'file') ||...
+        %     ~exist(fullfile(modelsFolderPath, 'AutoSegment_2DVent_Xe_H_coronal_1000e.hdf5'), 'file') ||...
+        %     ~exist(fullfile(modelsFolderPath, 'AutoSegment_3DGasExchange_Xe_200e.hdf5'), 'file') ||...
+        %     ~exist(fullfile(modelsFolderPath, 'AutoSegment_3DGasExchange_Xe_H_1000e.hdf5'), 'file') ||...
+        %     ~exist(fullfile(modelsFolderPath, 'AutoSegment_2DDiff_Xe_axial_2000e.hdf5'), 'file') ||...~exist(fullfile(modelsFolderPath, 'AutoSegment_3DGasExchange_Xe_H_1000e.hdf5'), 'file') ||...
+        %     ~exist(fullfile(destinationFolderPath, 'AutoSegmentation.py'), 'file')
+        % 
+        %     copyfile(sourcemodel1Path, destinationFolderPath);
+        %     copyfile(sourcemodel2Path, modelsFolderPath);
+        %     copyfile(sourcemodel3Path, modelsFolderPath);
+        %     copyfile(sourcemodel4Path, modelsFolderPath);
+        %     copyfile(sourcemodel5Path, modelsFolderPath);
+        %     copyfile(sourcemodel6Path, modelsFolderPath);
+        %     copyfile(sourcemodel7Path, modelsFolderPath);
+        % 
+        %     disp('File copied successfully.');
+        % else
+        %     disp('models files already exist in the models folder.');
+        % end
         % delete old files
         fileName1 = 'AutoMask.mat';
         fileName2 = 'AutoMask.nii.gz';
@@ -147,8 +147,14 @@ switch MainInput.SegmentationMethod
                     case 'sagittal'
                         SegmentType = 'not_supported'; % not supported yet
                     case 'isotropic'
-                        SegmentType = 'not_supported'; % not supported yet
-                end 
+                        if (MainInput.NoProtonImage == 0) && (strcmp(MainInput.Imagestosegment, 'Proton & Xe Registered'))
+                            SegmentType = 'gx_3D_2ch_iso'; %system('predict_mask_3DGasExchange_w_H_isotropic.exe')
+                        elseif strcmp(MainInput.Imagestosegment, 'Xenon')
+                            SegmentType = 'gx_3D_1ch_iso'; 
+                        else 
+                            SegmentType = 'gx_3D_1ch_iso'; %system('predict_mask_3DGasExchange_wout_H_isotropic.exe')           
+                        end  
+               end 
             case 'Diffusion'
                switch MainInput.SliceOrientation
                     case 'coronal' 
@@ -196,9 +202,13 @@ switch MainInput.SegmentationMethod
                 switch MainInput.AnalysisType
                     case 'Ventilation'
                         if size(Mask,1) ~= size(Ventilation.Image,1)
-                            temp_mask = zeros(size(Ventilation.Image,1),size(Ventilation.Image,2),size(Ventilation.Image,3));
-                            for i = 1:size(Ventilation.Image,3)
-                                temp_mask(:,:,i) = imresize(Mask(:,:,i),[size(Ventilation.Image,1),size(Ventilation.Image,2)]);
+                            temp_mask = zeros(size(Ventilation.Image));
+                            if strcmp(MainInput.SegmentType, 'gx_3D_1ch_iso') || strcmp(MainInput.SegmentType, 'gx_3D_2ch_iso')
+                                temp_mask = imresize3(Mask, size(Ventilation.Image));
+                            else
+                                for i = 1:size(Ventilation.Image,3)
+                                    temp_mask(:,:,i) = imresize(Mask(:,:,i),[size(Ventilation.Image,1),size(Ventilation.Image,2)]);
+                                end
                             end
                             temp_mask = temp_mask > 0.5;
                         else

@@ -27,7 +27,7 @@ CalResults= [];
     elseif strcmp(MainInput.XeDataext,'.dat') && (strcmp(MainInput.Institute, 'Duke') ||...
             strcmp(MainInput.Institute, 'UVA')  || strcmp(MainInput.Institute, 'XeCTC')) 
         [GasExResults, CalResults] = Calibration.Xe_duke_UVA_calibration(MainInput); 
-    elseif strcmp(MainInput.XeDataext,'.h5') || strcmp(MainInput.XeDataext,'.MRD') 
+    elseif strcmp(MainInput.XeDataext,'.h5') || strcmp(MainInput.XeDataext,'.MRD') || strcmp(MainInput.XeDataext,'.mrd') 
         [GasExResults, CalResults] = Calibration.XeCTC_Calibration_MRD(MainInput);         
     %-------------------- add new function here -------------------------------
     % elseif strcmp(DataType,'add DataType') == 1

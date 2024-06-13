@@ -397,11 +397,40 @@ end
 cd(DataPath)
 % S = orthosliceViewer((BinnedVentmap)); %colormap(SixBinMap);
 %% Generate montages
+% check images size, 2D or 3D
+if size(Ventilation.Image,3) > 30
+    Image_3D = 1;
+    nrow = ceil(sqrt(size(scaledImage,3)));
+    % Initialize an empty vector to store indices of slices with no zeros
+    slices_with_no_zeros = zeros(1,size(Ventilation.LungMask,3));    
+    % Loop through each slice
+    for slice_idx = 1:size(Ventilation.LungMask,3)
+        % Extract the current slice
+        current_slice = Ventilation.LungMask(:, :, slice_idx);
+        
+        % Check if all elements in the current slice are non-zero
+        if sum(current_slice(:)) > 0
+            % Append the slice index to the vector if all elements are non-zero
+            slices_with_no_zeros(slice_idx) = 1;
+        end
+    end
+    nonZeroSlices = find(slices_with_no_zeros);
+    nonZeroSlice_lng = nonZeroSlices(end) - nonZeroSlices(1);
+    nonZeroSlice_space = floor(nonZeroSlice_lng/16);
+    slice_indices = nonZeroSlices(1):nonZeroSlice_space:nonZeroSlices(end);
+end 
 % Xe images:
 subplot(3,1,1)
+if Image_3D == 1
+HPXeMontage = montage(reshape(scaledImage,[size(scaledImage,1),...
+    size(scaledImage,2), 1, size(scaledImage,3)]),'Size',...
+    [nrow nrow],'DisplayRange',[]);
+else
 HPXeMontage = montage(reshape(scaledImage,[size(scaledImage,1),...
     size(scaledImage,2), 1, size(scaledImage,3)]),'Size',...
     [1 size(scaledImage,3)],'DisplayRange',[]);
+end
+
 title('Xenon Montage')
 savedMontage=get(HPXeMontage,'CData');
 savedMontage2 = imadjust(savedMontage);
@@ -412,9 +441,15 @@ imwrite(savedMontage2,fullFileName2,'png');
 % Mask images:
 subplot(3,1,2)
 MaskRegistered = permute(MaskRegistered,[1 2 4 3]);
+if Image_3D == 1
+MaskMontage=montage(reshape(MaskRegistered,[size(MaskRegistered,1),...
+    size(MaskRegistered,2), size(MaskRegistered,3), size(MaskRegistered,4)]),...
+    'Size',[nrow nrow],'DisplayRange',[]);
+else
 MaskMontage=montage(reshape(MaskRegistered,[size(MaskRegistered,1),...
     size(MaskRegistered,2), size(MaskRegistered,3), size(MaskRegistered,4)]),...
     'Size',[1 size(MaskRegistered,4)],'DisplayRange',[]);
+end
 title('Mask Array')
 savedMaskMontage = get(MaskMontage,'CData');
 % savedMaskMontage2 = imadjust(savedMaskMontage);
@@ -424,9 +459,15 @@ imwrite(savedMaskMontage,fullFileName2,'png');
 
 % Defect images:
 subplot(3,1,3)
+if Image_3D == 1
+DefectArrayMontage=montage(reshape(array4dMRrgb4,[size(array4dMRrgb4,1),...
+    size(array4dMRrgb4,2),size(array4dMRrgb4,3),size(array4dMRrgb4,4)]),...
+    'Size',[nrow nrow],'DisplayRange',[]);
+else
 DefectArrayMontage=montage(reshape(array4dMRrgb4,[size(array4dMRrgb4,1),...
     size(array4dMRrgb4,2),size(array4dMRrgb4,3),size(array4dMRrgb4,4)]),...
     'Size',[1 size(array4dMRrgb4,4)],'DisplayRange',[]);
+end
 title('Defect Array')
 savedDefectArrayMontage=get(DefectArrayMontage,'CData');
 outputFileName2= 'DefectArrayMontage.png';
@@ -435,13 +476,16 @@ imwrite(savedDefectArrayMontage,fullFileName2,'png');
 
 % Proton Images
 subplot(3,1,3)
-% ProtonImages=montage(reshape(Proton.ProtonRegistered,[size(Proton.ProtonRegistered,1),...
-%     size(Proton.ProtonRegistered,2),size(Proton.ProtonRegistered,3),size(Proton.ProtonRegistered,4)]),...
-%     'Size',[1 size(Proton.ProtonRegistered,4)],'DisplayRange',[]);
 Proton.ProtonRegistered = Proton.ProtonRegistered/max(Proton.ProtonRegistered(:));
+if Image_3D == 1
+ProtonImages=montage(reshape(Proton.ProtonRegistered,[size(Proton.ProtonRegistered,1),...
+    size(Proton.ProtonRegistered,2),size(Proton.ProtonRegistered,3)]),...
+    'Size',[nrow nrow],'DisplayRange',[0 1]);
+else
 ProtonImages=montage(reshape(Proton.ProtonRegistered,[size(Proton.ProtonRegistered,1),...
     size(Proton.ProtonRegistered,2),size(Proton.ProtonRegistered,3)]),...
     'Size',[1 size(Proton.ProtonRegistered,3)],'DisplayRange',[0 1]);
+end
 title('Proton Montage')
 savedProtonImages=get(ProtonImages,'CData');
 outputFileName2= 'ProtonMontage.png';
@@ -451,9 +495,15 @@ imwrite(savedProtonImages,fullFileName2,'png');
 % Xe_Vent Images
 subplot(4,1,4)
 Mask_Vent_Reg = permute(Mask_Vent_Reg,[1 2 4 3]);
+if Image_3D == 1
+Mask_Vent_RegMontage=montage(reshape(Mask_Vent_Reg,[size(Mask_Vent_Reg,1),...
+    size(Mask_Vent_Reg,2), size(Mask_Vent_Reg,3), size(Mask_Vent_Reg,4)]),...
+    'Size',[nrow nrow],'DisplayRange',[]);
+else
 Mask_Vent_RegMontage=montage(reshape(Mask_Vent_Reg,[size(Mask_Vent_Reg,1),...
     size(Mask_Vent_Reg,2), size(Mask_Vent_Reg,3), size(Mask_Vent_Reg,4)]),...
     'Size',[1 size(Mask_Vent_Reg,4)],'DisplayRange',[]);
+end
 title('Mask Array')
 savedMask_Vent_RegMontage = get(Mask_Vent_RegMontage,'CData');
 % savedMaskMontage2 = imadjust(savedMaskMontage);
@@ -469,27 +519,29 @@ close all;
 % %how many slices to incluse in the final powerpoint file
 sl_include=zeros(1,size(maskarray,3));
 for sl=1:size(maskarray,3)
-    choose_slice=maskarray(:,:,sl);       
-    logica_test2=sum(choose_slice(:));
-    if logica_test2>1
-         sl_include(sl)=sl;
+    choose_slice = maskarray(:,:,sl);       
+    if sum(choose_slice(:)) > 1
+         sl_include(sl) = sl;
     else
-         sl_include(sl)=0;
+         sl_include(sl) = 0;
     end 
 end
 sl_include( :, ~any(sl_include,1) ) = [];  %columns
-sl_1=sl_include(1);
-sl_end=sl_include(end);
+sl_1 = sl_include(1);
+sl_end = sl_include(end);
 NumSliceView = length(sl_include);
 if NumSliceView > 16
     NumSliceView = 16;
+end
+if Image_3D ~= 1
+    slice_indices = sl_1:1:sl_end;
 end
 % if you want the un-segemted slices not to show up on the powepoint, run
 % the above code and add this line (,'Indices', sl_1:sl_end) to the end of
 % each Montage. 
 %%% get rid of the gray frame in each montage
 
-VentscaledImage = scaledImage2(:,:,sl_1:sl_end);
+VentscaledImage = scaledImage2(:,:,slice_indices);
 VentMontage = figure('Name','Vent Image');set(VentMontage,'WindowState','minimized');
 montage(reshape(VentscaledImage,[size(VentscaledImage,1), size(VentscaledImage,2), 1, size(VentscaledImage,3)]),...
     'Size',[1 size(VentscaledImage,3)],'DisplayRange',[0 1]);
@@ -503,12 +555,12 @@ VentMontagePosition=get(gcf,'position');
 
 ProtonRegisteredMontage = figure('Name','Proton Image');set(ProtonRegisteredMontage,'WindowState','minimized');
 if strcmp(MainInput.NoProtonImage,'yes') == 1 
-    ProtonImage = Proton.ProtonRegisteredColored(:,:,sl_1:sl_end);
+    ProtonImage = Proton.ProtonRegisteredColored(:,:,slice_indices);
     montage(reshape(ProtonImage,[size(ProtonImage,1), size(ProtonImage,2), 1, size(ProtonImage,3)]),...
     'Size',[1 size(ProtonImage,3)],'DisplayRange',[0 1]);
 else 
     ProtonImage = permute(Proton.ProtonRegisteredColored, [1 2 4 3]);
-    ProtonImage = ProtonImage(:,:,:,sl_1:sl_end);
+    ProtonImage = ProtonImage(:,:,:,slice_indices);
     montage(reshape(ProtonImage,[size(ProtonImage,1), size(ProtonImage,2),size(ProtonImage,3),...
     size(ProtonImage,4)]),'Size',[1 size(ProtonImage,4)],'DisplayRange',[]);
 end
@@ -518,8 +570,9 @@ set(gcf,'units','pixels'); % set the figure units to pixels
 y = get(gcf,'position'); % get the figure position
 set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
+ProtonRegisteredPosition = get(gcf,'position'); 
 
-maskarrayimg = MaskRegistered(:,:,:,sl_1:sl_end);
+maskarrayimg = MaskRegistered(:,:,:,slice_indices);
 MaskMontage = figure('Name','Mask');set(MaskMontage,'WindowState','minimized');
 montage(reshape(maskarrayimg,[size(maskarrayimg,1), size(maskarrayimg,2), size(maskarrayimg,3), size(maskarrayimg,4)]),...
     'Size',[1 size(maskarrayimg,4)],'DisplayRange',[]);
@@ -531,7 +584,7 @@ set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
 MaskMontagePosition = get(gcf,'position'); 
 
-DefectArray = array4dMRrgb4(:,:,:,sl_1:sl_end);
+DefectArray = array4dMRrgb4(:,:,:,slice_indices);
 DefectArrayMontage = figure('Name','Defects');set(DefectArrayMontage,'WindowState','minimized');
 montage(reshape(DefectArray,[size(DefectArray,1), size(DefectArray,2),size(DefectArray,3),...
     size(DefectArray,4)]),'Size',[1 size(DefectArray,4)],'DisplayRange',[]);
@@ -541,9 +594,9 @@ set(gcf,'units','pixels'); % set the figure units to pixels
 y = get(gcf,'position'); % get the figure position
 set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
-DefectArrayMontagePosition=get(gcf,'position'); 
+DefectArrayMontagePosition = get(gcf,'position'); 
 
-protonarrayimg = Proton.ProtonRegistered(:,:,sl_1:sl_end);
+protonarrayimg = Proton.ProtonRegistered(:,:,slice_indices);
 ProtonImages = figure('Name','Mask');set(ProtonImages,'WindowState','minimized');
 if sum(protonarrayimg(:)) > 0
     montage(reshape(protonarrayimg,[size(protonarrayimg,1), size(protonarrayimg,2), size(protonarrayimg,3), size(protonarrayimg,4)]),...
@@ -560,7 +613,7 @@ set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
 ProtonMontagePosition = get(gcf,'position');
 
-Mask_Vent_Regarrayimg = Mask_Vent_Reg(:,:,:,sl_1:sl_end);
+Mask_Vent_Regarrayimg = Mask_Vent_Reg(:,:,:,slice_indices);
 Mask_Vent_RegMontage = figure('Name','Mask');set(Mask_Vent_RegMontage,'WindowState','minimized');
 montage(reshape(Mask_Vent_Regarrayimg,[size(Mask_Vent_Regarrayimg,1), size(Mask_Vent_Regarrayimg,2), size(Mask_Vent_Regarrayimg,3), size(Mask_Vent_Regarrayimg,4)]),...
     'Size',[1 size(Mask_Vent_Regarrayimg,4)],'DisplayRange',[]);
@@ -600,20 +653,19 @@ Global.exportToPPTX('addtext',Title ,'Position',[4.2 -0.1 11.5 1],'Color','b','F
 Global.exportToPPTX('addpicture',VentMontage,'Position',...
     [0 0.4 NumSliceView*scalefactor scalefactor*NumSliceView*(VentMontagePosition(4)/VentMontagePosition(3))]);
 Global.exportToPPTX('addpicture',ProtonImages,'Position',...
-    [0 1.6 NumSliceView*scalefactor scalefactor*NumSliceView*(VentMontagePosition(4)/VentMontagePosition(3))]);
+    [0 1.6 NumSliceView*scalefactor scalefactor*NumSliceView*(ProtonMontagePosition(4)/ProtonMontagePosition(3))]);
 Global.exportToPPTX('addpicture',ProtonRegisteredMontage,'Position',...
-    [0 3 NumSliceView*scalefactor scalefactor*NumSliceView*(VentMontagePosition(4)/VentMontagePosition(3))]);
+    [0 3 NumSliceView*scalefactor scalefactor*NumSliceView*(ProtonRegisteredPosition(4)/ProtonRegisteredPosition(3))]);
 Global.exportToPPTX('addpicture',Mask_Vent_RegMontage,'Position',...
-    [0 4.2 NumSliceView*scalefactor scalefactor*NumSliceView*(VentMontagePosition(4)/VentMontagePosition(3))]);
+    [0 4.2 NumSliceView*scalefactor scalefactor*NumSliceView*(Mask_Vent_RegMontagePosition(4)/Mask_Vent_RegMontagePosition(3))]);
 Global.exportToPPTX('addpicture',MaskMontage,'Position',...
-    [0 5.5 NumSliceView*scalefactor scalefactor*NumSliceView*(VentMontagePosition(4)/VentMontagePosition(3))]);
+    [0 5.5 NumSliceView*scalefactor scalefactor*NumSliceView*(MaskMontagePosition(4)/MaskMontagePosition(3))]);
 % Global.exportToPPTX('addpicture',DefectArrayMontage,'Position',...
 %     [0 4 NumSliceView NumSliceView*(VentMontagePosition(4)/VentMontagePosition(3))]);
 Global.exportToPPTX('addpicture',DefectArrayMontage,'Position',...
-    [0 7 NumSliceView*scalefactor scalefactor*NumSliceView*(VentMontagePosition(4)/VentMontagePosition(3))]);
+    [0 7 NumSliceView*scalefactor scalefactor*NumSliceView*(DefectArrayMontagePosition(4)/DefectArrayMontagePosition(3))]);
 % Global.exportToPPTX('addpicture',ProtonImages,'Position',...
 %     [0 5.2 NumSliceView NumSliceView*(VentMontagePosition(4)/VentMontagePosition(3))]);
-
 
 VDP_hist = imread([outputPath ,'Ventilation_Histogram.png']);    
 %   Global.exportToPPTX('addpicture',VDP_hist,'Position',[0 5 8.5 8.5*(size(VDP_hist,1)/size(VDP_hist,2))]);

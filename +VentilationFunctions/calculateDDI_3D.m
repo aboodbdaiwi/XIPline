@@ -197,8 +197,33 @@ function [Ventilation] = calculateDDI_3D(Ventilation,Proton,MainInput)
     %% 
     close all;
     NumSliceView = 16;
+        % check images size, 2D or 3D
+    if size(Ventilation.Image,3) > 30
+        Image_3D = 1;
+        nrow = ceil(sqrt(size(Ventilation.Image,3)));
+        % Initialize an empty vector to store indices of slices with no zeros
+        slices_with_no_zeros = zeros(1,size(Ventilation.LungMask,3));    
+        % Loop through each slice
+        for slice_idx = 1:size(Ventilation.LungMask,3)
+            % Extract the current slice
+            current_slice = Ventilation.LungMask(:, :, slice_idx);
+            
+            % Check if all elements in the current slice are non-zero
+            if sum(current_slice(:)) > 0
+                % Append the slice index to the vector if all elements are non-zero
+                slices_with_no_zeros(slice_idx) = 1;
+            end
+        end
+        nonZeroSlices = find(slices_with_no_zeros);
+        nonZeroSlice_lng = nonZeroSlices(end) - nonZeroSlices(1);
+        nonZeroSlice_space = floor(nonZeroSlice_lng/16);
+        slice_indices = nonZeroSlices(1):nonZeroSlice_space:nonZeroSlices(end);
+        DDI3Dmap_SS = DDI3Dmap(:,:,:,slice_indices);
+    else
+        DDI3Dmap_SS = DDI3Dmap;
+    end 
     DDIMontage = figure('Name','Vent Image');set(DDIMontage,'WindowState','minimized');
-    montage(DDI3Dmap, 'Size',[1 size(DDI3Dmap,4)],'DisplayRange',[]);
+    montage(DDI3Dmap_SS, 'Size',[1 size(DDI3Dmap_SS,4)],'DisplayRange',[]);
     set(gca,'units','pixels'); % set the axes units to pixels
     x = get(gca,'position'); % get the position of the axes
     set(gcf,'units','pixels'); % set the figure units to pixels

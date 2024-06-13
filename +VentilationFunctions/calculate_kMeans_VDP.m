@@ -89,12 +89,40 @@ fprintf("VDP = %f", VDP);
 fprintf("Cluster 3 = %f, Cluster 4 = %f, Cluster 5 = %f\n", cluster3, cluster4, cluster5);
 
 %% %Check for non-zero slices along the third dimension
-nonzero_slices = any(any(maskarray, 1), 2);
-% %Extract non-zero slices and reshpe to 2D
-nonzero_seg = segmentation(:, :, nonzero_slices);
-nonzero_msk = maskarray(:, :, nonzero_slices);
-re_seg = reshape(nonzero_seg, size(nonzero_seg, 1), []);
-msk2d = reshape(nonzero_msk,size(nonzero_msk, 1), []);
+
+% check images size, 2D or 3D
+if size(Ventilation.Image,3) > 30
+    Image_3D = 1;
+    nrow = ceil(sqrt(size(Ventilation.Image,3)));
+    % Initialize an empty vector to store indices of slices with no zeros
+    slices_with_no_zeros = zeros(1,size(Ventilation.LungMask,3));    
+    % Loop through each slice
+    for slice_idx = 1:size(Ventilation.LungMask,3)
+        % Extract the current slice
+        current_slice = Ventilation.LungMask(:, :, slice_idx);
+        
+        % Check if all elements in the current slice are non-zero
+        if sum(current_slice(:)) > 0
+            % Append the slice index to the vector if all elements are non-zero
+            slices_with_no_zeros(slice_idx) = 1;
+        end
+    end
+    nonZeroSlices = find(slices_with_no_zeros);
+    nonZeroSlice_lng = nonZeroSlices(end) - nonZeroSlices(1);
+    nonZeroSlice_space = floor(nonZeroSlice_lng/16);
+    slice_indices = nonZeroSlices(1):nonZeroSlice_space:nonZeroSlices(end);
+    nonzero_seg = segmentation(:, :, slice_indices);
+    nonzero_msk = maskarray(:, :, slice_indices);
+    re_seg = reshape(nonzero_seg, size(nonzero_seg, 1), []);
+    msk2d = reshape(nonzero_msk,size(nonzero_msk, 1), []);
+else
+    nonzero_slices = any(any(maskarray, 1), 2);
+    % %Extract non-zero slices and reshpe to 2D
+    nonzero_seg = segmentation(:, :, nonzero_slices);
+    nonzero_msk = maskarray(:, :, nonzero_slices);
+    re_seg = reshape(nonzero_seg, size(nonzero_seg, 1), []);
+    msk2d = reshape(nonzero_msk,size(nonzero_msk, 1), []);
+end 
 
 %% plot the clustered colormap
 re_seg(msk2d == 0) = NaN;
@@ -105,15 +133,15 @@ cmap = [1 0 0; 1 0 0; 0 1 0; 0 1 0; 0 1 0];
 outputpath = [Ventilation.outputpath, '\VDP Analysis'];
 mkdir(outputpath);
 cd(outputpath);
-figure();
+
+figure;
 montage_kmeans = imshow(re_seg, cmap, 'DisplayRange', []);
 set(montage_kmeans, 'AlphaData', ~isnan(re_seg))
 axis on;
 set(gca, 'XColor', 'none', 'yColor', 'none', 'xtick', [], 'ytick', [], 'Color', 'k')
 colorbar(gca, 'Ticks', [1.5,2.5,3.5,4.5,5.5], 'TickLabels', [1, 2,3,4,5], ...
     'FontSize', 10, 'FontWeight', 'bold');
-
-%% Save the colormap image
+% Save the colormap image
 set(gcf,'PaperPositionMode','auto')
 % print('kmeans_VDPmap','-dpng','-r300')
 saveas(gca,'kmeans_VDPmap.png');
