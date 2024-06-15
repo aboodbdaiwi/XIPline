@@ -47,7 +47,7 @@ Start by adding the local folder in the MATLAB path and execute the `XIPline.mla
 When implementing new features, or debugging, we recommend using the debugging MATLAB script `XIPline_Code_Script.m`. This script can run the entire application but without the graphical user interface (GUI). 
 
 ## Usage
-These are a few analysis demos (please refer to the user's manual for step-by-step quid on performing all analysis)
+These are a few analysis demos (please refer to the user's manual for step-by-step guide on performing all analysis)
 
 1 - Calibration Analysis demo:
 video
