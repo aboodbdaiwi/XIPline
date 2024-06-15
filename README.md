@@ -15,7 +15,7 @@ XIPline application is developed at the [CPIR](https://www.cincinnatichildrens.o
 
 ## Setup
 ### Run Standalone Application
-To install XIPline, download the [`XIPlineInstaller.exe` file](https://drive.google.com/drive/folders/1CIFWiEEHiJ0wWNwVQTAFq40OrirYuE7q?usp=drive_link) and fellow the normal instllation steps. This step doesn't require additional steps except downloading the pre-trained deep-learning models for auto-segmentation (see below). 
+To install XIPline, download the [`XIPlineInstaller.exe`](https://drive.google.com/drive/folders/1CIFWiEEHiJ0wWNwVQTAFq40OrirYuE7q?usp=drive_link) file. and fellow the normal instllation steps. This step doesn't require additional steps except downloading the pre-trained deep-learning models for auto-segmentation (see below). 
 
 #### auto-segmentation: Downloading the .h5 models for machine learning
 1 - Download the h5 models for auto segmentation from [here](https://drive.google.com/drive/folders/1CIFWiEEHiJ0wWNwVQTAFq40OrirYuE7q?usp=drive_link).
