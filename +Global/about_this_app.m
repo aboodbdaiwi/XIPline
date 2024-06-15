@@ -1,5 +1,5 @@
 function    about_this_app(font_size)
-    c1 = 'Hyperpolarized 129Xe MRI Analysis App\n';
+    c1 = 'XIPline, 129Xe Image Processing pipeline\n';
     c2 = 'A MATLAB-based user interface application is developed\n';
     c3 = 'to analyze hyperpolarized 129Xe MRI data. \n';
     c4 = 'This open source, research tool provides basic\n';

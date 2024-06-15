@@ -208,8 +208,10 @@ if NumSliceView > 16
     NumSliceView = 16;
 end
 scalefactor = 16/NumSliceView;
-
-ventimage = Ventilation.UncorrectedImage(:,:,sl_1:sl_end);
+if Image_3D ~= 1
+    slice_indices = sl_1:1:sl_end;
+end
+ventimage = Ventilation.UncorrectedImage(:,:,slice_indices);
 ventimage = ventimage/max(ventimage(:));
 VentMontage = figure('Name','Vent Image');set(VentMontage,'WindowState','minimized');
 montage(reshape(ventimage,[size(ventimage,1), size(ventimage,2), 1, size(ventimage,3)]),...
