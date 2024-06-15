@@ -1,9 +1,9 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="78153330" file="D:\Github\HP_Xe_Analysis_App\XIPline.prj" location="D:\Github\HP_Xe_Analysis_App" name="XIPline" preferred-package-location="D:\Github\HP_Xe_Analysis_App\XIPline\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="78153330" file="D:\Github\XIPline\XIPline.prj" location="D:\Github\XIPline" name="XIPline" preferred-package-location="D:\Github\HP_Xe_Analysis_App\XIPline\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>XIPline</param.appname>
     <param.icon />
     <param.icons />
-    <param.version>1.1</param.version>
+    <param.version>1.1.0</param.version>
     <param.authnamewatermark>Center for Pulmonary Imaging Research</param.authnamewatermark>
     <param.email>abdullah.bdaiwi@cchmc.org</param.email>
     <param.company>Cincinnati Children's Hospital</param.company>
@@ -27,7 +27,7 @@
     <param.web.mcr>true</param.web.mcr>
     <param.package.mcr>false</param.package.mcr>
     <param.no.mcr>false</param.no.mcr>
-    <param.web.mcr.name>MyAppInstaller_web</param.web.mcr.name>
+    <param.web.mcr.name>XIPlineInstaller</param.web.mcr.name>
     <param.package.mcr.name>MyAppInstaller_mcr</param.package.mcr.name>
     <param.no.mcr.name>MyAppInstaller_app</param.no.mcr.name>
     <param.windows.command.prompt>true</param.windows.command.prompt>
@@ -63,7 +63,6 @@
       <param.web.mcr />
       <param.package.mcr />
       <param.no.mcr />
-      <param.web.mcr.name />
       <param.package.mcr.name />
       <param.no.mcr.name />
       <param.windows.command.prompt />
@@ -93,12 +92,15 @@
     </fileset.resources>
     <fileset.package />
     <fileset.depfun>
+      <file>D:\Github\HP_Xe_Analysis_App\+GasExchangeFunctions\+GasExchange_Recon\+SysModel\@ExactSystemModel\ExactSystemModel.m</file>
+      <file>D:\Github\HP_Xe_Analysis_App\+GasExchangeFunctions\+GasExchange_Recon\+SysModel\@MatrixSystemModel\MatrixSystemModel.m</file>
+      <file>D:\Github\HP_Xe_Analysis_App\+GasExchangeFunctions\+GasExchange_Recon\+SysModel\@SystemModel\SystemModel.m</file>
       <file>D:\OneDrive - cchmc\Lab\Philips_ADC\imVolume.m</file>
     </fileset.depfun>
     <build-deliverables>
-      <file location="${PROJECT_ROOT}\XIPline\for_testing" name="splash.png" optional="false">D:\Github\HP_Xe_Analysis_App\XIPline\for_testing\splash.png</file>
-      <file location="${PROJECT_ROOT}\XIPline\for_testing" name="XIPline.exe" optional="false">D:\Github\HP_Xe_Analysis_App\XIPline\for_testing\XIPline.exe</file>
-      <file location="${PROJECT_ROOT}\XIPline\for_testing" name="readme.txt" optional="true">D:\Github\HP_Xe_Analysis_App\XIPline\for_testing\readme.txt</file>
+      <file location="${PROJECT_ROOT}\XIPline\for_testing" name="splash.png" optional="false">D:\Github\XIPline\XIPline\for_testing\splash.png</file>
+      <file location="${PROJECT_ROOT}\XIPline\for_testing" name="readme.txt" optional="true">D:\Github\XIPline\XIPline\for_testing\readme.txt</file>
+      <file location="${PROJECT_ROOT}\XIPline\for_testing" name="XIPline.exe" optional="false">D:\Github\XIPline\XIPline\for_testing\XIPline.exe</file>
     </build-deliverables>
     <workflow />
     <matlab>
