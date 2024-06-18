@@ -58,13 +58,13 @@ end
 % check image dimenssion if less than 16
 if size(moving1,3) < 16  
     moving = zeros(size(moving1,1),size(moving1,2),16);
-    moving (:,:,1:size(moving1,3)) = abs(moving1);
+    moving(:,:,1:size(moving1,3)) = abs(moving1);
 else
     moving = moving1;
 end
 if size(fixed1,3) < 16
     fixed = zeros(size(fixed1,1),size(fixed1,2),16);
-    fixed (:,:,1:size(fixed1,3)) = abs(fixed1); 
+    fixed(:,:,1:size(fixed1,3)) = abs(fixed1); 
 else
     fixed = fixed1;
 end

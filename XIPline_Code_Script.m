@@ -9,7 +9,7 @@
 %
 %   Please add updates at the end. Ex: 3/10/24 - ASB: update .... 
 %% calibration 
-[filename, path] = uigetfile('*.data*','Select xenon data file');
+[filename, path] = uigetfile('*.*','Select xenon data file');
 XeFullPath = [path,filename];
 XeDataLocation = path(1:end-1);
 [~,~,xe_ext] = fileparts(XeFullPath);
@@ -20,7 +20,8 @@ MainInput.XeFileName = filename;
 MainInput.XeDataext = xe_ext;
 cd(MainInput.XeDataLocation)
 
-[GasExResults, CalResults] = Calibration.XeCTC_Calibration(MainInput);
+% [GasExResults, CalResults] = Calibration.XeCTC_Calibration(MainInput);
+[GasExResults, CalResults] = Calibration.XeCTC_Calibration_MRD(MainInput); 
 % the rest of the calculations is in the main interface 
 
 %% Image analysis

@@ -158,7 +158,7 @@ for i=1:size(Images,3)
             initialvalues = [0.0300 0.0140 M(j,1)];
             [eestm,fval(j)] = DiffusionFunctions.MLfitRr2(M(j,:),bvalues,sigma^2,initialvalues,"cylRandr",weights,lb,ub,Do,delta);       % This is the only code line needed + function MLfitconloc1 
         elseif strcmp(fitType,'animals') == 1
-            lb=[0.00001 0.005 0.5]; ub=[M(j,1)+3*sqrt(s2) 0.12 1.1];
+            % lb=[0.00001 0.005 0.5]; ub=[M(j,1)+3*sqrt(s2) 0.12 1.1];
             lb=[0.060 0.0010 0.5*M(j,1)]; ub=[0.0140 0.0090 1.5*M(j,1)];
             initialvalues=[0.0100 0.0050 M(j,1)];
             [eestm,fval(j)] = DiffusionFunctions.MLfitRr2(M(j,:),bvalues,sigma^2,initialvalues,"cylRandrAnimal",weights,lb,ub,Do,delta);       % This is the only code line needed + function MLfitconloc1 

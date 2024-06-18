@@ -17,13 +17,17 @@ switch MainInput.AnalysisType
     case 'Ventilation'
         switch MainInput.Imagestosegment
             case 'Xe & Proton Registered'
-               Image_to_Segment = Proton.ProtonRegisteredColored;
+                switch MainInput.SegmentManual 
+                    case 'Freehand'
+                    Image_to_Segment = Ventilation.Image;
+                    case 'AppSegmenter'
+                    Image_to_Segment = Proton.ProtonRegisteredColored;
+                end                   
             case 'Xenon'
                Image_to_Segment = Ventilation.Image;               
             case 'Registered Proton'
                Image_to_Segment = Proton.ProtonRegistered;  
         end 
-
     case 'Diffusion'
         switch MainInput.Imagestosegment
             case 'Xe & Proton Registered'
@@ -33,12 +37,15 @@ switch MainInput.AnalysisType
             case 'Registered Proton'
                Image_to_Segment = Diffusion.Image; 
         end
-
     case 'GasExchange'
-        Image = GasExchange.VentImage;
         switch MainInput.Imagestosegment
             case 'Xe & Proton Registered'
-               Image_to_Segment = GasExchange.ProtonRegisteredColored;
+                switch MainInput.SegmentManual 
+                    case 'Freehand'
+                    Image_to_Segment = GasExchange.VentImage;  
+                    case 'AppSegmenter'
+                    Image_to_Segment = GasExchange.ProtonRegisteredColored;
+                end                 
             case 'Xenon'
                Image_to_Segment = GasExchange.VentImage;               
             case 'Registered Proton'
@@ -54,9 +61,10 @@ switch MainInput.SegmentAnatomy
             case 'Threshold'
                 LungMask = Segmentation.SegmentLungthresh(Image_to_Segment,MainInput.SE,MainInput.thresholdlevel);
             case 'Manual'
-                switch MainInput.SegmentManual
+                switch MainInput.SegmentManual 
                     case 'Freehand'
-                        LungMask = Segmentation.SegmentLungParenchyma(Image_to_Segment);
+                        LungMask = Segmentation.FreehandSegment(Image_to_Segment); 
+                        % LungMask = Segmentation.SegmentLungParenchyma(Image_to_Segment); 
                     case 'AppSegmenter'
 %                         VolumSegmt = volumeSegmenter(Image);
                         volumeSegmenter(Image_to_Segment);
@@ -81,7 +89,7 @@ switch MainInput.SegmentAnatomy
         end                
     case 'Airway'
         AirwayMask = [];
-        AirwayMask = double(Segmentation.SegmentAirway(Image_to_Segment));
+        AirwayMask = double(Segmentation.FreehandSegment(Image_to_Segment));
         % store airway mask
         switch MainInput.AnalysisType
             case 'Ventilation'
