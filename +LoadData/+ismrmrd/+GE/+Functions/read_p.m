@@ -99,23 +99,24 @@ if verb, fprintf('rdbm_rev=%g\n',rdbm_rev); end
 
 
 %% reading p-file
-use_ox = 1;
-if (exist('GERecon','file') && use_ox)
-    if verb, fprintf('Reading p-file using Orchstra (GERecon)\n'); end
-    [data,header] = LoadData.ismrmrd.GE.Functions.read_pfile(fname,do_single,verb);
-else
-    if verb
-        fprintf('Reading p-file using Matlab (read_MR_rawdata.m) routines\n');
-    end
-    [data,header] = LoadData.ismrmrd.GE.Functions.read_MR_rawdata(fname);
-    if do_single
-        if verb
-            fprintf('Warning: read_MR_rawdata uses double\n');
-            fprintf('\tconverting to single afterwards\n');
-        end
-        data = single(data);
-    end
-end
+use_ox = 1; % ASB forced it and hard coded
+[data,header] = LoadData.ismrmrd.GE.Functions.read_pfile(fname,do_single,verb);
+% if (exist('LoadData.ismrmrd.GE.GERecon','file') && use_ox)
+%     if verb, fprintf('Reading p-file using Orchstra (GERecon)\n'); end
+%     [data,header] = LoadData.ismrmrd.GE.Functions.read_pfile(fname,do_single,verb);
+% else
+%     if verb
+%         fprintf('Reading p-file using Matlab (read_MR_rawdata.m) routines\n');
+%     end
+%     [data,header] = LoadData.ismrmrd.GE.Functions.read_MR_rawdata(fname);
+%     if do_single
+%         if verb
+%             fprintf('Warning: read_MR_rawdata uses double\n');
+%             fprintf('\tconverting to single afterwards\n');
+%         end
+%         data = single(data);
+%     end
+% end
 
 
 %% cleaning up

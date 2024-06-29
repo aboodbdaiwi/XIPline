@@ -20,7 +20,6 @@ GasExResults = [];
 %Results to Pass to Calibration information
 CalResults= [];
     % call functions 
-
     if strcmp(MainInput.XeDataext,'.data') && (strcmp(MainInput.Institute, 'XeCTC') ||...
             strcmp(MainInput.Scanner, 'Philips'))                 
         [GasExResults, CalResults] = Calibration.XeCTC_Calibration(MainInput); 
@@ -30,7 +29,10 @@ CalResults= [];
     elseif strcmp(MainInput.XeDataext,'.7') && strcmp(MainInput.Scanner, 'GE')   
             LoadData.ismrmrd.GE.calibration_to_ismrmrd([MainInput.Xe_name '.h5'],MainInput);
             MainInput.XeFileName = [MainInput.Xe_name '.h5'];
-        [GasExResults, CalResults] = Calibration.XeCTC_Calibration_GEMRD(MainInput);       
+        [GasExResults, CalResults] = Calibration.XeCTC_Calibration_GEMRD(MainInput);     
+    elseif (strcmp(MainInput.XeDataext,'.h5') || strcmp(MainInput.XeDataext,'.MRD') ||...
+            strcmp(MainInput.XeDataext,'.mrd')) && strcmp(MainInput.Scanner, 'GE')   
+        [GasExResults, CalResults] = Calibration.XeCTC_Calibration_GEMRD(MainInput);         
     elseif strcmp(MainInput.XeDataext,'.h5') || strcmp(MainInput.XeDataext,'.MRD') || strcmp(MainInput.XeDataext,'.mrd') 
         [GasExResults, CalResults] = Calibration.XeCTC_Calibration_MRD(MainInput);         
 

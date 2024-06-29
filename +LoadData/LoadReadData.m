@@ -6,7 +6,7 @@ function [Ventilation, Diffusion, GasExchange, Proton] = LoadReadData(MainInput)
 %                   
 %   Package: https://github.com/aboodbdaiwi/HP129Xe_Analysis_App
 %
-%   Author: Abdullah S. Bdaiwio
+%   Author: Abdullah S. Bdaiwi
 %   Work email: abdullah.bdaiwi@cchmc.org
 %   Personal email: abdaiwi89@gmail.com
 %   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
@@ -163,19 +163,19 @@ elseif strcmp(MainInput.XeDataext,'.nii') == 1 || strcmp(MainInput.XeDataext,'.g
     elseif strcmp(MainInput.AnalysisType,'GasExchange') == 1 
         % not supported yet
     end
-elseif (strcmp(MainInput.XeDataext,'.h5') == 1 || strcmp(MainInput.XeDataext,'.mrd') == 1) 
+elseif (strcmp(MainInput.XeDataext,'.h5') || strcmp(MainInput.XeDataext,'.mrd')) 
     if strcmp(MainInput.AnalysisType,'Ventilation') == 1   
         MainInput.ReconImageMode = 'xenon';
         [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
         Ventilation.Image = Image;  
-    elseif strcmp(MainInput.AnalysisType,'Diffusion') == 1 
+    elseif strcmp(MainInput.AnalysisType,'Diffusion') 
         MainInput.ReconImageMode = 'xenon';
         [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
         Diffusion.Image = Image;
     elseif strcmp(MainInput.AnalysisType,'GasExchange') && strcmp(MainInput.Institute,'XeCTC') && strcmp(MainInput.SequenceType, '3D Radial')
         [GasExchange] = LoadData.ismrmrd.radial_3D_XeCTC_gx_recon(MainInput,GasExchange);
     end
-elseif strcmp(MainInput.XeDataext,'.data') == 1  && strcmp(MainInput.Scanner, 'Philips') == 1   
+elseif strcmp(MainInput.XeDataext,'.data')  && strcmp(MainInput.Scanner, 'Philips')  
     if strcmp(MainInput.AnalysisType,'Ventilation') == 1 && strcmp(MainInput.SequenceType, '2D GRE') == 1 ...
             && (strcmp(MainInput.ScannerSoftware, '5.3.1') == 1 || strcmp(MainInput.ScannerSoftware, '5.6.1') == 1)
         [Image, file_folder, file_name] = LoadData.LoadData_Gas_VentDiff_Philips_GRE(MainInput.XeDataLocation);
@@ -184,20 +184,20 @@ elseif strcmp(MainInput.XeDataext,'.data') == 1  && strcmp(MainInput.Scanner, 'P
         Ventilation.folder = file_folder;     
 
     elseif strcmp(MainInput.AnalysisType,'Ventilation') == 1 && strcmp(MainInput.SequenceType, '2D GRE') == 1 && strcmp(MainInput.ScannerSoftware, '5.9.0') == 1                
-        [Image, file_folder, file_name] = LoadData.LoadData_Gas_VentDiff_Philips_GRE_R590(MainInput.XeDataLocation);
+        [Image, file_folder, file_name] = LoadData.LoadData_Gas_VentDiff_Philips_GRE_R590(MainInput);
         Ventilation.Image = Image;
         Ventilation.filename = file_name;
         Ventilation.folder = file_folder;          
         
     elseif strcmp(MainInput.AnalysisType,'Diffusion') == 1  && strcmp(MainInput.SequenceType, '2D GRE') == 1 ...
             && (strcmp(MainInput.ScannerSoftware, '5.3.1') == 1 || strcmp(MainInput.ScannerSoftware, '5.6.1') == 1)
-        [Image, file_folder, file_name] = LoadData.LoadData_Gas_VentDiff_Philips_GRE(MainInput.XeDataLocation);
+        [Image, file_folder, file_name] = LoadData.LoadData_Gas_VentDiff_Philips_GRE(MainInput);
         Diffusion.Image = Image;
         Diffusion.filename = file_name;
         Diffusion.folder = file_folder;
 
     elseif strcmp(MainInput.AnalysisType,'Diffusion') == 1  && strcmp(MainInput.SequenceType, '2D GRE') == 1 && strcmp(MainInput.ScannerSoftware, '5.9.0') == 1 
-        [Image, file_folder, file_name] = LoadData.LoadData_Gas_VentDiff_Philips_GRE_R590(MainInput.XeDataLocation);
+        [Image, file_folder, file_name] = LoadData.LoadData_Gas_VentDiff_Philips_GRE_R590(MainInput);
         Diffusion.Image = Image;
         Diffusion.filename = file_name;
         Diffusion.folder = file_folder;
@@ -239,28 +239,29 @@ elseif strcmp(MainInput.XeDataext,'.dat') && strcmp(MainInput.Scanner,'Siemens')
             MainInput.CalFileName = [MainInput.Cal_name '_Calibration.h5'];            
             [GasExchange] = LoadData.ismrmrd.radial_3D_XeCTC_gx_recon(MainInput,GasExchange);
         end
-elseif strcmp(MainInput.XeDataext,'.p') && strcmp(MainInput.Scanner,'GE') 
+elseif strcmp(MainInput.XeDataext,'.7') && strcmp(MainInput.Scanner,'GE') 
             XeFullPath = MainInput.XeFullPath;
             XeDataLocation = MainInput.XeDataLocation;
             filename = MainInput.XeFileName;
             Xe_name = MainInput.Xe_name;
             ext = MainInput.XeDataext;
             cd(XeDataLocation)
-        if strcmp(MainInput.AnalysisType,'Ventilation') == 1    
+        if strcmp(MainInput.AnalysisType,'Ventilation')  
             MainInput.ReconImageMode = 'xenon';
             LoadData.ismrmrd.GE.gre_to_ismrmrd(filename,Xe_name,fullfile(XeDataLocation,[Xe_name '.h5']));
             MainInput.XeFileName = [Xe_name '.h5'];
             MainInput.ReconImageMode = 'xenon';
             [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
             Ventilation.Image = Image;  
-        elseif strcmp(MainInput.AnalysisType,'Diffusion') == 1 
+        elseif strcmp(MainInput.AnalysisType,'Diffusion') 
             LoadData.ismrmrd.GE.diff_to_ismrmrd(filename,Xe_name,fullfile(XeDataLocation,[Xe_name '.h5']));
             MainInput.XeFileName = [Xe_name '.h5'];
             MainInput.ReconImageMode = 'xenon';
             [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
             Diffusion.Image = Image;
-        elseif strcmp(MainInput.AnalysisType,'GasExchange') == 1 
-            LoadData.ismrmrd.GE.dissolved_to_ismrmrd(filename,Xe_name,fullfile(XeDataLocation,[Xe_name '.h5']));
+        elseif strcmp(MainInput.AnalysisType,'GasExchange')  
+            mrdfile = [Xe_name '.h5']; mrdfile,dissolvedarchive,dissolvedmat,calmat
+            LoadData.ismrmrd.GE.dissolved_to_ismrmrd(mrdfile,dissolvedarchive,dissolvedmat,calmat);
             LoadData.ismrmrd.GE.calibration_to_ismrmrd(MainInput.CalFileName,MainInput.Cal_name,fullfile(XeDataLocation,[MainInput.Cal_name '_Calibration.h5']));
             MainInput.XeFileName = [Xe_name '.h5'];
             MainInput.CalFileName = [MainInput.Cal_name '_Calibration.h5'];            
@@ -309,14 +310,14 @@ end
 %% 
 if MainInput.NoProtonImage == 0    
     try 
-        % cd(MainInput.XeDataLocation)
-        % if strcmp(MainInput.AnalysisType,'Ventilation')                 
-        %     mkdir([MainInput.HDataLocation '\Ventilation Analysis']);  
-        % elseif strcmp(MainInput.AnalysisType,'Diffusion')
-        % elseif strcmp(MainInput.AnalysisType,'GasExchange')          
-        %     mkdir([MainInput.HDataLocation '\Gas Exchange Analysis']);
-        % end
-        if strcmp(MainInput.HDataext,'.dcm') == 1                 
+        cd(MainInput.XeDataLocation)
+        if strcmp(MainInput.AnalysisType,'Ventilation')                 
+            mkdir([MainInput.HDataLocation '\Ventilation Analysis']);  
+        elseif strcmp(MainInput.AnalysisType,'Diffusion')
+        elseif strcmp(MainInput.AnalysisType,'GasExchange')          
+            mkdir([MainInput.HDataLocation '\Gas Exchange Analysis']);
+        end
+        if strcmp(MainInput.HDataext,'.dcm')               
             [HImage, file_folder, file_name] = LoadData.DICOM_Load(MainInput.HDataLocation);
             Proton.Image = double(HImage);
             Proton.filename = file_name;
@@ -352,8 +353,24 @@ if MainInput.NoProtonImage == 0
             Proton.Image = HImage;
             Proton.filename = file_name;
             Proton.folder = file_folder;
+        elseif strcmp(MainInput.XeDataext,'.data')  && strcmp(MainInput.Scanner, 'Philips')  
+            MainInput.ReconImageMode = 'proton';
+            if strcmp(MainInput.AnalysisType,'Ventilation') && strcmp(MainInput.SequenceType, '2D GRE') ...
+                    && (strcmp(MainInput.ScannerSoftware, '5.3.1') || strcmp(MainInput.ScannerSoftware, '5.6.1'))
+                [Image, file_folder, file_name] = LoadData.LoadData_Gas_VentDiff_Philips_GRE(MainInput.XeDataLocation);
+                Proton.Image = Image;
+                Proton.filename = file_name;
+                Proton.folder = file_folder;     
+        
+            elseif strcmp(MainInput.AnalysisType,'Ventilation') && strcmp(MainInput.SequenceType, '2D GRE') && strcmp(MainInput.ScannerSoftware, '5.9.0')               
+                [Image, file_folder, file_name] = LoadData.LoadData_Gas_VentDiff_Philips_GRE_R590(MainInput);
+                Proton.Image = Image;
+                Proton.filename = file_name;
+                Proton.folder = file_folder; 
+            end
+
         elseif strcmp(MainInput.HDataext,'.data') == 1 && strcmp(MainInput.Scanner, 'Philips') == 1 &&...
-               strcmp(MainInput.SequenceType, '3D Radial') == 1         
+               strcmp(MainInput.SequenceType, '3D Radial')        
                 PixelShift = GasExchange.PixelShift; 
                 if sum(PixelShift) > 1
                     PixelShift = GasExchange.PixelShift;
@@ -361,12 +378,12 @@ if MainInput.NoProtonImage == 0
                     PixelShift = [0; 0; 0];
                 end
                 [Proton] = LoadData.LoadData_Proton_GasExchange_Philips_Sin(MainInput.HDataLocation,PixelShift,MainInput.Institute);
-        elseif (strcmp(MainInput.XeDataext,'.h5') == 1 || strcmp(MainInput.XeDataext,'.mrd') == 1)              
-            if strcmp(MainInput.AnalysisType,'Ventilation') == 1   
+        elseif (strcmp(MainInput.XeDataext,'.h5') || strcmp(MainInput.XeDataext,'.mrd'))              
+            if strcmp(MainInput.AnalysisType,'Ventilation')  
                 MainInput.ReconImageMode = 'proton';
                 [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
                 Proton.Image = Image;  
-            elseif strcmp(MainInput.AnalysisType,'Diffusion') == 1 
+            elseif strcmp(MainInput.AnalysisType,'Diffusion') 
                 %
             elseif strcmp(MainInput.AnalysisType,'GasExchange') && strcmp(MainInput.Institute,'XeCTC') && strcmp(MainInput.SequenceType, '3D Radial')
                 [Proton] = LoadData.ismrmrd.radial_3D_XeCTC_H_recon(MainInput, GasExchange, Proton);
@@ -391,22 +408,22 @@ if MainInput.NoProtonImage == 0
                     MainInput.HFileName = [H_name '.h5'];         
                     [GasExchange] = LoadData.ismrmrd.radial_3D_XeCTC_H_recon(MainInput,GasExchange);
                 end
-        elseif strcmp(MainInput.HDataext,'.p') && strcmp(MainInput.Scanner,'GE') 
+        elseif strcmp(MainInput.HDataext,'.7') && strcmp(MainInput.Scanner,'GE') 
                     HFullPath = MainInput.HFullPath;
                     HDataLocation = MainInput.XeDataLocation;
                     HFileName = MainInput.HFileName;
                     H_name = MainInput.H_name;
                     H_ext = MainInput.HDataext;
                     cd(HDataLocation) 
-                if strcmp(MainInput.AnalysisType,'Ventilation') == 1    
+                if strcmp(MainInput.AnalysisType,'Ventilation')    
                     MainInput.ReconImageMode = 'proton';
                     LoadData.ismrmrd.GE.gre_to_ismrmrd(HFileName,H_name,fullfile(HDataLocation,[H_name '.h5']));
                     MainInput.HFileName = [H_name '.h5'];
                     [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
                     Proton.Image  = Image;  
-                elseif strcmp(MainInput.AnalysisType,'Diffusion') == 1 
+                elseif strcmp(MainInput.AnalysisType,'Diffusion')  
                 % not supported yet
-                elseif strcmp(MainInput.AnalysisType,'GasExchange') == 1 
+                elseif strcmp(MainInput.AnalysisType,'GasExchange')  
                     LoadData.ismrmrd.GE.ute_to_ismrmrd(HFileName,H_name,fullfile(HDataLocation,[H_name '.h5']));                    
                     MainInput.HFileName = [H_name '.h5'];         
                     [GasExchange] = LoadData.ismrmrd.radial_3D_XeCTC_H_recon(MainInput,GasExchange);

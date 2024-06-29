@@ -51,6 +51,8 @@ enc_Nx = hdr.encoding.encodedSpace.matrixSize.x;
 enc_Ny = hdr.encoding.encodedSpace.matrixSize.y;
 if strcmp(MainInput.Scanner,'Siemens')
     enc_Ny = 5000/2;
+elseif strcmp(MainInput.Scanner,'GE')
+    enc_Ny = length(D.data)/2;
 end
 enc_Nz = hdr.encoding.encodedSpace.matrixSize.z;
 rec_Nx = hdr.encoding.reconSpace.matrixSize.x;
@@ -158,7 +160,7 @@ disp('Importing Data Completed.')
 %% Calculate Trajectories
 disp('Calculating Trajectories...')
 if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
-    del = 1.25;
+    del = 2.25;
     if (extraOvs)
         del = del * OvsFactor;
     end
@@ -228,11 +230,31 @@ disp('Determining Image Offset Completed.')
 
 %% Spectra
 disp('Fitting Spectrum...')
+% Look for files with the Calibration.h5 extension first
 MainInput.CalFileName = dir(fullfile(MainInput.XeDataLocation, '*Calibration.h5'));
+
+% Check if the directory listing is empty
+if isempty(MainInput.CalFileName)
+    % If empty, look for files with the .mrd extension
+    MainInput.CalFileName = dir(fullfile(MainInput.XeDataLocation, '*Calibration.mrd'));
+    % Check if the directory listing is still empty
+    if isempty(MainInput.CalFileName)
+        % If still empty, look for files with the .MRD extension
+        MainInput.CalFileName = dir(fullfile(MainInput.XeDataLocation, '*Calibration.MRD'));
+    end
+else
+    error('Calibration data is required');
+end
+
 MainInput.CalFileName = MainInput.CalFileName.name;
+MainInput.CalFullPath = fullfile(MainInput.XeDataLocation, MainInput.CalFileName);
 if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
     try
-        [GasExResults, ~] = GasExchangeFunctions.XeCTC_Calibration_MRD(MainInput);
+        if strcmp(MainInput.Scanner,'Siemens') || strcmp(MainInput.Scanner,'Philips')
+            [GasExResults, ~] = GasExchangeFunctions.XeCTC_Calibration_MRD(MainInput);
+        elseif strcmp(MainInput.Scanner,'GE')
+            [GasExResults, ~] = GasExchangeFunctions.XeCTC_Calibration_GEMRD(MainInput);
+        end
     catch
         error('Error. Could not analyze calibration Data file')
         success = 0;
@@ -352,11 +374,17 @@ if(NewImages == 1)
     %Vent Image
     disp('Reconstructing Ventilation Image...')
     UncorrectedVentImage = GasExchangeFunctions.Dissolved_HighResImageRecon(Xe_RecMatrix,GasKSpace_SS,XeTraj_SS/2,PixelShift); %2x Resolution
-    if strcmp(MainInput.Scanner,'Siemens')
+    if strcmp(MainInput.Scanner,'Siemens') 
         for i = 1:size(UncorrectedVentImage,1)
             img = UncorrectedVentImage(:,:,i);
             img = imrotate(img,90);
             UncorrectedVentImage(:,:,i) = flip(img,2);
+        end
+    elseif strcmp(MainInput.Scanner,'GE')
+        for i = 1:size(UncorrectedVentImage,1)
+            img = UncorrectedVentImage(:,:,i);
+            img = imrotate(img,90);
+            UncorrectedVentImage(:,:,i) = flip(img,1);
         end
     end
     disp('Reconstructing Ventilation Image Completed.')
@@ -385,28 +413,53 @@ if(NewImages == 1)
     %Gas Image
     disp('Reconstructing Gas Image...')
     GasImage = GasExchangeFunctions.Dissolved_LowResImageRecon(Xe_RecMatrix,GasKSpace_SS,XeTraj_SS/2,PixelShift); %2x Resolution
-    if strcmp(MainInput.Scanner,'Siemens')
+    if strcmp(MainInput.Scanner,'Siemens') 
         for i = 1:size(GasImage,1)
             img = GasImage(:,:,i);
             img = imrotate(img,90);
             GasImage(:,:,i) = flip(img,2);
         end
+    elseif strcmp(MainInput.Scanner,'GE')
+        for i = 1:size(GasImage,1)
+            img = GasImage(:,:,i);
+            img = imrotate(img,90);
+            GasImage(:,:,i) = flip(img,1);
+        end      
     end
     disp('Reconstructing Gas Image Completed.')
 
     %Dissolved Image
     disp('Reconstructing Dissolved Image...')
     DissolvedImage = GasExchangeFunctions.Dissolved_LowResImageRecon(Xe_RecMatrix,DissolvedKSpace_SS,XeTraj_SS/2,PixelShift); %2x Resolution
-    if strcmp(MainInput.Scanner,'Siemens')
+    if strcmp(MainInput.Scanner,'Siemens') 
         for i = 1:size(DissolvedImage,1)
             img = DissolvedImage(:,:,i);
             img = imrotate(img,90);
             DissolvedImage(:,:,i) = flip(img,2);
         end
+    elseif strcmp(MainInput.Scanner,'GE')
+        for i = 1:size(DissolvedImage,1)
+            img = DissolvedImage(:,:,i);
+            img = imrotate(img,90);
+            DissolvedImage(:,:,i) = flip(img,1);
+        end       
     end    
     disp('Reconstructing Dissolved Image Completed.')
     disp('Reconstructing Corrected Dissolved Image...')
     CorrDissolvedImage = GasExchangeFunctions.Dissolved_LowResImageRecon(Xe_RecMatrix,CorrectedDissKSpace_SS,XeTraj_SS/2,PixelShift); %2x Resolution
+    if strcmp(MainInput.Scanner,'Siemens') 
+        for i = 1:size(CorrDissolvedImage,1)
+            img = CorrDissolvedImage(:,:,i);
+            img = imrotate(img,90);
+            CorrDissolvedImage(:,:,i) = flip(img,2);
+        end
+    elseif strcmp(MainInput.Scanner,'GE')
+        for i = 1:size(CorrDissolvedImage,1)
+            img = CorrDissolvedImage(:,:,i);
+            img = imrotate(img,90);
+            CorrDissolvedImage(:,:,i) = flip(img,1);
+        end       
+    end     
     disp('Reconstructing Corrected Dissolved Image Completed.')
 elseif (VentMask == ones(size(VentMask)))%Vent mask already exists since not 
     %make success = 0 since indicates no signal

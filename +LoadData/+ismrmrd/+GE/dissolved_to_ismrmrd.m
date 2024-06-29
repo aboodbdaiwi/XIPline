@@ -21,11 +21,12 @@ end
 load(dissolvedmat);
 load(calmat,'te90');
 load(calmat,'targetAX');
-
-tmp = read_fdl('C:/Users/stcherne/Documents/Code_Repository/GE_2_ISMRMRD/DP/radial3D_129Xe_fov400_mtx64_intlv2000_kdt20_gmax33_smax147_dur4p6_coca_G_freq.fdl');
+freqfdlpath = MainInput.freqfdlFullPath;
+tmp = read_fdl(freqfdlpath);
+% tmp = read_fdl('C:/Users/stcherne/Documents/Code_Repository/GE_2_ISMRMRD/DP/radial3D_129Xe_fov400_mtx64_intlv2000_kdt20_gmax33_smax147_dur4p6_coca_G_freq.fdl');
 freq_off = tmp(2); clear tmp;
 
-dset = ismrmrd.Dataset(mrdfile);
+dset = LoadData.ismrmrd.Dataset(mrdfile);
 
 
 nX = size(k_dp,1);

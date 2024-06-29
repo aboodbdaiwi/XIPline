@@ -91,7 +91,7 @@ for l3=1:nphases
     for l4=1:nechoes
         for l5=1:nslices
             for l6=1:nreceivers
-                kspace = GERecon('Pfile.KSpace',l5,l4,l6,l3,pfile);
+                kspace = LoadData.ismrmrd.GE.GERecon('Pfile.KSpace',l5,l4,l6,l3,pfile);
                 d(:,:,l3,l4,l5,l6) = kspace.';
             end
         end
@@ -103,8 +103,8 @@ end
 if nargout>1
     h = LoadData.ismrmrd.GE.Functions.pfile2header(h);
     for lslice=1:nslices
-        h.orientation{lslice} = GERecon('Pfile.Orientation',lslice);
-        h.corners{lslice} = GERecon('Pfile.Corners',lslice);
+        h.orientation{lslice} = LoadData.ismrmrd.GE.GERecon('Pfile.Orientation',lslice);
+        h.corners{lslice} = LoadData.ismrmrd.GE.GERecon('Pfile.Corners',lslice);
     end
 end
 

@@ -21,212 +21,246 @@ function [GasExResults, CalResults] = XeCTC_Calibration_GEMRD(MainInput)
 %   Website: https://cpir.cchmc.org/
 
 %   Please add updates at the end. Ex: 3/10/24 - ASB: updated flip angle caluclation for spiral diffusion
-% clc; 
-% clearvars -except DataFile;
-% close all;
 
-%% Fixed Parameters
-% Parameters 
-% freq = 2463;
-dwell_time = 4*1E-6;% micro-s to s
-% te = 450; %us
+%% Define number of calibration, spectral fit and display toggles,number to skip, number of gas, target flip
 
-%Basic Parameters
-nDis = 500;
-nSkip = 100; % number of dissolved fids to skip to ensure steady-state
-nAvg = 50; % Dissolved fids to average. Set to 50 to match Elly's 1-sec static. Set to >600 to use all available
-nCal = 15; % number of flip angle calibration frames following, normally 20
-Voigt = 1; % Barrier lorentzian for 0, Voigt if 1. Requires Elly's NMR_fit_v, NMR_mix_v, and NMR_TimeFit_v for Voigt=1
+% user control of  outputs
+disp_fids = 1; % set to 1 to display first (noise) frame and first FID
+save_csv =1; % export derived variables as csv file
 
-%% Define Tolerances for Warnings
-freq_tol = 200; % frequency adjustment tolerance
+% user control of skipping and averaging
+seconds2skip = 2; %number of seconds to skip in breath hold
+seconds2avg = 1;
+nDis = 500; % Assume consortium standard
+FlipTarget = 10; % target flip angle from calibration
+
+% frequency guesses in ppm for dissolved phase fits
+rbc_freq_ppm = 217.2;
+mem_freq_ppm = 197.7;
+gas_freq_ppm = 0;
+
+%% define tolerances for warnings
+freq_tol = 100; % frequency adjustment tolerance
 deltaPhase1_tol = 90; % if calibration phase>90 use minTE
-FAScale_tol = 1.33; 
-SNR_tol = 25; % allowable
+TrueRefScale_tol = 1.33;
+SNR_tol = 50; % Ideal is 100 for RBC SNR, but allow 50
 
-%% Import Data File
-cd(MainInput.XeDataLocation)
-if exist(MainInput.XeFileName, 'file')
-    dsetCal = LoadData.ismrmrd.Dataset(MainInput.XeFileName, 'dataset');
+%% first read in the file and create the twix object
+% [file, path] = uigetfile('*.*', 'Select file'); % starts in current dir
+% file_with_path = strcat(path, file); % join path and filename to open
+% [~,filename,ext] = fileparts(file_with_path); % get file extension
+cali_struct = LoadData.ismrmrd.GE.Functions.readRawCali(MainInput.XeFileName);
+cali_struct.data = cali_struct.data(:,1:515);
+filename = MainInput.XeFileName;
+ext = MainInput.XeDataext;
+if strcmp(ext,'.dat') 
+   filename = file(15:end-4); % return filename back to something short
 else
-    error(['File ' MainInput.XeFileName ' does not exist.  Please generate it.'])
-end
-hdrCal = LoadData.ismrmrd.xml.deserialize(dsetCal.readxml);
-freq = hdrCal.userParameters.userParameterLong(1).value;
-te = hdrCal.sequenceParameters.TE*1000; % in usec
-FlipTarget = hdrCal.sequenceParameters.flipAngle_deg(1); % target flip angle from calibration
+   filename = [filename,'_cali'];
+end   
+cal_vars_export = [filename,'.csv']; % generate the filename for data comparison
+filename = strrep(filename, '_', '-'); % replace underscores to avoid subscript problems
+file_loc = regexp(path, filesep, 'split');
+file_loc = file_loc{end-1};
 
-DCal = dsetCal.readAcquisition();
+%% Prepare variables
+% extract favorite variables from the data struct
+weight = cali_struct.weight;
+te = cali_struct.te;
+tr = cali_struct.tr;
+dwell_time = cali_struct.dwell_time;
+freq = cali_struct.freq;
+xeFreqMHz = cali_struct.xeFreqMHz;
+theFID = cali_struct.data;
+nFids = size(theFID, 2);
+nCal = nFids-nDis; % assume remaining FIDS past dissolved are cal
+nPts = size(theFID, 1);
+VRef = cali_struct.vref;
+scanDateStr = cali_struct.scan_date;
+rf_excitation_ppm = cali_struct.rf_excitation_ppm;
+disp(['YESSIR, rf_excitation_ppm = ', num2str(rf_excitation_ppm)]);
 
-cellSize = cell2mat(DCal.data(1,1));
-theFID = zeros(size(cellSize,1),size(DCal.data,2));
-for i = 1:size(DCal.data,2)
-    theFID(:,i) = cell2mat(DCal.data(1,i));
-end
+% % print out key variable values
+% fprintf('\n\n');
+% fprintf('\tFile Location = %s\n', file_loc);
+% fprintf('\tName = %s\n', cali_struct.seq_name);
+% fprintf('\tScan Date = %s\n', scanDateStr');
+% fprintf('\tWeight = %0.1f kg \n', weight);
+% fprintf('\tTE = %0.0f us\n', te);
+% fprintf('\tTR = %0.0f us\n', tr(1)); % some sequences now have an array of TRs for bonus spectra
+% fprintf('\tFrequency = %0.0f Hz\n', freq);
+% fprintf('\tRF Excitation Offset = %0.0f ppm\n', rf_excitation_ppm);
+% fprintf('\tReference Voltage = %0.1f V\n', VRef);
+% fprintf('\tDwell Time = %0.0f ns\n', dwell_time*1e9);
+% fprintf('\tnPts = %0.0f\n', nPts);
+% fprintf('\tnFrames = %0.0f\n', nFids);
+% fprintf('\tnDissolved Frames = %0.0f\n', nDis);
+% fprintf('\tnGas Frames = %0.0f\n\n', nCal);
 
-%% Parse Out the Various FIDs
-if size(theFID,2) < 500
-    nDis = size(theFID,2);
-end
-disData = theFID(:,1:nDis); % all dissolved data
-gasData = theFID(:,end-nCal+1);
-if nAvg > nDis
-    fprintf('\n Requested averages exceeds available; using %0.0f\n',nDis);
-    disData1 = theFID(:,nSkip+1:nDis); % all available dissolved data with skipping
-else
-    disData1 = theFID(:,nSkip+1:(nSkip+1+nAvg)); % requested averages of dissolved
-end
-disData1_avg = mean(disData1,2);  % average of dissolved after skipping
-calData = theFID(:,end-nCal+1:end); % the data left for flip angle calculations.
-t = double((0:(size(disData,1)-1))*dwell_time');
+%% parse out the various fids - dissolved, gas, and calibration
+calData = theFID(:, end-nCal+1:end); % the data left for flip angle calculations
+gasData = theFID(:, end-nCal+1); % the first gas frame for frequency calculations
+
+tr_s = tr(1) * 1e-6; %tr in seconds
+t_tr = tr_s * (1:nFids);
+nSkip = round(seconds2skip/tr_s);
+nAvg = round(seconds2avg/tr_s);
+t = dwell_time * (0:(nPts - 1))';
+disData = theFID(:, nSkip:nSkip+nAvg); % just the dissolved data of interest
 noise_est = max(abs(disData(end-10:end,end)));
-% figure; plot(abs(disData(:,end)))
-% figure; plot(abs(gasData(:,end)))
-% figure; imslice(abs(theFID))
-%% calculate frequency 
-
-% gasdata_fa = theFID(:,end-nCal+1:end);
-% gasdata_fa_avg = mean(gasdata_fa,2);
-% % figure; plot(abs(gasdata_fa_avg));
-% gasdata_fa_avg_fft = fftshift(ifft((gasdata_fa_avg)));
-% ts = 4.88*1E-6;% dwell time  - micro-s to s
-% fs = 1/(ts); % ferquency rate
-% N = 2048; % number of samples 
-% f=(-N/2:N/2-1)/N*fs;
-% figure; plot(f,abs(gasdata_fa_avg_fft))
-% % figure; plot(gasfitObj.f,abs(gasdata_fa_avg_fft))
-% gaussEqn = 'a*exp(-((x-b)/c)^2)+d';
-% startPoints = [0 0 10000 0.1];
-% x = f;
-% y = abs(gasdata_fa_avg_fft)';
-% crop = 900:1100;
-% f1 = fit(x(1,crop)',y(1,crop)',gaussEqn,'Start', startPoints);
-% plot(f1,x,y)
+disData_avg = mean(disData,2); % average the dissolved data
 
 %% Fit gas Spectrum
 fprintf('Analysis of Gas FID\n');
-gasfitObj = Calibration.NMR_TimeFit(gasData,t,1e-4,0,30,0,0,10000);
+% gasfitObj = NMR_TimeFit(gasData, t, 1e-4, -84, 30, 0, 0, 10000);
+gasfitObj = Calibration.NMR_TimeFit(gasData, t, 1e-10, 1000, 30, 0, 0, 10000);
 gasfitObj.fitTimeDomainSignal();
-% figure('Name','Gas Phase Analysis');
+% h1 = figure('Name', 'Gas Phase Analysis');
 % gasfitObj.plotTimeAndSpectralFit;
+% xlim([0, 0.01]);
 gasfitObj.describe();
-% From gas fit object, get offset frequency
-CalResults.Freq_Offset = gasfitObj.freq(1);
-% set(gcf,'Units','Normalized','Position',[0 0.04 0.5 0.85]);
 
-%% Fit Dissolved Spectrum
-fprintf('\nAnalysis of Averaged Dissolved FID, skipping %0.0f\n',nSkip);
-if Voigt == 1
-    fprintf('Using Voigt Lineshape to fit Barrier\n');
-    disfitObj = Calibration.NMR_TimeFit_v(disData1_avg,t,[1 1 1],[0 -720  -7700],[250 200 30],[0 200 0],[0 0 0],0,length(t)); % first widths lorenzian, 2nd are gauss
-else
-    fprintf('Using Lorentzian Lineshape to fit Barrier\n');
-    disfitObj = Calibration.NMR_TimeFit(disData1_avg,t,[1 1 1],[0 -720  -7700],[240 240 40],[0 0 0],0,length(t));
-end
-disfitObj = disfitObj.fitTimeDomainSignal();
-% figure('Name','Dissolved Phase Analysis')
-% disfitObj.plotTimeAndSpectralFit;
-% set(gcf,'Units','Normalized','Position',[0.5 0.04 0.5 0.85]); 
-
-disp('            Area     Freq (Hz)   Linewidths(Hz)   Phase(degrees)');
-peakName = {'    RBC:','Barrier:','    Gas:'};
-for iComp = 1:length(disfitObj.area)
-    disp([peakName{iComp} '  '...
-        sprintf('%8.3e',disfitObj.area(iComp)) ' ' ...
-        sprintf('%+8.2f',disfitObj.freq(iComp))  '  ' ...
-        sprintf('%8.2f',abs(disfitObj.fwhm(iComp))) '  ' ...
-        sprintf('%8.2f',abs(disfitObj.fwhmG(iComp))) '  ' ...
-        sprintf('%+9.2f',disfitObj.phase(iComp))]);
-end
-
-%% Calculate Target TR Frequency from Gas Fit
+%% calculate target transmit receive frequency from gas fit
 freq_target = freq + gasfitObj.freq(1);
-fprintf('\nFrequency_target = %8.0f Hz\n',freq_target); % report new target frequency
-if abs(freq_target-freq)>freq_tol
-    fprintf(2,'WARNING! Frequency adjust exceeds tolerances; Check system\n');
-end 
-
-%% Calculate and Report TE90
-deltaPhase = disfitObj.phase(2)-disfitObj.phase(1); % RBC-barrier phase diff in cal spectrum
-deltaPhase = mod(abs(deltaPhase),180); % deal with wrap around, but also negative phase
-deltaF = abs(disfitObj.freq(2)-disfitObj.freq(1)); % absolute RBC-barrier freq difference
-deltaTe90 = (90-deltaPhase)/(360*deltaF); % how far off are we?
-te90 = te + deltaTe90*1e6; % in usec
-fprintf('TE90 = %3.2f ms\n',te90/1000); % report TE90 in ms
-if abs(deltaPhase)> deltaPhase1_tol
-    fprintf(2,'WARNING! Phi_cal = %3.0f%c!; Use min TE!\n',deltaPhase,char(176));
+fprintf('\nFrequency_target = %8.0f Hz\n', freq_target); % report new target frequency
+if abs(freq_target-freq) > freq_tol
+    fprintf(2, 'WARNING! Frequency adjust exceeds tolerances; Check system\n');
 end
 
-%% Calculate True Flip Angle
-flipCalAmps = max(abs(calData)); % Add code to avoid saturation?
+%% Perform Flip Angle Calibration on Gas Phase Signals
+flipCalAmps = max(abs(calData));
 
 % calculate flip angle
-fitfunct = @(coefs,xdata)coefs(1)*cos(coefs(2)).^(xdata-1) + noise_est;   % cos theta decay
-% fitfunct = @(coefs,xdata)coefs(1)*cos(coefs(2)).^(xdata-1)+coefs(3);   % cos theta decay
-guess(1)=max(flipCalAmps);
-guess(2)=FlipTarget*pi/180;
-% guess(3)=0;
+fitfunct = @(coefs, xdata)coefs(1) * cos(coefs(2)).^(xdata - 1) + noise_est; % cos theta decay
+guess(1) = max(flipCalAmps);
+guess(2) = 20 * pi / 180; % just guess 10 degrees
+% guess(3) = noise_est; % with absolute values there will be a baseline offset per Matt Wilmering 4/12/21
 
 xdata = 1:length(flipCalAmps);
 ydata = flipCalAmps;
 
-fitoptions = optimoptions('lsqcurvefit','Display','off');
-[fitparams,~,residual,~,~,~,jacobian]  = lsqcurvefit(fitfunct,guess,xdata,ydata,[],[],fitoptions);
-ci = nlparci(fitparams,residual,jacobian);  % returns 95% conf intervals on fitparams by default
-param_err = fitparams-ci(:,1)';
+fitoptions = optimoptions('lsqcurvefit', 'Display', 'off');
+[fitparams, resnorm, residual, exitflag, output, lambda, jacobian] = lsqcurvefit(fitfunct, guess, xdata, ydata, [], [], fitoptions);
+ci = nlparci(fitparams, residual, jacobian); % returns 95% conf intervals on fitparams by default
+param_err = fitparams - ci(:, 1)';
 flip_angle = abs(fitparams(2)*180/pi);
-flip_err = param_err(2)*180/pi;
+flip_err = param_err(2) * 180 / pi;
 FlipScaleFactor = flip_angle/FlipTarget;
 
-figure('Name','Flip Angle Calibration');  % plot up the calibration data
-plot(xdata,ydata,'bo','MarkerFaceColor','b');
-hold on;
-plot(xdata,fitfunct(fitparams,xdata),'-r');
-legend('Acquired','Fit');
-xlabel('Acquisition Number');
-ylabel('Magnitude');
-a=sprintf('Flip Cal: %0.1f%c yields flip = %0.1f±%0.1f%c', FlipTarget,char(176),flip_angle,flip_err,char(176));
-title(a); %note degree symbol is char(176)
+% h2=figure('Name', 'Flip Angle Calibration'); % plot up the calibration data
+% plot(xdata, ydata, 'bo', 'MarkerFaceColor', 'b');
+% hold on;
+% plot(xdata, fitfunct(fitparams, xdata), '-r');
+% legend('Acquired', 'Fit');
+% xlabel('Frame Number');
+% ylabel('Magnitude');
+% a = sprintf('Flip Cal: V_{ref} = %0.1f yields flip = %0.1f�%0.1f%c', VRef, flip_angle, flip_err, char(176));
+% title(a); % note degree symbol is char(176)
+% pause(1); % had to insert pause to avoid occasional plotting conflicts - don't know why
 
-%% Provide Flip Angle Factor and Warnings
-fprintf('For flip angle calibration of %0.1f%c, the flip angle factor is %0.3f \n', FlipTarget,char(176),FlipScaleFactor);
-if FlipScaleFactor>FAScale_tol
-    fprintf(2,'WARNING! Excessive flip angle calibration scale factor; Check system\n');
+%% Provide New Reference Amplitude and Warnings
+
+if isnan(VRef)
+   hint_refV = '\bf Reference Voltage: \rmNot found';
+   fprintf(2,'WARNING! Reference Voltage not found.\n');
+else   
+   fprintf(['For ', num2str(VRef), 'V calibration, True_Ref = %3.0f V\n'], VRef*FlipScaleFactor); 
+   fprintf('(Estimated Weight Reference Voltage = %3.0f V)\n', 395.3+1.1431*weight); % Ari Bechtel estimate, new fit
+   hint_refV = ['\bf Reference Voltage: \rm', num2str(VRef*FlipScaleFactor, 3), 'V'];
+end   
+if FlipScaleFactor > TrueRefScale_tol
+    fprintf(2, 'WARNING! Excessive voltage calibration scale factor; Check system\n');
+end 
+
+%% Fit dissolved Spectrum - Make this last so user sees it
+fprintf('\nAnalysis of Averaged Dissolved FID, skipping %0.0f\n', nSkip);
+fprintf('Using Voigt Lineshape to fit Membrane\n');
+
+% Adjust frequency guesses based on rf_excitation then to Hz
+rbc_freq_adj = rbc_freq_ppm - rf_excitation_ppm;
+mem_freq_adj = mem_freq_ppm - rf_excitation_ppm;
+gas_freq_adj = gas_freq_ppm - rf_excitation_ppm;
+
+freq_guess = [rbc_freq_adj, mem_freq_adj, gas_freq_adj] * xeFreqMHz; % in Hz
+
+%set all other initial parameter guesses
+area_guess =  [1, 1, 1]; % no benefit seen in tailoring these guesses
+fwhmL_guess = [8.8, 5.0, 2] * xeFreqMHz;
+fwhmG_guess = [0, 6.1, 0] * xeFreqMHz;
+phase_guess = [0, 0, 0]; % no benefit seen in tailoring these guesses
+
+% first widths lorenzian, 2nd are gaussian
+disfitObj = Calibration.NMR_TimeFit_v(disData_avg, t, area_guess, freq_guess, fwhmL_guess, fwhmG_guess, phase_guess, [],[]);
+disfitObj = disfitObj.fitTimeDomainSignal();
+% h3 = figure('Name', 'Dissolved Phase Analysis'); 
+% disfitObj.plotTimeAndSpectralFit;
+% % update axis limits to see gas signal
+% ax = findall(h3, 'type', 'axes'); % find all the axes in figure (ax1 defined in NMR_TimeFit)
+% set(ax(1),'xlim',[0 .01]); % narrow gas plot limits for meaningful time
+% set(ax(5),'xlim',[-8000 2000])  % expand plot limits to show gas peak
+
+disp('            Area     Freq (Hz)   Linewidths(Hz)   Phase(degrees)');
+peakName = {'     RBC:', 'Membrane:', '     Gas:'};
+for iComp = 1:length(disfitObj.area)
+    disp([peakName{iComp}, '  ', ...
+        sprintf('%8.3e', disfitObj.area(iComp)), ' ', ...
+        sprintf('%+8.2f', disfitObj.freq(iComp)), '  ', ...
+        sprintf('%8.2f', abs(disfitObj.fwhm(iComp))), '  ', ...
+        sprintf('%8.2f', abs(disfitObj.fwhmG(iComp))), '  ', ...
+        sprintf('%+9.2f', disfitObj.phase(iComp))]);
 end
 
-%% Calculate and Report Dissolved Phase Spectral SNR
-timeFit = disfitObj.calcTimeDomainSignal(disfitObj.t);  % calculate fitted data in time domain
-timeRes = timeFit - disfitObj.timeDomainSignal;
-n25pct = round(length(timeRes)/4);
-std25 = std(timeRes(end-n25pct:end)); % take standard deviation of tail of residuals
-SNR_dis = disfitObj.area/std25; % will be a matrix for multiple peak fit
-fprintf('\nSNR Check for dissolved and gas peaks...\n'); % 
-fprintf('SNR for RBC peak = %3.1f \n',SNR_dis(1)); 
-fprintf('SNR for Barrier peak = %3.1f \n',SNR_dis(2)); 
-fprintf('SNR for Gas peak = %3.1f \n',SNR_dis(3)); 
+%% Calculate and report TE90 and Warnings
+deltaPhase = disfitObj.phase(2) - disfitObj.phase(1); % RBC-Membrane phase diff in cal spectrum
+deltaPhase = mod(abs(deltaPhase), 180); % deal with wrap around, but also negative phase
+deltaF = abs(disfitObj.freq(2)-disfitObj.freq(1)); % absolute RBC-membrane freq difference
+deltaTe90 = (90 - deltaPhase) / (360 * deltaF); % how far off are we?
+te90 = (te + deltaTe90 * 1e6)/1000; % in usec
 
-%% Calculate and Report Final Gas Phase FID spectral SNR
-timeFit=gasfitObj.calcTimeDomainSignal(gasfitObj.t);  % calculate fitted data in time domain
-timeRes=timeFit - gasfitObj.timeDomainSignal;
-n25pct = round(length(timeRes)/4);
-std25 = std(timeRes(end-n25pct:end)); % take standard deviation of tail of residuals
-SNR_gas=gasfitObj.area/std25; % will be a matrix for multiple peak fit
-fprintf('SNR for final gas peak = %3.1f \n',SNR_gas); %
-if SNR_gas<SNR_tol
-    fprintf(2,'WARNING! Gas FID SNR below minimums; Check Coil Plug\n');
-end
+% Hint the actual TE90 for usage
+if te90 < 0.445 
+   hint_te90 = '\color[rgb]{1,0,0} WARNING! Low TE90; Use 0.45ms.';
+elseif  te90 >= 0.505
+   hint_te90 = '\color[rgb]{1,0,0} WARNING! High TE90; Use 0.50ms.';
+else
+   hint_te90 = ['\color[rgb]{0,0,0} Use ',num2str(te90, 2), 'ms.'];
+end    
+fprintf('\nTE90 = %3.2f ms\n', te90); % report TE90 in ms
+fprintf(2,[hint_te90(20:end),' \n']);
+
+%% Calculate and report dissolved phase spectral SNR
+pause(0.1);
+disData_tail = disData(nPts/2+1:end,:); % just take the second half of FIDs
+mean_disData_tail = mean(disData_tail,2);
+diff = mean_disData_tail - disData_tail; % array of difference fids
+diff = diff - mean (diff); % subtract off any DC bias
+noiseFrame = diff(:,1); % take first frame as representative noise frame
+noiseDis = std(real(diff));
+SNR_frames_d = disfitObj.area'./noiseDis; % SNR of each frame
+SNRsnf_d = mean(SNR_frames_d,2)*sqrt(nAvg); % simulated noise frame SNR
+noise_mean = mean(noiseDis,2); % save mean noise frame for gas calculation
+
+fprintf('\nSNR Check for dissolved and gas peaks...\n'); 
+fprintf('SNR of dissolved spectra (Dai method):\n');
+fprintf('SNR for RBC peak = %3.1f \n', SNRsnf_d(1));
+fprintf('SNR for Membrane peak = %3.1f \n', SNRsnf_d(2));
+fprintf('SNR for Gas peak = %3.1f \n', SNRsnf_d(3));
+
+% Calculate and report SNR of analyzed gas FID using the Dai method
+SNR_gas_frame = gasfitObj.area'./noise_mean; % use noise calculated from dissolved
+fprintf('SNR for dedicated gas peak = %3.1f\n',SNR_gas_frame); 
+
+%% Quantify RBC:Membrane ratio
+RbcMemRatio = disfitObj.area(1) / disfitObj.area(2);
+fprintf('\nRbcMemRatio = %3.3f\n', RbcMemRatio); %
 
 %% Quantify ammount of off resonance excitation
-GasDisRatio = disfitObj.area(3)/sum(disfitObj.area(1:2));
-fprintf('\nGasDisRatio = %3.3f \n',GasDisRatio); 
-
-%% Quantify RBC:Barrier ratio
-RbcBarRatio = disfitObj.area(1)/disfitObj.area(2);
-fprintf('RbcBarRatio = %3.3f\n',RbcBarRatio);
+GasDisRatio = disfitObj.area(3) / sum(disfitObj.area(1:2));
+fprintf('GasDisRatio = %3.3f \n', GasDisRatio);
 
 %% Store Results for Additional Analysis
 %Results to Pass to Gas Exchange Recon
-GasExResults.RbcBarRatio = RbcBarRatio;
+GasExResults.RbcBarRatio = RbcMemRatio;
 GasExResults.GasDisRatio = GasDisRatio;
 GasExResults.DisFit = disfitObj;
 
@@ -250,36 +284,5 @@ CalResults.nDis = nDis;
 CalResults.nCal = nCal;
 CalResults.VRefScaleFactor = 0;
 CalResults.VRef = 0;
-%% plot diss specta
-clc
-dwell_time = CalResults.dwell_time;%us to s  
-GasFit = Calibration.NMR_Mix(CalResults.GasFit.area, CalResults.GasFit.freq, CalResults.GasFit.fwhm, CalResults.GasFit.phase);
-GasFit = GasFit.calcComponentSpectralDomainSignal(CalResults.GasFit.f);
-time = dwell_time*(0:length(GasFit)-1);
-DissFit = dwell_time*fftshift(fft(GasExResults.DisFit.calcComponentTimeDomainSignal(time),[],1),1);
-
-figure;
-hold('on')
-plot(GasExResults.DisFit.f,abs(GasExResults.DisFit.spectralDomainSignal),'bo','MarkerFaceColor','b');
-plot(GasExResults.DisFit.f,abs(sum(DissFit,2)),'-r','LineWidth',2);
-hold('off')
-
-%% 
-
-Diss_Text.Text = [...
-    sprintf('Phase Diff. = %3.2f%c\n', GasExResults.DisFit.phase(1) - GasExResults.DisFit.phase(2), char(176)),...
-    sprintf('Freq. Diff. = %3.1fHz\n', GasExResults.DisFit.freq(1) - GasExResults.DisFit.freq(2)),...
-    sprintf('RBC/Bar Ratio = %3.2f\n', GasExResults.RbcBarRatio),...
-    sprintf('Gas Contam. = %3.1f%%\n', GasExResults.GasDisRatio * 100),...               
-    ]
-% Plot Spct
-figure;
-hold('on') 
-plot(CalResults.GasFit.f,real(DissFit(:,1)),'r','Linewidth',2,'DisplayName','RBC');
-plot(CalResults.GasFit.f,real(DissFit(:,2)),'b','Linewidth',2,'DisplayName','Membrane');
-plot(CalResults.GasFit.f,real(DissFit(:,3)),'g','Linewidth',2,'DisplayName','Gas');
-% legend(Spct_Axes);
-hold('off');
-
 
 end

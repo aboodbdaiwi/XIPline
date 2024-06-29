@@ -18,11 +18,26 @@ function [Proton,MainInput] = GeneralRegisterProton_to_Xenon(...
 %   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
 
 %% match number of slices 
-ProtonVoxelInfo = MainInput.ProtonVoxelInfo;
-XeVoxelInfo = MainInput.XeVoxelInfo;
+
+moving1 = double(Proton.Image);
+fixed1 = XeImage;
+nSlice = size(fixed1,3);
+if strcmp(MainInput.AnalysisType,'GasExchange')
+    Proton.Image = imresize3(Proton.Image, size(XeImage));    
+    moving1 = Proton.Image;
+    ProtonVoxelInfo = MainInput.ProtonVoxelInfo;
+    XeVoxelInfo = MainInput.XeVoxelInfo;
+    if any(size(moving1) == size(fixed1))
+        ProtonVoxelInfo.PixelSize1 = XeVoxelInfo.PixelSize1;
+        ProtonVoxelInfo.PixelSize2 = XeVoxelInfo.PixelSize2;
+        ProtonVoxelInfo.SliceThickness = XeVoxelInfo.SliceThickness;
+    end
+else
+    ProtonVoxelInfo = MainInput.ProtonVoxelInfo;
+    XeVoxelInfo = MainInput.XeVoxelInfo;
+end
 RegistrationType = MainInput.RegistrationType;
 DataLocation = MainInput.XeDataLocation;
-
 
 % if strcmp(MainInput.AnalysisType,'Ventilation') == 1 
 %     mkdir([MainInput.XeDataLocation '\Ventilation Analysis']);
@@ -34,13 +49,10 @@ DataLocation = MainInput.XeDataLocation;
 %     MainInput.XeDataLocation = DataLocation;
 % end
 
-moving1 = double(Proton.Image);
-fixed1 = XeImage.Image;
-nSlice = size(fixed1,3);
 %% 
-
+disp('performing registration, please wait...');
 % match number of slices 
-if MainInput.SliceSelection == 1
+if (MainInput.SliceSelection == 1) && any(size(moving1) ~= size(fixed1))
     moving1 = squeeze(moving1(:,:,MainInput.Hstart:MainInput.Hend));
     fixed1 = squeeze(fixed1(:,:,MainInput.Xestart:MainInput.Xeend));
     if size(moving1,3) < size(fixed1,3)
@@ -124,7 +136,7 @@ Proton.ProtonRegisteredColored = permute(ProtonRegisteredColored,[1 2 4 3]);
 %% save images
 %Tiffs (movingRegisteredVolume)
 
-Global.write_imshowpair(ProtonRegistered,XeImage.Image,DataLocation)
+Global.write_imshowpair(ProtonRegistered,XeImage,DataLocation)
 % figure; orthosliceViewer(Proton.ProtonRegisteredColored)
 
 end

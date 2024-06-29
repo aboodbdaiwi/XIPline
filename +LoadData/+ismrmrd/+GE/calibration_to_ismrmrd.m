@@ -9,7 +9,7 @@ function calibration_to_ismrmrd(mrdfile,MainInput)
 % if exist(mrdfile,'file')
 %     error(['File ' mrdfile ' already exists.  Please remove first'])
 % end
-
+cd(MainInput.XeDataLocation)
 dset = LoadData.ismrmrd.Dataset(mrdfile);
 
 [data,h] = LoadData.ismrmrd.GE.Functions.read_p(MainInput.XeFileName);
@@ -17,12 +17,14 @@ dset = LoadData.ismrmrd.Dataset(mrdfile);
 cf = h.psc.mps_freq/10;
 
 % The path here should be the path to the local calibration waveform file
-fdl_freq_file = 'D:\Github\XIPline\+LoadData\+ismrmrd\+GE\calibration3D_129xe_fov400_nsp256_intlv600_kdt40_dur10p2cal_freq.fdl';
+% fdl_freq_file = 'D:\Github\XIPline\+LoadData\+ismrmrd\+GE\calibration3D_129xe_fov400_nsp256_intlv600_kdt40_dur10p2cal_freq.fdl';
+fdl_freq_file = MainInput.freqfdlFullPath;
 tmp = LoadData.ismrmrd.GE.Functions.read_fdl(fdl_freq_file);
 freq_off = tmp(1); 
 nDis = sum(tmp > 0); clear tmp;
 
-fdl_tr_file = 'D:\Github\XIPline\+LoadData\+ismrmrd\+GE\calibration3D_129xe_fov400_nsp256_intlv600_kdt40_dur10p2cal_TR.fdl';
+% fdl_tr_file = 'D:\Github\XIPline\+LoadData\+ismrmrd\+GE\calibration3D_129xe_fov400_nsp256_intlv600_kdt40_dur10p2cal_TR.fdl';
+fdl_tr_file = MainInput.trfdlFullPath;
 tmp = LoadData.ismrmrd.GE.Functions.read_fdl(fdl_tr_file);
 tr_gas = tmp(end); clear tmp;
 
@@ -67,7 +69,6 @@ end
 
 % Append the acquisition block
 dset.appendAcquisition(acqblock);
-
 
 header = [];
 

@@ -27,9 +27,9 @@ function [GasExResults, CalResults] = XeCTC_Calibration_MRD(MainInput)
 
 %% Fixed Parameters
 %CCHMC Parameters 
-freq = 2463;
-dwell_time = 4.88*1E-6;% micro-s to s
-te = 450; %us
+% freq = 2463;
+% dwell_time = 4.88*1E-6;% micro-s to s
+% te = 450; %us
 
 %Basic Parameters
 FlipTarget = 20; % target flip angle from calibration
@@ -52,6 +52,19 @@ if exist(MainInput.XeFileName, 'file')
 else
     error(['File ' MainInput.XeFileName ' does not exist.  Please generate it.'])
 end
+cali_struct = LoadData.ismrmrd.GE.Functions.readRawCali(MainInput.XeFileName);
+weight = cali_struct.weight;
+te = cali_struct.te;
+tr = cali_struct.tr;
+dwell_time = cali_struct.dwell_time;
+freq = cali_struct.freq;
+xeFreqMHz = cali_struct.xeFreqMHz;
+theFID = cali_struct.data;
+nFids = size(theFID, 2);
+nCal = nFids-nDis; % assume remaining FIDS past dissolved are cal
+nPts = size(theFID, 1);
+VRef = cali_struct.vref;
+
 hdrCal = LoadData.ismrmrd.xml.deserialize(dsetCal.readxml);
 DCal = dsetCal.readAcquisition();
 

@@ -1,51 +1,69 @@
 function [imag_vol, path, FileNames] = DICOM_Load(DataPath)
-%% A funtion of read in lung masks segmented in Amira and exported as DICOM Files
+%% A function to read in lung masks segmented in Amira and exported as DICOM Files
 % 
 % Written by Z.I. Cleveland 03/25/2015
 % DICOM extension commented out 09/27/2017 ZIC
 % 
-% Input:    num_reps:   number of repetions used in data acquisition
-%           save_save:  command to save as a .mat file must be 'save_data'
-%                       to work
+% Input:    DataPath:   path to the folder containing DICOM files
 %
 % Output:   imag_vol:   3D image output volume
 %           FileNames:  names of all files used to generate volume
 %
 %% 
-%%
 save_data = 'no'; % 'save_data';
 
 % Load data
-if exist('FileNames')~=0
+if exist('FileNames', 'var')
     clear('FileNames');
 end
 
 start_path = pwd;
-%[FileNames,path]=uigetfile('*.dcm','Select Dicom files','multiselect','on');
-% [FileNames,path]=uigetfile('.dcm','multiselect','on');
 
-DataFiles = dir([DataPath,'\*.dcm']);
+% Get list of DICOM files
+DataFiles = dir(fullfile(DataPath, '*.dcm'));
 DataFiles = struct2cell(DataFiles);
 FileNames = DataFiles(1,:);
 path = char(DataFiles(2,1));
 
 cd(path);
 
-num_files=length(FileNames);
-num_slices= num_files;
+num_files = length(FileNames);
+num_slices = num_files;
 
 if num_files > 1    
     msg = sprintf(['\n' int2str(num_slices) ' slices found.']);
     disp(msg);
 
-    % load image slices into a cell
-    all_slices = cell(num_files,1);
+    % Initialize arrays to store slice positions and instance numbers
+    slicePositions = zeros(num_files, 3);
+    instanceNumbers = zeros(num_files, 1);
+    acquisitionTimes = cell(num_files, 1);
+
+    % Load image slices and their metadata
+    all_slices = cell(num_files, 1);
 
     for indx = 1:num_files
         img_slice = squeeze(dicomread(FileNames{indx}));
         all_slices{indx} = img_slice;
+        info = dicominfo(FileNames{indx});
+
+        % Read Image Position Patient (0020,0032)
+        if isfield(info, 'ImagePositionPatient')
+            slicePositions(indx, :) = info.ImagePositionPatient;
+        end
+        
+        % Read Instance Number (0020,0013)
+        if isfield(info, 'InstanceNumber')
+            instanceNumbers(indx) = info.InstanceNumber;
+        end
+        
+        % Read Acquisition Time (0008,0032)
+        if isfield(info, 'AcquisitionTime')
+            acquisitionTimes{indx} = info.AcquisitionTime;
+        end
     end
 
+    % Generate 3D volume
     % generate 3D volume
     imag_size = size(all_slices{1});
     imag_vol = zeros(imag_size(1),imag_size(2),num_slices);
@@ -60,18 +78,22 @@ if num_files > 1
             imag_vol(:,:,slice) = all_slices{slice};
         end
     end
+    imag_sorted = zeros(size(imag_vol));
+    for i = 1:size(imag_vol,3)
+        imag_sorted(:,:,i) = imag_vol(:,:,find(instanceNumbers == i));
+    end
+    imag_vol = imag_sorted;
+
 elseif num_files == 1
     imag_vol = squeeze(dicomread(FileNames{1}));     
 end
 
-% Save data
-if nargin >=1
-    
-    save_check = strcmp(save_data,'save_data');
-    
+% Save data if required
+if nargin >= 1
+    save_check = strcmp(save_data, 'save_data');
     if save_check == 1 
         save_name = FileNames{1};
-        save_name(end-8:end)=[];
+        save_name(end-8:end) = [];
         save_name = [save_name '.mat'];
         cd ../        
         save(save_name);
@@ -81,7 +103,9 @@ if nargin >=1
         disp(msg);
     end
 end
+imslice(imag_vol)
 
 cd(start_path)
+
 
 %end
