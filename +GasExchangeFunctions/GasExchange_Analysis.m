@@ -1,5 +1,5 @@
 
-function [GasExchange] = GasExchange_Analysis (GasExchange,Proton,MainInput)
+function [GasExchange] = GasExchange_Analysis(GasExchange,Proton,MainInput)
 %   Inputs:
 %      ProtonImage - 3D array:
 %      UncorrectedVentImage:

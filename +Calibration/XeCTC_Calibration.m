@@ -56,7 +56,7 @@ SNR_tol = 25; % allowable
 % file_folder = DataFiles.folder;
 % file_with_path = strcat(file_folder,'\',file_name);  % join path and filename to open
 
-theFID = Calibration.loadLISTDATA(MainInput.XeFullPath);
+theFID = Calibration.loadLISTDATA(MainInput.CalFullPath);
 theFID = flip(squeeze(theFID),2);
 
 %% Parse Out the Various FIDs

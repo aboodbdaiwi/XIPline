@@ -36,15 +36,15 @@ SNR_tol = 25; % allowable
 %   DataFile = fullfile(DataPath, DataFile);
 % end
 % DataFiles = dir([DataPath,'\*.dat']);
-file_name = MainInput.XeFileName;
-file_folder = MainInput.XeDataLocation;
+file_name = MainInput.CalFileName;
+file_folder = MainInput.CalDataLocation;
 
 % file_with_path = strcat(file_folder,'\',file_name);  % join path and filename to open
 
-twix_obj = Calibration.mapVBVD(MainInput.XeFullPath); 
+twix_obj = Calibration.mapVBVD(MainInput.CalFullPath); 
 filename = file_name(15:end-4); % return filename back to something short
 filename = strrep(filename, '_', '-'); % replace underscores to avoid subscript problems
-file_loc = regexp(MainInput.XeDataLocation,filesep,'split');
+file_loc = regexp(MainInput.CalDataLocation,filesep,'split');
 file_loc = file_loc{end-1};
 
 %%

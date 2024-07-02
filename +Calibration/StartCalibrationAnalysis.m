@@ -20,20 +20,20 @@ GasExResults = [];
 %Results to Pass to Calibration information
 CalResults= [];
     % call functions 
-    if strcmp(MainInput.XeDataext,'.data') && (strcmp(MainInput.Institute, 'XeCTC') ||...
+    if strcmp(MainInput.CalDataext,'.data') && (strcmp(MainInput.Institute, 'XeCTC') ||...
             strcmp(MainInput.Scanner, 'Philips'))                 
         [GasExResults, CalResults] = Calibration.XeCTC_Calibration(MainInput); 
-    elseif strcmp(MainInput.XeDataext,'.dat') && (strcmp(MainInput.Institute, 'XeCTC') ||...
+    elseif strcmp(MainInput.CalDataext,'.dat') && (strcmp(MainInput.Institute, 'XeCTC') ||...
              strcmp(MainInput.Scanner, 'Siemens'))
         [GasExResults, CalResults] = Calibration.Xe_duke_UVA_calibration(MainInput); 
-    elseif strcmp(MainInput.XeDataext,'.7') && strcmp(MainInput.Scanner, 'GE')   
-            LoadData.ismrmrd.GE.calibration_to_ismrmrd([MainInput.Xe_name '.h5'],MainInput);
-            MainInput.XeFileName = [MainInput.Xe_name '.h5'];
+    elseif strcmp(MainInput.CalDataext,'.7') && strcmp(MainInput.Scanner, 'GE')   
+            LoadData.ismrmrd.GE.calibration_to_ismrmrd([MainInput.Cal_name '.h5'],MainInput);
+            MainInput.XeFileName = [MainInput.Cal_name '.h5'];
         [GasExResults, CalResults] = Calibration.XeCTC_Calibration_GEMRD(MainInput);     
-    elseif (strcmp(MainInput.XeDataext,'.h5') || strcmp(MainInput.XeDataext,'.MRD') ||...
-            strcmp(MainInput.XeDataext,'.mrd')) && strcmp(MainInput.Scanner, 'GE')   
+    elseif (strcmp(MainInput.CalDataext,'.h5') || strcmp(MainInput.CalDataext,'.MRD') ||...
+            strcmp(MainInput.CalDataext,'.mrd')) && strcmp(MainInput.Scanner, 'GE')   
         [GasExResults, CalResults] = Calibration.XeCTC_Calibration_GEMRD(MainInput);         
-    elseif strcmp(MainInput.XeDataext,'.h5') || strcmp(MainInput.XeDataext,'.MRD') || strcmp(MainInput.XeDataext,'.mrd') 
+    elseif strcmp(MainInput.CalDataext,'.h5') || strcmp(MainInput.CalDataext,'.MRD') || strcmp(MainInput.CalDataext,'.mrd') 
         [GasExResults, CalResults] = Calibration.XeCTC_Calibration_MRD(MainInput);         
 
         %-------------------- add new function here -------------------------------

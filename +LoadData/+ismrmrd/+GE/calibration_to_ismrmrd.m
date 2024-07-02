@@ -9,10 +9,10 @@ function calibration_to_ismrmrd(mrdfile,MainInput)
 % if exist(mrdfile,'file')
 %     error(['File ' mrdfile ' already exists.  Please remove first'])
 % end
-cd(MainInput.XeDataLocation)
+cd(MainInput.CalDataLocation)
 dset = LoadData.ismrmrd.Dataset(mrdfile);
 
-[data,h] = LoadData.ismrmrd.GE.Functions.read_p(MainInput.XeFileName);
+[data,h] = LoadData.ismrmrd.GE.Functions.read_p(MainInput.CalFileName);
 
 cf = h.psc.mps_freq/10;
 

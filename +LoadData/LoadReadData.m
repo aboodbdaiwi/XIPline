@@ -248,7 +248,7 @@ elseif strcmp(MainInput.XeDataext,'.7') && strcmp(MainInput.Scanner,'GE')
             cd(XeDataLocation)
         if strcmp(MainInput.AnalysisType,'Ventilation')  
             MainInput.ReconImageMode = 'xenon';
-            LoadData.ismrmrd.GE.gre_to_ismrmrd(filename,Xe_name,fullfile(XeDataLocation,[Xe_name '.h5']));
+            LoadData.ismrmrd.GE.gre_to_ismrmrd(filename,fullfile(XeDataLocation,[Xe_name '.h5']));
             MainInput.XeFileName = [Xe_name '.h5'];
             MainInput.ReconImageMode = 'xenon';
             [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
@@ -260,7 +260,7 @@ elseif strcmp(MainInput.XeDataext,'.7') && strcmp(MainInput.Scanner,'GE')
             [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
             Diffusion.Image = Image;
         elseif strcmp(MainInput.AnalysisType,'GasExchange')  
-            mrdfile = [Xe_name '.h5']; mrdfile,dissolvedarchive,dissolvedmat,calmat
+            mrdfile = [Xe_name '.h5']; %mrdfile,dissolvedarchive,dissolvedmat,calmat
             LoadData.ismrmrd.GE.dissolved_to_ismrmrd(mrdfile,dissolvedarchive,dissolvedmat,calmat);
             LoadData.ismrmrd.GE.calibration_to_ismrmrd(MainInput.CalFileName,MainInput.Cal_name,fullfile(XeDataLocation,[MainInput.Cal_name '_Calibration.h5']));
             MainInput.XeFileName = [Xe_name '.h5'];

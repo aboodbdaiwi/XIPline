@@ -49,10 +49,10 @@ SNR_tol = 50; % Ideal is 100 for RBC SNR, but allow 50
 % [file, path] = uigetfile('*.*', 'Select file'); % starts in current dir
 % file_with_path = strcat(path, file); % join path and filename to open
 % [~,filename,ext] = fileparts(file_with_path); % get file extension
-cali_struct = LoadData.ismrmrd.GE.Functions.readRawCali(MainInput.XeFileName);
+cali_struct = LoadData.ismrmrd.GE.Functions.readRawCali(MainInput.CalFileName);
 cali_struct.data = cali_struct.data(:,1:515);
-filename = MainInput.XeFileName;
-ext = MainInput.XeDataext;
+filename = MainInput.CalFileName;
+ext = MainInput.CalDataext;
 if strcmp(ext,'.dat') 
    filename = file(15:end-4); % return filename back to something short
 else

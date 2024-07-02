@@ -48,12 +48,20 @@ D = dset.readAcquisition();
 %% Encoding and reconstruction information
 % Matrix size
 enc_Nx = hdr.encoding.encodedSpace.matrixSize.x;
-enc_Ny = hdr.encoding.encodedSpace.matrixSize.y;
-if strcmp(MainInput.Scanner,'Siemens')
-    enc_Ny = 5000/2;
-elseif strcmp(MainInput.Scanner,'GE')
-    enc_Ny = length(D.data)/2;
+% enc_Ny = hdr.encoding.encodedSpace.matrixSize.y;
+size_proj = size(D.data{1}); 
+Ny = 0;
+for i = 1:length(D.data)
+    if size(D.data{i}) == size_proj
+        Ny = Ny + 1;
+    end
 end
+enc_Ny = Ny/2;
+% if strcmp(MainInput.Scanner,'Siemens')
+%     enc_Ny = 5000/2;
+% elseif strcmp(MainInput.Scanner,'GE')
+%     enc_Ny = length(D.data)/2;
+% end
 enc_Nz = hdr.encoding.encodedSpace.matrixSize.z;
 rec_Nx = hdr.encoding.reconSpace.matrixSize.x;
 rec_Ny = hdr.encoding.reconSpace.matrixSize.y;
@@ -229,40 +237,57 @@ end
 disp('Determining Image Offset Completed.')
 
 %% Spectra
-disp('Fitting Spectrum...')
-% Look for files with the Calibration.h5 extension first
-MainInput.CalFileName = dir(fullfile(MainInput.XeDataLocation, '*Calibration.h5'));
-
-% Check if the directory listing is empty
-if isempty(MainInput.CalFileName)
-    % If empty, look for files with the .mrd extension
-    MainInput.CalFileName = dir(fullfile(MainInput.XeDataLocation, '*Calibration.mrd'));
-    % Check if the directory listing is still empty
-    if isempty(MainInput.CalFileName)
-        % If still empty, look for files with the .MRD extension
-        MainInput.CalFileName = dir(fullfile(MainInput.XeDataLocation, '*Calibration.MRD'));
-    end
-else
-    error('Calibration data is required');
-end
-
-MainInput.CalFileName = MainInput.CalFileName.name;
-MainInput.CalFullPath = fullfile(MainInput.XeDataLocation, MainInput.CalFileName);
-if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
-    try
-        if strcmp(MainInput.Scanner,'Siemens') || strcmp(MainInput.Scanner,'Philips')
-            [GasExResults, ~] = GasExchangeFunctions.XeCTC_Calibration_MRD(MainInput);
-        elseif strcmp(MainInput.Scanner,'GE')
-            [GasExResults, ~] = GasExchangeFunctions.XeCTC_Calibration_GEMRD(MainInput);
-        end
-    catch
-        error('Error. Could not analyze calibration Data file')
-        success = 0;
-    end
-    time = GasExResults.DisFit.t;
-    AppendedDissolvedNMRFit = GasExResults.DisFit;
-    AppendedDissolvedFit = (time(2)-time(1))*fftshift(fft(AppendedDissolvedNMRFit.calcComponentTimeDomainSignal(time),[],1),1);
-end
+disp('Fitting Spectrum...') 
+[GasExResults, ~] = Calibration.StartCalibrationAnalysis(MainInput);
+time = GasExResults.DisFit.t;
+AppendedDissolvedNMRFit = GasExResults.DisFit;
+AppendedDissolvedFit = (time(2)-time(1))*fftshift(fft(AppendedDissolvedNMRFit.calcComponentTimeDomainSignal(time),[],1),1);
+% 
+% if strcmp(MainInput.CalDataext,'.data') && strcmp(MainInput.Scanner,'Philips')
+%         [GasExResults, ~] = Calibration.XeCTC_Calibration(MainInput); 
+% elseif strcmp(MainInput.CalDataext,'.dat') && strcmp(MainInput.Scanner,'Siemens')
+% elseif strcmp(MainInput.CalDataext,'.7') && strcmp(MainInput.Scanner,'GE')
+% elseif strcmp(MainInput.CalDataext,'.mrd') || strcmp(MainInput.CalDataext,'.MRD') || strcmp(MainInput.CalDataext,'.h5')
+%     if strcmp(MainInput.Scanner,'Siemens') || strcmp(MainInput.Scanner,'Philips')
+%         [GasExResults, ~] = GasExchangeFunctions.XeCTC_Calibration_MRD(MainInput);
+%     elseif strcmp(MainInput.Scanner,'GE')
+%         [GasExResults, ~] = GasExchangeFunctions.XeCTC_Calibration_GEMRD(MainInput);
+%     end
+% end
+% 
+% % Look for files with the Calibration.h5 extension first
+% MainInput.CalFileName = dir(fullfile(MainInput.XeDataLocation, '*Calibration.h5'));
+% 
+% % Check if the directory listing is empty
+% if isempty(MainInput.CalFileName)
+%     % If empty, look for files with the .mrd extension
+%     MainInput.CalFileName = dir(fullfile(MainInput.XeDataLocation, '*Calibration.mrd'));
+%     % Check if the directory listing is still empty
+%     if isempty(MainInput.CalFileName)
+%         % If still empty, look for files with the .MRD extension
+%         MainInput.CalFileName = dir(fullfile(MainInput.XeDataLocation, '*Calibration.MRD'));
+%     end
+% else
+%     error('Calibration data is required');
+% end
+% 
+% MainInput.CalFileName = MainInput.CalFileName.name;
+% MainInput.CalFullPath = fullfile(MainInput.XeDataLocation, MainInput.CalFileName);
+% if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
+%     try
+%         if strcmp(MainInput.Scanner,'Siemens') || strcmp(MainInput.Scanner,'Philips')
+%             [GasExResults, ~] = GasExchangeFunctions.XeCTC_Calibration_MRD(MainInput);
+%         elseif strcmp(MainInput.Scanner,'GE')
+%             [GasExResults, ~] = GasExchangeFunctions.XeCTC_Calibration_GEMRD(MainInput);
+%         end
+%     catch
+%         error('Error. Could not analyze calibration Data file')
+%         success = 0;
+%     end
+%     time = GasExResults.DisFit.t;
+%     AppendedDissolvedNMRFit = GasExResults.DisFit;
+%     AppendedDissolvedFit = (time(2)-time(1))*fftshift(fft(AppendedDissolvedNMRFit.calcComponentTimeDomainSignal(time),[],1),1);
+% end
 
 %View
 DissolvedNMR = figure('Name','Dissolved Phase Spectrum');set(DissolvedNMR,'WindowState','minimized');

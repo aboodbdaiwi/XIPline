@@ -47,12 +47,12 @@ SNR_tol = 25; % allowable
 
 %% Import Data File
 cd(MainInput.XeDataLocation)
-if exist(MainInput.XeFileName, 'file')
-    dsetCal = LoadData.ismrmrd.Dataset(MainInput.XeFileName, 'dataset');
+if exist(MainInput.CalFileName, 'file')
+    dsetCal = LoadData.ismrmrd.Dataset(MainInput.CalFileName, 'dataset');
 else
-    error(['File ' MainInput.XeFileName ' does not exist.  Please generate it.'])
+    error(['File ' MainInput.CalFileName ' does not exist.  Please generate it.'])
 end
-cali_struct = LoadData.ismrmrd.GE.Functions.readRawCali(MainInput.XeFileName);
+cali_struct = LoadData.ismrmrd.GE.Functions.readRawCali(MainInput.CalFileName);
 weight = cali_struct.weight;
 te = cali_struct.te;
 tr = cali_struct.tr;
