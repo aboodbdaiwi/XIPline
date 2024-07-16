@@ -25,7 +25,11 @@ function [Proton,GasExchange] = GasExchange_RegisterProton_to_Xenon(Proton,GasEx
 
 %% Register Proton to Xenon
 ProtonImage = Proton.Image;
-ProtonImageHR = Proton.ProtonImageHR;
+try
+    ProtonImageHR = Proton.ProtonImageHR;
+catch
+    ProtonImageHR = Proton.Image;
+end
 UncorrectedVentImage = GasExchange.UncorrectedVentImage;
 VentImage = GasExchange.VentImage;
 H_RecMatrix = Proton.H_RecMatrix;

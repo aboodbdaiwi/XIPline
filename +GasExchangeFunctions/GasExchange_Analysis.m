@@ -1,5 +1,5 @@
 
-function [GasExchange] = GasExchange_Analysis (GasExchange,Proton,MainInput)
+function [GasExchange] = GasExchange_Analysis(GasExchange,Proton,MainInput)
 %   Inputs:
 %      ProtonImage - 3D array:
 %      UncorrectedVentImage:
@@ -30,25 +30,50 @@ function [GasExchange] = GasExchange_Analysis (GasExchange,Proton,MainInput)
 % pause(.5)
 
 % SubjectAge = MainInput.SubjectAge;
+%% 
 VentImage = GasExchange.VentImage;
 GasImage = GasExchange.GasImage;
 DissolvedImage = GasExchange.DissolvedImage;
 CorrDissolvedImage = GasExchange.CorrDissolvedImage;
-ProtonImage = Proton.ProtonImageHR; % Proton.ProtonImageHR || Proton.Image;
-H_RecMatrix = Proton.H_RecMatrix;
+try 
+    ProtonImage = Proton.ProtonImageHR; % Proton.ProtonImageHR || Proton.Image;
+    H_RecMatrix = Proton.H_RecMatrix;
+    ProtonImageRegistered = Proton.ProtonHRRegistered; % ProtonHRRegistered || ProtonRegistered
+    ProtonMaskRegistered = Proton.ProtonMaskRegistred > 0;
+    ProtonMax = Proton.ProtonMax;
+    Slices_Co = Proton.Slices_Co;
+    Slices_Ax = Proton.Slices_Ax;
+catch
+    ProtonImage = Proton.Image; % Proton.ProtonImageHR || Proton.Image;
+    H_RecMatrix = size(Proton.Image,1);
+    ProtonImageRegistered = Proton.ProtonRegistered; % ProtonHRRegistered || ProtonRegistered
+    ProtonMaskRegistered = Proton.ProtonMaskRegistred > 0;
+    ProtonMax = max(Proton.Image(:));
+    nonZeroSlices = find(any(any(ProtonMaskRegistered, 1), 2)); % Indices of slices containing non-zero elements    
+    % Exclude the first 5 slices and the last 5 slices
+    if length(nonZeroSlices) > 10 % Ensure there are enough slices to exclude
+        nonZeroSlices = nonZeroSlices(6:end-5); % Exclude first 5 and last 5 slices
+    end
+    
+    % Step 2: Choose evenly spaced 7 slices
+    numNonZeroSlices = length(nonZeroSlices);
+    if numNonZeroSlices > 7
+        selectedIndices = round(linspace(nonZeroSlices(1), nonZeroSlices(end), 7)); % Evenly spaced indices
+    else
+        selectedIndices = nonZeroSlices; % Use all remaining non-zero slices if there are less than 7
+    end
+    Slices_Co = selectedIndices;
+    Slices_Ax = selectedIndices;
+end
 LungMask = GasExchange.LungMask > 0;
 RBC2Bar_struct = GasExchange.RBC2Bar_struct;
 RBCOsc_High_Image = GasExchange.RBCOsc_High_Image;
 RBCOsc_Low_Image = GasExchange.RBCOsc_Low_Image;
 RBCOsc_Normalization = GasExchange.RBCOsc_Normalization;
-ProtonImageRegistered = Proton.ProtonHRRegistered; % ProtonHRRegistered || ProtonRegistered
-ProtonMaskRegistered = Proton.ProtonMaskRegistred > 0;
-ProtonMax = Proton.ProtonMax;
+
 AppendedDissolvedNMRFit = GasExchange.AppendedDissolvedNMRFit;
 ActTE90 = GasExchange.ActTE90;
 freq_jump = GasExchange.freq_jump;
-Slices_Co = Proton.Slices_Co;
-Slices_Ax = Proton.Slices_Ax;
 
 switch MainInput.HealthyReferenceType
     case 'Default' 
@@ -162,7 +187,7 @@ disp('Dixon separation of Dissolved Phases...')
 [~,RBCOsc_Low,~,~] = GasExchangeFunctions.SinglePointDixon(RBCOsc_Low_Image,-RBC2Bar_struct.Low,GasImage,ProtonMaskRegistered);
 [~,RBCOsc_Norm,~,~] = GasExchangeFunctions.SinglePointDixon(RBCOsc_Normalization,-RBC2Bar_struct.Tot,GasImage,ProtonMaskRegistered);
 disp('Dixon separation of Dissolved Phases Completed.')
-
+% figure; imslice(abs(DissolvedImage))
 %Remove Values below zero
 BarrierImage(BarrierImage<0) = 0;
 RBCImage(RBCImage<0) = 0;
@@ -280,6 +305,7 @@ CorrDissolvedSNR = (mean(abs(CorrDissolvedImage(VentBinMask(:)))) - mean(abs(Cor
 BarrierSNR = (mean(BarrierImage(VentBinMask(:))) - mean(BarrierImage(NoiseMask(:))) ) / std(BarrierImage(NoiseMask(:)));
 RBCSNR = (mean(RBCImage(VentBinMask(:))) - mean(RBCImage(NoiseMask(:))) ) / std(RBCImage(NoiseMask(:)));
 disp('Calculating SNR Completed.')
+
 
 %% Quantify Defects, Intensities, etc.
 % waitbar(.30,f,'Quantify Defects, Intensities, etc....');
@@ -808,9 +834,19 @@ SigDynamics = openfig('SigDynamics.fig');
 Global.exportToPPTX('addslide'); %Signal Dynamics
 Global.exportToPPTX('addpicture',SigDynamics);
 Global.exportToPPTX('addtext',sprintf('Signal Dynamics'),'Position',[0 0 5 3]);
-
-cd([Proton.folder, '\Gas Exchange Analysis'])
-ProtonMontage = openfig('ProtonMontage.fig');
+try
+    cd([Proton.folder, '\Gas Exchange Analysis'])
+    ProtonMontage = openfig('ProtonMontage.fig');
+catch
+    folderName = 'Gas Exchange Analysis';
+    newFolder = fullfile(MainInput.HDataLocation, folderName);
+    mkdir(newFolder);
+    cd(newFolder);
+    ProtonMontage = figure('Name','Proton Image');set(ProtonMontage,'WindowState','minimized');
+    montage(Proton.ProtonRegistered,'DisplayRange',[0 max(Proton.ProtonRegistered(:))*0.8])%unregistered for these
+    savefig('ProtonMontage.fig')
+    close(gcf)
+end
 Global.exportToPPTX('addslide'); %Proton Image
 Global.exportToPPTX('addpicture',ProtonMontage);
 Global.exportToPPTX('addtext',sprintf('Proton Image'),'Position',[0 0 5 3]);
@@ -831,6 +867,36 @@ Global.exportToPPTX('addslide'); %Vent Image
 Global.exportToPPTX('addpicture',CorrVentMontage);
 Global.exportToPPTX('addtext',sprintf(['Corrected Ventilation Image-\nUncorrected SNR: ', num2str(VentSNR)]),'Position',[0 0 5 3]);
 
+try
+    Registration = openfig('Registerationfig.fig');
+catch
+    Registrationfig = figure('Name','Registration','units','normalized','outerposition',[0 0 1 4/NumPlotSlices]);set(Registrationfig,'WindowState','minimized');
+    set(Registrationfig,'color','white','Units','inches','Position',[0.25 0.25 2*NumPlotSlices 4*2+1])
+    tiledlayout(4,NumPlotSlices,'TileSpacing','none','Padding','compact');
+    for slice=1:NumPlotSlices
+        nexttile
+        imshowpair(abs(ProtonImageRegistered(:,:,Slices_Co(slice)))/ProtonMax,abs(VentImage(:,:,Slices_Co(slice)))/max(abs(VentImage(ProtonMaskRegistered(:)))),'Scaling','none','ColorChannels','red-cyan')
+        if slice == round(NumPlotSlices/2)
+            title('Before Registration','FontSize',24)
+        end
+    end
+    for slice=1:NumPlotSlices
+        nexttile
+        imshowpair(fliplr(rot90(squeeze(abs(ProtonImageRegistered(Slices_Ax(slice),:,:))),-1))/ProtonMax,fliplr(rot90(squeeze(abs(VentImage(Slices_Ax(slice),:,:))),-1))/max(abs(VentImage(ProtonMaskRegistered(:)))),'Scaling','none','ColorChannels','red-cyan')
+    end
+    for slice=1:NumPlotSlices
+        nexttile
+        imshowpair(abs(ProtonImageRegistered(:,:,Slices_Co(slice)))/ProtonMax,abs(VentImage(:,:,Slices_Co(slice)))/max(abs(VentImage(ProtonMaskRegistered(:)))),'Scaling','none','ColorChannels','red-cyan')
+        if slice == round(NumPlotSlices/2)
+            title('After Registration','FontSize',24)
+        end
+    end
+    for slice=1:NumPlotSlices
+        nexttile
+        imshowpair(fliplr(rot90(squeeze(abs(ProtonImageRegistered(Slices_Ax(slice),:,:))),-1))/ProtonMax,fliplr(rot90(squeeze(abs(VentImage(Slices_Ax(slice),:,:))),-1))/max(abs(VentImage(ProtonMaskRegistered(:)))),'Scaling','none','ColorChannels','red-cyan')
+    end
+    savefig('Registerationfig.fig')
+end
 Registration = openfig('Registerationfig.fig');
 Global.exportToPPTX('addslide'); %Registration
 Global.exportToPPTX('addpicture',Registration);

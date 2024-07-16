@@ -1,5 +1,5 @@
 
-function [Image, parentPath, FileNames] = LoadData_Gas_VentDiff_Philips_GRE(DataLocation)
+function [Image, parentPath, filename] = LoadData_Gas_VentDiff_Philips_GRE(MainInput)
 %   Inputs:
 %      
 %   Outputs:
@@ -13,14 +13,22 @@ function [Image, parentPath, FileNames] = LoadData_Gas_VentDiff_Philips_GRE(Data
 %
 %   Please add updates at the end. Ex: 3/10/24 - ASB: update .... 
 
-    DataFiles = dir([DataLocation,'\*.data']);
-    FileNames = DataFiles.name;
-    parentPath = DataFiles.folder;
+    % DataFiles = dir([FullFilePath,'\*.data']);
+    % FileNames = DataFiles.name;
+
+    if strcmp(MainInput.ReconImageMode,'proton')
+        parentPath = MainInput.HDataLocation;
+        cd(MainInput.HDataLocation)
+        filename = MainInput.H_name;
+    else
+        parentPath = MainInput.XeDataLocation;
+        cd(MainInput.XeDataLocation)
+        filename = MainInput.Xe_name;
+    end
+  
     ch_range = [1 1]; % assume one channel for data import by default
     filterim = 'Fermi';
-    cd(parentPath)
-    filename = FileNames;
-    filename(end-4:end)=[];
+
     [ImgK,NoiK,kx_oversample_factor] = LoadData.load_philips_extr1_2D(filename,ch_range);
     diffK = ImgK(:,:,:,:);
     
@@ -49,11 +57,15 @@ function [Image, parentPath, FileNames] = LoadData_Gas_VentDiff_Philips_GRE(Data
         end
         Image = rot90(rot90(diffimg));    
         
-    elseif length(size(diffK)) == 3
+    elseif length(size(diffK)) <= 3
             data_size = size(diffK);
             ky = data_size(1);
             kx =data_size(2);
-            slices = data_size(3);
+            if length(data_size) < 3
+                slices = 1;
+            else
+                slices = data_size(3); 
+            end
             diffimgcmplx = zeros(ky,round(kx/kx_oversample_factor),slices);
             if strcmp(filterim,'Fermi') == 1
                     filter= LoadData.fermi_filter_2D_AB(ky,kx,10);

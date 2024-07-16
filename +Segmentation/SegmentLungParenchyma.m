@@ -44,15 +44,15 @@ for slice_num = 1:szimg(3)
     end 
    end
 
-close
-
-% generate airway mask for current slice
-airway_slice_mask(airway_slice_mask>0)=1; 
-ImageMask(:,:,slice_num) = airway_slice_mask;
-
-if slice_num == szimg(3)
-    disp('Segmenting lung parenchyma complete.'); 
-end
+    close
+    
+    % generate airway mask for current slice
+    airway_slice_mask(airway_slice_mask>0)=1; 
+    ImageMask(:,:,slice_num) = airway_slice_mask;
+    
+    if slice_num == szimg(3)
+        disp('Segmenting lung parenchyma complete.'); 
+    end
 
 end
 
