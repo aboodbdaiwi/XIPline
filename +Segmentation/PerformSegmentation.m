@@ -53,36 +53,36 @@ switch MainInput.SegmentationMethod
         idcs = strfind(FunctionDirectory,filesep);%determine location of file separators
         FunctionDirectory = FunctionDirectory(1:idcs(end)-1);%remove file
 
-        % sourcemodel1Path = [FunctionDirectory,'\+Segmentation\AutoSegmentation.py'];
-        % sourcemodel2Path = [FunctionDirectory,'\+Segmentation\AutoSegment_2DVent_Xe_axial_2000e.hdf5'];
-        % sourcemodel3Path = [FunctionDirectory,'\+Segmentation\AutoSegment_2DVent_Xe_coronal_2000e.hdf5'];
-        % sourcemodel4Path = [FunctionDirectory,'\+Segmentation\AutoSegment_2DVent_Xe_H_coronal_1000e.hdf5'];
-        % sourcemodel5Path = [FunctionDirectory,'\+Segmentation\AutoSegment_3DGasExchange_Xe_200e.hdf5'];
-        % sourcemodel6Path = [FunctionDirectory,'\+Segmentation\AutoSegment_3DGasExchange_Xe_H_1000e.hdf5'];
-        % sourcemodel7Path = [FunctionDirectory,'\+Segmentation\AutoSegment_2DDiff_Xe_axial_2000e.hdf5'];
-        % 
-        % 
-        % cd(modelsFolderPath);
-        % if ~exist(fullfile(modelsFolderPath, 'AutoSegment_2DVent_Xe_axial_2000e.hdf5'), 'file') ||...
-        %     ~exist(fullfile(modelsFolderPath, 'AutoSegment_2DVent_Xe_coronal_2000e.hdf5'), 'file') ||...
-        %     ~exist(fullfile(modelsFolderPath, 'AutoSegment_2DVent_Xe_H_coronal_1000e.hdf5'), 'file') ||...
-        %     ~exist(fullfile(modelsFolderPath, 'AutoSegment_3DGasExchange_Xe_200e.hdf5'), 'file') ||...
-        %     ~exist(fullfile(modelsFolderPath, 'AutoSegment_3DGasExchange_Xe_H_1000e.hdf5'), 'file') ||...
-        %     ~exist(fullfile(modelsFolderPath, 'AutoSegment_2DDiff_Xe_axial_2000e.hdf5'), 'file') ||...~exist(fullfile(modelsFolderPath, 'AutoSegment_3DGasExchange_Xe_H_1000e.hdf5'), 'file') ||...
-        %     ~exist(fullfile(destinationFolderPath, 'AutoSegmentation.py'), 'file')
-        % 
-        %     copyfile(sourcemodel1Path, destinationFolderPath);
-        %     copyfile(sourcemodel2Path, modelsFolderPath);
-        %     copyfile(sourcemodel3Path, modelsFolderPath);
-        %     copyfile(sourcemodel4Path, modelsFolderPath);
-        %     copyfile(sourcemodel5Path, modelsFolderPath);
-        %     copyfile(sourcemodel6Path, modelsFolderPath);
-        %     copyfile(sourcemodel7Path, modelsFolderPath);
-        % 
-        %     disp('File copied successfully.');
-        % else
-        %     disp('models files already exist in the models folder.');
-        % end
+        sourcemodel1Path = [FunctionDirectory,'\+Segmentation\AutoSegmentation.py'];
+        sourcemodel2Path = [FunctionDirectory,'\+Segmentation\AutoSegment_2DVent_Xe_axial_2000e.hdf5'];
+        sourcemodel3Path = [FunctionDirectory,'\+Segmentation\AutoSegment_2DVent_Xe_coronal_2000e.hdf5'];
+        sourcemodel4Path = [FunctionDirectory,'\+Segmentation\AutoSegment_2DVent_Xe_H_coronal_1000e.hdf5'];
+        sourcemodel5Path = [FunctionDirectory,'\+Segmentation\AutoSegment_3DGasExchange_Xe_200e.hdf5'];
+        sourcemodel6Path = [FunctionDirectory,'\+Segmentation\AutoSegment_3DGasExchange_Xe_H_1000e.hdf5'];
+        sourcemodel7Path = [FunctionDirectory,'\+Segmentation\AutoSegment_2DDiff_Xe_axial_2000e.hdf5'];
+
+
+        cd(modelsFolderPath);
+        if ~exist(fullfile(modelsFolderPath, 'AutoSegment_2DVent_Xe_axial_2000e.hdf5'), 'file') ||...
+            ~exist(fullfile(modelsFolderPath, 'AutoSegment_2DVent_Xe_coronal_2000e.hdf5'), 'file') ||...
+            ~exist(fullfile(modelsFolderPath, 'AutoSegment_2DVent_Xe_H_coronal_1000e.hdf5'), 'file') ||...
+            ~exist(fullfile(modelsFolderPath, 'AutoSegment_3DGasExchange_Xe_200e.hdf5'), 'file') ||...
+            ~exist(fullfile(modelsFolderPath, 'AutoSegment_3DGasExchange_Xe_H_1000e.hdf5'), 'file') ||...
+            ~exist(fullfile(modelsFolderPath, 'AutoSegment_2DDiff_Xe_axial_2000e.hdf5'), 'file') ||...~exist(fullfile(modelsFolderPath, 'AutoSegment_3DGasExchange_Xe_H_1000e.hdf5'), 'file') ||...
+            ~exist(fullfile(destinationFolderPath, 'AutoSegmentation.py'), 'file')
+
+            copyfile(sourcemodel1Path, destinationFolderPath);
+            % copyfile(sourcemodel2Path, modelsFolderPath);
+            % copyfile(sourcemodel3Path, modelsFolderPath);
+            % copyfile(sourcemodel4Path, modelsFolderPath);
+            % copyfile(sourcemodel5Path, modelsFolderPath);
+            % copyfile(sourcemodel6Path, modelsFolderPath);
+            % copyfile(sourcemodel7Path, modelsFolderPath);
+
+            disp('File copied successfully.');
+        else
+            disp('models files already exist in the models folder.');
+        end
         % delete old files
         fileName1 = 'AutoMask.mat';
         fileName2 = 'AutoMask.nii.gz';
@@ -115,15 +115,52 @@ switch MainInput.SegmentationMethod
 %         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %         %Need a raw CPython installation (NOT anaconda).  These commands below
 %         % shouldn't need to be called if everthing is set up properly.
-%         terminate(pyenv)
-%         pyenv('Version','C:\Users\bda5ik\AppData\Local\Programs\Python\Python310\pythonw.exe'); %Call Python 3.9
-%         system('pip install numpy')
-%         system('pip install keras')
-%         system('pip install tensorflow')
-%         system('pip install nibabel')
-%         system('pip install scipy') 
-%         terminate(pyenv)
-%         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        
+        % Define the folder path
+        folderPath = destinationFolderPath;        
+        % Define the file names
+        satisfiedFile = fullfile(folderPath, '\python_requirement_satisfied.txt');
+        pathFile = fullfile(folderPath, '\python_path.txt');
+        
+        % Check if 'python_requirement_satisfied.txt' exists
+        if exist(satisfiedFile, 'file')
+            disp('Python requirements already satisfied.');
+        else
+            % If 'python_requirement_satisfied.txt' does not exist, check for 'python_path.txt'
+            if exist(pathFile, 'file')
+                % Read the first line from 'python_path.txt'
+                fid = fopen(pathFile, 'r');
+                if fid == -1
+                    error('Cannot open file: %s', pathFile);
+                end
+                pythonPath = fgetl(fid);
+                fclose(fid);
+                
+                % Display the Python path (this is where you can add additional steps if needed)
+                fprintf('Python path: %s\n', pythonPath);
+                
+                terminate(pyenv)
+                pyenv('Version', pythonPath);
+                system('pip install numpy')
+                system('pip install keras')
+                system('pip install tensorflow')
+                system('pip install nibabel')
+                system('pip install scipy') 
+                terminate(pyenv)
+        
+                % Create an empty 'python_requirement_satisfied.txt' file
+                fid = fopen(satisfiedFile, 'w');
+                if fid == -1
+                    error('Cannot create file: %s', satisfiedFile);
+                end
+                fclose(fid);
+                
+                disp('Python requirements are now marked as satisfied.');
+            else
+                error('Neither python_requirement_satisfied.txt nor python_path.txt found.');
+            end
+        end
+
         cd(FunctionDirectory)
         pathToMod = fileparts(fullfile(destinationFolderPath, 'AutoSegmentation.py'));
         if count(py.sys.path,pathToMod)==0
