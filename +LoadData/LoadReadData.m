@@ -438,7 +438,6 @@ if MainInput.NoProtonImage == 0
                 [Proton] = LoadData.LoadData_Proton_GasExchange_Philips_Sin(MainInput.HDataLocation,PixelShift,MainInput.Institute);
         
             end
-
         elseif (strcmp(MainInput.HDataext,'.h5') || strcmp(MainInput.HDataext,'.mrd'))              
             if strcmp(MainInput.AnalysisType,'Ventilation')  
                 MainInput.ReconImageMode = 'proton';
