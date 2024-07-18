@@ -221,8 +221,8 @@ disp('Saving Vent Tiff...')
 % Normalize the intensity of the original image to fall between [0,1].
 MR = Ventilation.Image;
 MR2 = MR / max(MR,[], 'all');
-scaledImage=zeros(max(size(MR2,1)),max(size(MR2,1)));
-scaledImage2=zeros(max(size(MR2,1)),max(size(MR2,1)));
+scaledImage = zeros(size(MR2));
+scaledImage2 = zeros(size(MR2));
 for m = 1:size(MR2,3)
     scaledImage(:,:,m) = MR2(:,:,m);
     scaledImage2(:,:,m) = scaledImage(:,:,m);
@@ -418,6 +418,8 @@ if size(Ventilation.Image,3) > 30
     nonZeroSlice_lng = nonZeroSlices(end) - nonZeroSlices(1);
     nonZeroSlice_space = floor(nonZeroSlice_lng/16);
     slice_indices = nonZeroSlices(1):nonZeroSlice_space:nonZeroSlices(end);
+else
+    Image_3D = 0;
 end 
 % Xe images:
 subplot(3,1,1)

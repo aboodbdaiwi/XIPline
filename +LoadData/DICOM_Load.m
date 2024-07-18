@@ -64,26 +64,59 @@ if num_files > 1
     end
 
     % Generate 3D volume
-    % generate 3D volume
     imag_size = size(all_slices{1});
     imag_vol = zeros(imag_size(1),imag_size(2),num_slices);
-    % Check if the variable is empty
-    if isempty(imag_vol)
-%         nonEmptyCount = sum(~cellfun('isempty', all_slices));
-        imag_size = size(all_slices{num_files});
-        imag_vol = zeros(imag_size(1),imag_size(2),num_files);       
-    end
+
     for slice = 1:num_slices
         if ~isempty(all_slices{slice})
             imag_vol(:,:,slice) = all_slices{slice};
         end
     end
-    imag_sorted = zeros(size(imag_vol));
-    for i = 1:size(imag_vol,3)
-        imag_sorted(:,:,i) = imag_vol(:,:,find(instanceNumbers == i));
+    
+    % Find unique elements and their counts
+    [uniqueVec, ~, idx] = unique(instanceNumbers);
+    counts = histc(idx, 1:numel(uniqueVec));
+    
+    % Find the repeated elements
+    repeatedElements = uniqueVec(counts > 1);
+    
+    % Display the results
+    if isempty(repeatedElements)
+        disp('No repeated elements found.');
+        imag_sorted = zeros(size(imag_vol));
+        for i = 1:size(imag_vol,3)
+            imag_sorted(:,:,i) = imag_vol(:,:,find(instanceNumbers == i));
+        end
+        imag_vol = imag_sorted;
+    else
+        disp('Repeated elements and their counts:');
+        for i = 1:length(repeatedElements)
+            fprintf('Element %d is repeated %d times\n', repeatedElements(i), counts(uniqueVec == repeatedElements(i)));
+        end
+        % Define the 3D array and the vector
+        array = rand(50, 50, 20);  % Replace with your actual array
+        vector = [1,1,1,1,1,2,2,2,2,2,3,3,3,3,3,4,4,4,4,4];
+        
+        % Find the unique numbers and the counts of each number
+        uniqueNumbers = unique(instanceNumbers);
+        numSlices = length(uniqueNumbers);
+        counts = histc(instanceNumbers, uniqueNumbers);
+        numBValues = counts(1);  % Assuming the number of repetitions is the same for all unique numbers
+        
+        % Initialize the new reshaped array
+        reshapedArray = zeros(size(imag_vol,1), size(imag_vol,2), numSlices, numBValues);
+        
+        % Loop through the unique numbers in the vector
+        for i = 1:numSlices
+            % Get the indices of the current unique number
+            indices = find(instanceNumbers == uniqueNumbers(i));
+            % Assign the corresponding slices to the reshaped array
+            reshapedArray(:, :, i, :) = imag_vol(:, :, indices);
+        end
+        imag_vol = reshapedArray;
+        % Display the size of the reshaped array to verify
+        disp(size(reshapedArray));
     end
-    imag_vol = imag_sorted;
-
 elseif num_files == 1
     imag_vol = squeeze(dicomread(FileNames{1}));     
 end
@@ -103,7 +136,7 @@ if nargin >= 1
         disp(msg);
     end
 end
-imslice(imag_vol)
+% imslice(imag_vol)
 
 cd(start_path)
 

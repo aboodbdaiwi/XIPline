@@ -20,10 +20,15 @@ function [Proton,MainInput] = GeneralRegisterProton_to_Xenon(...
 %% match number of slices 
 
 moving1 = double(Proton.Image);
-fixed1 = XeImage;
+try
+    fixed1 = XeImage.Image;
+catch
+    fixed1 = XeImage;
+end
+
 nSlice = size(fixed1,3);
 if strcmp(MainInput.AnalysisType,'GasExchange')
-    Proton.Image = imresize3(Proton.Image, size(XeImage));    
+    Proton.Image = imresize3(Proton.Image, size(fixed1));    
     moving1 = Proton.Image;
     ProtonVoxelInfo = MainInput.ProtonVoxelInfo;
     XeVoxelInfo = MainInput.XeVoxelInfo;
@@ -136,7 +141,7 @@ Proton.ProtonRegisteredColored = permute(ProtonRegisteredColored,[1 2 4 3]);
 %% save images
 %Tiffs (movingRegisteredVolume)
 
-Global.write_imshowpair(ProtonRegistered,XeImage,DataLocation)
+Global.write_imshowpair(ProtonRegistered,fixed(:,:,1:nSlice),DataLocation)
 % figure; orthosliceViewer(Proton.ProtonRegisteredColored)
 
 end

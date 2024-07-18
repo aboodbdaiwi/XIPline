@@ -53,7 +53,7 @@ disp('Looking For Necessary Files Completed.')
 
 cd(ProtonDataLocation)
 mkdir([ProtonDataLocation '\Gas Exchange Analysis']);
-outputpath = [ProtonDataLocation '\Gax Exchange Analysis'];
+outputpath = [ProtonDataLocation '\Gas Exchange Analysis'];
 cd(outputpath)
 Proton.outputfolder = outputpath;
 %% Import Acquisition Information

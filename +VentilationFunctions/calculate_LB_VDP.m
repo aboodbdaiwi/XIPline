@@ -238,6 +238,8 @@ if size(Ventilation.Image,3) > 30
     nonZeroSlice_lng = nonZeroSlices(end) - nonZeroSlices(1);
     nonZeroSlice_space = floor(nonZeroSlice_lng/16);
     slice_indices = nonZeroSlices(1):nonZeroSlice_space:nonZeroSlices(end);
+else
+    Image_3D = 0;
 end 
 if Image_3D == 1
 LinearBinningVDPMontage = montage(reshape(colorVentmap,[size(colorVentmap,1),...

@@ -1,4 +1,4 @@
-function gre_to_ismrmrd(gre_file,mrdfile)
+function gre_to_ismrmrd(gre_file,mrdfile,MainInput)
 % %% Handle Arguments
 % if nargin == 0
 %     [gre_file,mypath] = uigetfile('*.h5','Select GRE Raw Data file');
@@ -21,26 +21,24 @@ if exist(mrdfile,'file')
   %  error(['File ' mrdfile ' already exists.  Please remove first'])
 end
 
-dset = ismrmrd.Dataset(mrdfile);
+dset = LoadData.ismrmrd.Dataset(mrdfile);
 
 %% PJN - From here on, need GE-specific code
 
 % ADH - Again, we are going to need this path for each site.  It won't change from scan to scan so hard to say whether
 % we prompt for it every time or set it once for each site
-freqfdlpath = MainInput.freqfdlFullPath;
-tmp = read_fdl(freqfdlpath);
-% tmp = read_fdl('C:/Users/stcherne/Documents/Code_Repository/GE_2_ISMRMRD/DP/radial3D_129Xe_fov400_mtx64_intlv2000_kdt20_gmax33_smax147_dur4p6_coca_G_freq.fdl');
-freq_off = tmp(2); clear tmp;
-wfn = '/user/iibi/anhahn/code/mns-xe/xe_fgre/cart2D_129xe_fov384x360_mtx96x90_nexc90_kdt48_gmax39_smax147_dur5p22.mat';
-wf = load(wfn);
 
-[data,h] = read_p(gre_file);
+wfn_file = MainInput.wf_files.vent_wf;
+% wfn = '/user/iibi/anhahn/code/mns-xe/xe_fgre/cart2D_129xe_fov384x360_mtx96x90_nexc90_kdt48_gmax39_smax147_dur5p22.mat';
+wf = load(wfn_file);
+
+[data,h] = LoadData.ismrmrd.GE.Functions.read_p(gre_file);
 
 [nexc,~,nphases,nechoes,nslices,ncoils] = size(data);
 nread = sum(wf.ind(1,:));
 
 NAcq = nexc * nphases * nechoes * nslices * ncoils;
-acqblock = ismrmrd.Acquisition(NAcq);
+acqblock = LoadData.ismrmrd.Acquisition(NAcq);
 
 acqblock.head.version(:) = 1;
 acqblock.head.number_of_samples(:) = nread;
@@ -138,7 +136,7 @@ header.encoding.encodingLimits.repetition.maximum = 0;
 header.encoding.encodingLimits.repetition.center = 0;
 
 %% Serialize and write to the data set
-xmlstring = ismrmrd.xml.serialize(header);
+xmlstring = LoadData.ismrmrd.xml.serialize(header);
 dset.writexml(xmlstring);
 
 dset.close();

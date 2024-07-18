@@ -20,7 +20,7 @@ for slice=1:size(Image2,3) %repeat for rest of slices
 %     set(Xe, 'AlphaData', ProtonMaskRegistered(:,:,slice));%mask Xe image
 %     colormap(ax2,SixBinMap);%change colors
 %     imshowpair(movingRegisteredVolume(:,:,10), fixedVolume(:,:,10));
-    imshowpair(Image1(:,:,slice), Image2(:,:,slice),'ColorChannels','green-magenta'); %'red-cyan' or 'green-magenta'
+    imshowpair(double(Image1(:,:,slice)), double(Image2(:,:,slice)),'ColorChannels','green-magenta'); %'red-cyan' or 'green-magenta'
     set(gca,'units','pixels'); % set the axes units to pixels
     x = get(gca,'position'); % get the position of the axes
     set(gcf,'units','pixels'); % set the figure units to pixels

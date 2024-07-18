@@ -33,7 +33,7 @@ switch MainInput.AnalysisType
             case 'Xe & Proton Registered'
                Image_to_Segment = Diffusion.Image; 
             case 'Xenon'
-               Image_to_Segment = Diffusion.Image;             
+               Image_to_Segment = squeeze(Diffusion.Image(:,:,:,1));             
             case 'Registered Proton'
                Image_to_Segment = Diffusion.Image; 
         end
@@ -88,7 +88,7 @@ switch MainInput.SegmentAnatomy
                 GasExchange.LungMask = double(LungMask);
         end                
     case 'Airway'
-        AirwayMask = [];
+
         AirwayMask = double(Segmentation.FreehandSegment(Image_to_Segment));
         % store airway mask
         switch MainInput.AnalysisType

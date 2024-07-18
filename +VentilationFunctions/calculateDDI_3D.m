@@ -220,6 +220,7 @@ function [Ventilation] = calculateDDI_3D(Ventilation,Proton,MainInput)
         slice_indices = nonZeroSlices(1):nonZeroSlice_space:nonZeroSlices(end);
         DDI3Dmap_SS = DDI3Dmap(:,:,:,slice_indices);
     else
+        Image_3D = 0;
         DDI3Dmap_SS = DDI3Dmap;
     end 
     DDIMontage = figure('Name','Vent Image');set(DDIMontage,'WindowState','minimized');

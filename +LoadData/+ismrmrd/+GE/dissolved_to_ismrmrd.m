@@ -11,28 +11,27 @@ function dissolved_to_ismrmrd(mrdfile,dissolvedarchive,dissolvedmat,calmat)
 %   calmat              -> Mat file generated from recon_calibration
 %                         (e.g ScanArchive*.mat, NOT Spect_ScanArchive.mat)
 
-
 %% Create an empty ismrmrd dataset
 if exist(mrdfile,'file')
     error(['File ' filename ' already exists.  Please remove first'])
 end
 
-[~,h] = read_p(dissolvedarchive);
+[~,h] = LoadData.ismrmrd.GE.Functions.read_p(dissolvedarchive);
 load(dissolvedmat);
 load(calmat,'te90');
 load(calmat,'targetAX');
-freqfdlpath = MainInput.freqfdlFullPath;
-tmp = read_fdl(freqfdlpath);
+% freqfdlpath = MainInput.freqfdlFullPath;
+freqfdlpath = MainInput.wf_files.diss_wf_freq;
+tmp = LoadData.ismrmrd.GE.Functions.read_fdl(freqfdlpath);
 % tmp = read_fdl('C:/Users/stcherne/Documents/Code_Repository/GE_2_ISMRMRD/DP/radial3D_129Xe_fov400_mtx64_intlv2000_kdt20_gmax33_smax147_dur4p6_coca_G_freq.fdl');
 freq_off = tmp(2); clear tmp;
 
 dset = LoadData.ismrmrd.Dataset(mrdfile);
 
-
 nX = size(k_dp,1);
 nY = size(k_dp,2);
 tsp = 1e6/bw;
-acqblock = ismrmrd.Acquisition(2*nY);
+acqblock = LoadData.ismrmrd.Acquisition(2*nY);
 
 acqblock.head.version(:) = 1;
 acqblock.head.number_of_samples(:) = nX;
@@ -52,12 +51,10 @@ T(1,:,2:2:end) = x_dp;
 T(2,:,2:2:end) = y_dp;
 T(3,:,2:2:end) = z_dp;
 
-
 for acqno = 1:2*nY
     acqblock.head.scan_counter(acqno) = acqno-1;
     acqblock.head.idx.kspace_encode_step_1(acqno) = acqno-1;
-    acqblock.head.idx.repetition(acqno) = 0;
-    
+    acqblock.head.idx.repetition(acqno) = 0;    
     
     if mod(acqno,2)
         acqblock.head.idx.contrast(acqno) = 2;  % even numbered views dissolved
@@ -66,8 +63,7 @@ for acqno = 1:2*nY
     end
     
     acqblock.head.measurement_uid(acqno) = 0;  % no bonus spectra, set to 1 if bonus spectra
-    
-    
+      
     % Set the flags
     acqblock.head.flagClearAll(acqno);
     if acqno == 1
@@ -87,7 +83,6 @@ end
 
 % Append the acquisition block
 dset.appendAcquisition(acqblock);
-
 
 header = [];
 
@@ -155,8 +150,7 @@ header.userParameters.userParameterString(1).value = "coronal";
 
 
 %% Serialize and write to the data set
-xmlstring = ismrmrd.xml.serialize(header);
+xmlstring = LoadData.ismrmrd.xml.serialize(header);
 dset.writexml(xmlstring);
-
 
 dset.close();

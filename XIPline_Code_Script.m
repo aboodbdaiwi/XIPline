@@ -43,7 +43,7 @@ MainInput.RegistrationType = '';
 MainInput.PatientInfo = '';
 
 % 1) choose the type of analysis
-MainInput.AnalysisType = 'Ventilation';  % 'Ventilation', 'Diffusion', 'GasExchange'
+MainInput.AnalysisType = 'Diffusion';  % 'Ventilation', 'Diffusion', 'GasExchange'
 
 % 2) Do you have protom images? 
 MainInput.NoProtonImage = 1;  % 1: There is no proton images  % 0: There is  proton images   
@@ -190,17 +190,29 @@ cd(MainInput.XeDataLocation)
 
 % diary Log.txt
 MainInput.SegmentationMethod = 'Threshold'; % 'Threshold' || 'Manual' || 'Auto'
-MainInput.SegmentAnatomy = 'Parenchyma'; % 'Airway'; || 'Parenchyma'
+MainInput.SegmentAnatomy = 'Airway'; % 'Airway'; || 'Parenchyma'
 MainInput.Imagestosegment = 'Xenon';  % 'Xe & Proton Registered' | 'Xenon' | 'Registered Proton'
 
-MainInput.thresholdlevel = 1; % 'threshold' 
+MainInput.thresholdlevel = 0.6; % 'threshold' 
 MainInput.SE = 1;
 
 MainInput.SegmentManual = 'Freehand'; % 'AppSegmenter' || 'Freehand'
-MainInput.SliceOrientation = 'coronal'; % 'coronal' ||'transversal' || 'sagittal' ||'isotropic'
+MainInput.SliceOrientation = 'transversal'; % 'coronal' ||'transversal' || 'sagittal' ||'isotropic'
 [Proton,Ventilation,Diffusion,GasExchange] = Segmentation.PerformSegmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
 
-figure; Global.imslice(Ventilation.LungMask)
+figure; Global.imslice(Diffusion.LungMask)
+if ~isfield(Diffusion, 'AirwayMask')
+disp('Diffusion.AirwayMask does not exist');
+    
+else
+    disp('Diffusion.AirwayMask exists');
+end
+
+if ~exist('Diffusion.AirwayMask','var')
+    disp('airway mask not found')
+else
+    disp('airway mask found')
+end
 
 %% Ventilation analysis
 clc

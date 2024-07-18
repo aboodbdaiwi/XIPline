@@ -116,6 +116,7 @@ if size(Ventilation.Image,3) > 30
     re_seg = reshape(nonzero_seg, size(nonzero_seg, 1), []);
     msk2d = reshape(nonzero_msk,size(nonzero_msk, 1), []);
 else
+    Image_3D = 0;
     nonzero_slices = any(any(maskarray, 1), 2);
     % %Extract non-zero slices and reshpe to 2D
     nonzero_seg = segmentation(:, :, nonzero_slices);
