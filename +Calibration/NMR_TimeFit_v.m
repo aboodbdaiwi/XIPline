@@ -154,8 +154,8 @@ classdef NMR_TimeFit_v < Calibration.NMR_Fit_v
             %                         fitoptions.Display = 'final-detailed';
             fitoptions.Display = 'off';
             fitoptions.MaxIter = 10000;
-            fitoptions.TolFun=1E-900;
-            fitoptions.TolX = 1E-10;
+            fitoptions.TolFun=1E-9;
+            fitoptions.TolX = 1E-15;
             fitoptions.FinDiffType = 'central';
             fitoptions.Algorithm = 'trust-region-reflective'; % Not used 'levenberg-marquardt'
 %             fitoptions.Algorithm = 'levenberg-marquardt';

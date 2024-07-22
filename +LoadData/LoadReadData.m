@@ -339,38 +339,49 @@ elseif strcmp(MainInput.XeDataext,'.7') && strcmp(MainInput.Scanner,'GE')
 %       %  add load/read function here  
 %     end    
 
-    % apply denoising 
-    if strcmp(MainInput.denoiseXe,'yes')
-        if strcmp(MainInput.AnalysisType,'Ventilation')
-            Ventilation.Image = (Ventilation.Image - min(Ventilation.Image(:)))./(max(Ventilation.Image(:)) - min(Ventilation.Image(:)));
-            for i = 1:size(Ventilation.Image,3)
-                    Ventilation.Image(:,:,i) = Global.bm3d.BM3D(squeeze(Ventilation.Image(:,:,i)), MainInput.denoiseSD);
-            end
-        elseif strcmp(MainInput.AnalysisType,'Diffusion')
-            Image = Diffusion.Image;
-            Image = (Image - min(Image(:)))./(max(Image(:)) - min(Image(:)));
-            for i = 1:size(Image,3)
-                for j = 1:size(Image,4)
-                    Image(:,:,i,j) = Global.bm3d.BM3D(squeeze(Image(:,:,i,j)), 0.01);
-                end
-            end
-            Diffusion.Image = Image;
-        elseif strcmp(MainInput.AnalysisType,'GasExchange')
-        % we can't apply denoising on complex data         
-        %             GasExchange.VentImage
-        %             GasExchange.GasImage
-        %             GasExchange.Dissolved Image
-        
-        end
-    end
 
 end 
 
+% apply denoising 
+if strcmp(MainInput.denoiseXe,'yes')
+    if strcmp(MainInput.AnalysisType,'Ventilation')
+        Ventilation.Image = (Ventilation.Image - min(Ventilation.Image(:)))./(max(Ventilation.Image(:)) - min(Ventilation.Image(:)));
+        sd = (squeeze(Ventilation.Image(end,:,:)));
+        sd = sd(sd ~= 0);
+        sd = std(sd);
+        for i = 1:size(Ventilation.Image,3)
+                Ventilation.Image(:,:,i) = Global.bm3d.BM3D(squeeze(Ventilation.Image(:,:,i)), sd); %MainInput.denoiseSD
+        end
+        % imslice(Ventilation.Image)
+    elseif strcmp(MainInput.AnalysisType,'Diffusion')
+        Image = Diffusion.Image;
+        Image = (Image - min(Image(:)))./(max(Image(:)) - min(Image(:)));
+        
+        for i = 1:size(Image,3)
+            for j = 1:size(Image,4)
+                Image(:,:,i,j) = Global.bm3d.BM3D(squeeze(Image(:,:,i,j)), 0.01);
+            end
+        end
+        Diffusion.Image = Image;
+    elseif strcmp(MainInput.AnalysisType,'GasExchange')
+    % we can't apply denoising on complex data         
+    %             GasExchange.VentImage
+    %             GasExchange.GasImage
+    %             GasExchange.Dissolved Image
+    
+    end
+end
 
+% normalize images:
+if strcmp(MainInput.AnalysisType,'Ventilation')
+    Ventilation.Image = (Ventilation.Image - min(Ventilation.Image(:)))./(max(Ventilation.Image(:)) - min(Ventilation.Image(:)));
+elseif strcmp(MainInput.AnalysisType,'Diffusion')
+    Diffusion.Image = (Diffusion.Image - min(Diffusion.Image(:)))./(max(Diffusion.Image(:)) - min(Diffusion.Image(:)));
+end
 %% Load/Read Proton data 
 %% 
 if MainInput.NoProtonImage == 0    
-    % try 
+    try 
         cd(MainInput.HDataLocation)
         if strcmp(MainInput.AnalysisType,'Ventilation')                 
             mkdir([MainInput.HDataLocation '\Ventilation Analysis']);  
@@ -422,7 +433,6 @@ if MainInput.NoProtonImage == 0
                 Proton.Image = Image;
                 Proton.filename = file_name;
                 Proton.folder = file_folder;     
-        
             elseif strcmp(MainInput.AnalysisType,'Ventilation') && strcmp(MainInput.SequenceType, '2D GRE') && strcmp(MainInput.ScannerSoftware, '5.9.0')               
                 [Image, file_folder, file_name] = LoadData.LoadData_Gas_VentDiff_Philips_GRE_R590(MainInput);
                 Proton.Image = Image;
@@ -436,7 +446,6 @@ if MainInput.NoProtonImage == 0
                     PixelShift = [0; 0; 0];
                 end
                 [Proton] = LoadData.LoadData_Proton_GasExchange_Philips_Sin(MainInput.HDataLocation,PixelShift,MainInput.Institute);
-        
             end
         elseif (strcmp(MainInput.HDataext,'.h5') || strcmp(MainInput.HDataext,'.mrd'))              
             if strcmp(MainInput.AnalysisType,'Ventilation')  
@@ -466,7 +475,7 @@ if MainInput.NoProtonImage == 0
                 elseif strcmp(MainInput.AnalysisType,'GasExchange')
                     LoadData.ismrmrd.Siemens.ute_to_ismrmrd(HFileName,H_name,fullfile(HDataLocation,[H_name '.h5']));
                     MainInput.HFileName = [H_name '.h5'];         
-                    [GasExchange] = LoadData.ismrmrd.radial_3D_XeCTC_H_recon(MainInput,GasExchange);
+                    [Proton] = LoadData.ismrmrd.radial_3D_XeCTC_H_recon(MainInput,GasExchange);
                 end
         elseif strcmp(MainInput.HDataext,'.7') && strcmp(MainInput.Scanner,'GE') 
                     % (needs testing) this code hasn't been tested due to
@@ -488,7 +497,7 @@ if MainInput.NoProtonImage == 0
                 elseif strcmp(MainInput.AnalysisType,'GasExchange')  
                     LoadData.ismrmrd.GE.ute_to_ismrmrd(HFileName,H_name,fullfile(HDataLocation,[H_name '.h5']));                    
                     MainInput.HFileName = [H_name '.h5'];         
-                    [GasExchange] = LoadData.ismrmrd.radial_3D_XeCTC_H_recon(MainInput,GasExchange);
+                    [Proton] = LoadData.ismrmrd.radial_3D_XeCTC_H_recon(MainInput,GasExchange);
                 end
 
     %--------------------- add new read load function here --------------------
@@ -496,10 +505,12 @@ if MainInput.NoProtonImage == 0
     %     elseif strcmp(MainInput.HDataext,'add DataType') == 1
             %  add load/read function here 
         end 
-    % catch
-    %     disp('no proton images is selected')
-    %     MainInput.NoProtonImage = 1;
-    % end
+        Proton.Image = (Proton.Image - min(Proton.Image(:)))./(max(Proton.Image(:)) - min(Proton.Image(:)));
+
+    catch
+        disp('no proton images is selected')
+        MainInput.NoProtonImage = 1;
+    end
 end % end of Load/Read Proton data 
 
 close all;
