@@ -1,14 +1,14 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="78153330" file="D:\Github\XIPline\XIPline.prj" location="D:\Github\XIPline" name="XIPline" preferred-package-location="D:\Github\HP_Xe_Analysis_App\XIPline\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="4104814464" file="D:\Github\XIPline\XIPline.prj" location="D:\Github\XIPline" name="XIPline" preferred-package-location="D:\Github\XIPline\XIPline\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>XIPline</param.appname>
     <param.icon />
     <param.icons />
     <param.version>1.1.0</param.version>
-    <param.authnamewatermark>Center for Pulmonary Imaging Research</param.authnamewatermark>
+    <param.authnamewatermark>CCHMC-CPIR</param.authnamewatermark>
     <param.email>abdullah.bdaiwi@cchmc.org</param.email>
     <param.company>Cincinnati Children's Hospital</param.company>
-    <param.summary>129Xe Image Processing Pipeline (XIPline)</param.summary>
-    <param.description>The 129Xe Image Processing Pipeline (XIPline) is an open-source, executable application designed to offer a user-friendly graphical interface for analyzing and visualizing 129Xe MR data. This includes functionalities for scanner calibration, as well as the analysis of ventilation, diffusion-weighted, and gas exchange images.</param.description>
+    <param.summary>A MATLAB-based user interface application developed to analyze hyperpolarized 129Xe MRI data.</param.summary>
+    <param.description />
     <param.screenshot>${PROJECT_ROOT}\XIPline_resources\app_logo2.png</param.screenshot>
     <param.guid />
     <param.installpath.string>\XIPline\</param.installpath.string>
@@ -28,7 +28,7 @@
     <param.package.mcr>false</param.package.mcr>
     <param.no.mcr>false</param.no.mcr>
     <param.web.mcr.name>XIPlineInstaller</param.web.mcr.name>
-    <param.package.mcr.name>MyAppInstaller_mcr</param.package.mcr.name>
+    <param.package.mcr.name>XIPlineInstaller</param.package.mcr.name>
     <param.no.mcr.name>MyAppInstaller_app</param.no.mcr.name>
     <param.windows.command.prompt>true</param.windows.command.prompt>
     <param.create.log>false</param.create.log>
@@ -41,13 +41,13 @@
 	 
  Input Arguments 
 	 -?  print help on how to use the application 
-	 input arguments 
- Description 
- 	 The 129Xe Image Processing Pipeline (XIPline) is an open-source, executable application designed to offer a user-friendly graphical interface for analyzing and visualizing 129Xe MR data. This includes functionalities for scanner calibration, as well as the analysis of ventilation, diffusion-weighted, and gas exchange images.</param.help.text>
+	 input arguments</param.help.text>
     <unset>
       <param.icon />
       <param.icons />
+      <param.authnamewatermark />
       <param.email />
+      <param.description />
       <param.guid />
       <param.installpath.combo />
       <param.install.notes />
@@ -63,7 +63,6 @@
       <param.web.mcr />
       <param.package.mcr />
       <param.no.mcr />
-      <param.package.mcr.name />
       <param.no.mcr.name />
       <param.windows.command.prompt />
       <param.create.log />
@@ -92,9 +91,6 @@
     </fileset.resources>
     <fileset.package />
     <fileset.depfun>
-      <file>D:\Github\HP_Xe_Analysis_App\+GasExchangeFunctions\+GasExchange_Recon\+SysModel\@ExactSystemModel\ExactSystemModel.m</file>
-      <file>D:\Github\HP_Xe_Analysis_App\+GasExchangeFunctions\+GasExchange_Recon\+SysModel\@MatrixSystemModel\MatrixSystemModel.m</file>
-      <file>D:\Github\HP_Xe_Analysis_App\+GasExchangeFunctions\+GasExchange_Recon\+SysModel\@SystemModel\SystemModel.m</file>
       <file>D:\OneDrive - cchmc\Lab\Philips_ADC\imVolume.m</file>
     </fileset.depfun>
     <build-deliverables>
