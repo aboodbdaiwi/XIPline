@@ -22,14 +22,15 @@ To install XIPline, download the [`XIPlineInstaller.exe`](https://drive.google.c
 
 2 - Create this path `C:\XIPline\models` in your local `C:\` drive and add the downloaded .h5 files in the `models` folder. 
 
-3 - Install [Python](https://www.python.org/downloads/) 3.10 and install these packages: 
-```
-pip install numpy
-pip install keras
-pip install tensorflow
-pip install nibabel
-pip install scipy
-```
+3 - Install [Python](https://www.python.org/downloads/) 3.10. 
+
+Please refer to `User_Manual.pdf` document for more detailed steps. 
+
+#### For GE Data: Waveform Files
+1 - Create this path `C:\XIPline\GE_WFs` (in the same folder above) in your local `C:\` drive and add text files with the names (cal_wf_freq.txt, cal_wf_tr.txt, vent_wf.txt, diff_wf.txt, diss_wf_freq.txt) in the `GE_WFs` folder. 
+
+2- Add the path to the waveform file in the first line of each file. Note: the waveform files should be .mat for vent_wf and diff_wf and .fdl for the rest. 
+
 Please refer to `User_Manual.pdf` document for more detailed steps. 
 
 ### Run Developer Mode 
