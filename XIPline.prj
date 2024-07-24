@@ -3,11 +3,11 @@
     <param.appname>XIPline</param.appname>
     <param.icon />
     <param.icons />
-    <param.version>1.1.0</param.version>
+    <param.version>1.1</param.version>
     <param.authnamewatermark>CCHMC-CPIR</param.authnamewatermark>
     <param.email>abdullah.bdaiwi@cchmc.org</param.email>
     <param.company>Cincinnati Children's Hospital</param.company>
-    <param.summary>A MATLAB-based user interface application developed to analyze hyperpolarized 129Xe MRI data.</param.summary>
+    <param.summary>A MATLAB-based user interface application was developed to analyze hyperpolarized 129Xe MRI data.</param.summary>
     <param.description />
     <param.screenshot>${PROJECT_ROOT}\XIPline_resources\app_logo2.png</param.screenshot>
     <param.guid />

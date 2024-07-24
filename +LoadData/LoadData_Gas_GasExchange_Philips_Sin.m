@@ -63,20 +63,20 @@ NumPlotSlices = 7;%must be odd to work as expected
 XeSinFile = dir([GasDataLocation,'\*Dissolved_Xe_20191008.sin']);
 ScanVersion = Institute;
 if strcmp(ScanVersion,'CCHMC')%didn't find that sequence naming version; check for new sequence names
-    XeSinFile = dir([GasDataLocation,'\*CPIR_Gas_Exchange.sin']);
+    % XeSinFile = dir([GasDataLocation,'\*CPIR_Gas_Exchange.sin']);
     ScanVersion = 'CCHMC';
 end
 if strcmp(ScanVersion,'XeCTC')%didn't find that sequence version
     %XeSinFile = dir([GasDataLocation,'\*CTC_GasExchangeFunctions_Xe.sin']);
-    XeSinFile = dir([GasDataLocation,'\*XeCTC_Gas_Exchange.sin']);
+    % XeSinFile = dir([GasDataLocation,'\*CTC_Gas_Exchange.sin']);
     ScanVersion = 'XeCTC';
 end
 
 if strcmp(ScanVersion,'Duke') %didn't find that sequence naming version; check for duke version/Intermediate dixon
-    XeSinFile = dir([GasDataLocation,'\*DukeIPF_Gas_Exchange.sin']);
+    % XeSinFile = dir([GasDataLocation,'\*DukeIPF_Gas_Exchange.sin']);
     ScanVersion = 'Duke';
 end
-
+XeSinFile = dir([GasDataLocation,'\*.sin']);
 
 DataFiles = dir([GasDataLocation,'\*.data']);
 XeDataFile = DataFiles(1);
