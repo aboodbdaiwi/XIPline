@@ -58,7 +58,7 @@ These are a few analysis demos (please refer to the user's manual for step-by-st
 
 4 - [Diffusion Analysis demo](https://www.youtube.com/watch?v=kItn_P4dDyw&ab_channel=AbdullahBdaiwi)
 
-5 -[Gas Exchange Analysis demo](https://www.youtube.com/watch?v=_aerEFhWbm0&ab_channel=AbdullahBdaiwi)
+5 - [Gas Exchange Analysis demo](https://www.youtube.com/watch?v=_aerEFhWbm0&ab_channel=AbdullahBdaiwi)
 
 6 - [Developer Mode demo](https://www.youtube.com/watch?v=fEjruhWYejA&t=494s&ab_channel=AbdullahBdaiwi)
 
