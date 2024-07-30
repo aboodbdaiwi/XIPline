@@ -208,9 +208,9 @@ disp('Reconstructing UTE Image Competed.')
 ProtonImageHR = ProtonImage;
 %Correct Bias
 disp('Correcting Proton Bias...')
-ProtonImage = medfilt3(ProtonImage, [7 7 7]);%remove undersampling artifacts
-ProtonImage = imgaussfilt3(ProtonImage, 0.5);%reduce noise
-[ProtonImage, ~] = GasExchangeFunctions.Dissolved_ProtonBiasCorrection(ProtonImage);
+% ProtonImage = medfilt3(ProtonImage, [7 7 7]);%remove undersampling artifacts
+% ProtonImage = imgaussfilt3(ProtonImage, 0.5);%reduce noise
+% [ProtonImage, ~] = GasExchangeFunctions.Dissolved_ProtonBiasCorrection(ProtonImage);
 
 % Determine Levels
 ProtonMax = prctile(abs(ProtonImage(:)),99.99);
