@@ -44,8 +44,8 @@ foldername = "GLRLM Analysis\";
 mkdir(foldername)
 outputPath = char(foldername);
 cd(outputPath)
-
 disp('GLRLM analysis starting...');
+Image = (Image - min(Image(:)))/(max(Image(:)) - min(Image(:)));
 GLRLM_output.GLRLM_slice = cell(1,4,size(Image,3));  
 GLRLM_output.SI_slice = zeros(size(Image));
 GLRLM_output.stats_slice = zeros(4,11,size(Image,3));

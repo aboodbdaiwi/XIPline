@@ -52,7 +52,7 @@ MainInput.Institute = 'CCHMC';  % 'CCHMC', 'XeCTC', 'Duke'
 MainInput.Scanner = 'Philips'; % Siemens, Philips
 MainInput.ScannerSoftware = '5.9.0'; % '5.3.1', '5.6.1','5.9.0'
 MainInput.SequenceType = '2D GRE'; % '2D GRE', '3D Radial'
-
+MainInput.denoiseXe= 'no';
 % diary Log.txt
 [filename, path] = uigetfile('*.*','Select xenon data file');
 XeFullPath = [path,filename];
