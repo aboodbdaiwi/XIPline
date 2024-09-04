@@ -1,0 +1,669 @@
+# === DATA DESCRIPTION FILE ======================================================
+#
+# CAUTION - Investigational device.
+# Limited by Federal Law to investigational use.
+#
+# Scan name   : RawExp - XeCTC_Cal_Xe
+# Dataset name: RAW_002
+#
+# Gyroscan SW release            : 5.3-1
+# Reconstruction Host SW Version :   8
+# Reconstruction   AP SW Version :  25
+#
+# === GENERAL INFORMATION ========================================================
+#
+# n.a. n.a. n.a.  number of ...                        value
+# ---- ---- ----  ----------------------------------   -----
+.    0    0    0  number_of_mixes                    :     1
+#
+# mix  n.a. n.a.  number of ...                        value
+# ---- ---- ----  ----------------------------------   -----
+.    0    0    0  number_of_encoding_dimensions      :     2
+.    0    0    0  number_of_dynamic_scans            :     1
+.    0    0    0  number_of_cardiac_phases           :     1
+.    0    0    0  number_of_echoes                   :     1
+.    0    0    0  number_of_locations                :     1
+.    0    0    0  number_of_extra_attribute_1_values :     1
+.    0    0    0  number_of_extra_attribute_2_values :     1
+.    0    0    0  number_of_signal_averages          :     1
+#
+# mix  echo n.a.  k-space coordinate ranges            start  end
+# ---- ---- ----  ----------------------------------   -----  -----
+.    0    0    0  kx_range                           :  -512    511
+.    0    0    0  ky_range                           :  -260    259
+#
+# mix  echo n.a.  k-space oversample factors           value
+# ---- ---- ----  ----------------------------------   ---------
+.    0    0    0  kx_oversample_factor               :    4.0000
+.    0    0    0  ky_oversample_factor               :    1.0000
+#
+# mix  n.a. n.a.  reconstruction matrix                value
+# ---- ---- ----  ----------------------------------   -----
+.    0    0    0  X-resolution                       :   260
+.    0    0    0  Y-resolution                       :   528
+#
+# mix  echo loca  imaging space coordinate ranges      start  end
+# ---- ---- ----  ----------------------------------   -----  -----
+.    0    0    0  X_range                            :  -140    139
+.    0    0    0  Y_range                            :  -528     -1
+#
+# Complex data vector types:
+# --------------------------
+# STD = Standard data vector (image data or spectroscopy data)
+# REJ = Rejected standard data vector
+#       (only for scans with arrhythmia rejection)
+# PHX = Correction data vector for EPI/GraSE phase correction
+# FRX = Correction data vector for frequency spectrum correction
+# NOI = Preparation phase data vector for noise determination
+# NAV = Phase navigator data vector
+# DNA = Dynamic phase navigator vector
+#
+# Other attributes of complex data vectors:
+# -----------------------------------------
+# mix      = mixed sequence number
+# dyn      = dynamic scan number
+# card     = cardiac phase number
+# echo     = echo number
+# loca     = location number
+# chan     = synco channel number
+# extr1    = extra attribute 1 (semantics depend on type of scan)
+# extr2    = extra attribute 2 (   ''       ''   ''  ''  ''  '' )
+# ky,kz    = k-space coordinates in 1st and 2nd preparation direction (image data)
+# kx,ky,kz = k-space coordinates in 1st, 2nd and 3rd preparation direction (spectroscopy data)
+# aver     = sequence number of this signal average
+# sign     = sign of measurement gradient used for this data vector (1 = positive, -1 = negative)
+# rf       = sequence number of this rf echo (only for TSE, TFE, GraSE)
+# grad     = sequence number of this gradient echo (only for EPI/GraSE)
+# enc      = encoding time (only for EPI/GraSE)
+# rtop     = R-top offset in ms
+# rr       = RR-interval length in ms
+# size   = data vector size   in number of bytes (1 complex element = 2 floats = 8 bytes)
+# offset = data vector offset in number of bytes (first data vector starts at offset 0)
+#
+# The complex data vectors are represented as binary data in little endian single precision IEEE float format.
+#
+# Please note that complex data vector attributes which are not relevant for a certain type of vector
+# may have arbitrary values!
+#
+# Fourier transformations:
+# ------------------------
+# The Fourier transformation lengths for STD, NAV and REJ data are (by definition) equal to
+# to reconstruction matrix length * k-space oversample sample factor
+# in each applicable direction.
+#
+# The centre point of the k-space must be positioned in the middle of the interval with this length,
+# (or just right from the middle if the Fourier transformation length is even), according to the
+# specified k-space coordinate ranges. Apply a cyclic wrap-around to data that extends outside the
+# interval, and zerofill missing data before Fourier transformation.
+# After Fourier transformation, the imaging space coordinate ranges specify the position, length 
+# and direction of the relevant part of the frequency spectrum. Apply a cyclic wrap-around if
+# needed. If start value > end value, read the spectrum part between these positions in reverse order.
+#
+# Corrections:
+# ------------
+# Depending on the type of scan, one or more of the following corrections may have to be applied:
+# - frequency spectrum correction (using FRX data)
+# - EPI/GraSE phase correction    (using PHX data)
+# - rf echo amplitude correction  (using PHX data, only for GraSE scans)
+# 
+# These corrections can be applied to STD, NAV and REJ data vectors after forward Fourier transformation
+# in the measurement direction, by multiplying the selected part of the frequency spectrum of
+# these data vectors with the PHX and FRX correction data vector that has corresponding identifying
+# complex data vector attributes.
+# 
+# Remarks:
+# - In GraSE scans you may get a PHX correction data vector for each rf echo. These correction vectors
+#   differ only a scale factor from each other, and can be used for rf echo amplitude correction.
+#   If you don't want this correction, use the correction data vectors with rf echo = 0 only.
+# - Depending on the type of scan, several of the FRX correction data vectors may be identical.
+#
+# Identifying attributes of complex data vectors:
+# -----------------------------------------------
+# The next table specifies the identifying attributes for each type of complex data vector:
+#
+# typ mix   dyn   card  echo  loca  chan  extr1 extr2 ky    kz    n.a.  aver  sign  rf    grad  enc   rtop  rr    size   offset
+# --- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ------ ------
+#
+# STD   *     *     *     *     *     *     *     *     *     *           *     *     *     *
+# REJ   *     *     *     *     *     *     *     *     *     *           *     *     *     *
+# PHX   *                 *     *     *                                         *     *     *
+# FRX   *                 *     *     *                                         *            
+# NOI                           *     *                                                      
+# NAV   *     *     *     *     *     *     *     *     *     *           *     *     *     *
+# DNA         *                       *                                         *           *
+#
+# === START OF DATA VECTOR INDEX =================================================
+#
+# typ mix   dyn   card  echo  loca  chan  extr1 extr2 ky    kz    n.a.  aver  sign  rf    grad  enc   rtop  rr    size   offset
+# --- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ------ ------
+#
+  NOI     0     0     0     0     0     0     0     0     0     0     0     0     1     0     0     0     0     0 155648 0
+  STD     0     0     0     0     0     0     0     0   259     0     0     0     1     0     0     0     0     0   8192 155648
+  STD     0     0     0     0     0     0     0     0   258     0     0     0     1     0     0     0     0     0   8192 163840
+  STD     0     0     0     0     0     0     0     0   257     0     0     0     1     0     0     0     0     0   8192 172032
+  STD     0     0     0     0     0     0     0     0   256     0     0     0     1     0     0     0     0     0   8192 180224
+  STD     0     0     0     0     0     0     0     0   255     0     0     0     1     0     0     0     0     0   8192 188416
+  STD     0     0     0     0     0     0     0     0   254     0     0     0     1     0     0     0     0     0   8192 196608
+  STD     0     0     0     0     0     0     0     0   253     0     0     0     1     0     0     0     0     0   8192 204800
+  STD     0     0     0     0     0     0     0     0   252     0     0     0     1     0     0     0     0     0   8192 212992
+  STD     0     0     0     0     0     0     0     0   251     0     0     0     1     0     0     0     0     0   8192 221184
+  STD     0     0     0     0     0     0     0     0   250     0     0     0     1     0     0     0     0     0   8192 229376
+  STD     0     0     0     0     0     0     0     0   249     0     0     0     1     0     0     0     0     0   8192 237568
+  STD     0     0     0     0     0     0     0     0   248     0     0     0     1     0     0     0     0     0   8192 245760
+  STD     0     0     0     0     0     0     0     0   247     0     0     0     1     0     0     0     0     0   8192 253952
+  STD     0     0     0     0     0     0     0     0   246     0     0     0     1     0     0     0     0     0   8192 262144
+  STD     0     0     0     0     0     0     0     0   245     0     0     0     1     0     0     0     0     0   8192 270336
+  STD     0     0     0     0     0     0     0     0   244     0     0     0     1     0     0     0     0     0   8192 278528
+  STD     0     0     0     0     0     0     0     0   243     0     0     0     1     0     0     0     0     0   8192 286720
+  STD     0     0     0     0     0     0     0     0   242     0     0     0     1     0     0     0     0     0   8192 294912
+  STD     0     0     0     0     0     0     0     0   241     0     0     0     1     0     0     0     0     0   8192 303104
+  STD     0     0     0     0     0     0     0     0   240     0     0     0     1     0     0     0     0     0   8192 311296
+  STD     0     0     0     0     0     0     0     0   239     0     0     0     1     0     0     0     0     0   8192 319488
+  STD     0     0     0     0     0     0     0     0   238     0     0     0     1     0     0     0     0     0   8192 327680
+  STD     0     0     0     0     0     0     0     0   237     0     0     0     1     0     0     0     0     0   8192 335872
+  STD     0     0     0     0     0     0     0     0   236     0     0     0     1     0     0     0     0     0   8192 344064
+  STD     0     0     0     0     0     0     0     0   235     0     0     0     1     0     0     0     0     0   8192 352256
+  STD     0     0     0     0     0     0     0     0   234     0     0     0     1     0     0     0     0     0   8192 360448
+  STD     0     0     0     0     0     0     0     0   233     0     0     0     1     0     0     0     0     0   8192 368640
+  STD     0     0     0     0     0     0     0     0   232     0     0     0     1     0     0     0     0     0   8192 376832
+  STD     0     0     0     0     0     0     0     0   231     0     0     0     1     0     0     0     0     0   8192 385024
+  STD     0     0     0     0     0     0     0     0   230     0     0     0     1     0     0     0     0     0   8192 393216
+  STD     0     0     0     0     0     0     0     0   229     0     0     0     1     0     0     0     0     0   8192 401408
+  STD     0     0     0     0     0     0     0     0   228     0     0     0     1     0     0     0     0     0   8192 409600
+  STD     0     0     0     0     0     0     0     0   227     0     0     0     1     0     0     0     0     0   8192 417792
+  STD     0     0     0     0     0     0     0     0   226     0     0     0     1     0     0     0     0     0   8192 425984
+  STD     0     0     0     0     0     0     0     0   225     0     0     0     1     0     0     0     0     0   8192 434176
+  STD     0     0     0     0     0     0     0     0   224     0     0     0     1     0     0     0     0     0   8192 442368
+  STD     0     0     0     0     0     0     0     0   223     0     0     0     1     0     0     0     0     0   8192 450560
+  STD     0     0     0     0     0     0     0     0   222     0     0     0     1     0     0     0     0     0   8192 458752
+  STD     0     0     0     0     0     0     0     0   221     0     0     0     1     0     0     0     0     0   8192 466944
+  STD     0     0     0     0     0     0     0     0   220     0     0     0     1     0     0     0     0     0   8192 475136
+  STD     0     0     0     0     0     0     0     0   219     0     0     0     1     0     0     0     0     0   8192 483328
+  STD     0     0     0     0     0     0     0     0   218     0     0     0     1     0     0     0     0     0   8192 491520
+  STD     0     0     0     0     0     0     0     0   217     0     0     0     1     0     0     0     0     0   8192 499712
+  STD     0     0     0     0     0     0     0     0   216     0     0     0     1     0     0     0     0     0   8192 507904
+  STD     0     0     0     0     0     0     0     0   215     0     0     0     1     0     0     0     0     0   8192 516096
+  STD     0     0     0     0     0     0     0     0   214     0     0     0     1     0     0     0     0     0   8192 524288
+  STD     0     0     0     0     0     0     0     0   213     0     0     0     1     0     0     0     0     0   8192 532480
+  STD     0     0     0     0     0     0     0     0   212     0     0     0     1     0     0     0     0     0   8192 540672
+  STD     0     0     0     0     0     0     0     0   211     0     0     0     1     0     0     0     0     0   8192 548864
+  STD     0     0     0     0     0     0     0     0   210     0     0     0     1     0     0     0     0     0   8192 557056
+  STD     0     0     0     0     0     0     0     0   209     0     0     0     1     0     0     0     0     0   8192 565248
+  STD     0     0     0     0     0     0     0     0   208     0     0     0     1     0     0     0     0     0   8192 573440
+  STD     0     0     0     0     0     0     0     0   207     0     0     0     1     0     0     0     0     0   8192 581632
+  STD     0     0     0     0     0     0     0     0   206     0     0     0     1     0     0     0     0     0   8192 589824
+  STD     0     0     0     0     0     0     0     0   205     0     0     0     1     0     0     0     0     0   8192 598016
+  STD     0     0     0     0     0     0     0     0   204     0     0     0     1     0     0     0     0     0   8192 606208
+  STD     0     0     0     0     0     0     0     0   203     0     0     0     1     0     0     0     0     0   8192 614400
+  STD     0     0     0     0     0     0     0     0   202     0     0     0     1     0     0     0     0     0   8192 622592
+  STD     0     0     0     0     0     0     0     0   201     0     0     0     1     0     0     0     0     0   8192 630784
+  STD     0     0     0     0     0     0     0     0   200     0     0     0     1     0     0     0     0     0   8192 638976
+  STD     0     0     0     0     0     0     0     0   199     0     0     0     1     0     0     0     0     0   8192 647168
+  STD     0     0     0     0     0     0     0     0   198     0     0     0     1     0     0     0     0     0   8192 655360
+  STD     0     0     0     0     0     0     0     0   197     0     0     0     1     0     0     0     0     0   8192 663552
+  STD     0     0     0     0     0     0     0     0   196     0     0     0     1     0     0     0     0     0   8192 671744
+  STD     0     0     0     0     0     0     0     0   195     0     0     0     1     0     0     0     0     0   8192 679936
+  STD     0     0     0     0     0     0     0     0   194     0     0     0     1     0     0     0     0     0   8192 688128
+  STD     0     0     0     0     0     0     0     0   193     0     0     0     1     0     0     0     0     0   8192 696320
+  STD     0     0     0     0     0     0     0     0   192     0     0     0     1     0     0     0     0     0   8192 704512
+  STD     0     0     0     0     0     0     0     0   191     0     0     0     1     0     0     0     0     0   8192 712704
+  STD     0     0     0     0     0     0     0     0   190     0     0     0     1     0     0     0     0     0   8192 720896
+  STD     0     0     0     0     0     0     0     0   189     0     0     0     1     0     0     0     0     0   8192 729088
+  STD     0     0     0     0     0     0     0     0   188     0     0     0     1     0     0     0     0     0   8192 737280
+  STD     0     0     0     0     0     0     0     0   187     0     0     0     1     0     0     0     0     0   8192 745472
+  STD     0     0     0     0     0     0     0     0   186     0     0     0     1     0     0     0     0     0   8192 753664
+  STD     0     0     0     0     0     0     0     0   185     0     0     0     1     0     0     0     0     0   8192 761856
+  STD     0     0     0     0     0     0     0     0   184     0     0     0     1     0     0     0     0     0   8192 770048
+  STD     0     0     0     0     0     0     0     0   183     0     0     0     1     0     0     0     0     0   8192 778240
+  STD     0     0     0     0     0     0     0     0   182     0     0     0     1     0     0     0     0     0   8192 786432
+  STD     0     0     0     0     0     0     0     0   181     0     0     0     1     0     0     0     0     0   8192 794624
+  STD     0     0     0     0     0     0     0     0   180     0     0     0     1     0     0     0     0     0   8192 802816
+  STD     0     0     0     0     0     0     0     0   179     0     0     0     1     0     0     0     0     0   8192 811008
+  STD     0     0     0     0     0     0     0     0   178     0     0     0     1     0     0     0     0     0   8192 819200
+  STD     0     0     0     0     0     0     0     0   177     0     0     0     1     0     0     0     0     0   8192 827392
+  STD     0     0     0     0     0     0     0     0   176     0     0     0     1     0     0     0     0     0   8192 835584
+  STD     0     0     0     0     0     0     0     0   175     0     0     0     1     0     0     0     0     0   8192 843776
+  STD     0     0     0     0     0     0     0     0   174     0     0     0     1     0     0     0     0     0   8192 851968
+  STD     0     0     0     0     0     0     0     0   173     0     0     0     1     0     0     0     0     0   8192 860160
+  STD     0     0     0     0     0     0     0     0   172     0     0     0     1     0     0     0     0     0   8192 868352
+  STD     0     0     0     0     0     0     0     0   171     0     0     0     1     0     0     0     0     0   8192 876544
+  STD     0     0     0     0     0     0     0     0   170     0     0     0     1     0     0     0     0     0   8192 884736
+  STD     0     0     0     0     0     0     0     0   169     0     0     0     1     0     0     0     0     0   8192 892928
+  STD     0     0     0     0     0     0     0     0   168     0     0     0     1     0     0     0     0     0   8192 901120
+  STD     0     0     0     0     0     0     0     0   167     0     0     0     1     0     0     0     0     0   8192 909312
+  STD     0     0     0     0     0     0     0     0   166     0     0     0     1     0     0     0     0     0   8192 917504
+  STD     0     0     0     0     0     0     0     0   165     0     0     0     1     0     0     0     0     0   8192 925696
+  STD     0     0     0     0     0     0     0     0   164     0     0     0     1     0     0     0     0     0   8192 933888
+  STD     0     0     0     0     0     0     0     0   163     0     0     0     1     0     0     0     0     0   8192 942080
+  STD     0     0     0     0     0     0     0     0   162     0     0     0     1     0     0     0     0     0   8192 950272
+  STD     0     0     0     0     0     0     0     0   161     0     0     0     1     0     0     0     0     0   8192 958464
+  STD     0     0     0     0     0     0     0     0   160     0     0     0     1     0     0     0     0     0   8192 966656
+  STD     0     0     0     0     0     0     0     0   159     0     0     0     1     0     0     0     0     0   8192 974848
+  STD     0     0     0     0     0     0     0     0   158     0     0     0     1     0     0     0     0     0   8192 983040
+  STD     0     0     0     0     0     0     0     0   157     0     0     0     1     0     0     0     0     0   8192 991232
+  STD     0     0     0     0     0     0     0     0   156     0     0     0     1     0     0     0     0     0   8192 999424
+  STD     0     0     0     0     0     0     0     0   155     0     0     0     1     0     0     0     0     0   8192 1007616
+  STD     0     0     0     0     0     0     0     0   154     0     0     0     1     0     0     0     0     0   8192 1015808
+  STD     0     0     0     0     0     0     0     0   153     0     0     0     1     0     0     0     0     0   8192 1024000
+  STD     0     0     0     0     0     0     0     0   152     0     0     0     1     0     0     0     0     0   8192 1032192
+  STD     0     0     0     0     0     0     0     0   151     0     0     0     1     0     0     0     0     0   8192 1040384
+  STD     0     0     0     0     0     0     0     0   150     0     0     0     1     0     0     0     0     0   8192 1048576
+  STD     0     0     0     0     0     0     0     0   149     0     0     0     1     0     0     0     0     0   8192 1056768
+  STD     0     0     0     0     0     0     0     0   148     0     0     0     1     0     0     0     0     0   8192 1064960
+  STD     0     0     0     0     0     0     0     0   147     0     0     0     1     0     0     0     0     0   8192 1073152
+  STD     0     0     0     0     0     0     0     0   146     0     0     0     1     0     0     0     0     0   8192 1081344
+  STD     0     0     0     0     0     0     0     0   145     0     0     0     1     0     0     0     0     0   8192 1089536
+  STD     0     0     0     0     0     0     0     0   144     0     0     0     1     0     0     0     0     0   8192 1097728
+  STD     0     0     0     0     0     0     0     0   143     0     0     0     1     0     0     0     0     0   8192 1105920
+  STD     0     0     0     0     0     0     0     0   142     0     0     0     1     0     0     0     0     0   8192 1114112
+  STD     0     0     0     0     0     0     0     0   141     0     0     0     1     0     0     0     0     0   8192 1122304
+  STD     0     0     0     0     0     0     0     0   140     0     0     0     1     0     0     0     0     0   8192 1130496
+  STD     0     0     0     0     0     0     0     0   139     0     0     0     1     0     0     0     0     0   8192 1138688
+  STD     0     0     0     0     0     0     0     0   138     0     0     0     1     0     0     0     0     0   8192 1146880
+  STD     0     0     0     0     0     0     0     0   137     0     0     0     1     0     0     0     0     0   8192 1155072
+  STD     0     0     0     0     0     0     0     0   136     0     0     0     1     0     0     0     0     0   8192 1163264
+  STD     0     0     0     0     0     0     0     0   135     0     0     0     1     0     0     0     0     0   8192 1171456
+  STD     0     0     0     0     0     0     0     0   134     0     0     0     1     0     0     0     0     0   8192 1179648
+  STD     0     0     0     0     0     0     0     0   133     0     0     0     1     0     0     0     0     0   8192 1187840
+  STD     0     0     0     0     0     0     0     0   132     0     0     0     1     0     0     0     0     0   8192 1196032
+  STD     0     0     0     0     0     0     0     0   131     0     0     0     1     0     0     0     0     0   8192 1204224
+  STD     0     0     0     0     0     0     0     0   130     0     0     0     1     0     0     0     0     0   8192 1212416
+  STD     0     0     0     0     0     0     0     0   129     0     0     0     1     0     0     0     0     0   8192 1220608
+  STD     0     0     0     0     0     0     0     0   128     0     0     0     1     0     0     0     0     0   8192 1228800
+  STD     0     0     0     0     0     0     0     0   127     0     0     0     1     0     0     0     0     0   8192 1236992
+  STD     0     0     0     0     0     0     0     0   126     0     0     0     1     0     0     0     0     0   8192 1245184
+  STD     0     0     0     0     0     0     0     0   125     0     0     0     1     0     0     0     0     0   8192 1253376
+  STD     0     0     0     0     0     0     0     0   124     0     0     0     1     0     0     0     0     0   8192 1261568
+  STD     0     0     0     0     0     0     0     0   123     0     0     0     1     0     0     0     0     0   8192 1269760
+  STD     0     0     0     0     0     0     0     0   122     0     0     0     1     0     0     0     0     0   8192 1277952
+  STD     0     0     0     0     0     0     0     0   121     0     0     0     1     0     0     0     0     0   8192 1286144
+  STD     0     0     0     0     0     0     0     0   120     0     0     0     1     0     0     0     0     0   8192 1294336
+  STD     0     0     0     0     0     0     0     0   119     0     0     0     1     0     0     0     0     0   8192 1302528
+  STD     0     0     0     0     0     0     0     0   118     0     0     0     1     0     0     0     0     0   8192 1310720
+  STD     0     0     0     0     0     0     0     0   117     0     0     0     1     0     0     0     0     0   8192 1318912
+  STD     0     0     0     0     0     0     0     0   116     0     0     0     1     0     0     0     0     0   8192 1327104
+  STD     0     0     0     0     0     0     0     0   115     0     0     0     1     0     0     0     0     0   8192 1335296
+  STD     0     0     0     0     0     0     0     0   114     0     0     0     1     0     0     0     0     0   8192 1343488
+  STD     0     0     0     0     0     0     0     0   113     0     0     0     1     0     0     0     0     0   8192 1351680
+  STD     0     0     0     0     0     0     0     0   112     0     0     0     1     0     0     0     0     0   8192 1359872
+  STD     0     0     0     0     0     0     0     0   111     0     0     0     1     0     0     0     0     0   8192 1368064
+  STD     0     0     0     0     0     0     0     0   110     0     0     0     1     0     0     0     0     0   8192 1376256
+  STD     0     0     0     0     0     0     0     0   109     0     0     0     1     0     0     0     0     0   8192 1384448
+  STD     0     0     0     0     0     0     0     0   108     0     0     0     1     0     0     0     0     0   8192 1392640
+  STD     0     0     0     0     0     0     0     0   107     0     0     0     1     0     0     0     0     0   8192 1400832
+  STD     0     0     0     0     0     0     0     0   106     0     0     0     1     0     0     0     0     0   8192 1409024
+  STD     0     0     0     0     0     0     0     0   105     0     0     0     1     0     0     0     0     0   8192 1417216
+  STD     0     0     0     0     0     0     0     0   104     0     0     0     1     0     0     0     0     0   8192 1425408
+  STD     0     0     0     0     0     0     0     0   103     0     0     0     1     0     0     0     0     0   8192 1433600
+  STD     0     0     0     0     0     0     0     0   102     0     0     0     1     0     0     0     0     0   8192 1441792
+  STD     0     0     0     0     0     0     0     0   101     0     0     0     1     0     0     0     0     0   8192 1449984
+  STD     0     0     0     0     0     0     0     0   100     0     0     0     1     0     0     0     0     0   8192 1458176
+  STD     0     0     0     0     0     0     0     0    99     0     0     0     1     0     0     0     0     0   8192 1466368
+  STD     0     0     0     0     0     0     0     0    98     0     0     0     1     0     0     0     0     0   8192 1474560
+  STD     0     0     0     0     0     0     0     0    97     0     0     0     1     0     0     0     0     0   8192 1482752
+  STD     0     0     0     0     0     0     0     0    96     0     0     0     1     0     0     0     0     0   8192 1490944
+  STD     0     0     0     0     0     0     0     0    95     0     0     0     1     0     0     0     0     0   8192 1499136
+  STD     0     0     0     0     0     0     0     0    94     0     0     0     1     0     0     0     0     0   8192 1507328
+  STD     0     0     0     0     0     0     0     0    93     0     0     0     1     0     0     0     0     0   8192 1515520
+  STD     0     0     0     0     0     0     0     0    92     0     0     0     1     0     0     0     0     0   8192 1523712
+  STD     0     0     0     0     0     0     0     0    91     0     0     0     1     0     0     0     0     0   8192 1531904
+  STD     0     0     0     0     0     0     0     0    90     0     0     0     1     0     0     0     0     0   8192 1540096
+  STD     0     0     0     0     0     0     0     0    89     0     0     0     1     0     0     0     0     0   8192 1548288
+  STD     0     0     0     0     0     0     0     0    88     0     0     0     1     0     0     0     0     0   8192 1556480
+  STD     0     0     0     0     0     0     0     0    87     0     0     0     1     0     0     0     0     0   8192 1564672
+  STD     0     0     0     0     0     0     0     0    86     0     0     0     1     0     0     0     0     0   8192 1572864
+  STD     0     0     0     0     0     0     0     0    85     0     0     0     1     0     0     0     0     0   8192 1581056
+  STD     0     0     0     0     0     0     0     0    84     0     0     0     1     0     0     0     0     0   8192 1589248
+  STD     0     0     0     0     0     0     0     0    83     0     0     0     1     0     0     0     0     0   8192 1597440
+  STD     0     0     0     0     0     0     0     0    82     0     0     0     1     0     0     0     0     0   8192 1605632
+  STD     0     0     0     0     0     0     0     0    81     0     0     0     1     0     0     0     0     0   8192 1613824
+  STD     0     0     0     0     0     0     0     0    80     0     0     0     1     0     0     0     0     0   8192 1622016
+  STD     0     0     0     0     0     0     0     0    79     0     0     0     1     0     0     0     0     0   8192 1630208
+  STD     0     0     0     0     0     0     0     0    78     0     0     0     1     0     0     0     0     0   8192 1638400
+  STD     0     0     0     0     0     0     0     0    77     0     0     0     1     0     0     0     0     0   8192 1646592
+  STD     0     0     0     0     0     0     0     0    76     0     0     0     1     0     0     0     0     0   8192 1654784
+  STD     0     0     0     0     0     0     0     0    75     0     0     0     1     0     0     0     0     0   8192 1662976
+  STD     0     0     0     0     0     0     0     0    74     0     0     0     1     0     0     0     0     0   8192 1671168
+  STD     0     0     0     0     0     0     0     0    73     0     0     0     1     0     0     0     0     0   8192 1679360
+  STD     0     0     0     0     0     0     0     0    72     0     0     0     1     0     0     0     0     0   8192 1687552
+  STD     0     0     0     0     0     0     0     0    71     0     0     0     1     0     0     0     0     0   8192 1695744
+  STD     0     0     0     0     0     0     0     0    70     0     0     0     1     0     0     0     0     0   8192 1703936
+  STD     0     0     0     0     0     0     0     0    69     0     0     0     1     0     0     0     0     0   8192 1712128
+  STD     0     0     0     0     0     0     0     0    68     0     0     0     1     0     0     0     0     0   8192 1720320
+  STD     0     0     0     0     0     0     0     0    67     0     0     0     1     0     0     0     0     0   8192 1728512
+  STD     0     0     0     0     0     0     0     0    66     0     0     0     1     0     0     0     0     0   8192 1736704
+  STD     0     0     0     0     0     0     0     0    65     0     0     0     1     0     0     0     0     0   8192 1744896
+  STD     0     0     0     0     0     0     0     0    64     0     0     0     1     0     0     0     0     0   8192 1753088
+  STD     0     0     0     0     0     0     0     0    63     0     0     0     1     0     0     0     0     0   8192 1761280
+  STD     0     0     0     0     0     0     0     0    62     0     0     0     1     0     0     0     0     0   8192 1769472
+  STD     0     0     0     0     0     0     0     0    61     0     0     0     1     0     0     0     0     0   8192 1777664
+  STD     0     0     0     0     0     0     0     0    60     0     0     0     1     0     0     0     0     0   8192 1785856
+  STD     0     0     0     0     0     0     0     0    59     0     0     0     1     0     0     0     0     0   8192 1794048
+  STD     0     0     0     0     0     0     0     0    58     0     0     0     1     0     0     0     0     0   8192 1802240
+  STD     0     0     0     0     0     0     0     0    57     0     0     0     1     0     0     0     0     0   8192 1810432
+  STD     0     0     0     0     0     0     0     0    56     0     0     0     1     0     0     0     0     0   8192 1818624
+  STD     0     0     0     0     0     0     0     0    55     0     0     0     1     0     0     0     0     0   8192 1826816
+  STD     0     0     0     0     0     0     0     0    54     0     0     0     1     0     0     0     0     0   8192 1835008
+  STD     0     0     0     0     0     0     0     0    53     0     0     0     1     0     0     0     0     0   8192 1843200
+  STD     0     0     0     0     0     0     0     0    52     0     0     0     1     0     0     0     0     0   8192 1851392
+  STD     0     0     0     0     0     0     0     0    51     0     0     0     1     0     0     0     0     0   8192 1859584
+  STD     0     0     0     0     0     0     0     0    50     0     0     0     1     0     0     0     0     0   8192 1867776
+  STD     0     0     0     0     0     0     0     0    49     0     0     0     1     0     0     0     0     0   8192 1875968
+  STD     0     0     0     0     0     0     0     0    48     0     0     0     1     0     0     0     0     0   8192 1884160
+  STD     0     0     0     0     0     0     0     0    47     0     0     0     1     0     0     0     0     0   8192 1892352
+  STD     0     0     0     0     0     0     0     0    46     0     0     0     1     0     0     0     0     0   8192 1900544
+  STD     0     0     0     0     0     0     0     0    45     0     0     0     1     0     0     0     0     0   8192 1908736
+  STD     0     0     0     0     0     0     0     0    44     0     0     0     1     0     0     0     0     0   8192 1916928
+  STD     0     0     0     0     0     0     0     0    43     0     0     0     1     0     0     0     0     0   8192 1925120
+  STD     0     0     0     0     0     0     0     0    42     0     0     0     1     0     0     0     0     0   8192 1933312
+  STD     0     0     0     0     0     0     0     0    41     0     0     0     1     0     0     0     0     0   8192 1941504
+  STD     0     0     0     0     0     0     0     0    40     0     0     0     1     0     0     0     0     0   8192 1949696
+  STD     0     0     0     0     0     0     0     0    39     0     0     0     1     0     0     0     0     0   8192 1957888
+  STD     0     0     0     0     0     0     0     0    38     0     0     0     1     0     0     0     0     0   8192 1966080
+  STD     0     0     0     0     0     0     0     0    37     0     0     0     1     0     0     0     0     0   8192 1974272
+  STD     0     0     0     0     0     0     0     0    36     0     0     0     1     0     0     0     0     0   8192 1982464
+  STD     0     0     0     0     0     0     0     0    35     0     0     0     1     0     0     0     0     0   8192 1990656
+  STD     0     0     0     0     0     0     0     0    34     0     0     0     1     0     0     0     0     0   8192 1998848
+  STD     0     0     0     0     0     0     0     0    33     0     0     0     1     0     0     0     0     0   8192 2007040
+  STD     0     0     0     0     0     0     0     0    32     0     0     0     1     0     0     0     0     0   8192 2015232
+  STD     0     0     0     0     0     0     0     0    31     0     0     0     1     0     0     0     0     0   8192 2023424
+  STD     0     0     0     0     0     0     0     0    30     0     0     0     1     0     0     0     0     0   8192 2031616
+  STD     0     0     0     0     0     0     0     0    29     0     0     0     1     0     0     0     0     0   8192 2039808
+  STD     0     0     0     0     0     0     0     0    28     0     0     0     1     0     0     0     0     0   8192 2048000
+  STD     0     0     0     0     0     0     0     0    27     0     0     0     1     0     0     0     0     0   8192 2056192
+  STD     0     0     0     0     0     0     0     0    26     0     0     0     1     0     0     0     0     0   8192 2064384
+  STD     0     0     0     0     0     0     0     0    25     0     0     0     1     0     0     0     0     0   8192 2072576
+  STD     0     0     0     0     0     0     0     0    24     0     0     0     1     0     0     0     0     0   8192 2080768
+  STD     0     0     0     0     0     0     0     0    23     0     0     0     1     0     0     0     0     0   8192 2088960
+  STD     0     0     0     0     0     0     0     0    22     0     0     0     1     0     0     0     0     0   8192 2097152
+  STD     0     0     0     0     0     0     0     0    21     0     0     0     1     0     0     0     0     0   8192 2105344
+  STD     0     0     0     0     0     0     0     0    20     0     0     0     1     0     0     0     0     0   8192 2113536
+  STD     0     0     0     0     0     0     0     0    19     0     0     0     1     0     0     0     0     0   8192 2121728
+  STD     0     0     0     0     0     0     0     0    18     0     0     0     1     0     0     0     0     0   8192 2129920
+  STD     0     0     0     0     0     0     0     0    17     0     0     0     1     0     0     0     0     0   8192 2138112
+  STD     0     0     0     0     0     0     0     0    16     0     0     0     1     0     0     0     0     0   8192 2146304
+  STD     0     0     0     0     0     0     0     0    15     0     0     0     1     0     0     0     0     0   8192 2154496
+  STD     0     0     0     0     0     0     0     0    14     0     0     0     1     0     0     0     0     0   8192 2162688
+  STD     0     0     0     0     0     0     0     0    13     0     0     0     1     0     0     0     0     0   8192 2170880
+  STD     0     0     0     0     0     0     0     0    12     0     0     0     1     0     0     0     0     0   8192 2179072
+  STD     0     0     0     0     0     0     0     0    11     0     0     0     1     0     0     0     0     0   8192 2187264
+  STD     0     0     0     0     0     0     0     0    10     0     0     0     1     0     0     0     0     0   8192 2195456
+  STD     0     0     0     0     0     0     0     0     9     0     0     0     1     0     0     0     0     0   8192 2203648
+  STD     0     0     0     0     0     0     0     0     8     0     0     0     1     0     0     0     0     0   8192 2211840
+  STD     0     0     0     0     0     0     0     0     7     0     0     0     1     0     0     0     0     0   8192 2220032
+  STD     0     0     0     0     0     0     0     0     6     0     0     0     1     0     0     0     0     0   8192 2228224
+  STD     0     0     0     0     0     0     0     0     5     0     0     0     1     0     0     0     0     0   8192 2236416
+  STD     0     0     0     0     0     0     0     0     4     0     0     0     1     0     0     0     0     0   8192 2244608
+  STD     0     0     0     0     0     0     0     0     3     0     0     0     1     0     0     0     0     0   8192 2252800
+  STD     0     0     0     0     0     0     0     0     2     0     0     0     1     0     0     0     0     0   8192 2260992
+  STD     0     0     0     0     0     0     0     0     1     0     0     0     1     0     0     0     0     0   8192 2269184
+  STD     0     0     0     0     0     0     0     0     0     0     0     0     1     0     0     0     0     0   8192 2277376
+  STD     0     0     0     0     0     0     0     0    -1     0     0     0     1     0     0     0     0     0   8192 2285568
+  STD     0     0     0     0     0     0     0     0    -2     0     0     0     1     0     0     0     0     0   8192 2293760
+  STD     0     0     0     0     0     0     0     0    -3     0     0     0     1     0     0     0     0     0   8192 2301952
+  STD     0     0     0     0     0     0     0     0    -4     0     0     0     1     0     0     0     0     0   8192 2310144
+  STD     0     0     0     0     0     0     0     0    -5     0     0     0     1     0     0     0     0     0   8192 2318336
+  STD     0     0     0     0     0     0     0     0    -6     0     0     0     1     0     0     0     0     0   8192 2326528
+  STD     0     0     0     0     0     0     0     0    -7     0     0     0     1     0     0     0     0     0   8192 2334720
+  STD     0     0     0     0     0     0     0     0    -8     0     0     0     1     0     0     0     0     0   8192 2342912
+  STD     0     0     0     0     0     0     0     0    -9     0     0     0     1     0     0     0     0     0   8192 2351104
+  STD     0     0     0     0     0     0     0     0   -10     0     0     0     1     0     0     0     0     0   8192 2359296
+  STD     0     0     0     0     0     0     0     0   -11     0     0     0     1     0     0     0     0     0   8192 2367488
+  STD     0     0     0     0     0     0     0     0   -12     0     0     0     1     0     0     0     0     0   8192 2375680
+  STD     0     0     0     0     0     0     0     0   -13     0     0     0     1     0     0     0     0     0   8192 2383872
+  STD     0     0     0     0     0     0     0     0   -14     0     0     0     1     0     0     0     0     0   8192 2392064
+  STD     0     0     0     0     0     0     0     0   -15     0     0     0     1     0     0     0     0     0   8192 2400256
+  STD     0     0     0     0     0     0     0     0   -16     0     0     0     1     0     0     0     0     0   8192 2408448
+  STD     0     0     0     0     0     0     0     0   -17     0     0     0     1     0     0     0     0     0   8192 2416640
+  STD     0     0     0     0     0     0     0     0   -18     0     0     0     1     0     0     0     0     0   8192 2424832
+  STD     0     0     0     0     0     0     0     0   -19     0     0     0     1     0     0     0     0     0   8192 2433024
+  STD     0     0     0     0     0     0     0     0   -20     0     0     0     1     0     0     0     0     0   8192 2441216
+  STD     0     0     0     0     0     0     0     0   -21     0     0     0     1     0     0     0     0     0   8192 2449408
+  STD     0     0     0     0     0     0     0     0   -22     0     0     0     1     0     0     0     0     0   8192 2457600
+  STD     0     0     0     0     0     0     0     0   -23     0     0     0     1     0     0     0     0     0   8192 2465792
+  STD     0     0     0     0     0     0     0     0   -24     0     0     0     1     0     0     0     0     0   8192 2473984
+  STD     0     0     0     0     0     0     0     0   -25     0     0     0     1     0     0     0     0     0   8192 2482176
+  STD     0     0     0     0     0     0     0     0   -26     0     0     0     1     0     0     0     0     0   8192 2490368
+  STD     0     0     0     0     0     0     0     0   -27     0     0     0     1     0     0     0     0     0   8192 2498560
+  STD     0     0     0     0     0     0     0     0   -28     0     0     0     1     0     0     0     0     0   8192 2506752
+  STD     0     0     0     0     0     0     0     0   -29     0     0     0     1     0     0     0     0     0   8192 2514944
+  STD     0     0     0     0     0     0     0     0   -30     0     0     0     1     0     0     0     0     0   8192 2523136
+  STD     0     0     0     0     0     0     0     0   -31     0     0     0     1     0     0     0     0     0   8192 2531328
+  STD     0     0     0     0     0     0     0     0   -32     0     0     0     1     0     0     0     0     0   8192 2539520
+  STD     0     0     0     0     0     0     0     0   -33     0     0     0     1     0     0     0     0     0   8192 2547712
+  STD     0     0     0     0     0     0     0     0   -34     0     0     0     1     0     0     0     0     0   8192 2555904
+  STD     0     0     0     0     0     0     0     0   -35     0     0     0     1     0     0     0     0     0   8192 2564096
+  STD     0     0     0     0     0     0     0     0   -36     0     0     0     1     0     0     0     0     0   8192 2572288
+  STD     0     0     0     0     0     0     0     0   -37     0     0     0     1     0     0     0     0     0   8192 2580480
+  STD     0     0     0     0     0     0     0     0   -38     0     0     0     1     0     0     0     0     0   8192 2588672
+  STD     0     0     0     0     0     0     0     0   -39     0     0     0     1     0     0     0     0     0   8192 2596864
+  STD     0     0     0     0     0     0     0     0   -40     0     0     0     1     0     0     0     0     0   8192 2605056
+  STD     0     0     0     0     0     0     0     0   -41     0     0     0     1     0     0     0     0     0   8192 2613248
+  STD     0     0     0     0     0     0     0     0   -42     0     0     0     1     0     0     0     0     0   8192 2621440
+  STD     0     0     0     0     0     0     0     0   -43     0     0     0     1     0     0     0     0     0   8192 2629632
+  STD     0     0     0     0     0     0     0     0   -44     0     0     0     1     0     0     0     0     0   8192 2637824
+  STD     0     0     0     0     0     0     0     0   -45     0     0     0     1     0     0     0     0     0   8192 2646016
+  STD     0     0     0     0     0     0     0     0   -46     0     0     0     1     0     0     0     0     0   8192 2654208
+  STD     0     0     0     0     0     0     0     0   -47     0     0     0     1     0     0     0     0     0   8192 2662400
+  STD     0     0     0     0     0     0     0     0   -48     0     0     0     1     0     0     0     0     0   8192 2670592
+  STD     0     0     0     0     0     0     0     0   -49     0     0     0     1     0     0     0     0     0   8192 2678784
+  STD     0     0     0     0     0     0     0     0   -50     0     0     0     1     0     0     0     0     0   8192 2686976
+  STD     0     0     0     0     0     0     0     0   -51     0     0     0     1     0     0     0     0     0   8192 2695168
+  STD     0     0     0     0     0     0     0     0   -52     0     0     0     1     0     0     0     0     0   8192 2703360
+  STD     0     0     0     0     0     0     0     0   -53     0     0     0     1     0     0     0     0     0   8192 2711552
+  STD     0     0     0     0     0     0     0     0   -54     0     0     0     1     0     0     0     0     0   8192 2719744
+  STD     0     0     0     0     0     0     0     0   -55     0     0     0     1     0     0     0     0     0   8192 2727936
+  STD     0     0     0     0     0     0     0     0   -56     0     0     0     1     0     0     0     0     0   8192 2736128
+  STD     0     0     0     0     0     0     0     0   -57     0     0     0     1     0     0     0     0     0   8192 2744320
+  STD     0     0     0     0     0     0     0     0   -58     0     0     0     1     0     0     0     0     0   8192 2752512
+  STD     0     0     0     0     0     0     0     0   -59     0     0     0     1     0     0     0     0     0   8192 2760704
+  STD     0     0     0     0     0     0     0     0   -60     0     0     0     1     0     0     0     0     0   8192 2768896
+  STD     0     0     0     0     0     0     0     0   -61     0     0     0     1     0     0     0     0     0   8192 2777088
+  STD     0     0     0     0     0     0     0     0   -62     0     0     0     1     0     0     0     0     0   8192 2785280
+  STD     0     0     0     0     0     0     0     0   -63     0     0     0     1     0     0     0     0     0   8192 2793472
+  STD     0     0     0     0     0     0     0     0   -64     0     0     0     1     0     0     0     0     0   8192 2801664
+  STD     0     0     0     0     0     0     0     0   -65     0     0     0     1     0     0     0     0     0   8192 2809856
+  STD     0     0     0     0     0     0     0     0   -66     0     0     0     1     0     0     0     0     0   8192 2818048
+  STD     0     0     0     0     0     0     0     0   -67     0     0     0     1     0     0     0     0     0   8192 2826240
+  STD     0     0     0     0     0     0     0     0   -68     0     0     0     1     0     0     0     0     0   8192 2834432
+  STD     0     0     0     0     0     0     0     0   -69     0     0     0     1     0     0     0     0     0   8192 2842624
+  STD     0     0     0     0     0     0     0     0   -70     0     0     0     1     0     0     0     0     0   8192 2850816
+  STD     0     0     0     0     0     0     0     0   -71     0     0     0     1     0     0     0     0     0   8192 2859008
+  STD     0     0     0     0     0     0     0     0   -72     0     0     0     1     0     0     0     0     0   8192 2867200
+  STD     0     0     0     0     0     0     0     0   -73     0     0     0     1     0     0     0     0     0   8192 2875392
+  STD     0     0     0     0     0     0     0     0   -74     0     0     0     1     0     0     0     0     0   8192 2883584
+  STD     0     0     0     0     0     0     0     0   -75     0     0     0     1     0     0     0     0     0   8192 2891776
+  STD     0     0     0     0     0     0     0     0   -76     0     0     0     1     0     0     0     0     0   8192 2899968
+  STD     0     0     0     0     0     0     0     0   -77     0     0     0     1     0     0     0     0     0   8192 2908160
+  STD     0     0     0     0     0     0     0     0   -78     0     0     0     1     0     0     0     0     0   8192 2916352
+  STD     0     0     0     0     0     0     0     0   -79     0     0     0     1     0     0     0     0     0   8192 2924544
+  STD     0     0     0     0     0     0     0     0   -80     0     0     0     1     0     0     0     0     0   8192 2932736
+  STD     0     0     0     0     0     0     0     0   -81     0     0     0     1     0     0     0     0     0   8192 2940928
+  STD     0     0     0     0     0     0     0     0   -82     0     0     0     1     0     0     0     0     0   8192 2949120
+  STD     0     0     0     0     0     0     0     0   -83     0     0     0     1     0     0     0     0     0   8192 2957312
+  STD     0     0     0     0     0     0     0     0   -84     0     0     0     1     0     0     0     0     0   8192 2965504
+  STD     0     0     0     0     0     0     0     0   -85     0     0     0     1     0     0     0     0     0   8192 2973696
+  STD     0     0     0     0     0     0     0     0   -86     0     0     0     1     0     0     0     0     0   8192 2981888
+  STD     0     0     0     0     0     0     0     0   -87     0     0     0     1     0     0     0     0     0   8192 2990080
+  STD     0     0     0     0     0     0     0     0   -88     0     0     0     1     0     0     0     0     0   8192 2998272
+  STD     0     0     0     0     0     0     0     0   -89     0     0     0     1     0     0     0     0     0   8192 3006464
+  STD     0     0     0     0     0     0     0     0   -90     0     0     0     1     0     0     0     0     0   8192 3014656
+  STD     0     0     0     0     0     0     0     0   -91     0     0     0     1     0     0     0     0     0   8192 3022848
+  STD     0     0     0     0     0     0     0     0   -92     0     0     0     1     0     0     0     0     0   8192 3031040
+  STD     0     0     0     0     0     0     0     0   -93     0     0     0     1     0     0     0     0     0   8192 3039232
+  STD     0     0     0     0     0     0     0     0   -94     0     0     0     1     0     0     0     0     0   8192 3047424
+  STD     0     0     0     0     0     0     0     0   -95     0     0     0     1     0     0     0     0     0   8192 3055616
+  STD     0     0     0     0     0     0     0     0   -96     0     0     0     1     0     0     0     0     0   8192 3063808
+  STD     0     0     0     0     0     0     0     0   -97     0     0     0     1     0     0     0     0     0   8192 3072000
+  STD     0     0     0     0     0     0     0     0   -98     0     0     0     1     0     0     0     0     0   8192 3080192
+  STD     0     0     0     0     0     0     0     0   -99     0     0     0     1     0     0     0     0     0   8192 3088384
+  STD     0     0     0     0     0     0     0     0  -100     0     0     0     1     0     0     0     0     0   8192 3096576
+  STD     0     0     0     0     0     0     0     0  -101     0     0     0     1     0     0     0     0     0   8192 3104768
+  STD     0     0     0     0     0     0     0     0  -102     0     0     0     1     0     0     0     0     0   8192 3112960
+  STD     0     0     0     0     0     0     0     0  -103     0     0     0     1     0     0     0     0     0   8192 3121152
+  STD     0     0     0     0     0     0     0     0  -104     0     0     0     1     0     0     0     0     0   8192 3129344
+  STD     0     0     0     0     0     0     0     0  -105     0     0     0     1     0     0     0     0     0   8192 3137536
+  STD     0     0     0     0     0     0     0     0  -106     0     0     0     1     0     0     0     0     0   8192 3145728
+  STD     0     0     0     0     0     0     0     0  -107     0     0     0     1     0     0     0     0     0   8192 3153920
+  STD     0     0     0     0     0     0     0     0  -108     0     0     0     1     0     0     0     0     0   8192 3162112
+  STD     0     0     0     0     0     0     0     0  -109     0     0     0     1     0     0     0     0     0   8192 3170304
+  STD     0     0     0     0     0     0     0     0  -110     0     0     0     1     0     0     0     0     0   8192 3178496
+  STD     0     0     0     0     0     0     0     0  -111     0     0     0     1     0     0     0     0     0   8192 3186688
+  STD     0     0     0     0     0     0     0     0  -112     0     0     0     1     0     0     0     0     0   8192 3194880
+  STD     0     0     0     0     0     0     0     0  -113     0     0     0     1     0     0     0     0     0   8192 3203072
+  STD     0     0     0     0     0     0     0     0  -114     0     0     0     1     0     0     0     0     0   8192 3211264
+  STD     0     0     0     0     0     0     0     0  -115     0     0     0     1     0     0     0     0     0   8192 3219456
+  STD     0     0     0     0     0     0     0     0  -116     0     0     0     1     0     0     0     0     0   8192 3227648
+  STD     0     0     0     0     0     0     0     0  -117     0     0     0     1     0     0     0     0     0   8192 3235840
+  STD     0     0     0     0     0     0     0     0  -118     0     0     0     1     0     0     0     0     0   8192 3244032
+  STD     0     0     0     0     0     0     0     0  -119     0     0     0     1     0     0     0     0     0   8192 3252224
+  STD     0     0     0     0     0     0     0     0  -120     0     0     0     1     0     0     0     0     0   8192 3260416
+  STD     0     0     0     0     0     0     0     0  -121     0     0     0     1     0     0     0     0     0   8192 3268608
+  STD     0     0     0     0     0     0     0     0  -122     0     0     0     1     0     0     0     0     0   8192 3276800
+  STD     0     0     0     0     0     0     0     0  -123     0     0     0     1     0     0     0     0     0   8192 3284992
+  STD     0     0     0     0     0     0     0     0  -124     0     0     0     1     0     0     0     0     0   8192 3293184
+  STD     0     0     0     0     0     0     0     0  -125     0     0     0     1     0     0     0     0     0   8192 3301376
+  STD     0     0     0     0     0     0     0     0  -126     0     0     0     1     0     0     0     0     0   8192 3309568
+  STD     0     0     0     0     0     0     0     0  -127     0     0     0     1     0     0     0     0     0   8192 3317760
+  STD     0     0     0     0     0     0     0     0  -128     0     0     0     1     0     0     0     0     0   8192 3325952
+  STD     0     0     0     0     0     0     0     0  -129     0     0     0     1     0     0     0     0     0   8192 3334144
+  STD     0     0     0     0     0     0     0     0  -130     0     0     0     1     0     0     0     0     0   8192 3342336
+  STD     0     0     0     0     0     0     0     0  -131     0     0     0     1     0     0     0     0     0   8192 3350528
+  STD     0     0     0     0     0     0     0     0  -132     0     0     0     1     0     0     0     0     0   8192 3358720
+  STD     0     0     0     0     0     0     0     0  -133     0     0     0     1     0     0     0     0     0   8192 3366912
+  STD     0     0     0     0     0     0     0     0  -134     0     0     0     1     0     0     0     0     0   8192 3375104
+  STD     0     0     0     0     0     0     0     0  -135     0     0     0     1     0     0     0     0     0   8192 3383296
+  STD     0     0     0     0     0     0     0     0  -136     0     0     0     1     0     0     0     0     0   8192 3391488
+  STD     0     0     0     0     0     0     0     0  -137     0     0     0     1     0     0     0     0     0   8192 3399680
+  STD     0     0     0     0     0     0     0     0  -138     0     0     0     1     0     0     0     0     0   8192 3407872
+  STD     0     0     0     0     0     0     0     0  -139     0     0     0     1     0     0     0     0     0   8192 3416064
+  STD     0     0     0     0     0     0     0     0  -140     0     0     0     1     0     0     0     0     0   8192 3424256
+  STD     0     0     0     0     0     0     0     0  -141     0     0     0     1     0     0     0     0     0   8192 3432448
+  STD     0     0     0     0     0     0     0     0  -142     0     0     0     1     0     0     0     0     0   8192 3440640
+  STD     0     0     0     0     0     0     0     0  -143     0     0     0     1     0     0     0     0     0   8192 3448832
+  STD     0     0     0     0     0     0     0     0  -144     0     0     0     1     0     0     0     0     0   8192 3457024
+  STD     0     0     0     0     0     0     0     0  -145     0     0     0     1     0     0     0     0     0   8192 3465216
+  STD     0     0     0     0     0     0     0     0  -146     0     0     0     1     0     0     0     0     0   8192 3473408
+  STD     0     0     0     0     0     0     0     0  -147     0     0     0     1     0     0     0     0     0   8192 3481600
+  STD     0     0     0     0     0     0     0     0  -148     0     0     0     1     0     0     0     0     0   8192 3489792
+  STD     0     0     0     0     0     0     0     0  -149     0     0     0     1     0     0     0     0     0   8192 3497984
+  STD     0     0     0     0     0     0     0     0  -150     0     0     0     1     0     0     0     0     0   8192 3506176
+  STD     0     0     0     0     0     0     0     0  -151     0     0     0     1     0     0     0     0     0   8192 3514368
+  STD     0     0     0     0     0     0     0     0  -152     0     0     0     1     0     0     0     0     0   8192 3522560
+  STD     0     0     0     0     0     0     0     0  -153     0     0     0     1     0     0     0     0     0   8192 3530752
+  STD     0     0     0     0     0     0     0     0  -154     0     0     0     1     0     0     0     0     0   8192 3538944
+  STD     0     0     0     0     0     0     0     0  -155     0     0     0     1     0     0     0     0     0   8192 3547136
+  STD     0     0     0     0     0     0     0     0  -156     0     0     0     1     0     0     0     0     0   8192 3555328
+  STD     0     0     0     0     0     0     0     0  -157     0     0     0     1     0     0     0     0     0   8192 3563520
+  STD     0     0     0     0     0     0     0     0  -158     0     0     0     1     0     0     0     0     0   8192 3571712
+  STD     0     0     0     0     0     0     0     0  -159     0     0     0     1     0     0     0     0     0   8192 3579904
+  STD     0     0     0     0     0     0     0     0  -160     0     0     0     1     0     0     0     0     0   8192 3588096
+  STD     0     0     0     0     0     0     0     0  -161     0     0     0     1     0     0     0     0     0   8192 3596288
+  STD     0     0     0     0     0     0     0     0  -162     0     0     0     1     0     0     0     0     0   8192 3604480
+  STD     0     0     0     0     0     0     0     0  -163     0     0     0     1     0     0     0     0     0   8192 3612672
+  STD     0     0     0     0     0     0     0     0  -164     0     0     0     1     0     0     0     0     0   8192 3620864
+  STD     0     0     0     0     0     0     0     0  -165     0     0     0     1     0     0     0     0     0   8192 3629056
+  STD     0     0     0     0     0     0     0     0  -166     0     0     0     1     0     0     0     0     0   8192 3637248
+  STD     0     0     0     0     0     0     0     0  -167     0     0     0     1     0     0     0     0     0   8192 3645440
+  STD     0     0     0     0     0     0     0     0  -168     0     0     0     1     0     0     0     0     0   8192 3653632
+  STD     0     0     0     0     0     0     0     0  -169     0     0     0     1     0     0     0     0     0   8192 3661824
+  STD     0     0     0     0     0     0     0     0  -170     0     0     0     1     0     0     0     0     0   8192 3670016
+  STD     0     0     0     0     0     0     0     0  -171     0     0     0     1     0     0     0     0     0   8192 3678208
+  STD     0     0     0     0     0     0     0     0  -172     0     0     0     1     0     0     0     0     0   8192 3686400
+  STD     0     0     0     0     0     0     0     0  -173     0     0     0     1     0     0     0     0     0   8192 3694592
+  STD     0     0     0     0     0     0     0     0  -174     0     0     0     1     0     0     0     0     0   8192 3702784
+  STD     0     0     0     0     0     0     0     0  -175     0     0     0     1     0     0     0     0     0   8192 3710976
+  STD     0     0     0     0     0     0     0     0  -176     0     0     0     1     0     0     0     0     0   8192 3719168
+  STD     0     0     0     0     0     0     0     0  -177     0     0     0     1     0     0     0     0     0   8192 3727360
+  STD     0     0     0     0     0     0     0     0  -178     0     0     0     1     0     0     0     0     0   8192 3735552
+  STD     0     0     0     0     0     0     0     0  -179     0     0     0     1     0     0     0     0     0   8192 3743744
+  STD     0     0     0     0     0     0     0     0  -180     0     0     0     1     0     0     0     0     0   8192 3751936
+  STD     0     0     0     0     0     0     0     0  -181     0     0     0     1     0     0     0     0     0   8192 3760128
+  STD     0     0     0     0     0     0     0     0  -182     0     0     0     1     0     0     0     0     0   8192 3768320
+  STD     0     0     0     0     0     0     0     0  -183     0     0     0     1     0     0     0     0     0   8192 3776512
+  STD     0     0     0     0     0     0     0     0  -184     0     0     0     1     0     0     0     0     0   8192 3784704
+  STD     0     0     0     0     0     0     0     0  -185     0     0     0     1     0     0     0     0     0   8192 3792896
+  STD     0     0     0     0     0     0     0     0  -186     0     0     0     1     0     0     0     0     0   8192 3801088
+  STD     0     0     0     0     0     0     0     0  -187     0     0     0     1     0     0     0     0     0   8192 3809280
+  STD     0     0     0     0     0     0     0     0  -188     0     0     0     1     0     0     0     0     0   8192 3817472
+  STD     0     0     0     0     0     0     0     0  -189     0     0     0     1     0     0     0     0     0   8192 3825664
+  STD     0     0     0     0     0     0     0     0  -190     0     0     0     1     0     0     0     0     0   8192 3833856
+  STD     0     0     0     0     0     0     0     0  -191     0     0     0     1     0     0     0     0     0   8192 3842048
+  STD     0     0     0     0     0     0     0     0  -192     0     0     0     1     0     0     0     0     0   8192 3850240
+  STD     0     0     0     0     0     0     0     0  -193     0     0     0     1     0     0     0     0     0   8192 3858432
+  STD     0     0     0     0     0     0     0     0  -194     0     0     0     1     0     0     0     0     0   8192 3866624
+  STD     0     0     0     0     0     0     0     0  -195     0     0     0     1     0     0     0     0     0   8192 3874816
+  STD     0     0     0     0     0     0     0     0  -196     0     0     0     1     0     0     0     0     0   8192 3883008
+  STD     0     0     0     0     0     0     0     0  -197     0     0     0     1     0     0     0     0     0   8192 3891200
+  STD     0     0     0     0     0     0     0     0  -198     0     0     0     1     0     0     0     0     0   8192 3899392
+  STD     0     0     0     0     0     0     0     0  -199     0     0     0     1     0     0     0     0     0   8192 3907584
+  STD     0     0     0     0     0     0     0     0  -200     0     0     0     1     0     0     0     0     0   8192 3915776
+  STD     0     0     0     0     0     0     0     0  -201     0     0     0     1     0     0     0     0     0   8192 3923968
+  STD     0     0     0     0     0     0     0     0  -202     0     0     0     1     0     0     0     0     0   8192 3932160
+  STD     0     0     0     0     0     0     0     0  -203     0     0     0     1     0     0     0     0     0   8192 3940352
+  STD     0     0     0     0     0     0     0     0  -204     0     0     0     1     0     0     0     0     0   8192 3948544
+  STD     0     0     0     0     0     0     0     0  -205     0     0     0     1     0     0     0     0     0   8192 3956736
+  STD     0     0     0     0     0     0     0     0  -206     0     0     0     1     0     0     0     0     0   8192 3964928
+  STD     0     0     0     0     0     0     0     0  -207     0     0     0     1     0     0     0     0     0   8192 3973120
+  STD     0     0     0     0     0     0     0     0  -208     0     0     0     1     0     0     0     0     0   8192 3981312
+  STD     0     0     0     0     0     0     0     0  -209     0     0     0     1     0     0     0     0     0   8192 3989504
+  STD     0     0     0     0     0     0     0     0  -210     0     0     0     1     0     0     0     0     0   8192 3997696
+  STD     0     0     0     0     0     0     0     0  -211     0     0     0     1     0     0     0     0     0   8192 4005888
+  STD     0     0     0     0     0     0     0     0  -212     0     0     0     1     0     0     0     0     0   8192 4014080
+  STD     0     0     0     0     0     0     0     0  -213     0     0     0     1     0     0     0     0     0   8192 4022272
+  STD     0     0     0     0     0     0     0     0  -214     0     0     0     1     0     0     0     0     0   8192 4030464
+  STD     0     0     0     0     0     0     0     0  -215     0     0     0     1     0     0     0     0     0   8192 4038656
+  STD     0     0     0     0     0     0     0     0  -216     0     0     0     1     0     0     0     0     0   8192 4046848
+  STD     0     0     0     0     0     0     0     0  -217     0     0     0     1     0     0     0     0     0   8192 4055040
+  STD     0     0     0     0     0     0     0     0  -218     0     0     0     1     0     0     0     0     0   8192 4063232
+  STD     0     0     0     0     0     0     0     0  -219     0     0     0     1     0     0     0     0     0   8192 4071424
+  STD     0     0     0     0     0     0     0     0  -220     0     0     0     1     0     0     0     0     0   8192 4079616
+  STD     0     0     0     0     0     0     0     0  -221     0     0     0     1     0     0     0     0     0   8192 4087808
+  STD     0     0     0     0     0     0     0     0  -222     0     0     0     1     0     0     0     0     0   8192 4096000
+  STD     0     0     0     0     0     0     0     0  -223     0     0     0     1     0     0     0     0     0   8192 4104192
+  STD     0     0     0     0     0     0     0     0  -224     0     0     0     1     0     0     0     0     0   8192 4112384
+  STD     0     0     0     0     0     0     0     0  -225     0     0     0     1     0     0     0     0     0   8192 4120576
+  STD     0     0     0     0     0     0     0     0  -226     0     0     0     1     0     0     0     0     0   8192 4128768
+  STD     0     0     0     0     0     0     0     0  -227     0     0     0     1     0     0     0     0     0   8192 4136960
+  STD     0     0     0     0     0     0     0     0  -228     0     0     0     1     0     0     0     0     0   8192 4145152
+  STD     0     0     0     0     0     0     0     0  -229     0     0     0     1     0     0     0     0     0   8192 4153344
+  STD     0     0     0     0     0     0     0     0  -230     0     0     0     1     0     0     0     0     0   8192 4161536
+  STD     0     0     0     0     0     0     0     0  -231     0     0     0     1     0     0     0     0     0   8192 4169728
+  STD     0     0     0     0     0     0     0     0  -232     0     0     0     1     0     0     0     0     0   8192 4177920
+  STD     0     0     0     0     0     0     0     0  -233     0     0     0     1     0     0     0     0     0   8192 4186112
+  STD     0     0     0     0     0     0     0     0  -234     0     0     0     1     0     0     0     0     0   8192 4194304
+  STD     0     0     0     0     0     0     0     0  -235     0     0     0     1     0     0     0     0     0   8192 4202496
+  STD     0     0     0     0     0     0     0     0  -236     0     0     0     1     0     0     0     0     0   8192 4210688
+  STD     0     0     0     0     0     0     0     0  -237     0     0     0     1     0     0     0     0     0   8192 4218880
+  STD     0     0     0     0     0     0     0     0  -238     0     0     0     1     0     0     0     0     0   8192 4227072
+  STD     0     0     0     0     0     0     0     0  -239     0     0     0     1     0     0     0     0     0   8192 4235264
+  STD     0     0     0     0     0     0     0     0  -240     0     0     0     1     0     0     0     0     0   8192 4243456
+  STD     0     0     0     0     0     0     0     0  -241     0     0     0     1     0     0     0     0     0   8192 4251648
+  STD     0     0     0     0     0     0     0     0  -242     0     0     0     1     0     0     0     0     0   8192 4259840
+  STD     0     0     0     0     0     0     0     0  -243     0     0     0     1     0     0     0     0     0   8192 4268032
+  STD     0     0     0     0     0     0     0     0  -244     0     0     0     1     0     0     0     0     0   8192 4276224
+  STD     0     0     0     0     0     0     0     0  -245     0     0     0     1     0     0     0     0     0   8192 4284416
+  STD     0     0     0     0     0     0     0     0  -246     0     0     0     1     0     0     0     0     0   8192 4292608
+  STD     0     0     0     0     0     0     0     0  -247     0     0     0     1     0     0     0     0     0   8192 4300800
+  STD     0     0     0     0     0     0     0     0  -248     0     0     0     1     0     0     0     0     0   8192 4308992
+  STD     0     0     0     0     0     0     0     0  -249     0     0     0     1     0     0     0     0     0   8192 4317184
+  STD     0     0     0     0     0     0     0     0  -250     0     0     0     1     0     0     0     0     0   8192 4325376
+  STD     0     0     0     0     0     0     0     0  -251     0     0     0     1     0     0     0     0     0   8192 4333568
+  STD     0     0     0     0     0     0     0     0  -252     0     0     0     1     0     0     0     0     0   8192 4341760
+  STD     0     0     0     0     0     0     0     0  -253     0     0     0     1     0     0     0     0     0   8192 4349952
+  STD     0     0     0     0     0     0     0     0  -254     0     0     0     1     0     0     0     0     0   8192 4358144
+  STD     0     0     0     0     0     0     0     0  -255     0     0     0     1     0     0     0     0     0   8192 4366336
+  STD     0     0     0     0     0     0     0     0  -256     0     0     0     1     0     0     0     0     0   8192 4374528
+  STD     0     0     0     0     0     0     0     0  -257     0     0     0     1     0     0     0     0     0   8192 4382720
+  STD     0     0     0     0     0     0     0     0  -258     0     0     0     1     0     0     0     0     0   8192 4390912
+  STD     0     0     0     0     0     0     0     0  -259     0     0     0     1     0     0     0     0     0   8192 4399104
+  STD     0     0     0     0     0     0     0     0  -260     0     0     0     1     0     0     0     0     0   8192 4407296
+#
+# === END OF DATA VECTOR INDEX ===================================================
+#
+# mix  echo loca  linear phase errors                  value
+# ---- ---- ----  ----------------------------------   ---------
+.    0    0    0  0th_order_phase_error_X            :   -2.2072
+.    0    0    0  1st_order_phase_error_X            :    2.4794
+#
+# === END OF DATA DESCRIPTION FILE ===============================================

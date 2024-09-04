@@ -75,7 +75,12 @@ else
     XeVoxelInfo = MainInput.XeVoxelInfo;
 end
 RegistrationType = MainInput.RegistrationType;
-DataLocation = fullfile(MainInput.XeDataLocation,'Gas Exchange Analysis');
+if strcmp(MainInput.AnalysisType,'GasExchange')
+    DataLocation = fullfile(MainInput.XeDataLocation,'Gas Exchange Analysis');
+else
+    DataLocation = fullfile(MainInput.XeDataLocation,'Ventilation Analysis');
+end
+
 cd(DataLocation)
 H_RecMatrix = Proton.H_RecMatrix;
 % if strcmp(MainInput.AnalysisType,'Ventilation') == 1 
@@ -165,7 +170,10 @@ tform = geomtform;
 % [xWorld,yWorld,zWorld] = transformPointsForward(geomtform,centerXWorld,centerYWorld,centerZWorld);
 % [r,c,p] = worldToSubscript(Rfixed,xWorld,yWorld,zWorld);
 ProtonRegistered = imwarp(movingVolume,Rmoving,geomtform,'bicubic','OutputView',Rfixed);
-ProtonHRRegistered = imwarp(Proton.ProtonImageHR,Rmoving,geomtform,'bicubic','OutputView',Rfixed);
+if strcmp(MainInput.AnalysisType,'GasExchange')
+    ProtonHRRegistered = imwarp(Proton.ProtonImageHR,Rmoving,geomtform,'bicubic','OutputView',Rfixed);
+end
+
 %% stor data
 for slice =1:size(fixedVolume,3)
     A = ProtonRegistered(:,:,slice);
@@ -239,7 +247,9 @@ if strcmp(MainInput.AnalysisType,'GasExchange')
     Proton.Slices_Ax = Slices_Ax; 
     Proton.optimizer = optimizer;
     Proton.ProtonRegistered = ProtonRegistered;
-    Proton.ProtonHRRegistered = ProtonHRRegistered;
+    if strcmp(MainInput.AnalysisType,'GasExchange')
+        Proton.ProtonHRRegistered = ProtonHRRegistered;
+    end
     Proton.ProtonMaskRegistred = LungMask;
     Proton.ProtonRegisteredColored = permute(ProtonRegisteredColored,[1 2 4 3]);
     GasExchange.LungMask = LungMask;
