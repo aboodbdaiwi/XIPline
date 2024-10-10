@@ -3,7 +3,7 @@
     <param.appname>XIPline</param.appname>
     <param.icon />
     <param.icons />
-    <param.version>1.1.0</param.version>
+    <param.version>1.1</param.version>
     <param.authnamewatermark>CCHMC-CPIR</param.authnamewatermark>
     <param.email>abdullah.bdaiwi@cchmc.org</param.email>
     <param.company>Cincinnati Children's Hospital</param.company>
@@ -83,15 +83,31 @@
       <file>${PROJECT_ROOT}\+Registration</file>
       <file>${PROJECT_ROOT}\+Segmentation</file>
       <file>${PROJECT_ROOT}\+VentilationFunctions</file>
+      <file>${PROJECT_ROOT}\Example_Data</file>
       <file>${PROJECT_ROOT}\Icons</file>
+      <file>${PROJECT_ROOT}\README.md</file>
       <file>${PROJECT_ROOT}\user_manual</file>
       <file>${PROJECT_ROOT}\V3 Scan Info</file>
       <file>${PROJECT_ROOT}\XeCTC Scan Info</file>
+      <file>${PROJECT_ROOT}\XIPline_Code_Script.m</file>
       <file>${PROJECT_ROOT}\XIPline_resources</file>
     </fileset.resources>
     <fileset.package />
     <fileset.depfun>
       <file>D:\OneDrive - cchmc\Lab\Philips_ADC\imVolume.m</file>
+      <file>D:\OneDrive - cchmc\Lab\Xe_App\testtingData\Test_Data_forXIPline\Example_Data\GasExchange\Philips_IRC186H_1029\GasData\Gas Exchange Analysis\Barrier_Histogram.png</file>
+      <file>D:\OneDrive - cchmc\Lab\Xe_App\testtingData\Test_Data_forXIPline\Example_Data\GasExchange\Philips_IRC186H_1029\GasData\Gas Exchange Analysis\BinnedBarrierUptake.tif</file>
+      <file>D:\OneDrive - cchmc\Lab\Xe_App\testtingData\Test_Data_forXIPline\Example_Data\GasExchange\Philips_IRC186H_1029\GasData\Gas Exchange Analysis\BinnedDissolved.tif</file>
+      <file>D:\OneDrive - cchmc\Lab\Xe_App\testtingData\Test_Data_forXIPline\Example_Data\GasExchange\Philips_IRC186H_1029\GasData\Gas Exchange Analysis\BinnedRBCBarrier.tif</file>
+      <file>D:\OneDrive - cchmc\Lab\Xe_App\testtingData\Test_Data_forXIPline\Example_Data\GasExchange\Philips_IRC186H_1029\GasData\Gas Exchange Analysis\BinnedRBCOscillation.tif</file>
+      <file>D:\OneDrive - cchmc\Lab\Xe_App\testtingData\Test_Data_forXIPline\Example_Data\GasExchange\Philips_IRC186H_1029\GasData\Gas Exchange Analysis\BinnedRBCTransfer.tif</file>
+      <file>D:\OneDrive - cchmc\Lab\Xe_App\testtingData\Test_Data_forXIPline\Example_Data\GasExchange\Philips_IRC186H_1029\GasData\Gas Exchange Analysis\BinnedVent.tif</file>
+      <file>D:\OneDrive - cchmc\Lab\Xe_App\testtingData\Test_Data_forXIPline\Example_Data\GasExchange\Philips_IRC186H_1029\GasData\Gas Exchange Analysis\Dissolved_Histogram.png</file>
+      <file>D:\OneDrive - cchmc\Lab\Xe_App\testtingData\Test_Data_forXIPline\Example_Data\GasExchange\Philips_IRC186H_1029\GasData\Gas Exchange Analysis\OscWorkFlow_Fig.png</file>
+      <file>D:\OneDrive - cchmc\Lab\Xe_App\testtingData\Test_Data_forXIPline\Example_Data\GasExchange\Philips_IRC186H_1029\GasData\Gas Exchange Analysis\RBC_Barrier_Histogram.png</file>
+      <file>D:\OneDrive - cchmc\Lab\Xe_App\testtingData\Test_Data_forXIPline\Example_Data\GasExchange\Philips_IRC186H_1029\GasData\Gas Exchange Analysis\RBC_Histogram.png</file>
+      <file>D:\OneDrive - cchmc\Lab\Xe_App\testtingData\Test_Data_forXIPline\Example_Data\GasExchange\Philips_IRC186H_1029\GasData\Gas Exchange Analysis\RBC_Oscillation_Histogram.png</file>
+      <file>D:\OneDrive - cchmc\Lab\Xe_App\testtingData\Test_Data_forXIPline\Example_Data\GasExchange\Philips_IRC186H_1029\GasData\Gas Exchange Analysis\Ventilation_Histogram.png</file>
     </fileset.depfun>
     <build-deliverables>
       <file location="${PROJECT_ROOT}\XIPline\for_testing" name="splash.png" optional="false">D:\Github\XIPline\XIPline\for_testing\splash.png</file>

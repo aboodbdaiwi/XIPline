@@ -380,7 +380,8 @@ elseif strcmp(MainInput.AnalysisType,'Diffusion')
 end
 %% Load/Read Proton data 
 %% 
-if MainInput.NoProtonImage == 0    
+if (isnumeric(MainInput.NoProtonImage) && MainInput.NoProtonImage == 0) || ...
+   (ischar(MainInput.NoProtonImage) && strcmp(MainInput.NoProtonImage, 'no'))
     try 
         cd(MainInput.HDataLocation)
         if strcmp(MainInput.AnalysisType,'Ventilation')                 

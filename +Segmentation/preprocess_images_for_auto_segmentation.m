@@ -28,11 +28,13 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
                 end
             else
                 Im_size = 256;
-                if size(Ventilation.Image,1) ~= Im_size
+                if size(Ventilation.Image,1) ~= Im_size || size(Ventilation.Image,2) ~= Im_size
                     Xe_Img = zeros(Im_size,Im_size,size(Ventilation.Image,3));
                     for i = 1:size(Ventilation.Image,3)
                         Xe_Img(:,:,i) = imresize(Ventilation.Image(:,:,i),[Im_size,Im_size]);
                     end
+                else
+                    Xe_Img = Ventilation.Image;               
                 end
             end
             
@@ -50,11 +52,13 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
                         H_Img = Proton.ProtonRegistered;
                     end
                 else
-                    if size(Proton.Image,1) ~= Im_size
+                    if size(Proton.Image,1) ~= Im_size || size(Proton.Image,2) ~= Im_size
                         H_Img = zeros(Im_size,Im_size,size(Proton.Image,3));
                         for i = 1:size(Proton.Image,3)
                             H_Img(:,:,i) = imresize(Proton.ProtonRegistered(:,:,i),[Im_size,Im_size]);
                         end
+                    else
+                        H_Img = Proton.ProtonRegistered;
                     end
                 end
                 % normalize
@@ -85,11 +89,13 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
         case 'Diffusion'
             % resize xenon images
             Im_size = 64;
-            if size(Diffusion.Image,1) ~= Im_size
+            if size(Diffusion.Image,1) ~= Im_size || size(Diffusion.Image,2) ~= Im_size
                 Xe_Img = zeros(Im_size,Im_size,size(Diffusion.Image,3));
                 for i = 1:size(Diffusion.Image,3)
                     Xe_Img(:,:,i) = imresize(Diffusion.Image(:,:,i,1),[Im_size,Im_size]);
                 end
+            else
+                Xe_Img = Diffusion.Image(:,:,:,1);
             end
             % normalize
             Xe_Img = Xe_Img./max(Xe_Img(:));
@@ -118,7 +124,7 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
             % resize proton images
             if strcmp(MainInput.NoProtonImage, 'no') || MainInput.NoProtonImage == 0
                 % resize
-                if size(Proton.ProtonRegistered,1) ~= Im_size
+                if size(Proton.ProtonRegistered,1) ~= Im_size || size(Proton.ProtonRegistered,2) ~= Im_size
                     H_Img = imresize3(Proton.ProtonRegistered, Im_size);
                 else
                     H_Img = Proton.ProtonRegistered;

@@ -168,6 +168,15 @@ switch MainInput.SegmentationMethod
             disp('Uploaded AutoSegmentation')
         end
         % segmentation type
+        % Check if MainInput.NoProtonImage is 'yes' or 'no', then convert to 1 or 0
+        if strcmp(MainInput.NoProtonImage, 'yes')
+            MainInput.NoProtonImage = 1;
+        elseif strcmp(MainInput.NoProtonImage, 'no')
+            MainInput.NoProtonImage = 0;
+        else
+            error('MainInput.NoProtonImage must be ''yes'' or ''no''.');
+        end        
+        % segmentation type
         switch MainInput.AnalysisType
             case 'Ventilation'                            
                switch MainInput.SliceOrientation
@@ -238,7 +247,7 @@ switch MainInput.SegmentationMethod
 
                 switch MainInput.AnalysisType
                     case 'Ventilation'
-                        if size(Mask,1) ~= size(Ventilation.Image,1)
+                        if size(Mask,1) ~= size(Ventilation.Image,1) || size(Mask,2) ~= size(Ventilation.Image,2)
                             temp_mask = zeros(size(Ventilation.Image));
                             if strcmp(MainInput.SegmentType, 'gx_3D_1ch_iso') || strcmp(MainInput.SegmentType, 'gx_3D_2ch_iso')
                                 temp_mask = imresize3(Mask, size(Ventilation.Image));
