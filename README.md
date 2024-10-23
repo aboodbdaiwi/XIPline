@@ -18,7 +18,7 @@ XIPline application is developed at the [CPIR](https://www.cincinnatichildrens.o
 To install XIPline, download the [`XIPlineInstaller.exe`](https://zenodo.org/records/13975562?token=eyJhbGciOiJIUzUxMiJ9.eyJpZCI6ImJlNGQ2ZmFlLTQ2YjItNGExZS04YjAwLTgxZDA2ZTk3MDg4MCIsImRhdGEiOnt9LCJyYW5kb20iOiJhMTBmNzE4YzhjMWRmOTM2ZGEwMzQyNTBjYzg4NDVlMyJ9.7TGIE0yU51SVSYzlYL2Z7KWqHLd5h5QzzvnxH1V4wxgOUZYN86PHANCFi2nalYeRfvkiCajC58_5RvA3SfQ7pw) file. and fellow the normal instllation steps. This step doesn't require additional steps except downloading the pre-trained deep-learning models for auto-segmentation (see below). 
 
 #### auto-segmentation: Downloading the .h5 models for machine learning
-1 - Download the h5 models for auto segmentation from [here](https://drive.google.com/drive/folders/1CIFWiEEHiJ0wWNwVQTAFq40OrirYuE7q?usp=drive_link).
+1 - Download the h5 models for auto segmentation from [here](https://zenodo.org/records/13975562?token=eyJhbGciOiJIUzUxMiJ9.eyJpZCI6ImJlNGQ2ZmFlLTQ2YjItNGExZS04YjAwLTgxZDA2ZTk3MDg4MCIsImRhdGEiOnt9LCJyYW5kb20iOiJhMTBmNzE4YzhjMWRmOTM2ZGEwMzQyNTBjYzg4NDVlMyJ9.7TGIE0yU51SVSYzlYL2Z7KWqHLd5h5QzzvnxH1V4wxgOUZYN86PHANCFi2nalYeRfvkiCajC58_5RvA3SfQ7pw).
 
 2 - Create this path `C:\XIPline\models` in your local `C:\` drive and add the downloaded .h5 files in the `models` folder. 
 
