@@ -1,0 +1,72 @@
+Software License Agreement for XIPline (129Xe Image Processing Pipeline)
+
+-------------------------------------------------------------------------
+1. License Overview
+This Software License Agreement ("Agreement") is a legal agreement between you ("Licensee" or "User") and the developers of the 129Xe Image Processing Pipeline (XIPline) software ("Licensor"). By downloading, installing, copying, or using this software, you agree to be bound by the terms and conditions of this Agreement.
+The XIPline application was developed and belongs to the Center for Pulmonary Imaging at Cincinnati Children's Hospital Medical Center. It is intended for research use only and is not approved for commercial or clinical purposes.
+
+-------------------------------------------------------------------------
+2. License Grant
+- Research Use Only: This software is licensed for non-commercial research purposes only. The Licensee is granted a non-exclusive, non-transferable license to install, use, and modify the XIPline software solely for research purposes. Any use of this software for commercial purposes, including but not limited to the development of commercial products or services, is strictly prohibited without prior written permission from the Licensor.
+- Scope: The Licensee is permitted to use XIPline for analyzing and processing hyperpolarized 129Xe MRI data as described in the software documentation. Modifications to the source code are allowed only if they are confined to research activities. Redistribution of modified versions is allowed under the same terms as this Agreement, provided proper credit is given to the Licensor and contributors.
+
+-------------------------------------------------------------------------
+3. Ownership
+- Intellectual Property: The XIPline software and all associated intellectual property rights are owned by the Center for Pulmonary Imaging at Cincinnati Children's Hospital Medical Center. The Licensee does not obtain any ownership interest in the software or any related intellectual property through this Agreement. Any modifications made by the Licensee remain the property of the Licensor if distributed.
+
+-------------------------------------------------------------------------
+4. Restrictions
+- Prohibited Uses: The Licensee shall not:
+  - Use the software for any commercial purposes without explicit permission.
+  - Rent, lease, sell, or sublicense the software to any third party.
+  - Distribute the software in any form without including this Agreement.
+  - Reverse engineer, decompile, or disassemble the software, except to the extent that applicable law expressly permits this activity.
+
+- Data Privacy: The Licensee shall ensure that any data processed through the software complies with applicable data protection and privacy regulations. The Licensor is not responsible for any misuse or unauthorized use of patient data.
+
+-------------------------------------------------------------------------
+5. Modifications and Contributions
+- Open-Source Contributions: XIPline is released as open-source software under the MIT. Any contributions made by users to the codebase must comply with the terms of the chosen open-source license. Contributions should be submitted to the official repository, and contributors will be credited accordingly.
+
+- Changes by Licensee: Licensees may modify the software for research purposes but must ensure the modified version clearly identifies changes made. If distributed, the modified version must include attribution to the original Licensor.
+
+-------------------------------------------------------------------------
+6. Publications and Acknowledgments
+- Attribution: If the Licensee uses XIPline in published research, the Licensee must appropriately cite the software and any associated publications, including the following citation (or as indicated in software documentation):
+ - Citation: Abdullah S. Bdaiwi, Matthew M. Willmering, Joseph W. Plummer, Riaz Hussain, David J. Roach, Jason C. Woods, Laura L. Walkup, and Zackary I. Cleveland “129Xe Image Processing Pipeline (XIPline): Open-Source, Graphical User Interface Application for Hyperpolarized 129Xe MRI Analysis”. MRM, (pending publication).
+- Contributions in Publications: The Licensee agrees to acknowledge the Center for Pulmonary Imaging at Cincinnati Children's Hospital Medical Center in any publication that results from the use of the software. The Licensee may consult with the Licensor regarding collaborative authorship on publications.
+
+-------------------------------------------------------------------------
+7. Termination
+- Termination by Licensor: The Licensor reserves the right to terminate this Agreement if the Licensee fails to comply with the terms herein. Upon termination, the Licensee must cease all use of the software and destroy any copies.
+- Termination by Licensee: The Licensee may terminate this Agreement by discontinuing use of the software and destroying all copies.
+
+-------------------------------------------------------------------------
+8. Disclaimers
+- No Warrant*: The software is provided "as is," without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, or non-infringement. In no event shall the Licensor be liable for any claim, damages, or other liability, whether in an action of contract, tort, or otherwise, arising from, out of, or in connection with the software or the use or other dealings in the software.
+- Support: The Licensor is not obligated to provide any technical support, updates, or bug fixes to the Licensee. However, updates may be made available via the official repository.
+
+-------------------------------------------------------------------------
+9. Limitation of Liability
+- No Liability for Damages: Under no circumstances shall the Licensor be liable for any damages that result from the use or inability to use the software, including but not limited to loss of data, direct or indirect damages, or any claims from third parties. This limitation applies even if the Licensor has been advised of the possibility of such damages.
+
+-------------------------------------------------------------------------
+10. Indemnification
+The Licensee agrees to indemnify, defend, and hold harmless the Licensor from and against any and all claims, liabilities, damages, losses, or expenses arising from the Licensee’s use of the software, including but not limited to any misuse of the software, or any violation of this Agreement.
+
+-------------------------------------------------------------------------
+11. Entire Agreement
+This Agreement constitutes the entire agreement between the Licensee and Licensor concerning the subject matter hereof and supersedes all prior agreements or understandings, whether oral or written.
+
+-------------------------------------------------------------------------
+12. Amendments
+This Agreement may only be modified by a written amendment signed by an authorized representative of the Licensor.
+
+-------------------------------------------------------------------------
+By using the XIPline software, the Licensee acknowledges that they have read, understood, and agreed to be bound by the terms and conditions outlined in this Agreement.
+
+For any inquiries regarding this Agreement or the use of the XIPline software, please contact the Center for Pulmonary Imaging at Cincinnati Children's Hospital Medical Center.
+Abdullah S. Bdaiwi
+Abdullah.bdaiwi@cchmc.org 
+
+

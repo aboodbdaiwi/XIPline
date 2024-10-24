@@ -21,10 +21,11 @@ start_path = pwd;
 
 % Get list of DICOM files
 DataFiles = dir(fullfile(DataPath, '*.dcm'));
+
 DataFiles = struct2cell(DataFiles);
 FileNames = DataFiles(1,:);
 path = char(DataFiles(2,1));
-
+[~, sortedIdx] = sort(FileNames);
 cd(path);
 
 num_files = length(FileNames);
@@ -45,7 +46,7 @@ if num_files > 1
     for indx = 1:num_files
         img_slice = squeeze(dicomread(FileNames{indx}));
         all_slices{indx} = img_slice;
-        info = dicominfo(FileNames{indx});
+        info = dicominfo(FileNames{indx});        
 
         % Read Image Position Patient (0020,0032)
         if isfield(info, 'ImagePositionPatient')
@@ -72,6 +73,7 @@ if num_files > 1
             imag_vol(:,:,slice) = all_slices{slice};
         end
     end
+
     try 
         % Find unique elements and their counts
         [uniqueVec, ~, idx] = unique(instanceNumbers);

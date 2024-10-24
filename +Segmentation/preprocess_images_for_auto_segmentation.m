@@ -31,7 +31,9 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
                 if size(Ventilation.Image,1) ~= Im_size || size(Ventilation.Image,2) ~= Im_size
                     Xe_Img = zeros(Im_size,Im_size,size(Ventilation.Image,3));
                     for i = 1:size(Ventilation.Image,3)
-                        Xe_Img(:,:,i) = imresize(Ventilation.Image(:,:,i),[Im_size,Im_size]);
+                         resImg = imresize(Ventilation.Image(:,:,i),[Im_size,Im_size]);
+                         %resImg = (resImg - min(resImg(:)))./(max(resImg(:)) - min(resImg(:)));
+                         Xe_Img(:,:,i) = resImg;
                     end
                 else
                     Xe_Img = Ventilation.Image;               
