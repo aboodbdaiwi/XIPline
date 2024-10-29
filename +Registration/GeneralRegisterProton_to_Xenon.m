@@ -33,6 +33,7 @@ elseif strcmp(MainInput.AnalysisType,'GasExchange')
         fixed1 = XeImage;
     end
 end
+%     figure; Global.imslice(fixed1);
 
 HImage = Proton.Image;
 nSlice = size(fixed1,3);
@@ -80,6 +81,7 @@ if strcmp(MainInput.AnalysisType,'GasExchange')
 else
     DataLocation = fullfile(MainInput.XeDataLocation,'Ventilation Analysis');
 end
+%     figure; Global.imslice(moving1);
 
 cd(DataLocation)
 H_RecMatrix = Proton.H_RecMatrix;
@@ -99,6 +101,21 @@ disp('performing registration, please wait...');
 if (MainInput.SliceSelection == 1) && any(size(moving1) ~= size(fixed1))
     moving1 = squeeze(moving1(:,:,MainInput.Hstart:MainInput.Hend));
     fixed1 = squeeze(fixed1(:,:,MainInput.Xestart:MainInput.Xeend));
+    % maxsize = max(size(fixed1,1), size(fixed1,2));
+    % if size(fixed1, 1) ~= size(fixed1, 2) 
+    %     resizefixed1 = zeros(maxsize, maxsize, size(fixed1,3));
+    %     for i = 1:size(fixed1, 3)
+    %         resizefixed1(:,:,i) = imresize(squeeze(fixed1(:,:,i)),[maxsize, maxsize]);
+    %     end
+    %     fixed1 = resizefixed1;
+    % end    
+    % if size(moving1, 1) ~= size(fixed1, 1) || size(moving1, 2) ~= size(fixed1, 2)
+    %     resizemoving1 = zeros(size(fixed1,1), size(fixed1,2), size(moving1,3));
+    %     for i = 1:size(moving1, 3)
+    %         resizemoving1(:,:,i) = imresize(squeeze(moving1(:,:,i)),[maxsize, maxsize]);
+    %     end
+    %     moving1 = resizemoving1;
+    % end
     if size(moving1,3) < size(fixed1,3)
         Im1 = fixed1;
         Im2 = moving1;
@@ -110,6 +127,30 @@ if (MainInput.SliceSelection == 1) && any(size(moving1) ~= size(fixed1))
     end
     nSlice = size(Im1,3);
 end
+
+
+% % Get the size of the original array
+% [Xerows, Xecols, Xeslices] = size(fixed1);
+% [Hrows, Hcols, ~] = size(moving1);
+% % Check if the third dimension is less than 16
+% if Xeslices < 16
+%     % Create a new 3D array of size 100x100x16 filled with zeros
+%     newfixed1 = zeros(Xerows, Xecols, 16);
+%     newmoving1 = zeros(Hrows, Hcols, 16);
+%     % Calculate the starting index to place the original array in the middle
+%     startSlice = floor((16 - Xeslices) / 2) + 1;
+%     endSlice = startSlice + Xeslices - 1;
+% 
+%     % Place the original array in the middle of the new array
+%     newfixed1(:,:,startSlice:endSlice) = fixed1;
+%     newmoving1(:,:,startSlice:endSlice) = moving1;
+%     fixed = newfixed1;
+%     moving = newmoving1;
+% else
+%     moving = moving1;
+%     fixed = fixed1;
+%     disp('The third dimension is already 16 or greater. No resizing needed.');
+% end
 
 % check image dimenssion if less than 16
 if size(moving1,3) < 16  
@@ -173,7 +214,7 @@ ProtonRegistered = imwarp(movingVolume,Rmoving,geomtform,'bicubic','OutputView',
 if strcmp(MainInput.AnalysisType,'GasExchange')
     ProtonHRRegistered = imwarp(Proton.ProtonImageHR,Rmoving,geomtform,'bicubic','OutputView',Rfixed);
 end
-
+% figure; imslice(ProtonRegistered)
 %% stor data
 for slice =1:size(fixedVolume,3)
     A = ProtonRegistered(:,:,slice);
@@ -188,8 +229,9 @@ Proton.Rfixed = Rfixed;
 Proton.optimizer = optimizer;
 Proton.geomtform = geomtform;
 Proton.ProtonRegisteredColored = permute(ProtonRegisteredColored,[1 2 4 3]);
+% figure; orthosliceViewer(Proton.ProtonRegisteredColored)
 %% view
-% orthosliceViewer(Proton.ProtonRegisteredColored)
+
 if strcmp(MainInput.AnalysisType,'GasExchange')
     %Determine Slices to Plot
     NumPlotSlices = 7;

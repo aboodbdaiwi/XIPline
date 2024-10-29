@@ -41,6 +41,6 @@ function [matched_im] = match_n_slices(Im1,Im2)
     end
 
     matched_im = zeros(size(Im2,1),size(Im2,2),size(Im1,3));
-    matched_im(:,:,Im1_slice_indx) = Image_3D;         
+    matched_im(1:min(size(Im2,1),size(Image_3D,1)),1:1:min(size(Im2,2),size(Image_3D,2)),Im1_slice_indx) = Image_3D(1:min(size(Im2,1),size(Image_3D,1)),1:1:min(size(Im2,2),size(Image_3D,2)),Im1_slice_indx);         
 %     figure; Global.imslice(matched_im);
 end
