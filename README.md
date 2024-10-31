@@ -22,7 +22,7 @@ To install XIPline, download the [`XIPlineInstaller.exe`](https://zenodo.org/rec
 
 2 - Create this path `C:\XIPline\models` in your local `C:\` drive and add the downloaded .h5 files in the `models` folder. 
 
-3 - Install [Python](https://www.python.org/downloads/) 3.10. 
+3 - Install [Python](https://www.python.org/downloads/) 3.10.2 and make sure to add the Python path to the environment variables.
 
 Please refer to `User_Manual.pdf` document for more detailed steps. 
 
@@ -71,5 +71,5 @@ Personal email: abdaiwi89@gmail.com
 
 Website: [CPIR](https://www.cincinnatichildrens.org/research/divisions/c/cpir)
 
-please cite this paper: TBA
+please cite this paper: Bdaiwi AS, Willmering MM, Plummer JW, et al. 129Xe Image Processing Pipeline: An open-source, graphical user interface application for the analysis of hyperpolarized 129 Xe MRI. Magn Reson Med.2024;1-18. doi: 10.1002/mrm.30347
 
