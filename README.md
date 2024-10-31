@@ -22,7 +22,7 @@ To install XIPline, download the [`XIPlineInstaller.exe`](https://zenodo.org/rec
 
 2 - Create this path `C:\XIPline\models` in your local `C:\` drive and add the downloaded .h5 files in the `models` folder. 
 
-3 - Install [Python](https://www.python.org/downloads/) 3.10. 
+3 - Install [Python](https://www.python.org/downloads/) 3.10.2 and make sure to add the Python path to the environment variables.
 
 Please refer to `User_Manual.pdf` document for more detailed steps. 
 
