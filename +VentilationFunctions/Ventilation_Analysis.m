@@ -7,7 +7,7 @@ function [Ventilation] = Ventilation_Analysis (Ventilation,Proton,MainInput)
 %      
 %   Outputs:
 %                   
-%   Package: https://github.com/aboodbdaiwi/HP129Xe_Analysis_App
+%   Package: https://github.com/aboodbdaiwi/xipline
 %
 %   Author: Abdullah S. Bdaiwi
 %   Work email: abdullah.bdaiwi@cchmc.org
@@ -56,6 +56,21 @@ end
 ventmean = Ventilation.LB_RefMean; % Defined by data collected up to Jan 2021.
 ventstd =  Ventilation.LB_RefSD; % Defined by data collected up to Jan 2021.
 
+%% Calculate SNR:
+switch settings.calculate_SNR
+    case "yes"
+%         waitbar(.20,f,'Calculating SNR...');
+%         pause(.1)        
+        disp('Calculating SNR...')
+        [SNR_slice, Overall_SNR] = VentilationFunctions.calculate_SNR(Ventilation, parentPath);
+        Ventilation.SNR_slice = SNR_slice;
+        Ventilation.Overall_SNR = Overall_SNR;
+    case "no"
+        disp('SNR calculation has been skipped.')
+    otherwise
+        disp('Input error. Check inputs/outputs of input_params().')
+end
+close all;
 
 %% 5) Apply RF correction to images:
 % Generally, we choose not to perform RF correction on images if we run N4
@@ -118,21 +133,7 @@ switch settings.N4_bias_analysis
         disp('Input error. Check inputs/outputs of input_params().')
 end
 
-%% 7) Calculate SNR:
-switch settings.calculate_SNR
-    case "yes"
-%         waitbar(.20,f,'Calculating SNR...');
-%         pause(.1)        
-        disp('Calculating SNR...')
-        [SNR_slice, Overall_SNR] = VentilationFunctions.calculate_SNR(Ventilation);
-        Ventilation.SNR_slice = SNR_slice;
-        Ventilation.Overall_SNR = Overall_SNR;
-    case "no"
-        disp('SNR calculation has been skipped.')
-    otherwise
-        disp('Input error. Check inputs/outputs of input_params().')
-end
-close all;
+
 %% Proton image
 if MainInput.NoProtonImage == 1 
     Proton.ProtonRegistered = zeros(size(MR));

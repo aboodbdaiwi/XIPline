@@ -1,4 +1,4 @@
-function [SNR_slice, Overall_SNR] = calculate_SNR(Ventilation)
+function [SNR_slice, Overall_SNR] = calculate_SNR(Ventilation, parentPath)
 %% MATLAB script to perform SNR calculation
 % This code uses the ventilation images (can be N4 corrected or
 % original), and the corresponding masks, to generate an array of SNR
@@ -102,6 +102,7 @@ Overall_SNR = round((overall_mean/overall_std), 2)*sqrt(2 - (pi/2));
 
 disp(['Mean SNR for all masked ventilation slices = ',num2str(Overall_SNR)])
 
+cd(parentPath);
 % Generate a text file with the SNR of each slice
 C = num2cell(SNR_slice);
 filePh = fopen('SNR.txt','w');
