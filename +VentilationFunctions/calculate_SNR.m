@@ -46,8 +46,9 @@ maskarray_dilated = imdilate(maskarray, SE);
 %     airwaymask = Segmentation.SegmentLungthresh(MR,1,1);
 % end
 % force airway mask
-airwaymask = Segmentation.SegmentLungthresh(MR,1,1);
-
+airwaymask = Segmentation.SegmentLungthresh(MR,0.5,1);
+% airwaymask = double(MR > 2000);
+% imslice(airwaymask)
 backgroundmask = double(imcomplement(maskarray_dilated).*~airwaymask);
 background1 = (MR).*(backgroundmask);
 

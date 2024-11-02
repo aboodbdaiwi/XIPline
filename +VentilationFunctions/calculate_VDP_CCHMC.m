@@ -295,7 +295,7 @@ for slice = 1:size(d_Incomplete_rgb,3)
     array4dincomplete(:,:,:,slice) =  ind2rgb(d_Incomplete_rgb(:,:,slice),cm_incomplete);
 end
 cm_complete=[0 0 0
-    1 0 0]; % red
+    1 1 0]; % red
 % cm_complete=[0 0 0
 %     1 0 0];
 array4dcomplete = zeros(size(d_Complete_rgb,1), size(d_Complete_rgb,2),3,...
@@ -398,7 +398,7 @@ cd(DataPath)
 % S = orthosliceViewer((BinnedVentmap)); %colormap(SixBinMap);
 %% Generate montages
 % check images size, 2D or 3D
-if size(Ventilation.Image,3) > 30
+if size(Ventilation.Image,3) > 40
     Image_3D = 1;
     nrow = ceil(sqrt(size(scaledImage,3)));
     % Initialize an empty vector to store indices of slices with no zeros
