@@ -1,0 +1,24 @@
+This component implements whole lung and lobar 3He MRI ventilation measurements:
+
+A) Whole lung 3He MRI ventilation measurements:
+1. CoSeg_GPU.cu and CoSeg_kernels.cu
+	GPU implementation of the 1H-3He MRI joint lung segmentation algorithm. 
+2. CO_segmentation.m
+	This function calls the above GPU-based segmentation function and requires: 3D 1H and 3He MR images and the respective user seeds.
+3. clustering_3D.m
+	This function performs k-means clustering of 3He MRI images and returns 3He MRI clustering (5 clusters) maps.
+4. VDP_calculation.m
+	This function requires segmented lung mask and ventilation maps, computes whole lung ventilation defect percent, and save results as a ".txt" file. 
+
+
+B) Lobar 3He MRI ventilation measurements:
+1. CoReg_TVL1_Newton_GPU_Ind_opt.cu and CoReg_TVL1_Newton_Ind_kernels.cu
+	GPU implementation of CT-1H and CT-3He MRI simultaneous deformable registration algorithm. 
+2. CoReg.m
+	The function calls the above GPU registration function and requires: 3D CT, 1H and 3He MR images as inputs and returns the estimated deformation field.
+3. DeformLabels3D.m
+	This function deforms CT lobe mask (provided by VIDA for example) using the above obtained deformation field.
+4. clustering_3D.m
+	This function performs k-means clustering of 3He MRI images and returns 3He MRI clustering (5 clusters) maps.
+5. VDP_calculation.m
+	This function requires deformed CT lobe mask and 3He MRI cluster maps, computes lobar lung ventilation defect percent, and save results as a ".txt" file. 

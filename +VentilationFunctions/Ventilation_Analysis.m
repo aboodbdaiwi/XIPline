@@ -222,7 +222,13 @@ end
 close all;
 %% K-means VDP
 if strcmp(Ventilation.Kmeans,'yes')
-    [Ventilation] = VentilationFunctions.calculate_kMeans_VDP(Ventilation,Proton,MainInput);
+    Ventilation.parentPath = parentPath;
+    % Riaz code
+    % [Ventilation] = VentilationFunctions.calculate_kMeans_VDP(Ventilation,Proton,MainInput); 
+    % Samal's code
+    % [Ventilation] = VentilationFunctions.kmeansCalc(Ventilation,Proton,MainInput);
+    % Grace's (Rachel) code
+    [Ventilation] = VentilationFunctions.kmeans.VDP_calculationASB(Ventilation,Proton,MainInput);
 end
 close all;
 %% DDI
