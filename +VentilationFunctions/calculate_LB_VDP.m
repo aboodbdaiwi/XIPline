@@ -1,4 +1,4 @@
-function [Ventilation] = calculate_LB_VDP(MR, maskarray, maskarraytrachea, ventmean, ventstd, parentPath, N4_bias_analysis, Overall_SNR,Ventilation,Proton,MainInput)
+function [Ventilation] = calculate_LB_VDP(Ventilation,Proton,MainInput)
 %% MATLAB script to perform Linear Binning VDP calculation
 
 % Authors: Joseph Plummer
@@ -35,13 +35,29 @@ function [Ventilation] = calculate_LB_VDP(MR, maskarray, maskarraytrachea, ventm
 % else
 %     disp('User must declare whether or they are analyzing N4 corrected images. Check settings/input_params(), and make sure N4_bias_analysis = yes or no.')
 % end
+
+%% extract variables 
+MR = Ventilation.Image;
+maskarray = Ventilation.LungMask;
+% maskarray = double(Ventilation.LungMask + Ventilation.VesselMask);
+% maskarray(maskarray > 1) = 0;
+% maskarray = double(maskarray);
+airwaymask = Ventilation.AirwayMask;
+maskarraytrachea = maskarray;
+maskarraytrachea(airwaymask == 1)=0;    
+Ventilation.maskarraytrachea = maskarraytrachea;
+ventmean = mean(Ventilation.Thresholds);
+ventstd = std(Ventilation.Thresholds);
+parentPath = Ventilation.parentPath;
+Overall_SNR = Ventilation.Overall_SNR;
+Thresholds = Ventilation.Thresholds;
+
 cd(parentPath)
 foldername = "VDP Analysis\";
 mkdir(foldername)
 LB_outputpath = char(foldername);
 LB_outputpath = [parentPath, LB_outputpath];
 cd(LB_outputpath)
-
 %% 2) Perform N4 bias correction OR RF correction:
 % moved outside the function
 % if N4_bias_analysis == "no"
@@ -59,15 +75,38 @@ cd(LB_outputpath)
 % Make a logical array of the trachea:
 maskarray4 = logical(maskarraytrachea);
 VentImage = MR;
-NormMR2 = VentImage.*(maskarraytrachea > 0); % Normalize
+% apply median filter; 
+VentImage = VentilationFunctions.medFilter(VentImage);
 
+NormMR2 = VentImage.*(maskarraytrachea > 0); % Normalize
+NormMR2 = (NormMR2 - min(NormMR2(:)))/(max(NormMR2(:)) - min(NormMR2(:)));
+NormMR3 = NormMR2; % Normalize
+NormMR3(maskarraytrachea == 0) = [];
 %% 3) Generate bins for the linear binned data:
-% Divide the lungs up into percentiles based on the trachea signal:
-VentMax2 = prctile((NormMR2(maskarray4(:))),99.0); % 99.5th percentile
+% 
+switch Ventilation.LB_Normalization
+    case 'mean'
+        NFactor = mean(NormMR3(:));
+        ScaledVentImage2 = NormMR2/NFactor;
+        NormMR4 = ScaledVentImage2;
+        NormMR4(maskarraytrachea == 0) = [];
+        Im99percentile = prctile(NormMR4,99.9); % 99.5th percentile
+        ScaledVentImage2(ScaledVentImage2 >= Im99percentile) = Im99percentile;      
+    case 'median'
+        NFactor = median(NormMR3(:)); 
+        ScaledVentImage2 = NormMR2/NFactor;
+        NormMR4 = ScaledVentImage2;
+        NormMR4(maskarraytrachea == 0) = [];
+        Im99percentile = prctile(NormMR4,99.9); % 99.5th percentile
+        ScaledVentImage2(ScaledVentImage2 >= Im99percentile) = Im99percentile;
+    case 'percentile'
+        NormMR2 = (NormMR2 - min(NormMR2(:)))/(max(NormMR2(:)) - min(NormMR2(:)));
+        NFactor = prctile((NormMR2(maskarray4(:))),99.5); % 99.5th percentile
+        ScaledVentImage2 = NormMR2/NFactor;
+        ScaledVentImage2(ScaledVentImage2 > 1) = 1;
+end
 
 % Re-scale the images:
-ScaledVentImage2 = NormMR2/VentMax2;
-ScaledVentImage2(ScaledVentImage2 > 1) = 1;
 ScaledVentImagenan2 = ScaledVentImage2;
 ScaledVentImagenan2(ScaledVentImagenan2 == 0) = nan;
 
@@ -88,7 +127,7 @@ SixBinMap = [1 0 0  %Red %Used for Vent and RBC
              ];
 
 % Define thresholds based on standard deviations:         
-VentThresh2 = [ventmean-2*ventstd ,ventmean-1*ventstd ,ventmean,ventmean+ventstd,ventmean+2*ventstd];
+% VentThresh2 = [ventmean-2*ventstd ,ventmean-1*ventstd ,ventmean,ventmean+ventstd,ventmean+2*ventstd];
 
 % Bin the scaled image data accordingly:
 VentBinMap2 = zeros(size(ScaledVentImage2));
@@ -97,17 +136,17 @@ for ii = 1:size(ScaledVentImage2,3)
         for kk = 1:size(ScaledVentImage2,1)
             if maskarray(kk,jj,ii) == 0
                 VentBinMap2(kk,jj,ii) = 0; %0 - black
-            elseif abs(ScaledVentImage2(kk,jj,ii)) <= VentThresh2(1)
+            elseif abs(ScaledVentImage2(kk,jj,ii)) <= Thresholds(1)
                 VentBinMap2(kk,jj,ii) = 1; %1 - red
-            elseif abs(ScaledVentImage2(kk,jj,ii)) <= VentThresh2(2)
+            elseif abs(ScaledVentImage2(kk,jj,ii)) <= Thresholds(2)
                 VentBinMap2(kk,jj,ii) = 2; %2 - orange
-            elseif abs(ScaledVentImage2(kk,jj,ii)) <= VentThresh2(3)
+            elseif abs(ScaledVentImage2(kk,jj,ii)) <= Thresholds(3)
                 VentBinMap2(kk,jj,ii) = 3; %3 - green 1
-            elseif abs(ScaledVentImage2(kk,jj,ii)) <= VentThresh2(4)
+            elseif abs(ScaledVentImage2(kk,jj,ii)) <= Thresholds(4)
                 VentBinMap2(kk,jj,ii) = 4; %4 - green 2
-            elseif abs(ScaledVentImage2(kk,jj,ii)) <= VentThresh2(5)
+            elseif abs(ScaledVentImage2(kk,jj,ii)) <= Thresholds(5)
                 VentBinMap2(kk,jj,ii) = 5; %5 - blue 1
-            elseif abs(ScaledVentImage2(kk,jj,ii)) > VentThresh2(5)
+            elseif abs(ScaledVentImage2(kk,jj,ii)) > Thresholds(5)
                 VentBinMap2(kk,jj,ii) = 6; %6 - blue 2
             end
         end
@@ -313,9 +352,9 @@ Vent_vec(Vent_vec == 0) = NaN;
 
 healthy_mean_Osc=ventmean;
 healthy_std_Osc=ventstd;
-norm_lim_high = healthy_mean_Osc + healthy_std_Osc;
-norm_lim_low = healthy_mean_Osc - healthy_std_Osc;
-Mean_Edges = linspace(0,1,100);
+norm_lim_high = Thresholds(4);  % healthy_mean_Osc + healthy_std_Osc;
+norm_lim_low = Thresholds(2); % healthy_mean_Osc - healthy_std_Osc;
+Mean_Edges = linspace(0,max(Vent_vec),100);
 [bin_count,~] = histcounts(Vent_vec,Mean_Edges);
 Norm_Factor_1 = sum(bin_count);
 
@@ -328,7 +367,7 @@ Healthy_Mean_Dist = Healthy_Mean_Dist*Norm_Factor_1;
 % VentHistFig = figure('Name','Ventilation Histogram');
 % VentEdges = [-0.5, linspace(0,1,50) 1.5];
 % set(VentHistFig,'color','white','Units','inches','Position',[0.25 0.25 8 4.5])
-All_Bins=VentThresh2;
+All_Bins=Thresholds;
 Bin1 = All_Bins(1);
 Bin2 = All_Bins(2);
 Bin3 = All_Bins(3);
@@ -348,41 +387,96 @@ histogram(Vent_vec(Vent_vec>Bin4 & Vent_vec<=Bin5),Mean_Edges,'FaceColor',[0 0.5
 histogram(Vent_vec(Vent_vec>Bin5 ),Mean_Edges,'FaceColor',[0 0 1],'FaceAlpha',1)
 hold on
 
+% Calculate histogram counts for each group and find the max value
+[counts_total, ~] = histcounts(Vent_vec, Mean_Edges);  % Overall counts
+[counts_bin1, ~] = histcounts(Vent_vec(Vent_vec <= Bin1), Mean_Edges);  % Bin1
+[counts_bin2, ~] = histcounts(Vent_vec(Vent_vec > Bin1 & Vent_vec <= Bin2), Mean_Edges);  % Bin2
+[counts_bin3, ~] = histcounts(Vent_vec(Vent_vec > Bin2 & Vent_vec <= Bin3), Mean_Edges);  % Bin3
+[counts_bin4, ~] = histcounts(Vent_vec(Vent_vec > Bin3 & Vent_vec <= Bin4), Mean_Edges);  % Bin4
+[counts_bin5, ~] = histcounts(Vent_vec(Vent_vec > Bin4 & Vent_vec <= Bin5), Mean_Edges);  % Bin5
+[counts_bin6, edge_bin6] = histcounts(Vent_vec(Vent_vec > Bin5), Mean_Edges);  % Bin6
+% Find the maximum frequency from all the histograms
+max_frequency = max([counts_total, counts_bin1, counts_bin2, counts_bin3, counts_bin4, counts_bin5, counts_bin6]);
+
+
 % histogram((ScaledVentImage2(maskarray4(:))),VentEdges,'Normalization','probability','EdgeColor',[0 0.65 0],'FaceColor',[1 1 1],'FaceAlpha',0.75);
 
-plot([norm_lim_low norm_lim_low],[0 5500],'k-.',[norm_lim_high,norm_lim_high],[0 5500],'k-.','LineWidth',2)
-if max(bin_count)>= max(Healthy_Mean_Dist)
-    ylim([0 max(bin_count)+100])
-elseif max(bin_count)< max(Healthy_Mean_Dist)
-    ylim([0  max(Healthy_Mean_Dist)+100])
-end
+% plot([norm_lim_low norm_lim_low],[0 5500],'k-.',[norm_lim_high,norm_lim_high],[0 5500],'k-.','LineWidth',2)
+% if max(bin_count)>= max(Healthy_Mean_Dist)
+%     ylim([0 max(bin_count)+100])
+% elseif max(bin_count)< max(Healthy_Mean_Dist)
+%     ylim([0  max(Healthy_Mean_Dist)+100])
+% end
 % plot healthy dist.
-y = 0:0.001:1;
-f = exp(-(y-ventmean).^2./(2*ventstd^2))./(ventstd*sqrt(2*pi));
-f = f./max(f(:));
-f = f.*max(bin_count(:));
-plot(y,f,'k-.','LineWidth',2);
 
-xlim([0 1])
+% The mean and standard deviation can be computed from the thresholds
+ventmean = Thresholds(3);  % middle threshold is the mean
+ventstd = (Thresholds(5) - Thresholds(3)) / 2;  % SD can be calculated from the upper limit of threshold
+
+% Parameters
+fit_skew = Ventilation.Hdist(1);  % Shape parameter (alpha)
+fit_loc = Ventilation.Hdist(2);    % Location parameter (xi)
+fit_scale = Ventilation.Hdist(3);  % Scale parameter (omega)
+
+% xdata
+xdata = 0:0.001:max(edge_bin6);  % Example x values
+
+% Skew-normal PDF calculation
+phi = @(z) exp(-0.5 * z.^2) / sqrt(2 * pi);  % Standard normal PDF
+Phi = @(z) 0.5 * (1 + erf(z / sqrt(2)));    % Standard normal CDF
+
+z = (xdata - fit_loc) / fit_scale;
+skewnorm_pdf = 2 / fit_scale * phi(z) .* Phi(fit_skew * z);
+skewnorm_pdf = (skewnorm_pdf - min(skewnorm_pdf))/(max(skewnorm_pdf) - min(skewnorm_pdf));
+% Scale the distribution to the bin counts for visualization
+skewnorm_pdf = skewnorm_pdf.*max_frequency;
+
+plot(xdata, skewnorm_pdf,'k-.', 'LineWidth', 2);
+hold on;
+
+% % Create the y-axis range for plotting the distribution
+% y = 0:0.001:max(edge_bin6);
+% % Gaussian distribution based on the mean and standard deviation
+% f = exp(-(y-ventmean).^2./(2*ventstd^2))./(ventstd*sqrt(2*pi));
+% % Normalize the distribution
+% f = (f - min(f))/(max(f) - min(f));
+% % Scale the distribution to the bin counts for visualization
+% f = f.*max_frequency;
+% % Plot the Gaussian distribution
+% plot(y, f, 'k-.', 'LineWidth', 2);
+% hold on;
+
+% Add vertical lines for the thresholds
+for i = 1:length(Thresholds)
+    xline(Thresholds(i), '--', 'LineWidth', 1.5, 'Label', sprintf('Threshold %.3f', Thresholds(i)));
+end
+
+% Add labels and title for clarity
+xlabel('Ventilation Value');
+ylabel('Frequency / Distribution');
+% title('Distribution of Ventilation with Thresholds');
+% legend('Distribution', 'Thresholds');
+
+ylim([0 max_frequency+(max_frequency*0.4)]);
 set(gca,'linewidth',1.5)
 set(gca,'FontSize',12)
 
 % Bins:
 ylims = ylim;
 xlims = xlim;
-pat = patch([xlims(1) xlims(1) VentThresh2(1) VentThresh2(1)],[0 ylims(2) ylims(2) 0],SixBinMap(1,:),'HandleVisibility','off');
+pat = patch([xlims(1) xlims(1) Thresholds(1) Thresholds(1)],[0 ylims(2) ylims(2) 0],SixBinMap(1,:),'HandleVisibility','off');
 pat.LineStyle = 'none';
 pat.FaceVertexAlphaData = 0.1;
 pat.FaceAlpha = 'flat';
 uistack(pat,'bottom');
-for bin = 2:size(VentThresh2,2)
-    pat = patch([VentThresh2(bin-1) VentThresh2(bin-1) VentThresh2(bin) VentThresh2(bin)],[0 ylims(2) ylims(2) 0],SixBinMap(bin,:),'HandleVisibility','off');
+for bin = 2:size(Thresholds,2)
+    pat = patch([Thresholds(bin-1) Thresholds(bin-1) Thresholds(bin) Thresholds(bin)],[0 ylims(2) ylims(2) 0],SixBinMap(bin,:),'HandleVisibility','off');
     pat.LineStyle = 'none';
     pat.FaceVertexAlphaData = 0.1;
     pat.FaceAlpha = 'flat';
     uistack(pat,'bottom');
 end
-pat = patch([VentThresh2(5) VentThresh2(5) xlims(2) xlims(2)],[0 ylims(2) ylims(2) 0],SixBinMap(6,:),'HandleVisibility','off');
+pat = patch([Thresholds(5) Thresholds(5) xlims(2) xlims(2)],[0 ylims(2) ylims(2) 0],SixBinMap(6,:),'HandleVisibility','off');
 pat.LineStyle = 'none';
 pat.FaceVertexAlphaData = 0.1;
 pat.FaceAlpha = 'flat';
@@ -393,7 +487,7 @@ legend2 = sprintf('Vent Low Percent:%0.1f%%  ' ,VentLowPercent);
 legend3 = sprintf('Vent High Percent:%0.1f%%  ' ,VentHighPercent);
 legend4 = sprintf(' Mean:%0.4f%    '  ,LB_mean);
 legend5 = sprintf(' StdDev:%0.4f%    '  ,LB_std);
-legend([legend1  legend2  legend3  legend4   legend5]);
+% legend([legend1  legend2  legend3  legend4   legend5]);
 title1 = sprintf('Ventilation Defect Percentage %0.1f%%',LB_VDP);
 title({title1},'Fontweight','bold','FontSize',12)
 set(gca,'FontSize',14)
@@ -473,7 +567,7 @@ end
 % the above code and add this line (,'Indices', sl_1:sl_end) to the end of
 % each Montage. 
 %%% get rid of the gray frame in each montage
-VentscaledImage = VentImage2(:,:,slice_indices);
+VentscaledImage = Ventilation.Image(:,:,slice_indices); % Ventilation.Image or VentImage2
 VentMontage = figure('Name','Vent Image');set(VentMontage,'WindowState','minimized');
 montage(reshape(VentscaledImage,[size(VentscaledImage,1), size(VentscaledImage,2), 1, size(VentscaledImage,3)]),...
     'Size',[1 size(VentscaledImage,3)],'DisplayRange',[0 max(VentscaledImage(:))]);

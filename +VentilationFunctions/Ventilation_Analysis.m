@@ -36,6 +36,7 @@ Ventilation.N4Analysis,... % N4 analysis
 Ventilation.IncompleteThresh,... % Incomplete threshold
 Ventilation.CompleteThresh,... % Complete threshold
 Ventilation.HyperventilatedThresh); % Hyperventilated threshold
+Ventilation.MedianFilter = 'yes';
 % Usage: settings = Functions.input_params(medfilter, RFcorrection,
 % savedata, calculateSNR, N4, incomplete, complete, hyper)
 Ventilation.Image = double(Ventilation.Image);
@@ -43,6 +44,7 @@ MR = Ventilation.Image;
 Ventilation.UncorrectedImage = MR;
 mkdir([MainInput.XeDataLocation '\Ventilation Analysis']);
 parentPath = [MainInput.XeDataLocation '\Ventilation Analysis\'];
+Ventilation.parentPath = parentPath;
 %parentPath = [MainInput.XeDataLocation,'\'];
 FileNames = Ventilation.filename;
 maskarray = double(Ventilation.LungMask);
@@ -53,8 +55,6 @@ catch
     Ventilation.AirwayMask = zeros(size(Ventilation.LungMask));
     airwaymask = Ventilation.AirwayMask;
 end
-ventmean = Ventilation.LB_RefMean; % Defined by data collected up to Jan 2021.
-ventstd =  Ventilation.LB_RefSD; % Defined by data collected up to Jan 2021.
 
 %% Calculate SNR:
 switch settings.calculate_SNR
@@ -126,14 +126,23 @@ switch settings.N4_bias_analysis
 %         niftiwrite(abs(N4_2),[parentPath,char(NameN4)]);
         niftiwrite(abs(N4_2),[parentPath + "Ventilation_ImagesN4"]); % Or do this until we have a naming convention        
         MR = double(N4);
+        Ventilation.Image_uncorrected = Ventilation.Image;
         Ventilation.Image = MR;
     case "no"
         disp('N4 bias field correction has been skipped.')
     otherwise
         disp('Input error. Check inputs/outputs of input_params().')
 end
-
-
+%% calculate ventilation heterogeneity
+if strcmp(Ventilation.HeterogeneityIndex,'yes') 
+    [Ventilation] = VentilationFunctions.calculate_VHI(Ventilation);
+else
+    Ventilation.CV_maps = [];
+    Ventilation.sliceMeanCV = [];
+    Ventilation.sliceVHI = [];
+    Ventilation.overallMeanCV = []; 
+    Ventilation.overallVHI = [];
+end
 %% Proton image
 if MainInput.NoProtonImage == 1 
     Proton.ProtonRegistered = zeros(size(MR));
@@ -148,11 +157,6 @@ if strcmp(Ventilation.ThreshAnalysis,'yes')   % 'yes'; || 'no'
 %     f = waitbar(.20,'Calculating SNR...');
 %     waitbar(.50,f,'Performing Thershold Analysis ...');
 %     pause(.1)    
-    medfilter = settings.Median_Filter;
-    complete = settings.Complete_threshold;
-    incomplete = settings.Incomplete_threshold;
-    hyper = settings.Hyper_threshold;
-    N4_bias_analysis = settings.N4_bias_analysis;
 
     % Call the calculate_VDP() function. Make sure you call the correct data
     % depending on N4 bias correction (N4) vs original (MR):
@@ -164,7 +168,7 @@ if strcmp(Ventilation.ThreshAnalysis,'yes')   % 'yes'; || 'no'
 %         disp('Neither original or N4 bias corrected images were declared. Declare these in the input_params() function.')
 %      end
 
-    [Ventilation] = VentilationFunctions.calculate_VDP_CCHMC(MR, maskarray, complete, incomplete, hyper, medfilter, N4_bias_analysis, parentPath,Overall_SNR,Ventilation,Proton,MainInput);    
+    [Ventilation] = VentilationFunctions.calculate_VDP_CCHMC(Ventilation,Proton,MainInput);    
 
     % if strcmp(MainInput.Institute,'XeCTC') == 1 || strcmp(MainInput.Institute,'CCHMC') == 1
     %     [Ventilation] = VentilationFunctions.calculate_VDP_CCHMC(MR, maskarray, complete, incomplete, hyper, medfilter, N4_bias_analysis, parentPath,Overall_SNR,Ventilation,Proton,MainInput);    
@@ -216,7 +220,7 @@ if strcmp(Ventilation.LB_Analysis,'yes') == 1
 %         disp('Neither original or N4 bias corrected images were declared. Declare these in the input_params() function.')
 %     end
     
-    [Ventilation] = VentilationFunctions.calculate_LB_VDP(MR, maskarray, maskarraytrachea, ventmean, ventstd, parentPath, N4_bias_analysis, Overall_SNR,Ventilation,Proton,MainInput);    
+    [Ventilation] = VentilationFunctions.calculate_LB_VDP(Ventilation,Proton,MainInput);    
 
 end
 close all;
@@ -229,6 +233,12 @@ if strcmp(Ventilation.Kmeans,'yes')
     % [Ventilation] = VentilationFunctions.kmeansCalc(Ventilation,Proton,MainInput);
     % Grace's (Rachel) code
     [Ventilation] = VentilationFunctions.kmeans.VDP_calculationASB(Ventilation,Proton,MainInput);
+end
+close all;
+%% Adaptive K-means VDP
+if strcmp(Ventilation.AKmeans,'yes')
+    Ventilation.parentPath = parentPath;
+    [Ventilation] = VentilationFunctions.Akmeans.VDP_calculationASB(Ventilation,Proton,MainInput);
 end
 close all;
 %% DDI
@@ -264,12 +274,7 @@ if Ventilation.GLRLM_Analysis == "yes" % 'yes'; || 'no'
 %     waitbar(.90,f,'Performing Texture Analysis ...');
 %     pause(.1)     
     cd(parentPath)
-    if settings.N4_bias_analysis == "yes"
-       VentImage = N4.*maskarray;        
-    else
-       VentImage = MR.*maskarray; 
-    end
-    [Ventilation] = VentilationFunctions.GLRLM_Analysis(Ventilation,VentImage,parentPath);
+    [Ventilation] = VentilationFunctions.GLRLM_Analysis(Ventilation);
 end 
 close all;
 %% %% save maps in mat file

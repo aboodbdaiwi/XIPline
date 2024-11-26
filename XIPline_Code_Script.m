@@ -43,10 +43,10 @@ MainInput.RegistrationType = '';
 MainInput.PatientInfo = '';
 
 % 1) choose the type of analysis
-MainInput.AnalysisType = 'Diffusion';  % 'Ventilation', 'Diffusion', 'GasExchange'
+MainInput.AnalysisType = 'Ventilation';  % 'Ventilation', 'Diffusion', 'GasExchange'
 
 % 2) Do you have protom images? 
-MainInput.NoProtonImage = 1;  % 1: There is no proton images  % 0: There is  proton images   
+MainInput.NoProtonImage = 0;  % 1: There is no proton images  % 0: There is  proton images   
 
 MainInput.Institute = 'CCHMC';  % 'CCHMC', 'XeCTC', 'Duke'
 MainInput.Scanner = 'Philips'; % Siemens, Philips
@@ -189,21 +189,50 @@ clc
 cd(MainInput.XeDataLocation)
 
 % diary Log.txt
-MainInput.SegmentationMethod = 'Threshold'; % 'Threshold' || 'Manual' || 'Auto'
-MainInput.SegmentAnatomy = 'Airway'; % 'Airway'; || 'Parenchyma'
+MainInput.SegmentationMethod = 'Auto'; % 'Threshold' || 'Manual' || 'Auto'
+MainInput.SegmentAnatomy = 'Parenchyma'; % 'Airway'; || 'Parenchyma'
 MainInput.Imagestosegment = 'Xenon';  % 'Xe & Proton Registered' | 'Xenon' | 'Registered Proton'
 
 MainInput.thresholdlevel = 0.6; % 'threshold' 
 MainInput.SE = 1;
 
 MainInput.SegmentManual = 'Freehand'; % 'AppSegmenter' || 'Freehand'
-MainInput.SliceOrientation = 'transversal'; % 'coronal' ||'transversal' || 'sagittal' ||'isotropic'
+MainInput.SliceOrientation = 'coronal'; % 'coronal' ||'transversal' || 'sagittal' ||'isotropic'
 [Proton,Ventilation,Diffusion,GasExchange] = Segmentation.PerformSegmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
 
-figure; Global.imslice(Diffusion.LungMask)
+% create vessle mask
+if strcmp(MainInput.AnalysisType,'Ventilation')                
+    MainInput.SegmentVessels = 1; % 0 || 1
+elseif strcmp(MainInput.AnalysisType,'Diffusion')
+    MainInput.SegmentVessels = 0; % 0 || 1
+elseif strcmp(MainInput.AnalysisType,'GasExchange')
+    MainInput.SegmentVessels = 0; % 0 || 1
+end
+
+MainInput.vesselImageMode = 'xenon'; % xenon || proton
+MainInput.SliceOrientation = 'coronal';
+switch MainInput.vesselImageMode
+    case 'xenon'
+        MainInput.frangi_thresh = 0.25;
+    case 'proton'  
+        MainInput.frangi_thresh = 0.2; % you can change this threshold to increase or decrease the mask
+end
+
+if MainInput.SegmentVessels == 1
+    [Ventilation] = Segmentation.Vasculature_filter(Proton, Ventilation, MainInput);
+else
+    Ventilation.VesselMask = zeros(size(Ventilation.Image));
+    Ventilation.vessel_stack = zeros(size(Ventilation.Image));
+end
+maskarray = double(Ventilation.LungMask + Ventilation.VesselMask);
+maskarray(maskarray > 1) = 0;
+Ventilation.LungMask = double(maskarray);
+
+figure; Global.imslice(Ventilation.VesselMask)
+
+figure; Global.imslice(Ventilation.LungMask)
 if ~isfield(Diffusion, 'AirwayMask')
-disp('Diffusion.AirwayMask does not exist');
-    
+    disp('Diffusion.AirwayMask does not exist');
 else
     disp('Diffusion.AirwayMask exists');
 end
@@ -220,29 +249,37 @@ close all;
 cd(MainInput.XeDataLocation)
 
 % diary LogFile_LoadingData
-Ventilation.N4Analysis = 0;
+Ventilation.N4Analysis = 1;
 Ventilation.IncompleteThresh = 60;
 Ventilation.RFCorrect = 0;
 Ventilation.CompleteThresh = 15;
 Ventilation.HyperventilatedThresh = 200;
+Ventilation.HeterogeneityIndex = 'yes';
 Ventilation.ThreshAnalysis = 'yes'; % 'yes'; || 'no'
-Ventilation.LB_Analysis = 'no'; % 'yes'; || 'no'
-Ventilation.Kmeans = 'no';  % 'yes'; || 'no'
-Ventilation.DDI2D = 'yes';  % 'yes'; || 'no'
+Ventilation.LB_Analysis = 'yes'; % 'yes'; || 'no'
+Ventilation.LB_Normalization = 'percentile'; % 'mean'; || 'median' || 'percentile'            
+Ventilation.Kmeans = 'yes';  % 'yes'; || 'no'
+Ventilation.AKmeans = 'yes';  % 'yes'; || 'no'
+Ventilation.DDI2D = 'no';  % 'yes'; || 'no'
 Ventilation.DDI3D = 'no';  % 'yes'; || 'no'
-Ventilation.DDI3Dx = 3;
-Ventilation.DDI3Dy = 3;
-Ventilation.DDI3Dz = 3;
+Ventilation.ImageResolution = [3, 3, 15];
+MainInput.PixelSpacing = Ventilation.ImageResolution(1:2);
+MainInput.SliceThickness = Ventilation.ImageResolution(3);
 Ventilation.DDIDefectMap = 'Threshold';  % 'Threshold'; || 'Linear Binning' || 'Kmeans'
 Ventilation.GLRLM_Analysis = 'no'; % 'yes'; || 'no'
 
-if Ventilation.N4Analysis == 1
-    Ventilation.LB_RefMean = 0.6786; % Defined by data collected up to Jan 2021.
-    Ventilation.LB_RefSD =  0.1395; % Defined by data collected up to Jan 2021.
-elseif Ventilation.N4Analysis == 0
-    Ventilation.LB_RefMean = 0.5421; % Default (non-N4 corrected, based on data up to Jan 2021)
-    Ventilation.LB_RefSD = 0.1509; % Default (non-N4 corrected, based on data up to Jan 2021)
+switch Ventilation.LB_Normalization
+    case 'mean'
+        Ventilation.Thresholds = [0.609909, 0.827439, 0.998199, 1.143472, 1.27208];  % median
+        Ventilation.Hdist = [-2.100652, 1.154155, 0.238074]; 
+    case 'median'
+        Ventilation.Thresholds = [0.609909, 0.827439, 0.998199, 1.143472, 1.27208];  % median
+        Ventilation.Hdist = [-2.100652, 1.154155, 0.238074]; 
+    case 'percentile'
+        Ventilation.Thresholds = [0.448181, 0.621903, 0.752298, 0.860778, 0.955443]; % percentile
+        Ventilation.Hdist = [-2.515712, 0.87849, 0.188364]; 
 end
+
 
 [Ventilation] = VentilationFunctions.Ventilation_Analysis(Ventilation, Proton, MainInput);
 

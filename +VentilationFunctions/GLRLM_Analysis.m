@@ -39,7 +39,13 @@ function [Ventilation] = GLRLM_Analysis(Ventilation,Image,parentPath)
 % this code is based on the GLRLM analysis 
 % https://www.mathworks.com/matlabcentral/fileexchange/17482-gray-level-run-length-matrix-toolbox
 % Abdullah Bdaiwi
+parentPath = Ventilation.parentPath;
 cd(parentPath)
+maskarray = double(Ventilation.LungMask + Ventilation.VesselMask);
+maskarray(maskarray > 1) = 0;
+maskarray = double(maskarray);
+Image = Ventilation.Image.*maskarray;
+
 foldername = "GLRLM Analysis\";
 mkdir(foldername)
 outputPath = char(foldername);

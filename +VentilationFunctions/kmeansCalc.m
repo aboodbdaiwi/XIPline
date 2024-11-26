@@ -10,12 +10,12 @@ kdefectVol = sum(kdefect(:));
 kventilatedVol = sum(kventilated(:));
 kVDP = kdefectVol / (kdefectVol + kventilatedVol) * 100;
 disp(['KmeansVDP= ' num2str(kVDP), '%'])
-Ventilation.KmeansVDP = KmeansVDP;
+Ventilation.KmeansVDP = kVDP;
 % Cluster Map (2=defect, 1=normal, 0=background)
 XeClustersShow = double(Ventilation.LungMask) + kdefect;
 
 
-% imslice(XeClustersShow)
+imslice(XeClustersShow)
 
 
 end

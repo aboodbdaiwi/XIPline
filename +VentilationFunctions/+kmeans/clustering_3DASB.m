@@ -3,9 +3,10 @@ function [Ventilation] = clustering_3DASB(Ventilation)
 % This function was designed to segment ventilated areas in hyperpolarized 
 % helium-3 (3He) images, using K-means clustering. ***3D SEGMENTATION***
 
-heSlices = Ventilation.Image;
+% heSlices = Ventilation.Image;
+heSlices = Ventilation.Image.*Ventilation.LungMask;
 heSlices (isnan(heSlices)) = 0;
-
+% lungmask = Ventilation.LungMask;
 %% initialization
 % tic
 k = 4; %number of clusters for clustering whole 3He MRI 
@@ -24,7 +25,7 @@ if width <= 128
     sideColumns = 10;
 elseif width <= 256
     removeSize = 6;
-    sideColumns = 15;
+    sideColumns = 15; % 12 for axial slices works better 
 else
     removeSize = 12;
     sideColumns = 25;
@@ -34,8 +35,13 @@ for slice = 1:numberOfslices
 end
 
 %% First step of Hirarchical clustering
+clc;
 heSlices = round(((heSlices - min(heSlices(:)))/(max(heSlices(:))-min(heSlices(:))))*255);
-[garbage,clusters_3D] = VentilationFunctions.kmeans.kmeans3D(heSlices,k);
+[~,clusters_3D] = VentilationFunctions.kmeans.kmeans3D(heSlices,k); % kmeansModified kmeans3D
+% [garbage,clusters_3D] = VentilationFunctions.kmeans.kmeansModified(heSlices.*lungmask,k); % kmeansModified kmeans3D
+% removeSize = 6;
+% sideColumns = 10;
+% imslice(clusters_3D)
 %scroll_matrix(clusters_3D)
 for indx =1:k
     temp = clusters_3D == indx;
@@ -63,7 +69,7 @@ for slice = 1:numberOfslices
         %removing areas of current cluster which their size is less or
         %equal to removeSize pixels in order to remove noise
         temp2 = VentilationFunctions.kmeans.miprmdebrisn(temp,removeSize);
-        [garbage,col]=find(temp2);
+        [~,col]=find(temp2);
         minCol = min(col);
         maxCol = max(col);
         % Delete the current clustre from ventilated area if the
@@ -71,16 +77,23 @@ for slice = 1:numberOfslices
         if (minCol<sideColumns) & (maxCol>(width-sideColumns)) 
             mask(temp) = 0;
         end
+        % figure; imslice(I)
     end
+    
     % primaryMask is to show the difference after finding hypoVV
     primaryMask(:,:,slice) = VentilationFunctions.kmeans.miprmdebrisn(mask,removeSize); %removing the areas smaller than removeSize from ventilated area (assume to be noise)
     heSlicesMask_3D(:,:,slice) = mask;
 end
-
+% primaryMask = Ventilation.LungMask;
+% imslice(primaryMask)
 %% Second step of Hirarchical clustering (Clustering HypoVV)
+% airwaymask = double(Segmentation.SegmentLungthresh(Ventilation.Image,1,0.5)); 
+% backGroundMask = logical(imcomplement(primaryMask).*~airwaymask);
+
 backGroundMask = ~primaryMask; % to find the nonventilated area and the background
 J = heSlices(backGroundMask); % J is a vector contains t9he intensity of pixelclustersNews which were segmented asthe background at the first step of H-Kmeans
 [garbage,clustersNew]= VentilationFunctions.kmeans.kmeansModified(J,k2);
+% imslice(clustersNew)
 temp = clustersNew == k2-1;
 secondLastClusterMin = round(min(J(temp)));
 secondLastClusterMax = round(max(J(temp)));
@@ -93,8 +106,8 @@ end
 
 threshold = secondLastClusterMin + ((lastClusterMax-secondLastClusterMin)/7);
 
-secondLastClusterMin
-secondLastClusterMax
+% secondLastClusterMin
+% secondLastClusterMax
 lastClusterMin = round(min(min(J(temp))))
 lastClusterMax = round(max(max(J(temp))))
 
@@ -105,9 +118,10 @@ HypoVent2 = xor(HypoVent1,primaryMask);
 HypoVent = HypoVent1 & HypoVent2;
 %if sum(mask(:))>0  % we assume that if there is not any VV in the current He slice, so no hypoVV as well in this slice
 clusters_3D(HypoVent) = 1; % assining hypoVV to be named cluster 1
+% imslice(clusters_3D)
 heSlicesMask_3D(HypoVent) = 1; % Adding the HypoVV to the previously segmented VV
 %end
-
+% imslice(heSlicesMask_3D)
 %% Removing small areas from 3D mask (slice by slice)
 for slice = 1:numberOfslices
     mask = heSlicesMask_3D(:,:,slice);
@@ -129,7 +143,7 @@ for slice = 1:numberOfslices
     heSlicesMask_3D(:,:,slice) = mask;
 end
 Ventilation.clusters_3D = clusters_3D;
-
+% imslice(clusters_3D)
 
 end %function
 

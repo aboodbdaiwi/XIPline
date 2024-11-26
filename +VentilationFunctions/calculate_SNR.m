@@ -33,8 +33,9 @@ function [SNR_slice, Overall_SNR] = calculate_SNR(Ventilation, parentPath)
 % partial volume pixels and the trachea.
 SE = strel('square', 28);
 MR = double(Ventilation.Image);
-maskarray = double(Ventilation.LungMask);
-% airwaymask = double(Ventilation.AirwayMask);
+maskarray = double(Ventilation.LungMask + Ventilation.VesselMask);
+maskarray(maskarray > 1) = 0;
+maskarray = double(maskarray);
 
 % Dilate the mask arrary according to the structuring element:
 maskarray_dilated = imdilate(maskarray, SE);

@@ -1,58 +1,68 @@
 function [Ventilation] = VDP_calculationASB(Ventilation,Proton,MainInput)
 
-    % load the deformed lung/lobe mask. 
-    LungMask = Ventilation.LungMask;
+% load the deformed lung/lobe mask. 
+maskarray = Ventilation.LungMask;
+% maskarray = double(Ventilation.LungMask + Ventilation.VesselMask);
+% maskarray(maskarray > 1) = 0;
+% maskarray = double(maskarray);
 
-    % k-means clustering using our previous code.
-    [Ventilation] = VentilationFunctions.kmeans.clustering_3DASB(Ventilation);
-    clusters_3D = Ventilation.clusters_3D;
-    % imslice(clusters_3D)
-    % get the number of He image clusters. Usually, one integral corresponds to one cluster.
-    clusters_3D_labels = unique(clusters_3D);
-    clusters_3D_label_length = length (clusters_3D_labels);
-    
-    % get the number of lobes. Usually, one lobel corresponds to one lobe.
-    lobemask_labels = unique(LungMask);
-    lobemask_labels = lobemask_labels(lobemask_labels>0);
-    lobemask_label_length = length (lobemask_labels);
-    
-    % create a 2D array to save the regional VDP.
-    % row represents lobes in the order of left upper---left lower---right upper---right
-    % middle---right lower 
-    lobe_wise_VDP = zeros(lobemask_label_length,clusters_3D_label_length + 1);
-    
-    % interate through each lobe% open and close file by file ID.
-    for i = 1 : lobemask_label_length
-        
-        % find the current lobe i.
-        lobe = (LungMask==lobemask_labels(i));
-        lobe_wise_VDP(i,1) = lobemask_labels(i);
-        % interate through each He cluster
-        for j = 1 : clusters_3D_label_length
-            % find the current cluster.
-            cluster = (clusters_3D==clusters_3D_labels(j));
-            % find cluster j in the current lobe i. for example, we want to
-            % see cluster 0 in lobe 1.=, similarly, we can see cluster 1 in lobe 1
-            cluster_i_in_lobe_j = lobe.*cluster;
-            % calculate the region of the current cluster, in the units of
-            % voxel.
-            lobe_wise_VDP(i,j+1) = sum(cluster_i_in_lobe_j(:));
-        end
-        % normalize the region of current cluster to the current lobe for
-        % regional VDP calculation.
-        lobe_wise_VDP(i,2:clusters_3D_label_length + 1) = lobe_wise_VDP(i,2:clusters_3D_label_length + 1)/sum(lobe(:))*100;
-    end
-        
-    % whole lung VDP calculation, we actually calculate the ratio of each
-    % He image cluster over the whole lung.
-    wholelung_VDP = zeros (clusters_3D_label_length,1);
-    % get the whole lung volume.
-    total_lung_volume = (LungMask~=0);
 
-    for i = 1 : clusters_3D_label_length 
-            cluster_within_lung = (clusters_3D==clusters_3D_labels(i)).*total_lung_volume;
-            wholelung_VDP(i) = sum(cluster_within_lung(:))/sum(total_lung_volume(:))*100;
+% k-means clustering using our previous code.
+[Ventilation] = VentilationFunctions.kmeans.clustering_3DASB(Ventilation);
+clusters_3D = Ventilation.clusters_3D;
+
+% Xemaskd = Ventilation.Image.*Ventilation.LungMask;
+% [heSlicesClusters,heSlicesMask,clusterMin] = VentilationFunctions.CallClustering(Xemaskd);
+% clusters_3D = heSlicesClusters;
+% Ventilation.clusters_3D = clusters_3D;
+% imslice(clusters_3D)
+
+% get the number of He image clusters. Usually, one integral corresponds to one cluster.
+clusters_3D_labels = unique(clusters_3D);
+clusters_3D_label_length = length (clusters_3D_labels);
+
+% get the number of lobes. Usually, one lobel corresponds to one lobe.
+lobemask_labels = unique(maskarray);
+lobemask_labels = lobemask_labels(lobemask_labels>0);
+lobemask_label_length = length (lobemask_labels);
+
+% create a 2D array to save the regional VDP.
+% row represents lobes in the order of left upper---left lower---right upper---right
+% middle---right lower 
+lobe_wise_VDP = zeros(lobemask_label_length,clusters_3D_label_length + 1);
+
+% interate through each lobe% open and close file by file ID.
+for i = 1 : lobemask_label_length
+    
+    % find the current lobe i.
+    lobe = (maskarray==lobemask_labels(i));
+    lobe_wise_VDP(i,1) = lobemask_labels(i);
+    % interate through each He cluster
+    for j = 1 : clusters_3D_label_length
+        % find the current cluster.
+        cluster = (clusters_3D==clusters_3D_labels(j));
+        % find cluster j in the current lobe i. for example, we want to
+        % see cluster 0 in lobe 1.=, similarly, we can see cluster 1 in lobe 1
+        cluster_i_in_lobe_j = lobe.*cluster;
+        % calculate the region of the current cluster, in the units of
+        % voxel.
+        lobe_wise_VDP(i,j+1) = sum(cluster_i_in_lobe_j(:));
     end
+    % normalize the region of current cluster to the current lobe for
+    % regional VDP calculation.
+    lobe_wise_VDP(i,2:clusters_3D_label_length + 1) = lobe_wise_VDP(i,2:clusters_3D_label_length + 1)/sum(lobe(:))*100;
+end
+    
+% whole lung VDP calculation, we actually calculate the ratio of each
+% He image cluster over the whole lung.
+wholelung_VDP = zeros (clusters_3D_label_length,1);
+% get the whole lung volume.
+total_lung_volume = (maskarray~=0);
+
+for i = 1 : clusters_3D_label_length 
+        cluster_within_lung = (clusters_3D==clusters_3D_labels(i)).*total_lung_volume;
+        wholelung_VDP(i) = sum(cluster_within_lung(:))/sum(total_lung_volume(:))*100;
+end
 
 Ventilation.wholelung_VDP = wholelung_VDP;
 Ventilation.KmeansVDP = wholelung_VDP(1);
@@ -65,11 +75,11 @@ if size(Ventilation.Image,3) > 40
     Image_3D = 1;
     nrow = ceil(sqrt(size(Ventilation.Image,3)));
     % Initialize an empty vector to store indices of slices with no zeros
-    slices_with_no_zeros = zeros(1,size(Ventilation.LungMask,3));    
+    slices_with_no_zeros = zeros(1,size(maskarray,3));    
     % Loop through each slice
-    for slice_idx = 1:size(Ventilation.LungMask,3)
+    for slice_idx = 1:size(maskarray,3)
         % Extract the current slice
-        current_slice = Ventilation.LungMask(:, :, slice_idx);
+        current_slice = maskarray(:, :, slice_idx);
         
         % Check if all elements in the current slice are non-zero
         if sum(current_slice(:)) > 0
@@ -82,15 +92,15 @@ if size(Ventilation.Image,3) > 40
     nonZeroSlice_space = floor(nonZeroSlice_lng/16);
     slice_indices = nonZeroSlices(1):nonZeroSlice_space:nonZeroSlices(end);
     nonzero_seg = segmentation(:, :, slice_indices);
-    nonzero_msk = LungMask(:, :, slice_indices);
+    nonzero_msk = maskarray(:, :, slice_indices);
     re_seg = reshape(nonzero_seg, size(nonzero_seg, 1), []);
     msk2d = reshape(nonzero_msk,size(nonzero_msk, 1), []);
 else
     Image_3D = 0;
-    nonzero_slices = any(any(LungMask, 1), 2);
+    nonzero_slices = any(any(maskarray, 1), 2);
     % %Extract non-zero slices and reshpe to 2D
     nonzero_seg = segmentation(:, :, nonzero_slices);
-    nonzero_msk = LungMask(:, :, nonzero_slices);
+    nonzero_msk = maskarray(:, :, nonzero_slices);
     re_seg = reshape(nonzero_seg, size(nonzero_seg, 1), []);
     msk2d = reshape(nonzero_msk,size(nonzero_msk, 1), []);
 end 
@@ -101,7 +111,6 @@ re_seg(msk2d == 0) = NaN;
 % cmap = [1 0 0; 1 0.7143 0; 0.4 0.7 0.4; 0 1 0; 0 0 1];
 cmap = [1 0 0; 0 1 0; 0 1 0; 0 1 0; 0 1 0];
 % % %plot and see the colormap
-Ventilation.parentPath = '\\rds6.chmccorp.cchmc.org\PulMed-54\CPIR_Images_Database\CTC\analysis\vent\pipeline-002Cincinnati\Data_Analysis\CTC009-014-01\Ventilation Analysis';
 outputpath = [Ventilation.parentPath, '\VDP Analysis'];
 mkdir(outputpath);
 cd(outputpath);
@@ -132,8 +141,8 @@ disp('Saving VentDefectmap Tiff...')
 
 % Create an output image initialized to zeros (same size as xenon_image)
 VDPmap = zeros(size(segmentation));
-class_0_inside_lung = (segmentation == 0) & (LungMask == 1);
-class_1to4_inside_lung = (segmentation >= 1) & (LungMask == 1);
+class_0_inside_lung = (segmentation == 0) & (maskarray == 1);
+class_1to4_inside_lung = (segmentation >= 1) & (maskarray == 1);
 VDPmap(class_0_inside_lung) = 2;
 VDPmap(class_1to4_inside_lung) = 1;
 
@@ -185,8 +194,8 @@ VDPmap(class_1to4_inside_lung) = 0;
 cus_colormap = zeros(100,3);
 % colorgradient = 0:0.01:0.99;
 cus_colormap(:,1) = 1;
-cus_colormap(:,2) = 1;
-cus_colormap(:,3) = 0;
+cus_colormap(:,2) = 0;
+cus_colormap(:,3) = 1;
 
 for slice = 1:size(VDPmap,3)
     [~,~] = Global.imoverlay(squeeze(abs(Ventilation.Image(:,:,slice))),squeeze(VDPmap(:,:,slice)),[1,100],[0,max(Ventilation.Image(:))],cus_colormap,1,gca);
@@ -216,9 +225,9 @@ end
 Ventilation.kmeansDefectmap2 = kmeansDefectmap2;
 %% save ppt 
 % %how many slices to incluse in the final powerpoint file
-sl_include=zeros(1,size(LungMask,3));
-for sl=1:size(LungMask,3)
-    choose_slice=LungMask(:,:,sl);       
+sl_include=zeros(1,size(maskarray,3));
+for sl=1:size(maskarray,3)
+    choose_slice=maskarray(:,:,sl);       
     logica_test2=sum(choose_slice(:));
     if logica_test2>1
          sl_include(sl)=sl;
@@ -241,7 +250,7 @@ ventimage = Ventilation.Image(:,:,slice_indices);
 ventimage = ventimage/max(ventimage(:));
 VentMontage = figure('Name','Vent Image');set(VentMontage,'WindowState','minimized');
 montage(reshape(ventimage,[size(ventimage,1), size(ventimage,2), 1, size(ventimage,3)]),...
-    'Size',[1 size(ventimage,3)],'DisplayRange',[0 0.8]);
+    'Size',[1 size(ventimage,3)],'DisplayRange',[0 1]);
 set(gca,'units','pixels'); % set the axes units to pixels
 x = get(gca,'position'); % get the position of the axes
 set(gcf,'units','pixels'); % set the figure units to pixels
@@ -313,7 +322,10 @@ fprintf('PowerPoint file has been saved\n');
             Global.exportToPPTX('save',fullfile(parentPath, ReportTitle));
             Global.exportToPPTX('close');
             fprintf('PowerPoint file has been saved\n');               
-
 close all;
+
+save_data=[parentPath,'\','Ventilation_Analysis','.mat'];
+save(save_data); 
+
 
 end

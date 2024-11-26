@@ -173,8 +173,6 @@ switch MainInput.SegmentationMethod
             MainInput.NoProtonImage = 1;
         elseif strcmp(MainInput.NoProtonImage, 'no')
             MainInput.NoProtonImage = 0;
-        else
-            error('MainInput.NoProtonImage must be ''yes'' or ''no''.');
         end        
         % segmentation type
         switch MainInput.AnalysisType

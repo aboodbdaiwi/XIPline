@@ -1,4 +1,4 @@
-function [Ventilation] = calculate_VDP_CCHMC(MR, maskarray, complete, incomplete, hyper, medfilter, N4_bias_analysis,DataPath,Overall_SNR,Ventilation,Proton,MainInput)
+function [Ventilation] = calculate_VDP_CCHMC(Ventilation,Proton,MainInput)
 %% MATLAB script to perform VDP calculation
 %
 % Authors: Joseph Plummer
@@ -13,6 +13,18 @@ function [Ventilation] = calculate_VDP_CCHMC(MR, maskarray, complete, incomplete
 %   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
 
 %% VDP Calculation Code:
+MR = Ventilation.Image;
+maskarray = double(Ventilation.LungMask + Ventilation.VesselMask);
+maskarray(maskarray > 1) = 0;
+maskarray = double(maskarray);
+complete = Ventilation.CompleteThresh;
+incomplete = Ventilation.IncompleteThresh;
+hyper = Ventilation.HyperventilatedThresh;
+medfilter = Ventilation.MedianFilter;
+DataPath = Ventilation.parentPath;
+Overall_SNR = Ventilation.Overall_SNR;
+
+
 cd(DataPath)
 close all; 
 warning('off','all') % Suppress all the tiff warnings
@@ -40,23 +52,23 @@ end
 % Run VDP algorithm depending on whether the median filer is applied.
 switch medfilter
     case "yes"
-    % Calculate the defect ventilation percentage with median filter
-    Incomplete_defect = VentilationFunctions.medFilter(double(NormMR<(mean(NormMR(NormMR>0))...
-        *incomplete)*(maskarray>0)));
-    Complete_defect = VentilationFunctions.medFilter(double(NormMR<(mean(NormMR(NormMR>0))...
-        *complete)*(maskarray>0)));
-    Hyper_defect = VentilationFunctions.medFilter(double(NormMR>(mean(NormMR(NormMR>0))*hyper)...
-        *(maskarray>0)));
-    defectArray = Incomplete_defect+Complete_defect+4*Hyper_defect;
+        % Calculate the defect ventilation percentage with median filter
+        Incomplete_defect = VentilationFunctions.medFilter(double(NormMR<(mean(NormMR(NormMR>0))...
+            *incomplete)*(maskarray>0)));
+        Complete_defect = VentilationFunctions.medFilter(double(NormMR<(mean(NormMR(NormMR>0))...
+            *complete)*(maskarray>0)));
+        Hyper_defect = VentilationFunctions.medFilter(double(NormMR>(mean(NormMR(NormMR>0))*hyper)...
+            *(maskarray>0)));
+        defectArray = Incomplete_defect+Complete_defect+4*Hyper_defect;
     case "no"
-    % Calculate the defect ventilation percentage without median filter
-    Incomplete_defect = NormMR<(mean(NormMR(NormMR>0))...
-        *incomplete)*(maskarray>0);
-    Complete_defect = NormMR<(mean(NormMR(NormMR>0))...
-        *complete)*(maskarray>0);
-    Hyper_defect = NormMR>(mean(NormMR(NormMR>0))*2)...
-        *(maskarray>0);
-    defectArray = Incomplete_defect+Complete_defect+4*Hyper_defect;
+        % Calculate the defect ventilation percentage without median filter
+        Incomplete_defect = NormMR<(mean(NormMR(NormMR>0))...
+            *incomplete)*(maskarray>0);
+        Complete_defect = NormMR<(mean(NormMR(NormMR>0))...
+            *complete)*(maskarray>0);
+        Hyper_defect = NormMR>(mean(NormMR(NormMR>0))*2)...
+            *(maskarray>0);
+        defectArray = Incomplete_defect+Complete_defect+4*Hyper_defect;
     otherwise 
         fprintf('There is an error with median filter. Enter a value of 1 (yes) or 0 (no) in the input_params().\n')
 end
@@ -304,7 +316,7 @@ for slice = 1:size(d_Complete_rgb,3)
     array4dcomplete(:,:,:,slice) =  ind2rgb(d_Complete_rgb(:,:,slice),cm_complete);
 end
 cm_hyper=[0 0 0
-    0 0 1]; % blue
+    1 1 1]; % change to none for now but you can switch back to blue
 array4dhyper = zeros(size(d_Hyper_rgb,1), size(d_Hyper_rgb,2),3,...
     size(d_Hyper_rgb,3));
 for slice = 1:size(d_Hyper_rgb,3)

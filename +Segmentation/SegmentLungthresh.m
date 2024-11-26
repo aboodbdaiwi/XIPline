@@ -15,7 +15,7 @@ function lung_mask = SegmentLungthresh(Image,SE,nzcof)
 % SE: structuring element size for erode/dilate
 Image = Image(:,:,:,1);
 Image = Image./max(Image(:));
-[counts,~] = imhist(Image,16);
+[counts,~] = imhist(Image,256);
 T = otsuthresh(counts);
 
 % noise_thresh=max(Image(:));

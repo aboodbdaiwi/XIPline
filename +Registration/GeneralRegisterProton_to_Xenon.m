@@ -116,16 +116,19 @@ if (MainInput.SliceSelection == 1) && any(size(moving1) ~= size(fixed1))
     %     end
     %     moving1 = resizemoving1;
     % end
+    nSlice =  size(fixed1,3);
     if size(moving1,3) < size(fixed1,3)
         Im1 = fixed1;
         Im2 = moving1;
-        [moving1] = Global.match_n_slices(Im1,Im2);        
+        [moving1] = Global.match_n_slices(Im1,Im2);   
+        nSlice = size(Im1,3);
     elseif size(moving1,3) > size(fixed1,3)
         Im1 = moving1;
         Im2 = fixed1;
         [fixed1] = Global.match_n_slices(Im1,Im2);
+        nSlice = size(Im1,3);
     end
-    nSlice = size(Im1,3);
+    
 end
 
 

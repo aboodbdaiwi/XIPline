@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# register proton to gas of UW data
+dim=3 # image dimensionality
+AP="/export/home/zhawei/ants_v210/antsbin/bin/" # path to ANTs binaries
+
+ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS=8 # controls multi-threading
+export ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS
+
+f=$2 ; m=$1 # fixed and moving image file names
+outprefix=$3
+
+if [[ ! -s $f ]] ; then echo no fixed $f ; exit; fi
+if [[ ! -s $m ]] ; then echo no moving $m ;exit; fi
+if [[ ${#outprefix} -eq 0 ]] ; then
+echo usage is
+echo $0 fixed.nii.gz moving.nii.gz outprefix
+echo where outprefix is a string
+exit
+fi
+
+nm1=` basename $f | cut -d '.' -f 1 `
+nm=${D}${nm1}_fixed_${outprefix}_moving # construct output prefix
+
+
+${AP}antsRegistration -d $dim \
+		      -v 1 \
+		      -m MI[ $f, $m , 1 , 32, regular, 0.25 ] \
+                      -t rigid[ 0.1 ] \
+                      -c [ 1000x500x250x100, 1.e-6, 20] \
+	              -s 0x0x0x0vox \
+                      -f 4x3x2x1 -l 1 \
+                      -o [${nm},${nm}Warped.nii.gz,${nm}_inv.nii.gz]
+			
+
+# -m mutual information similarity, passing fixed, moving, metricWeight(?), and number of histogram bins (32 is fine)
+# -t xxx define transform, gradient descent optimization = .1 (the bigger this is, likely the larger step sizes will be taken?)
+# -t SyN define transform (what's SyN?).  3 arguments: gradientStep, updateFieldVarienceInVoxelSpace,totalFieldVarianceInVoxelSpace
+

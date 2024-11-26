@@ -44,6 +44,7 @@ hl=length(ind);
 mu=(1:k)*m/(k+1);
 
 % start process
+iter = 1; 
 while(true)
   if sum(isnan(mu))>0  % This if-command was added by Reza on Nov.03-2010 to deal with NaN results
       %mu
@@ -78,6 +79,12 @@ while(true)
       %mu
       break;
   end;
+  
+  if iter > 1000
+      break;
+  end
+  
+  iter = iter + 1;
   
 end
 % calculate mask
