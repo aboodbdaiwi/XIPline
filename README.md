@@ -63,7 +63,7 @@ These are a few analysis demos (please refer to the user's manual for step-by-st
 6 - [Developer Mode demo](https://www.youtube.com/watch?v=fEjruhWYejA&t=494s&ab_channel=AbdullahBdaiwi)
 
 ## Acknowledgments:
-Author: Abdullah S. Bdaiwi https://onlinelibrary.wiley.com/doi/full/10.1002/mrm.30347
+Author: Abdullah S. Bdaiwi 
 
 Work email: abdullah.bdaiwi@cchmc.org
 
