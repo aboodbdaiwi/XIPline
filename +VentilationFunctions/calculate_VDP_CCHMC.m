@@ -22,7 +22,7 @@ incomplete = Ventilation.IncompleteThresh;
 hyper = Ventilation.HyperventilatedThresh;
 medfilter = Ventilation.MedianFilter;
 DataPath = Ventilation.parentPath;
-Overall_SNR = Ventilation.Overall_SNR;
+Overall_SNR = Ventilation.SNR_lung;
 
 
 cd(DataPath)

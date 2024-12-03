@@ -1,4 +1,4 @@
-function [SNR_slice, Overall_SNR] = calculate_SNR(Ventilation, parentPath)
+function [Ventilation] = calculate_SNR(Ventilation)
 %% MATLAB script to perform SNR calculation
 % This code uses the ventilation images (can be N4 corrected or
 % original), and the corresponding masks, to generate an array of SNR
@@ -31,12 +31,19 @@ function [SNR_slice, Overall_SNR] = calculate_SNR(Ventilation, parentPath)
 % Create a structuring element to dilate the Xe mask array.
 % The structuring element size '28' can be changed as needed to remove
 % partial volume pixels and the trachea.
+parentPath = Ventilation.parentPath;
 SE = strel('square', 28);
 MR = double(Ventilation.Image);
-maskarray = double(Ventilation.LungMask + Ventilation.VesselMask);
-maskarray(maskarray > 1) = 0;
-maskarray = double(maskarray);
+maskarray = double(Ventilation.LungMask);
 
+MRvv = double(MR);
+NormMR = MRvv.*(maskarray>0);
+incomplete = 0.50;
+defectmask = VentilationFunctions.medFilter(double(NormMR<(mean(NormMR(NormMR>0))*incomplete)*(maskarray>0)));
+% maskarray = double(Ventilation.LungMask + Ventilation.VesselMask);
+% maskarray(maskarray > 1) = 0;
+% maskarray = double(maskarray);
+% figure; imslice(~defectmask)
 % Dilate the mask arrary according to the structuring element:
 maskarray_dilated = imdilate(maskarray, SE);
 
@@ -49,7 +56,7 @@ maskarray_dilated = imdilate(maskarray, SE);
 % force airway mask
 airwaymask = Segmentation.SegmentLungthresh(MR,0.5,1);
 % airwaymask = double(MR > 2000);
-% imslice(airwaymask)
+% imslice(backgroundmask)
 backgroundmask = double(imcomplement(maskarray_dilated).*~airwaymask);
 background1 = (MR).*(backgroundmask);
 
@@ -67,13 +74,16 @@ background1 = (MR).*(backgroundmask);
 
 % Calculate the SNR for each slice:
 SNR_slice = zeros(1, size(MR,3));
+SNRvv_slice = zeros(1, size(MR,3));
 signal_n_avg = zeros(size(SNR_slice));
+signalvv_avg = zeros(size(SNR_slice));
 std_noise = zeros(size(SNR_slice));
 mean_noise = zeros(size(SNR_slice));
 for n = 1:size(MR,3)
         %Calculating the siganl vector
         mask = maskarray(:,:,n);
         nois_mask = backgroundmask(:,:,n);
+        dfctmmask = double(~defectmask(:,:,n));
 
         signal_vec = MR(:,:,n).*mask;
         signal_vec = reshape(signal_vec,size(MR,1)*size(MR,2),1);
@@ -81,6 +91,13 @@ for n = 1:size(MR,3)
         %signal_vec(mask == 0) = [];
         signal_n_avg(n) = mean(signal_vec);
         signal_n_avg(isnan(signal_n_avg))=0;
+
+        signal_vec = MR(:,:,n).*mask.*dfctmmask;
+        signal_vec = reshape(signal_vec,size(MR,1)*size(MR,2),1);
+        signal_vec = nonzeros(signal_vec);
+        %signal_vec(mask == 0) = [];
+        signalvv_avg(n) = mean(signal_vec);
+        signalvv_avg(isnan(signalvv_avg))=0;
 
         %Calculating the noise vector
         noise_vec= MR(:,:,n).*nois_mask; 
@@ -93,22 +110,44 @@ for n = 1:size(MR,3)
         std_noise(isnan(std_noise))=0;
 
         SNR_slice(n) = round(signal_n_avg(n) / std_noise(n),2)*sqrt(2 - (pi/2)); %signal to noise ratio
+        SNRvv_slice(n) = round(signalvv_avg(n) / std_noise(n),2)*sqrt(2 - (pi/2)); %signal to noise ratio
 end
 SNR_slice(isnan(SNR_slice))=0;
 SNR_slice(isinf(SNR_slice)) = 0;
 SNR_slice = SNR_slice(SNR_slice ~= 0);
 
+SNRvv_slice(isnan(SNRvv_slice))=0;
+SNRvv_slice(isinf(SNRvv_slice)) = 0;
+SNRvv_slice = SNRvv_slice(SNRvv_slice ~= 0);
+
 overall_mean = mean(MR(maskarray == 1), "all", 'omitnan');
 overall_std = std(MR(backgroundmask == 1), 0,"all", 'omitnan');
-Overall_SNR = round((overall_mean/overall_std), 2)*sqrt(2 - (pi/2));
+SNR_lung = round((overall_mean/overall_std), 2)*sqrt(2 - (pi/2));
 
-disp(['Mean SNR for all masked ventilation slices = ',num2str(Overall_SNR)])
+maskarray2 = maskarray.*~defectmask;
+overallvv_mean = mean(MR(maskarray2 == 1), "all", 'omitnan');
+SNR_vv = round((overallvv_mean/overall_std), 2)*sqrt(2 - (pi/2));
+
+disp(['Mean SNR for all masked lung slices = ',num2str(SNR_lung)])
+disp(['Mean SNR for all masked ventilated slices = ',num2str(SNR_vv)])
 
 cd(parentPath);
 % Generate a text file with the SNR of each slice
 C = num2cell(SNR_slice);
-filePh = fopen('SNR.txt','w');
+filePh = fopen('SNRlung.txt','w');
 fprintf(filePh,'%s\n',C{:});
 fclose(filePh);
+
+C = num2cell(SNRvv_slice);
+filePh = fopen('SNRvv.txt','w');
+fprintf(filePh,'%s\n',C{:});
+fclose(filePh);
+
+Ventilation.SNR_slice = SNR_slice; 
+Ventilation.SNRvv_slice = SNRvv_slice;
+Ventilation.SNR_lung = SNR_lung; 
+Ventilation.SNR_vv = SNR_vv;
+
+
 
 end

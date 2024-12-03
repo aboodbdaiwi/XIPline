@@ -62,9 +62,7 @@ switch settings.calculate_SNR
 %         waitbar(.20,f,'Calculating SNR...');
 %         pause(.1)        
         disp('Calculating SNR...')
-        [SNR_slice, Overall_SNR] = VentilationFunctions.calculate_SNR(Ventilation, parentPath);
-        Ventilation.SNR_slice = SNR_slice;
-        Ventilation.Overall_SNR = Overall_SNR;
+        [Ventilation] = VentilationFunctions.calculate_SNR(Ventilation);       
     case "no"
         disp('SNR calculation has been skipped.')
     otherwise
