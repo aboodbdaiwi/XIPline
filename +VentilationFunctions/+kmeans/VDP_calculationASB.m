@@ -68,6 +68,7 @@ Ventilation.wholelung_VDP = wholelung_VDP;
 Ventilation.KmeansVDP = wholelung_VDP(1);
 fprintf("k-means VDP = %f", wholelung_VDP(1));
 segmentation = clusters_3D;
+Ventilation.Kmeans_segmentation = segmentation;
 %% %Check for non-zero slices along the third dimension
 
 % check images size, 2D or 3D

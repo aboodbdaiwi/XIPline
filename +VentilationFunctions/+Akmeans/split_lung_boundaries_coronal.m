@@ -41,6 +41,9 @@ if length(lobe_label_values)==5
 elseif length(lobe_label_values)==2
     lobemask.RUL=temp_handles.lobemaskRUL.*lungsmask;
     lobemask.LUL=temp_handles.lobemaskLUL.*lungsmask;
+else
+    lobemask.RUL=temp_handles.lungsmask;
+    lobemask.LUL=temp_handles.lungsmask;
 end
 
 se2=strel('disk',2);

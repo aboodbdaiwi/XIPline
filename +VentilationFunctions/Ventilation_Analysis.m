@@ -255,12 +255,18 @@ if strcmp(Ventilation.DDI2D,'yes') || strcmp(Ventilation.DDI3D,'yes')
             defectMap = double(Ventilation.LungMask) + defect_mask; 
         case 'Kmeans'
             defect_mask = Ventilation.Kmeans_segmentation;
-            defect_mask(defect_mask > 0 & defect_mask < 3) = 1;
+            defect_mask(defect_mask > 0 & defect_mask < 2) = 1;
             defect_mask(defect_mask > 1) = 0;
             defectMap = double(Ventilation.LungMask) + defect_mask; 
+        case 'AKmeans'
+            defect_mask = Ventilation.Akmeans_defect_mask;
+            defect_mask(defect_mask > 0 & defect_mask < 2) = 1;
+            defect_mask(defect_mask > 1) = 0;
+            defectMap = double(Ventilation.LungMask) + defect_mask;             
     end
     Ventilation.defectMap_forDDI = defectMap;
 end
+
 if strcmp(Ventilation.DDI2D,'yes')
     [Ventilation] = VentilationFunctions.calculateDDI_2D(Ventilation,Proton,MainInput);
 end

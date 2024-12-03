@@ -307,7 +307,7 @@ for slice = 1:size(d_Incomplete_rgb,3)
     array4dincomplete(:,:,:,slice) =  ind2rgb(d_Incomplete_rgb(:,:,slice),cm_incomplete);
 end
 cm_complete=[0 0 0
-    1 1 0]; % red
+    1 0 0]; % red
 % cm_complete=[0 0 0
 %     1 0 0];
 array4dcomplete = zeros(size(d_Complete_rgb,1), size(d_Complete_rgb,2),3,...
@@ -316,7 +316,7 @@ for slice = 1:size(d_Complete_rgb,3)
     array4dcomplete(:,:,:,slice) =  ind2rgb(d_Complete_rgb(:,:,slice),cm_complete);
 end
 cm_hyper=[0 0 0
-    1 1 1]; % change to none for now but you can switch back to blue
+    0 0 1]; % change to none for now but you can switch back to blue
 array4dhyper = zeros(size(d_Hyper_rgb,1), size(d_Hyper_rgb,2),3,...
     size(d_Hyper_rgb,3));
 for slice = 1:size(d_Hyper_rgb,3)
@@ -554,7 +554,7 @@ end
 % the above code and add this line (,'Indices', sl_1:sl_end) to the end of
 % each Montage. 
 %%% get rid of the gray frame in each montage
-
+close all;
 VentscaledImage = scaledImage2(:,:,slice_indices);
 VentMontage = figure('Name','Vent Image');set(VentMontage,'WindowState','minimized');
 montage(reshape(VentscaledImage,[size(VentscaledImage,1), size(VentscaledImage,2), 1, size(VentscaledImage,3)]),...

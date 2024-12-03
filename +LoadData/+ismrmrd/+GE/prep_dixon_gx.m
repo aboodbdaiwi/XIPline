@@ -1,5 +1,6 @@
-function prep_dixon_gx(d,h,wfn,mtx_reco,delay,lb,spks,...
-    fname,f0,nskip,do_gascor)
+
+function prep_dixon_gx(d,h,wfn,wfn_freq,fname,do_gascor,mtx_reco,delay,lb,spks,...
+    f0,nskip)
 % Preprocessing 3D Radial GX for offline recon and analysis
 %    prep_dixon_gx(d,h,wfn,mtx_reco,delay,lb,spks,...
 %                          fname,f0,do_single,do_gascor)
@@ -39,14 +40,14 @@ switch length(lb)
 end
 if ~exist('spks','var'),  spks = []; end
 if isempty(spks),         spks = false; end
-if ~exist('fname','var'), fname = []; end
-if ~isempty(fname)
-    if ~islogical(fname)
-        if ~isempty(regexpi(fname,'\.7$')), fname = fname(1:end-2); end
-        if ~isempty(regexpi(fname,'\.h5$')), fname = fname(1:end-3); end
-        if ~isempty(regexpi(fname,'\.mat$')), fname = fname(1:end-4); end
-    end
-end
+% if ~exist('fname','var'), fname = []; end
+% if ~isempty(fname)
+%     if ~islogical(fname)
+%         if ~isempty(regexpi(fname,'\.7$')), fname = fname(1:end-2); end
+%         if ~isempty(regexpi(fname,'\.h5$')), fname = fname(1:end-3); end
+%         if ~isempty(regexpi(fname,'\.mat$')), fname = fname(1:end-4); end
+%     end
+% end
 if ~exist('f0','var'),    f0 = []; end
 if isempty(f0),           f0 = 0; end
 if length(f0)~=1, error('length(f0)~=1'); end
@@ -60,7 +61,7 @@ if verb>0, timerVal = tic; end         % record execution time
 %% reading in data, if pfile name is given
 if ~isnumeric(d)
     if exist(d,'file')
-        [d,h] = read_p(d,false);
+        [d,h] = LoadData.ismrmrd.GE.Functions.read_p(d,false);
     else
         warning('strange input d/file not existing');
     end
@@ -69,12 +70,13 @@ end
 d(1:2*nskip,:) = [];
 
 %% reading waveform file
-wf = load_waveform(wfn);
+wf = LoadData.ismrmrd.GE.Functions.load_waveform(wfn);
 
 
 %% reading frequencies and flip angles
+% freq_array = LoadData.ismrmrd.GE.Functions.read_fdl([wfn(1:end-4) '_freq.fdl']);
 
-freq_array = read_fdl([wfn(1:end-4) '_freq.fdl']);
+freq_array = LoadData.ismrmrd.GE.Functions.read_fdl(wfn_freq);
 freq_array(1:2*nskip) = [];
 %% different WHOLE and ZOOM delay times (delay->array)
 if length(delay)>1
@@ -198,7 +200,11 @@ else
 end
 
 %% Gas contaminant removal
-
+maxk = max(abs(k(:)));
+if  maxk > 5
+    k2 = (k./maxk).*0.5;
+    k = k2;
+end
 if do_gascor
     dpv = freq_array ~= 0;
     gpv = freq_array == 0;
@@ -235,8 +241,8 @@ end
 
 cart_down_fac = []; 
 
-k_gp = raw2grid(d(1:2:end,:,:,:,:,:),ischop(h),k,shft,cart_down_fac,[],ind(1:2:end,:),delay*1d-6,bw,false);
-k_dp = raw2grid(d(2:2:end,:,:,:,:,:),ischop(h),k,shft,cart_down_fac,[],ind(2:2:end,:),delay*1d-6,bw,false);
+k_gp = LoadData.ismrmrd.GE.Functions.raw2grid(d(1:2:end,:,:,:,:,:),LoadData.ismrmrd.GE.Functions.ischop(h),k,shft,cart_down_fac,[],ind(1:2:end,:),delay*1d-6,bw,false);
+k_dp = LoadData.ismrmrd.GE.Functions.raw2grid(d(2:2:end,:,:,:,:,:),LoadData.ismrmrd.GE.Functions.ischop(h),k,shft,cart_down_fac,[],ind(2:2:end,:),delay*1d-6,bw,false);
 
 clear d wf ind
 % size of reshaped data dd:
@@ -280,8 +286,8 @@ te_dp = h.rdb_hdr.te;
 fov = fov*1e3;
 bw = h.rdb_hdr.user0;
 
-if ~isempty(fname)
+% if ~isempty(fname)
     [fp,fn] = fileparts(fname);
     save([fp '/Dixon_' fn '.mat'],'-mat','-v7.3',...
         'k_gp','k_dp','x_gp','y_gp','z_gp','x_dp','y_dp','z_dp','date','te_dp','fov', 'bw');
-end
+% end

@@ -51,7 +51,7 @@ he = temp_handles.he;
 % end
 lungsmask = temp_handles.lungsmask(:,:,1:nSlices);
 contoured_slices = find(squeeze(sum(sum(lungsmask,1),2))>0).';
-if ~isfield(temp_handles,'view')
+if ~isfield(temp_handles,'view') || strcmpi(temp_handles.view,'transversal')
     temp_handles.view = 'axial';
 end
 switch temp_handles.view

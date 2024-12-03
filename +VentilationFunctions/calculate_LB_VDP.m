@@ -627,6 +627,7 @@ DefectArrayMontagePosition=get(gcf,'position');
 % save ppt 
 ReportTitle = 'Ventilation_Analysis';
 %Start new presentation
+
 isOpen  = Global.exportToPPTX();
 if ~isempty(isOpen) %If PowerPoint already started, then close first and then open a new one
     Global.exportToPPTX('close');
@@ -643,7 +644,7 @@ else
 end 
 %Add slides
 Global.exportToPPTX('addslide'); % Image/mask/VDP
-Global.exportToPPTX('addtext',sprintf(char(foldername)),'Position',[5 0 7 1],'Color','b','FontSize',25);
+Global.exportToPPTX('addtext',sprintf(char([foldername,'-Normalization: ', Ventilation.LB_Normalization])),'Position',[5 0 7 1],'Color','b','FontSize',25);
 Global.exportToPPTX('addpicture',VentMontage,'Position',...
     [0 0.4 NumSliceView NumSliceView*(VentMontagePosition(4)/VentMontagePosition(3))]);
 Global.exportToPPTX('addpicture',ProtonMontage,'Position',...

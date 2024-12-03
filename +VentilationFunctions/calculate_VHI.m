@@ -110,4 +110,6 @@ function [Ventilation] = calculate_VHI(Ventilation)
     Ventilation.sliceVHI = sliceVHI;
     Ventilation.overallMeanCV = overallMeanCV;
     Ventilation.overallVHI = overallVHI;
+    Ventilation.CV_maps(isnan(Ventilation.CV_maps)) = 0; % Replace NaN with 0
+    Ventilation.CV_maps(isinf(Ventilation.CV_maps)) = 0; % Replace Inf with 0    
 end
