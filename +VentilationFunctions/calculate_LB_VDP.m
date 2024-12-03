@@ -49,7 +49,7 @@ Ventilation.maskarraytrachea = maskarraytrachea;
 ventmean = mean(Ventilation.Thresholds);
 ventstd = std(Ventilation.Thresholds);
 parentPath = Ventilation.parentPath;
-Overall_SNR = Ventilation.Overall_SNR;
+Overall_SNR = Ventilation.SNR_lung;
 Thresholds = Ventilation.Thresholds;
 
 cd(parentPath)
@@ -644,7 +644,7 @@ else
 end 
 %Add slides
 Global.exportToPPTX('addslide'); % Image/mask/VDP
-Global.exportToPPTX('addtext',sprintf(char([foldername,'-Normalization: ', Ventilation.LB_Normalization])),'Position',[5 0 7 1],'Color','b','FontSize',25);
+Global.exportToPPTX('addtext',sprintf('LB VDP-Normalization: %s', Ventilation.LB_Normalization),'Position',[5 0 7 1],'Color','b','FontSize',25);
 Global.exportToPPTX('addpicture',VentMontage,'Position',...
     [0 0.4 NumSliceView NumSliceView*(VentMontagePosition(4)/VentMontagePosition(3))]);
 Global.exportToPPTX('addpicture',ProtonMontage,'Position',...
