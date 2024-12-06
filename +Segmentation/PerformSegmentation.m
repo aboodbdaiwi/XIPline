@@ -179,7 +179,7 @@ switch MainInput.SegmentationMethod
             case 'Ventilation'                            
                switch MainInput.SliceOrientation
                     case 'coronal' 
-                        if MainInput.NoProtonImage == 0 && strcmp(MainInput.Imagestosegment, 'Xe & Proton Registered') == 1
+                        if MainInput.NoProtonImage == 0 && strcmp(MainInput.Imagestosegment, 'Proton & Xe Registered') == 1
                             SegmentType = 'vent_2D_2ch_cor'; %system('predict_mask_2DVent_w_H_coronal.exe')
                         elseif strcmp(MainInput.Imagestosegment, 'Xenon') == 1
                             SegmentType = 'vent_2D_1ch_cor'; 

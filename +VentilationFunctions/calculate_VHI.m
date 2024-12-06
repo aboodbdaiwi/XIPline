@@ -22,9 +22,7 @@ function [Ventilation] = calculate_VHI(Ventilation)
 
     % Extract input data and define the effective binary mask
     image = Ventilation.Image;
-    maskarray = double(Ventilation.LungMask + Ventilation.VesselMask);
-    maskarray(maskarray > 1) = 0;  % Exclude overlapping regions
-    maskarray = double(maskarray);
+    maskarray = double(Ventilation.LungMask);
 
     [rows, cols, slices] = size(image);
 

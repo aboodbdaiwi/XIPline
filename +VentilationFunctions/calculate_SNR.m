@@ -54,12 +54,12 @@ maskarray_dilated = imdilate(maskarray, SE);
 %     airwaymask = Segmentation.SegmentLungthresh(MR,1,1);
 % end
 % force airway mask
-airwaymask = Segmentation.SegmentLungthresh(MR,0.5,1);
+airwaymask = Segmentation.SegmentLungthresh(MR,1,0.3);
 % airwaymask = double(MR > 2000);
-% imslice(backgroundmask)
+
 backgroundmask = double(imcomplement(maskarray_dilated).*~airwaymask);
 background1 = (MR).*(backgroundmask);
-
+% imslice(backgroundmask)
 % % Label 0s in the background noise array as NaNs
 % background1(background1 == 0) = NaN;
 % 
@@ -109,8 +109,8 @@ for n = 1:size(MR,3)
         mean_noise(isnan(mean_noise))=0;
         std_noise(isnan(std_noise))=0;
 
-        SNR_slice(n) = round(signal_n_avg(n) / std_noise(n),2)*sqrt(2 - (pi/2)); %signal to noise ratio
-        SNRvv_slice(n) = round(signalvv_avg(n) / std_noise(n),2)*sqrt(2 - (pi/2)); %signal to noise ratio
+        SNR_slice(n) = round((signal_n_avg(n) - mean_noise(n)) / std_noise(n),2)*sqrt(2 - (pi/2)); %signal to noise ratio
+        SNRvv_slice(n) = round((signalvv_avg(n) - mean_noise(n)) / std_noise(n),2)*sqrt(2 - (pi/2)); %signal to noise ratio
 end
 SNR_slice(isnan(SNR_slice))=0;
 SNR_slice(isinf(SNR_slice)) = 0;
