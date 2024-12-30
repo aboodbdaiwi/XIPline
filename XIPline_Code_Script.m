@@ -20,7 +20,7 @@ MainInput.XeFileName = filename;
 MainInput.XeDataext = xe_ext;
 cd(MainInput.XeDataLocation)
 
-% [GasExResults, CalResults] = Calibration.XeCTC_Calibration(MainInput);
+[GasExResults, CalResults] = Calibration.XeCTC_Calibration(MainInput);
 [GasExResults, CalResults] = Calibration.XeCTC_Calibration_MRD(MainInput); 
 % the rest of the calculations is in the main interface 
 
@@ -46,12 +46,12 @@ MainInput.PatientInfo = '';
 MainInput.AnalysisType = 'GasExchange';  % 'Ventilation', 'Diffusion', 'GasExchange'
 
 % 2) Do you have protom images? 
-MainInput.NoProtonImage = 0;  % 1: There is no proton images  % 0: There is  proton images   
+MainInput.NoProtonImage = 1;  % 1: There is no proton images  % 0: There is  proton images   
 
-MainInput.Institute = 'CCHMC';  % 'CCHMC', 'XeCTC', 'Duke'
-MainInput.Scanner = 'Philips'; % Siemens, Philips
+MainInput.Institute = 'XeCTC';  % 'CCHMC', 'XeCTC', 'Duke'
+MainInput.Scanner = 'GE'; % Siemens, Philips, GE
 MainInput.ScannerSoftware = '5.9.0'; % '5.3.1', '5.6.1','5.9.0'
-MainInput.SequenceType = '2D GRE'; % '2D GRE', '3D Radial'
+MainInput.SequenceType = '3D Radial'; % '2D GRE', '3D Radial'
 MainInput.denoiseXe= 'no';
 % diary Log.txt
 [filename, path] = uigetfile('*.*','Select xenon data file');
@@ -67,7 +67,7 @@ MainInput.XeDataext = xe_ext;
 cd(MainInput.XeDataLocation)
 
 % select calibration
-if strcmp(MainInput.Institute,'XeCTC') && (strcmp(MainInput.XeDataext,'.dat') || strcmp(MainInput.XeDataext,'.p'))
+if strcmp(MainInput.Institute,'XeCTC') && strcmp(MainInput.AnalysisType,'GasExchange') %&& (strcmp(app.MainInput.XeDataext,'.dat') || strcmp(app.MainInput.XeDataext,'.p'))
     [filename, path] = uigetfile('*.*','Select calibration data file');
     CalFullPath = [path,filename];
     CalDataLocation = path(1:end-1);
@@ -79,7 +79,6 @@ if strcmp(MainInput.Institute,'XeCTC') && (strcmp(MainInput.XeDataext,'.dat') ||
     MainInput.Cal_name = Cal_name;    
     MainInput.CalDataext = Cal_ext;
 end
-
 
 % select proton
 if MainInput.NoProtonImage == 0

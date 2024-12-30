@@ -27,10 +27,27 @@ dset = LoadData.ismrmrd.Dataset(mrdfile);
 %Read in gre data
 % ADH - Again, we are going to need this path for each site.  It won't change from scan to scan so hard to say whether
 % we prompt for it every time or set it once for each site
-wfn_file = MainInput.wf_files.diff_wf;
+
+% The path here should be the path to the local diffusion waveform file
+directory = 'C:\XIPline\GE\waveforms\xe_calibration';
+% Define file patterns to search for
+filePatterns = {'*.mat', '*TR.fdl'};
+filePaths = {};
+for i = 1:length(filePatterns)
+    fileList = dir(fullfile(directory, filePatterns{i}));
+    if isempty(fileList)
+        fprintf('No file matching %s found in the directory.\n', filePatterns{i});
+    else
+        % Append each matching file's full path to the list
+        for j = 1:length(fileList)
+            filePaths{end+1} = fullfile(directory, fileList(j).name);
+        end
+    end
+end
+
+wfn_file = filePaths{1};
 % wfn = '/nfs/s-iibi54/users-1/anhahn/code/mns-xe/xe_diffusion_minTR/diffCart2D_129Xe_fov400_mtx64_nexc128_kdt60_gmax34_smax147_dur10p7_bmax12_co.mat';
 wf = load(wfn_file);
-
 nbv = numel(wf.bvalues);
 
 [data,h] = LoadData.ismrmrd.GE.Functions.read_p(gre_file);

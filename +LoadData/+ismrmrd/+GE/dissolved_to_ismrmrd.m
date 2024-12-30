@@ -20,9 +20,35 @@ end
 load(dissolvedmat);
 load(calmat,'te90');
 load(calmat,'targetAX');
+
 % freqfdlpath = MainInput.freqfdlFullPath;
-freqfdlpath = MainInput.wf_files.diss_wf_freq;
-tmp = LoadData.ismrmrd.GE.Functions.read_fdl(freqfdlpath);
+% The path here should be the path to the local calibration waveform file
+directory = 'C:\XIPline\GE\waveforms\xe_dissolved';
+% Define file patterns to search for
+filePatterns = {'*freq.fdl', '*TR.fdl'};
+filePaths = {};
+for i = 1:length(filePatterns)
+    fileList = dir(fullfile(directory, filePatterns{i}));
+    if isempty(fileList)
+        fprintf('No file matching %s found in the directory.\n', filePatterns{i});
+    else
+        % Append each matching file's full path to the list
+        for j = 1:length(fileList)
+            filePaths{end+1} = fullfile(directory, fileList(j).name);
+        end
+    end
+end
+
+% Display the full paths
+if isempty(filePaths)
+    disp('No matching files found.');
+else
+    fprintf('Matching files found:\n');
+    disp(filePaths');
+end
+
+fdl_freq_file = filePaths{1};
+tmp = LoadData.ismrmrd.GE.Functions.read_fdl(fdl_freq_file);
 % tmp = read_fdl('C:/Users/stcherne/Documents/Code_Repository/GE_2_ISMRMRD/DP/radial3D_129Xe_fov400_mtx64_intlv2000_kdt20_gmax33_smax147_dur4p6_coca_G_freq.fdl');
 freq_off = tmp(2); clear tmp;
 

@@ -28,7 +28,24 @@ dset = LoadData.ismrmrd.Dataset(mrdfile);
 % ADH - Again, we are going to need this path for each site.  It won't change from scan to scan so hard to say whether
 % we prompt for it every time or set it once for each site
 
-wfn_file = MainInput.wf_files.vent_wf;
+% The path here should be the path to the local ventilation waveform file
+directory = 'C:\XIPline\GE\waveforms\xe_calibration';
+% Define file patterns to search for
+filePatterns = {'*.mat', '*TR.fdl'};
+filePaths = {};
+for i = 1:length(filePatterns)
+    fileList = dir(fullfile(directory, filePatterns{i}));
+    if isempty(fileList)
+        fprintf('No file matching %s found in the directory.\n', filePatterns{i});
+    else
+        % Append each matching file's full path to the list
+        for j = 1:length(fileList)
+            filePaths{end+1} = fullfile(directory, fileList(j).name);
+        end
+    end
+end
+
+wfn_file = filePaths{1};
 % wfn = '/user/iibi/anhahn/code/mns-xe/xe_fgre/cart2D_129xe_fov384x360_mtx96x90_nexc90_kdt48_gmax39_smax147_dur5p22.mat';
 wf = load(wfn_file);
 

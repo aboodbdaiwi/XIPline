@@ -1,13 +1,13 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="4104814464" file="D:\Github\XIPline\XIPline.prj" location="D:\Github\XIPline" name="XIPline" preferred-package-location="D:\Github\XIPline\XIPline\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="3498823334" file="D:\Github\XIPline\XIPline.prj" location="D:\Github\XIPline" name="XIPline" preferred-package-location="D:\Github\XIPline\XIPline\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>XIPline</param.appname>
     <param.icon />
     <param.icons />
-    <param.version>1.1</param.version>
+    <param.version>1.1.0</param.version>
     <param.authnamewatermark>CCHMC-CPIR</param.authnamewatermark>
     <param.email>abdullah.bdaiwi@cchmc.org</param.email>
     <param.company>Cincinnati Children's Hospital</param.company>
-    <param.summary>A MATLAB-based user interface application is developed to analyze hyperpolarized 129Xe MRI data</param.summary>
+    <param.summary>A MATLAB-based user interface application was developed to analyze hyperpolarized 129Xe MRI data.</param.summary>
     <param.description />
     <param.screenshot>${PROJECT_ROOT}\XIPline_resources\app_logo2.png</param.screenshot>
     <param.guid />
@@ -86,16 +86,23 @@
       <file>${PROJECT_ROOT}\Example_Data</file>
       <file>${PROJECT_ROOT}\Icons</file>
       <file>${PROJECT_ROOT}\README.md</file>
+      <file>${PROJECT_ROOT}\Software License Agreement.txt</file>
       <file>${PROJECT_ROOT}\user_manual</file>
       <file>${PROJECT_ROOT}\V3 Scan Info</file>
       <file>${PROJECT_ROOT}\XeCTC Scan Info</file>
-      <file>${PROJECT_ROOT}\XIPline</file>
+      <file>${PROJECT_ROOT}\XIPline.mlapp</file>
       <file>${PROJECT_ROOT}\XIPline_Code_Script.m</file>
       <file>${PROJECT_ROOT}\XIPline_resources</file>
     </fileset.resources>
     <fileset.package />
     <fileset.depfun>
+      <file>C:\Users\bda5ik\Desktop\Example_Data\Ventilation\1001_CPIR_Ventilation\Ventilation Analysis\SNRlung.txt</file>
+      <file>C:\Users\bda5ik\Desktop\Example_Data\Ventilation\1001_CPIR_Ventilation\Ventilation Analysis\SNRvv.txt</file>
+      <file>D:\OneDrive - cchmc\Lab\Philips_ADC\calcImageSlice.m</file>
+      <file>D:\OneDrive - cchmc\Lab\Philips_ADC\imslice.m</file>
       <file>D:\OneDrive - cchmc\Lab\Philips_ADC\imVolume.m</file>
+      <file>D:\OneDrive - cchmc\Lab\Philips_ADC\showImageSlice.m</file>
+      <file>D:\OneDrive - cchmc\Lab\Philips_ADC\Volume.m</file>
     </fileset.depfun>
     <build-deliverables>
       <file location="${PROJECT_ROOT}\XIPline\for_testing" name="splash.png" optional="false">D:\Github\XIPline\XIPline\for_testing\splash.png</file>

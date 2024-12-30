@@ -17,16 +17,38 @@ dset = LoadData.ismrmrd.Dataset(mrdfile);
 cf = h.psc.mps_freq/10;
 
 % The path here should be the path to the local calibration waveform file
+directory = 'C:\XIPline\GE\waveforms\xe_calibration';
+% Define file patterns to search for
+filePatterns = {'*freq.fdl', '*TR.fdl'};
+filePaths = {};
+for i = 1:length(filePatterns)
+    fileList = dir(fullfile(directory, filePatterns{i}));
+    if isempty(fileList)
+        fprintf('No file matching %s found in the directory.\n', filePatterns{i});
+    else
+        % Append each matching file's full path to the list
+        for j = 1:length(fileList)
+            filePaths{end+1} = fullfile(directory, fileList(j).name);
+        end
+    end
+end
+
+% Display the full paths
+if isempty(filePaths)
+    disp('No matching files found.');
+else
+    fprintf('Matching files found:\n');
+    disp(filePaths');
+end
+
 % fdl_freq_file = 'D:\Github\XIPline\+LoadData\+ismrmrd\+GE\calibration3D_129xe_fov400_nsp256_intlv600_kdt40_dur10p2cal_freq.fdl';
-% fdl_freq_file = MainInput.freqfdlFullPath;
-fdl_freq_file = MainInput.wf_files.cal_wf_freq;
+fdl_freq_file = filePaths{1};
 tmp = LoadData.ismrmrd.GE.Functions.read_fdl(fdl_freq_file);
 freq_off = tmp(1); 
 nDis = sum(tmp > 0); clear tmp;
 
 % fdl_tr_file = 'D:\Github\XIPline\+LoadData\+ismrmrd\+GE\calibration3D_129xe_fov400_nsp256_intlv600_kdt40_dur10p2cal_TR.fdl';
-% fdl_tr_file = MainInput.trfdlFullPath;
-fdl_tr_file = MainInput.wf_files.cal_wf_tr;
+fdl_tr_file = filePaths{2};
 tmp = LoadData.ismrmrd.GE.Functions.read_fdl(fdl_tr_file);
 tr_gas = tmp(end); clear tmp;
 

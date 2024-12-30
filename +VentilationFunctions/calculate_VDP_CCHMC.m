@@ -19,6 +19,7 @@ maskarray = double(Ventilation.LungMask);
 % maskarray(maskarray > 1) = 0;
 % maskarray = double(maskarray);
 complete = Ventilation.CompleteThresh;
+% complete = Ventilation.NoiseCompleteThresh;
 incomplete = Ventilation.IncompleteThresh;
 hyper = Ventilation.HyperventilatedThresh;
 medfilter = Ventilation.MedianFilter;
@@ -712,7 +713,13 @@ legend4 = sprintf('%0.2f±%0.2f (%0.1f%%)',md_Hyper,sd_Hyper, Hyper);
 Ventilation.VDP = VDP;
 Ventilation.VentscaledImage = VentscaledImage;
 Ventilation.DefectArray = DefectArray;
-Ventilation.defectArray = defectArray;
+dmap = defectArray;
+dmap(dmap == 0) = 3;
+dmap = dmap.* maskarray;
+array_temp = dmap; % Create a temporary copy
+dmap(array_temp == 1) = 2; % Change 1s to 2s
+dmap(array_temp == 2) = 1; % Change 2s to 1s
+Ventilation.defectArray = dmap;
 Ventilation.VDP_hist = VDP_hist;
 Ventilation.VentDefectmap = VentDefectmap;
 Ventilation.legend1 = legend1;

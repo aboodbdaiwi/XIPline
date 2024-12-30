@@ -34,12 +34,14 @@ function [Ventilation] = calculate_SNR(Ventilation)
 parentPath = Ventilation.parentPath;
 SE = strel('square', 28);
 MR = double(Ventilation.Image);
+MR = (MR - min(MR(:))) / (max(MR(:)) - min(MR(:)));
 maskarray = double(Ventilation.LungMask);
 
 MRvv = double(MR);
 NormMR = MRvv.*(maskarray>0);
-incomplete = 0.50;
+incomplete = 0.33;
 defectmask = VentilationFunctions.medFilter(double(NormMR<(mean(NormMR(NormMR>0))*incomplete)*(maskarray>0)));
+Ventilation.SNRdefectmask = defectmask;
 % maskarray = double(Ventilation.LungMask + Ventilation.VesselMask);
 % maskarray(maskarray > 1) = 0;
 % maskarray = double(maskarray);
@@ -57,7 +59,10 @@ maskarray_dilated = imdilate(maskarray, SE);
 airwaymask = Segmentation.SegmentLungthresh(MR,1,0.3);
 % airwaymask = double(MR > 2000);
 
-backgroundmask = double(imcomplement(maskarray_dilated).*~airwaymask);
+zerofillings = double(MR == 0);
+backgroundmask = double(imcomplement(maskarray_dilated).*~airwaymask.*~zerofillings);
+Noise99percentile = prctile(MR(backgroundmask == 1),99.0);
+
 background1 = (MR).*(backgroundmask);
 % imslice(backgroundmask)
 % % Label 0s in the background noise array as NaNs
@@ -66,7 +71,6 @@ background1 = (MR).*(backgroundmask);
 % % Label 0s in the Xe vent array as NaNs
 % MR2 = MR.*(maskarray>0);
 % MR2(MR2 == 0) = NaN;
-
 
 % Calculate the column size needed to reshape the background noise
 % array for accurate StdDev calculation:
@@ -147,7 +151,7 @@ Ventilation.SNR_slice = SNR_slice;
 Ventilation.SNRvv_slice = SNRvv_slice;
 Ventilation.SNR_lung = SNR_lung; 
 Ventilation.SNR_vv = SNR_vv;
-
+Ventilation.NoiseCompleteThresh = round(overall_mean/Noise99percentile);
 
 
 end

@@ -45,7 +45,7 @@ end
 SE = strel('square', 10);
 maskarray_dilated = imdilate(maskarray, SE);
 % Export Image and Mask temporarily for use in N4
-niftiwrite(abs(MR),[parentPath,'Image.nii']); % Image
+niftiwrite(abs(MR+0.001),[parentPath,'Image.nii']); % Image
 niftiwrite(abs(maskarray_dilated),[parentPath,'Mask.nii']); % Mask
 niftiwrite(abs(maskarray),[parentPath,'Weight.nii']); % Weight
 
@@ -74,6 +74,25 @@ niftiwrite(abs(maskarray),[parentPath,'Weight.nii']); % Weight
 %     '-t [0.15,0.01,200] ',... % histogram settings
 %     '-o ["',parentPath,'CorrectedImage.nii","',parentPath,'Bias.nii"]']; % output corrected image and bias field
 % system(cmd);
+%% general settings (Abdullah)
+
+% cmd = ['"',N4Path,'N4BiasFieldCorrection.exe"',...%run bias correction
+%     ' -d 3 -i "',parentPath,'Image.nii"',... % set to 3 dimensions and input image of Image.nii
+%     ' -s 2',... % shrink by factor of 1
+%     ' -w "',parentPath,'Weight.nii" ',... % import mask called Weight.nii
+%     ' -o ["',parentPath,'CorrectedImage.nii","',parentPath,'Bias.nii"]']; % output corrected image and bias field
+% system(cmd);
+
+% cmd = ['"',N4Path,'N4BiasFieldCorrection.exe"',...%run bias correction
+%     ' -d 3 -i "',parentPath,'Image.nii"',... % set to 3 dimensions and input image of Image.nii
+%     ' -s 1',... % shrink by factor of 1
+%     ' -x "',parentPath,'Weight.nii" ',... % import mask called Weight.nii
+%     ' -c [100,50,50,50]',... % convergence
+%     ' -b [200]',... % spline settings %hf, lr, ap
+%     ' -t [1e-10]',... % histogram settings
+%     ' -o ["',parentPath,'CorrectedImage.nii","',parentPath,'Bias.nii"]']; % output corrected image and bias field
+% system(cmd);
+
 %% new settings (Abdullah)
 %Main issue is drop off at top of lungs (dual loop) and RL edges (Polarean)
 % Z Correction

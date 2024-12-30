@@ -23,8 +23,38 @@ function [Ventilation] = calculate_VHI(Ventilation)
     % Extract input data and define the effective binary mask
     image = Ventilation.Image;
     maskarray = double(Ventilation.LungMask);
+    
+    if size(image, 1) > 128
+        imageresized = zeros(128, 128, size(image, 3));
+        maskresized = zeros(128, 128, size(image, 3));
+        cleanMask = zeros(128, 128, size(image, 3)); % To store cleaned masks
+        
+        % Define a small structuring element for morphological operations
+        se = strel('disk', 1); % Disk with radius 1
+        
+        for i = 1:size(image, 3)
+            % Resize image and mask
+            imageresized(:, :, i) = imresize(image(:, :, i), [128, 128]);
+            maskresized(:, :, i) = imresize(maskarray(:, :, i), [128, 128]);
+            
+            % Convert the resized mask to binary
+            binaryMask = maskresized(:, :, i) > 0.5; 
+            
+            % Apply binary opening to remove isolated pixels
+            cleanedMask = imopen(binaryMask, se);
+            
+            % Store the cleaned mask
+            cleanMask(:, :, i) = cleanedMask;
+        end
+    end
 
+    image = imageresized;
+    maskarray = double(cleanMask > 0);
     [rows, cols, slices] = size(image);
+
+    NormMR = image.*(maskarray>0);
+    incomplete = 0.33;
+    defectmask = VentilationFunctions.medFilter(double(NormMR<(mean(NormMR(NormMR>0))*incomplete)*(maskarray>0)));
 
     % Initialize outputs
     CV_maps = zeros(rows, cols, slices);  % To store CV maps for all slices
@@ -36,7 +66,7 @@ function [Ventilation] = calculate_VHI(Ventilation)
     for sliceIdx = 1:slices
         % Extract the current slice and mask
         slice = image(:, :, sliceIdx);
-        maskSlice = maskarray(:, :, sliceIdx);
+        maskSlice = maskarray(:, :, sliceIdx) - defectmask(:, :, sliceIdx);
 
         % Initialize the CV map for the current slice
         CV_map = NaN(rows, cols);
@@ -78,7 +108,7 @@ function [Ventilation] = calculate_VHI(Ventilation)
         % Calculate mean CV and VHI (IQR of CV) for the current slice
         if ~isempty(CV_values)
             sliceMeanCV(sliceIdx) = mean(CV_values);
-            sliceVHI(sliceIdx) = iqr(CV_values);  % IQR = Q3 - Q1
+            sliceVHI(sliceIdx) = iqr(CV_values).*100;  % IQR = Q3 - Q1
             allCV_values = [allCV_values, CV_values];  % Append to global list
         else
             sliceMeanCV(sliceIdx) = NaN;
@@ -89,7 +119,7 @@ function [Ventilation] = calculate_VHI(Ventilation)
     % Calculate overall metrics
     if ~isempty(allCV_values)
         overallMeanCV = mean(allCV_values);
-        overallVHI = iqr(allCV_values);
+        overallVHI = iqr(allCV_values).*100;
     else
         overallMeanCV = NaN;
         overallVHI = NaN;
