@@ -9,11 +9,6 @@ function [mu,mask]=kmeansModified(ima,k)
 %   Output:
 %          mu: vector of class means 
 %          mask: clasification image mask
-%
-%   Author: Jose Vicente Manjon Herrera
-%    Email: jmanjon@fis.upv.es
-%     Date: 27-08-2005
-%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % check image
@@ -27,7 +22,7 @@ s=length(ima);
 
 % create image histogram
 
-m=max(ima)+1;%255
+m=max(ima)+1;
 h=zeros(1,m);
 hc=zeros(1,m);
 
@@ -44,7 +39,6 @@ hl=length(ind);
 mu=(1:k)*m/(k+1);
 
 % start process
-iter = 1; 
 while(true)
   if sum(isnan(mu))>0  % This if-command was added by Reza on Nov.03-2010 to deal with NaN results
       %mu
@@ -79,12 +73,6 @@ while(true)
       %mu
       break;
   end;
-  
-  if iter > 1000
-      break;
-  end
-  
-  iter = iter + 1;
   
 end
 % calculate mask

@@ -293,7 +293,7 @@ title('Linear Binning VDP')
 savedLinearBinningVDPMontage = get(LinearBinningVDPMontage,'CData');
 
 % Write out the montage using the input details above:
-FileName = [foldername + "Linear_Binning_VDPmap.png"];
+FileName = [foldername + "LBVDPmap_"+Ventilation.LB_Normalization+".png"];
 fullFileName = fullfile(parentPath,FileName);
 imwrite(savedLinearBinningVDPMontage,fullFileName,'png');
 %% Output mask images with proton overlays:

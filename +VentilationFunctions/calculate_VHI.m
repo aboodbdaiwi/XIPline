@@ -46,8 +46,10 @@ function [Ventilation] = calculate_VHI(Ventilation)
             % Store the cleaned mask
             cleanMask(:, :, i) = cleanedMask;
         end
+    else
+        imageresized = image;
+        cleanMask = maskarray;
     end
-
     image = imageresized;
     maskarray = double(cleanMask > 0);
     [rows, cols, slices] = size(image);
