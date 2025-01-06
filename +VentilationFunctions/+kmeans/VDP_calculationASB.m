@@ -5,7 +5,7 @@ maskarray = Ventilation.LungMask;
 % maskarray = double(Ventilation.LungMask + Ventilation.VesselMask);
 % maskarray(maskarray > 1) = 0;
 % maskarray = double(maskarray);
-
+Ventilation.SliceOrientation = MainInput.SliceOrientation;
 
 % k-means clustering using our previous code.
 [Ventilation] = VentilationFunctions.kmeans.clustering_3DASB(Ventilation);

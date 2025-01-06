@@ -257,7 +257,7 @@ colorVentmap = array4dVentDefect + array4dLowVent + array4dNormalVent1 + ...
 
 % Make a montage:
 % check images size, 2D or 3D
-if size(Ventilation.Image,3) > 30
+if size(Ventilation.Image,3) > 35
     Image_3D = 1;
     nrow = ceil(sqrt(size(Ventilation.Image,3)));
     % Initialize an empty vector to store indices of slices with no zeros
