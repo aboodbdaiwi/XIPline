@@ -114,7 +114,7 @@ else
      lastClusterMax = secondLastClusterMax;
 end
 
-threshold = secondLastClusterMin + ((lastClusterMax-secondLastClusterMin)/7);
+threshold = secondLastClusterMin + ((lastClusterMax-secondLastClusterMin)/20);
 
 % secondLastClusterMin
 % secondLastClusterMax
