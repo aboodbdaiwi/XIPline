@@ -328,7 +328,7 @@ elseif strcmp(MainInput.XeDataext,'.7') && strcmp(MainInput.Scanner,'GE')
 
 
 
-            LoadData.ismrmrd.GE.
+            % LoadData.ismrmrd.GE.
             
             mrdfile = [Xe_name '.h5']; %mrdfile,dissolvedarchive,dissolvedmat,calmat
 

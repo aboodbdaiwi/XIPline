@@ -33,7 +33,7 @@ image3D = (image3D - min(image3D(:)))/(max(image3D(:)) - min(image3D(:)));
 
 % Convert image to double for processing
 image3D = double(image3D);
-lungsmask = Ventilation.LungMask;
+lungsmask = Ventilation.LungMaskOriginal;
 [nRows,nCols,nSlices] = size(image3D);
 
 se=strel('disk',2);
@@ -65,7 +65,7 @@ end
 % figure; imslice(dilated_lung, 'vesselMask1'); % Display the original 3D image
 
 VesselMask = (VesselMask - min(VesselMask(:)))/(max(VesselMask(:)) - min(VesselMask(:)));
-lungMaskLogical = logical(Ventilation.LungMask(:));
+lungMaskLogical = logical(Ventilation.LungMaskOriginal(:));
 NFactor = prctile(VesselMask(lungMaskLogical), 99.0);
         VesselMask = VesselMask/NFactor;
         VesselMask(VesselMask > 1) = 1;
@@ -91,8 +91,8 @@ Ventilation.VesselMask = VesselMask;
 Ventilation.vessel_stack = vessel_stack;
 
 disp('Save NIFTI')
-% niftiwrite((fliplr(rot90(VesselMask,-1))),[MainInput.XeDataLocation,'\vessel_mask.nii'],'Compressed',true);
-% niftiwrite((fliplr(rot90(vessel_stack,-1))),[MainInput.XeDataLocation,'\vessel_stack.nii'],'Compressed',true);
+niftiwrite((fliplr(rot90(VesselMask,-1))),[MainInput.XeDataLocation,'\vessel_mask.nii'],'Compressed',true);
+niftiwrite((fliplr(rot90(vessel_stack,-1))),[MainInput.XeDataLocation,'\vessel_stack.nii'],'Compressed',true);
 % 
 % save_data=[MainInput.XeDataLocation,'\','VesselMask','.mat'];
 % save(save_data);

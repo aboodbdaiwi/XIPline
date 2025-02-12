@@ -226,7 +226,7 @@ end
 maskarray = double(Ventilation.LungMask + Ventilation.VesselMask);
 maskarray(maskarray > 1) = 0;
 Ventilation.LungMask = double(maskarray);
-
+Ventilation.LungMaskOriginal = Ventilation.LungMask;
 figure; Global.imslice(Ventilation.VesselMask)
 
 figure; Global.imslice(Ventilation.LungMask)
