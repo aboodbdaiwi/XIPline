@@ -1,10 +1,10 @@
-function [meanRbc2barrier,te90,targetAX,targetTG] = recon_calibration(d,h,wfn,delay,fname)
+function [meanRbc2barrier,te90,targetAX,targetTG] = recon_calibration(d,h,wfnpath,delay,fname)
 %RECON_CALIBRATION Reconstruct 129Xe calibration
 % [bb,bbabs] = recon_calibration(d,h,wfn,mtx,delay,lb,fname,comb_time)
 %                                                               (default)
 %         d  Raw (p-file) data  (or pfile fname)
 %         h  Header from p-file (or empty)
-%       wfn  Location of waveform .mat file
+%   wfnpath  Location of waveform .mat file
 %     delay  Gradient-acquisition delay                   [pts] (0)
 %     fname  Print <fname>.png and save reco as <fname>.mat     ([]) 
 %            also export dicom if template.dcm is found
@@ -40,7 +40,28 @@ if ~isnumeric(d)
 end
 
 
-%% reading waveform file
+
+
+%% reading waveform file: reading frequencies and flip angles
+% The path here should be the path to the local calibration waveform file
+% wfnpath = 'C:\XIPline\GE\waveforms\xe_calibration';
+% Define file patterns to search for
+% filePatterns = {'*freq.fdl', '*TR.fdl'};
+filePatterns = {'*.mat', '*freq.fdl', '*flip.fdl'};
+filePaths = {};
+for i = 1:length(filePatterns)
+    fileList = dir(fullfile(wfnpath, filePatterns{i}));
+    if isempty(fileList)
+        fprintf('No file matching %s found in the directory.\n', filePatterns{i});
+    else
+        % Append each matching file's full path to the list
+        for j = 1:length(fileList)
+            filePaths{end+1} = fullfile(wfnpath, fileList(j).name);
+        end
+    end
+end
+
+wfn = filePaths{1};
 if isempty(wfn), error('wfn empty'); end
 if isstruct(wfn)
     wf = wfn;
@@ -51,24 +72,6 @@ else
     wf = load(wfn);          % load waveform
 end
 
-%% reading frequencies and flip angles
-% The path here should be the path to the local calibration waveform file
-directory = 'C:\XIPline\GE\waveforms\xe_calibration';
-% Define file patterns to search for
-% filePatterns = {'*freq.fdl', '*TR.fdl'};
-filePatterns = {'*freq.fdl', '*flip.fdl'};
-filePaths = {};
-for i = 1:length(filePatterns)
-    fileList = dir(fullfile(directory, filePatterns{i}));
-    if isempty(fileList)
-        fprintf('No file matching %s found in the directory.\n', filePatterns{i});
-    else
-        % Append each matching file's full path to the list
-        for j = 1:length(fileList)
-            filePaths{end+1} = fullfile(directory, fileList(j).name);
-        end
-    end
-end
 % Display the full paths
 if isempty(filePaths)
     disp('No matching files found.');
@@ -76,10 +79,10 @@ else
     fprintf('Matching files found:\n');
     disp(filePaths');
 end
-fdl_freq_file = filePaths{1};
+fdl_freq_file = filePaths{2};
 freq_array = LoadData.ismrmrd.GE.Functions.read_fdl(fdl_freq_file);
 
-fdl_tr_file = filePaths{2};
+fdl_tr_file = filePaths{3};
 flip_array = LoadData.ismrmrd.GE.Functions.read_fdl(fdl_tr_file);
 
 % freq_array = read_fdl([wfn(1:end-4) '_freq.fdl']);
