@@ -166,8 +166,9 @@ fwhm_f = disfitObj.fwhm;
 phase_f = disfitObj.phase;
 
 %% RBC:Barrier Ratio
-% meanRbc2barrier = disfitObj.area(rbc_idx)/disfitObj.area(barrier_idx);
-meanRbc2barrier = disfitObj.area(2)/disfitObj.area(3);
+meanRbc2barrier = disfitObj.area(rbc_idx)/disfitObj.area(barrier_idx);
+% meanRbc2barrier = disfitObj.area(2)/disfitObj.area(3);
+
 %% Compute TE90
 te = h.rdb_hdr.te*1e-6;
 
