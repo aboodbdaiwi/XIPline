@@ -1,4 +1,4 @@
-function calibration_to_ismrmrd(mrdfile,MainInput)
+function calibration_to_ismrmrd(MainInput)
 %%
 %   mrdfile -> Name of MRD file to write
 %
@@ -10,6 +10,8 @@ function calibration_to_ismrmrd(mrdfile,MainInput)
 %     error(['File ' mrdfile ' already exists.  Please remove first'])
 % end
 cd(MainInput.CalDataLocation)
+[Cal_path, Cal_name, Cal_ext ] = fileparts(MainInput.CalFullPath);
+mrdfile = [MainInput.Cal_name '_Calibration.h5'];
 dset = LoadData.ismrmrd.Dataset(mrdfile);
 
 [data,h] = LoadData.ismrmrd.GE.Functions.read_p(MainInput.CalFileName);

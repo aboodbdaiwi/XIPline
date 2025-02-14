@@ -196,7 +196,7 @@ MainInput.thresholdlevel = 0.6; % 'threshold'
 MainInput.SE = 1;
 
 MainInput.SegmentManual = 'Freehand'; % 'AppSegmenter' || 'Freehand'
-MainInput.SliceOrientation = 'coronal'; % 'coronal' ||'transversal' || 'sagittal' ||'isotropic'
+MainInput.SliceOrientation = 'isotropic'; % 'coronal' ||'transversal' || 'sagittal' ||'isotropic'
 [Proton,Ventilation,Diffusion,GasExchange] = Segmentation.PerformSegmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
 
 % create vessle mask
@@ -217,19 +217,28 @@ switch MainInput.vesselImageMode
         MainInput.frangi_thresh = 0.2; % you can change this threshold to increase or decrease the mask
 end
 
-if MainInput.SegmentVessels == 1
-    [Ventilation] = Segmentation.Vasculature_filter(Proton, Ventilation, MainInput);
-else
-    Ventilation.VesselMask = zeros(size(Ventilation.Image));
-    Ventilation.vessel_stack = zeros(size(Ventilation.Image));
+if strcmp(MainInput.AnalysisType,'Ventilation')  
+    if MainInput.SegmentVessels == 1
+        [Ventilation] = Segmentation.Vasculature_filter(Proton, Ventilation, MainInput);
+    else
+        Ventilation.VesselMask = zeros(size(Ventilation.Image));
+        Ventilation.vessel_stack = zeros(size(Ventilation.Image));
+    end
+    maskarray = double(Ventilation.LungMask + Ventilation.VesselMask);
+    maskarray(maskarray > 1) = 0;
+    Ventilation.LungMask = double(maskarray);
+    Ventilation.LungMaskOriginal = Ventilation.LungMask;
+    % figure; Global.imslice(Ventilation.VesselMask)
 end
-maskarray = double(Ventilation.LungMask + Ventilation.VesselMask);
-maskarray(maskarray > 1) = 0;
-Ventilation.LungMask = double(maskarray);
-Ventilation.LungMaskOriginal = Ventilation.LungMask;
-figure; Global.imslice(Ventilation.VesselMask)
 
-figure; Global.imslice(Ventilation.LungMask)
+if strcmp(MainInput.AnalysisType,'Ventilation')                
+    figure; Global.imslice(Ventilation.LungMask)
+elseif strcmp(MainInput.AnalysisType,'Diffusion')
+    figure; Global.imslice(Diffusion.LungMask)
+elseif strcmp(MainInput.AnalysisType,'GasExchange')
+    figure; Global.imslice(GasExchange.LungMask)
+end
+
 if ~isfield(Diffusion, 'AirwayMask')
     disp('Diffusion.AirwayMask does not exist');
 else
@@ -312,6 +321,11 @@ Diffusion.Delta = 3.5; % ms
 clc;
 cd(MainInput.XeDataLocation)
 % diary Log.txt
+if MainInput.NoProtonImage == 1
+    Proton.Image = zeros(size(GasExchange.VentImage));
+    Proton.ProtonRegistered = zeros(size(GasExchange.VentImage));
+    Proton.ProtonMaskRegistred = GasExchange.LungMask;
+end
 
 MainInput.ImportHealthyCohort = 0; % 0: import CCHMC healthy Ref., 1: import .mat H. Ref., 2: enter values manually
 if MainInput.ImportHealthyCohort == 0

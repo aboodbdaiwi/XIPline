@@ -261,81 +261,11 @@ elseif strcmp(MainInput.XeDataext,'.7') && strcmp(MainInput.Scanner,'GE')
             [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
             Diffusion.Image = Image;
         elseif strcmp(MainInput.AnalysisType,'GasExchange') 
-            % (not working) this code needs to be updated to read in .7 files
-            % Define the main directory
-            mainDir = XeDataLocation;
-            % % Define the search patterns for the files
-            % dissolvedarchivePattern = 'ScanArchive.h5';
-            % dissolvedmatPattern = 'Dixon_ScanArchive.mat';
-            % calmatPattern = 'ScanArchive.mat';
-            % 
-            % % Initialize variables to store file paths
-            % dissolvedarchive = '';
-            % dissolvedmat = '';
-            % calmat = '';
-            % 
-            % % Get a list of all files in the main directory
-            % files = dir(mainDir);
-            % 
-            % % Loop through each file in the directory
-            % for i = 1:length(files)
-            %     % Get the full path of the current file
-            %     filePath = fullfile(mainDir, files(i).name);
-            % 
-            %     % Check if the file matches the dissolvedarchive pattern
-            %     if contains(files(i).name, dissolvedarchivePattern(1:end-4)) && endsWith(files(i).name, '.h5')
-            %         dissolvedarchive = filePath;
-            %     end
-            % 
-            %     % Check if the file matches the dissolvedmat pattern
-            %     if contains(files(i).name, dissolvedmatPattern(1:end-4)) && endsWith(files(i).name, '.mat')
-            %         dissolvedmat = filePath;
-            %     end
-            % 
-            %     % Check if the file matches the calmat pattern
-            %     if contains(files(i).name, calmatPattern(1:end-4)) && endsWith(files(i).name, '.mat') &&...
-            %             ~contains(files(i).name, 'Spect_ScanArchive') &&...
-            %             contains(files(i).name, 'Dixon') == 0
-            %         calmat = filePath;
-            %     end
-            % end
-            % 
-            % % Display the paths of the files found
-            % disp('dissolvedarchive:');
-            % disp(dissolvedarchive);
-            % disp('dissolvedmat:');
-            % disp(dissolvedmat);
-            % disp('calmat:');
-            % disp(calmat);
-            % 
-            % % Check if all required files are found
-            % if isempty(dissolvedarchive)
-            %     error('dissolvedarchive file not found.');
-            % end
-            % 
-            % if isempty(dissolvedmat)
-            %     error('dissolvedmat file not found.');
-            % end
-            % 
-            % if isempty(calmat)
-            %     error('calmat file not found.');
-            % end
-            % 
-            LoadData.ismrmrd.GE.calibration_to_ismrmrd([MainInput.Cal_name '.h5'],MainInput);
-            MainInput.CalFileName = [MainInput.Cal_name '.h5'];
-            [GasExResults, CalResults] = Calibration.XeCTC_Calibration_GEMRD(MainInput); 
-
-
-
-
-            % LoadData.ismrmrd.GE.
-            
-            mrdfile = [Xe_name '.h5']; %mrdfile,dissolvedarchive,dissolvedmat,calmat
-
-            LoadData.ismrmrd.GE.dissolved_to_ismrmrd(mrdfile,dissolvedarchive,dissolvedmat,calmat);
-            LoadData.ismrmrd.GE.calibration_to_ismrmrd(MainInput.CalFileName,MainInput.Cal_name,fullfile(XeDataLocation,[MainInput.Cal_name '_Calibration.h5']));
+            LoadData.ismrmrd.GE.dissolved_to_ismrmrd(MainInput, GasExchange);             
+            LoadData.ismrmrd.GE.calibration_to_ismrmrd(MainInput);
             MainInput.XeFileName = [Xe_name '.h5'];
-            MainInput.CalFileName = [MainInput.Cal_name '_Calibration.h5'];            
+            MainInput.CalFileName = [MainInput.Cal_name '_Calibration.h5'];  
+            MainInput.CalDataext = '.h5';
             [GasExchange] = LoadData.ismrmrd.radial_3D_XeCTC_gx_recon(MainInput,GasExchange);
         end
 

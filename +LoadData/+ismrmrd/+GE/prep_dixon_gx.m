@@ -1,5 +1,5 @@
 
-function prep_dixon_gx(d,h,wfn,wfn_freq,fname,do_gascor,mtx_reco,delay,lb,spks,...
+function prep_dixon_gx(d,h,wfnpath,wfn_freq,fname,do_gascor,mtx_reco,delay,lb,spks,...
     f0,nskip)
 % Preprocessing 3D Radial GX for offline recon and analysis
 %    prep_dixon_gx(d,h,wfn,mtx_reco,delay,lb,spks,...
@@ -69,14 +69,42 @@ end
 
 d(1:2*nskip,:) = [];
 
-%% reading waveform file
+%% reading waveform file: reading waveform file: reading frequencies and flip angles
+filePatterns = {'*.mat', '*freq.fdl'};
+filePaths = {};
+for i = 1:length(filePatterns)
+    fileList = dir(fullfile(wfnpath, filePatterns{i}));
+    if isempty(fileList)
+        fprintf('No file matching %s found in the directory.\n', filePatterns{i});
+    else
+        % Append each matching file's full path to the list
+        for j = 1:length(fileList)
+            filePaths{end+1} = fullfile(wfnpath, fileList(j).name);
+        end
+    end
+end
+
+wfn = filePaths{1};
+% if isempty(wfn), error('wfn empty'); end
+% if isstruct(wfn)
+%     wf = wfn;
+% else
+%     if ~isempty(regexpi(wfn,'\.wav$')), wfn = wfn(1:end-4); end
+%     if isempty(regexpi(wfn,'\.mat$')),  wfn = [wfn '.mat']; end
+%     if ~exist(wfn,'file'), error('file not found: wfn=%s',wfn); end
+%     wf = load(wfn);          % load waveform
+% end
 wf = LoadData.ismrmrd.GE.Functions.load_waveform(wfn);
 
-
-%% reading frequencies and flip angles
-% freq_array = LoadData.ismrmrd.GE.Functions.read_fdl([wfn(1:end-4) '_freq.fdl']);
-
-freq_array = LoadData.ismrmrd.GE.Functions.read_fdl(wfn_freq);
+% Display the full paths
+if isempty(filePaths)
+    disp('No matching files found.');
+else
+    fprintf('Matching files found:\n');
+    disp(filePaths');
+end
+fdl_freq_file = filePaths{2};
+freq_array = LoadData.ismrmrd.GE.Functions.read_fdl(fdl_freq_file);
 freq_array(1:2*nskip) = [];
 %% different WHOLE and ZOOM delay times (delay->array)
 if length(delay)>1
@@ -287,7 +315,7 @@ fov = fov*1e3;
 bw = h.rdb_hdr.user0;
 
 % if ~isempty(fname)
-    [fp,fn] = fileparts(fname);
+    [fp,fn] = fileparts(fname); cd(fp);
     save([fp '/Dixon_' fn '.mat'],'-mat','-v7.3',...
         'k_gp','k_dp','x_gp','y_gp','z_gp','x_dp','y_dp','z_dp','date','te_dp','fov', 'bw');
 % end

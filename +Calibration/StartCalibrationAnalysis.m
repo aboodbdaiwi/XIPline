@@ -27,7 +27,7 @@ CalResults= [];
              strcmp(MainInput.Scanner, 'Siemens'))
         [GasExResults, CalResults] = Calibration.Xe_duke_UVA_calibration(MainInput); 
     elseif strcmp(MainInput.CalDataext,'.7') && strcmp(MainInput.Scanner, 'GE')   
-            LoadData.ismrmrd.GE.calibration_to_ismrmrd([MainInput.Cal_name '.h5'],MainInput);
+            LoadData.ismrmrd.GE.calibration_to_ismrmrd(MainInput);
             MainInput.CalFileName = [MainInput.Cal_name '.h5'];
         [GasExResults, CalResults] = Calibration.XeCTC_Calibration_GEMRD(MainInput);     
     elseif (strcmp(MainInput.CalDataext,'.h5') || strcmp(MainInput.CalDataext,'.MRD') ||...

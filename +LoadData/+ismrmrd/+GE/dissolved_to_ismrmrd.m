@@ -1,4 +1,4 @@
-function dissolved_to_ismrmrd(mrdfile,dissolvedarchive,dissolvedmat,calmat)
+function dissolved_to_ismrmrd(MainInput, GasExchange)
 %%
 %   mrdfile             -> Name of MRD file to write
 %
@@ -12,15 +12,40 @@ function dissolved_to_ismrmrd(mrdfile,dissolvedarchive,dissolvedmat,calmat)
 %                         (e.g ScanArchive*.mat, NOT Spect_ScanArchive.mat)
 
 %% Create an empty ismrmrd dataset
-if exist(mrdfile,'file')
-    error(['File ' filename ' already exists.  Please remove first'])
-end
+XeFullPath = MainInput.XeFullPath;
+XeDataLocation = MainInput.XeDataLocation;  cd(XeDataLocation);
+filename = MainInput.XeFileName;
+Xe_name = MainInput.Xe_name;
+ext = MainInput.XeDataext;
 
-[~,h] = LoadData.ismrmrd.GE.Functions.read_p(dissolvedarchive);
-load(dissolvedmat);
-load(calmat,'te90');
-load(calmat,'targetAX');
+% create file mrd name
+mrdfile = [Xe_name '.h5'];
+% if exist(mrdfile,'file')
+%     error(['File ' filename ' already exists.  Please remove first'])
+% end
 
+% run prep_dixon_gx
+dDP = XeFullPath;
+h = [];
+wfnpath = 'C:\XIPline\GE\waveforms\xe_dissolved';
+wfn_freq = '';
+fname = dDP;
+LoadData.ismrmrd.GE.prep_dixon_gx(dDP,h,wfnpath,wfn_freq,fname);
+prep_mat_file = [XeDataLocation '\Dixon_' Xe_name '.mat'];
+load(prep_mat_file);
+
+% run calibration analysis to get te90
+CalFullPath = MainInput.CalFullPath;
+[Cal_path, Cal_name, Cal_ext ] = fileparts(CalFullPath);
+dCal = CalFullPath;
+h = [];
+wfnpath = 'C:\XIPline\GE\waveforms\xe_calibration'; % files inside the wfnpath folder = {'*.mat', '*freq.fdl', '*flip.fdl'};
+[meanRbc2barrier,te90,targetAX,targetTG] = Calibration.recon_calibration(dCal,h,wfnpath);
+close all;
+% read in gas exchnage data
+[~,h] = LoadData.ismrmrd.GE.Functions.read_p(XeFullPath);
+
+% te90 = CalResults.te90;
 % freqfdlpath = MainInput.freqfdlFullPath;
 % The path here should be the path to the local calibration waveform file
 directory = 'C:\XIPline\GE\waveforms\xe_dissolved';
@@ -168,7 +193,7 @@ header.encoding.trajectoryDescription.userParameterLong(1).name = "ramp_time";
 header.encoding.trajectoryDescription.userParameterLong(1).value = 72;
 
 header.userParameters.userParameterLong(1).name = "xe_center_frequency";
-header.userParameters.userParameterLong(1).value = h.ps.mps_freq/10;
+header.userParameters.userParameterLong(1).value = h.psc.mps_freq/10;
 header.userParameters.userParameterLong(2).name = "xe_dissolved_offset_frequency";
 header.userParameters.userParameterLong(2).value = freq_off;
 header.userParameters.userParameterString(1).name = "orientation";

@@ -238,6 +238,7 @@ disp('Determining Image Offset Completed.')
 
 %% Spectra
 disp('Fitting Spectrum...') 
+cd(MainInput.CalDataLocation)
 [GasExResults, ~] = Calibration.StartCalibrationAnalysis(MainInput);
 time = GasExResults.DisFit.t;
 AppendedDissolvedNMRFit = GasExResults.DisFit;
@@ -372,7 +373,7 @@ hold off
 % sgtitle('Signal Dynamics','FontSize',22)
 cd(outputpath)
 savefig('SigDynamics.fig')
-close(gcf)
+% close(gcf)
 % %H - Motion
 % subplot(1,2,2);
 % hold on
@@ -409,9 +410,10 @@ if(NewImages == 1)
         for i = 1:size(UncorrectedVentImage,1)
             img = UncorrectedVentImage(:,:,i);
             img = imrotate(img,90);
-            UncorrectedVentImage(:,:,i) = flip(img,1);
+            UncorrectedVentImage(:,:,i) = flip(img,2);
         end
     end
+    % imslice(abs(UncorrectedVentImage))
     disp('Reconstructing Ventilation Image Completed.')
     disp('Correcting Ventilation Bias...')
     VentMask = (abs(UncorrectedVentImage))>(prctile(abs(UncorrectedVentImage(:)),95)/3);
@@ -448,7 +450,7 @@ if(NewImages == 1)
         for i = 1:size(GasImage,1)
             img = GasImage(:,:,i);
             img = imrotate(img,90);
-            GasImage(:,:,i) = flip(img,1);
+            GasImage(:,:,i) = flip(img,2);
         end      
     end
     disp('Reconstructing Gas Image Completed.')
@@ -466,7 +468,7 @@ if(NewImages == 1)
         for i = 1:size(DissolvedImage,1)
             img = DissolvedImage(:,:,i);
             img = imrotate(img,90);
-            DissolvedImage(:,:,i) = flip(img,1);
+            DissolvedImage(:,:,i) = flip(img,2);
         end       
     end    
     disp('Reconstructing Dissolved Image Completed.')
@@ -482,7 +484,7 @@ if(NewImages == 1)
         for i = 1:size(CorrDissolvedImage,1)
             img = CorrDissolvedImage(:,:,i);
             img = imrotate(img,90);
-            CorrDissolvedImage(:,:,i) = flip(img,1);
+            CorrDissolvedImage(:,:,i) = flip(img,2);
         end       
     end     
     disp('Reconstructing Corrected Dissolved Image Completed.')
