@@ -26,10 +26,12 @@ CalResults= [];
     elseif strcmp(MainInput.CalDataext,'.dat') && (strcmp(MainInput.Institute, 'XeCTC') ||...
              strcmp(MainInput.Scanner, 'Siemens'))
         [GasExResults, CalResults] = Calibration.Xe_duke_UVA_calibration(MainInput); 
-    elseif strcmp(MainInput.CalDataext,'.7') && strcmp(MainInput.Scanner, 'GE')   
+    elseif strcmp(MainInput.CalDataext,'.7') && strcmp(MainInput.Scanner, 'GE') && strcmp(MainInput.Institute, 'XeCTC')  
             LoadData.ismrmrd.GE.calibration_to_ismrmrd(MainInput);
             MainInput.CalFileName = [MainInput.Cal_name '.h5'];
-        [GasExResults, CalResults] = Calibration.XeCTC_Calibration_GEMRD(MainInput);     
+        [GasExResults, CalResults] = Calibration.XeCTC_Calibration_GEMRD(MainInput);   
+    elseif strcmp(MainInput.CalDataext,'.7') && strcmp(MainInput.Scanner, 'GE')   
+        [GasExResults, CalResults] = Calibration.GE_calibration(MainInput);
     elseif (strcmp(MainInput.CalDataext,'.h5') || strcmp(MainInput.CalDataext,'.MRD') ||...
             strcmp(MainInput.CalDataext,'.mrd')) && strcmp(MainInput.Scanner, 'GE')   
         [GasExResults, CalResults] = Calibration.XeCTC_Calibration_GEMRD(MainInput);         
