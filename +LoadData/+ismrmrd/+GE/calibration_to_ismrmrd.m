@@ -12,6 +12,14 @@ function calibration_to_ismrmrd(MainInput)
 cd(MainInput.CalDataLocation)
 [Cal_path, Cal_name, Cal_ext ] = fileparts(MainInput.CalFullPath);
 mrdfile = [MainInput.Cal_name '_Calibration.h5'];
+% Check if the file exists
+if exist(mrdfile, 'file') == 2  % 'file' checks for both files and directories, '2' indicates a file
+    delete(mrdfile);  % Removes the file if it exists
+    fprintf('File %s existed and has been removed.\n', mrdfile);
+else
+    fprintf('File %s does not exist.\n', mrdfile);
+end
+
 dset = LoadData.ismrmrd.Dataset(mrdfile);
 
 [data,h] = LoadData.ismrmrd.GE.Functions.read_p(MainInput.CalFileName);

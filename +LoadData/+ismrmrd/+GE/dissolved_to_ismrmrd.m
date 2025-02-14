@@ -20,9 +20,14 @@ ext = MainInput.XeDataext;
 
 % create file mrd name
 mrdfile = [Xe_name '.h5'];
-% if exist(mrdfile,'file')
-%     error(['File ' filename ' already exists.  Please remove first'])
-% end
+% Check if the file exists
+if exist(mrdfile, 'file') == 2  % 'file' checks for both files and directories, '2' indicates a file
+    delete(mrdfile);  % Removes the file if it exists
+    fprintf('File %s existed and has been removed.\n', mrdfile);
+else
+    fprintf('File %s does not exist.\n', mrdfile);
+end
+
 
 % run prep_dixon_gx
 dDP = XeFullPath;
@@ -36,7 +41,7 @@ load(prep_mat_file);
 
 % run calibration analysis to get te90
 CalFullPath = MainInput.CalFullPath;
-[Cal_path, Cal_name, Cal_ext ] = fileparts(CalFullPath);
+% [Cal_path, Cal_name, Cal_ext ] = fileparts(CalFullPath);
 dCal = CalFullPath;
 h = [];
 wfnpath = 'C:\XIPline\GE\waveforms\xe_calibration'; % files inside the wfnpath folder = {'*.mat', '*freq.fdl', '*flip.fdl'};

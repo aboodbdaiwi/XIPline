@@ -169,11 +169,13 @@ switch MainInput.SegmentationMethod
         end
         % segmentation type
         % Check if MainInput.NoProtonImage is 'yes' or 'no', then convert to 1 or 0
-        if strcmp(MainInput.NoProtonImage, 'yes')
-            MainInput.NoProtonImage = 1;
-        elseif strcmp(MainInput.NoProtonImage, 'no')
-            MainInput.NoProtonImage = 0;
-        end        
+        if ~isnumeric(MainInput.NoProtonImage)
+            if strcmp(MainInput.NoProtonImage, 'yes')
+                MainInput.NoProtonImage = 1;
+            elseif strcmp(MainInput.NoProtonImage, 'no')
+                MainInput.NoProtonImage = 0;
+            end        
+        end
         % segmentation type
         switch MainInput.AnalysisType
             case 'Ventilation'                            

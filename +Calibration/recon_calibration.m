@@ -1,4 +1,4 @@
-function [meanRbc2barrier,te90,targetAX,targetTG] = recon_calibration(d,h,wfnpath,delay,fname)
+function [meanRbc2barrier,te90,targetAX,targetTG] = recon_calibration(dCal,h,wfnpath,delay,fname)
 %RECON_CALIBRATION Reconstruct 129Xe calibration
 % [bb,bbabs] = recon_calibration(d,h,wfn,mtx,delay,lb,fname,comb_time)
 %                                                               (default)
@@ -29,11 +29,11 @@ if ~isempty(fname)
     end
 end
 
-filepath = d;
+filepath = dCal;
 %% reading in data, if pfile name is given
-if ~isnumeric(d)
-    if exist(d,'file')
-        [d,h] = LoadData.ismrmrd.GE.Functions.read_p(d);
+if ~isnumeric(dCal)
+    if exist(dCal,'file')
+        [d,h] = LoadData.ismrmrd.GE.Functions.read_p(dCal);
     else
         warning('strange input d/file not existing');
     end
@@ -285,7 +285,7 @@ figstr = sprintf('P%05d Exam%d Series%d',...
 set(gcf,'name',figstr);
 [fp,fn] = fileparts(filepath);
 if ~isempty(fp)
-    print(fn,'-dpng','-r600');
+    saveas(gca,'Calibration_Analysis.png');
 end
 
 end      % main function recon_calibration.m
