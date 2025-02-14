@@ -838,19 +838,27 @@ try
     cd([Proton.folder, '\Gas Exchange Analysis'])
     ProtonMontage = openfig('ProtonMontage.fig');
 catch
-    folderName = 'Gas Exchange Analysis';
-    newFolder = fullfile(MainInput.HDataLocation, folderName);
-    mkdir(newFolder);
-    cd(newFolder);
-    ProtonMontage = figure('Name','Proton Image');set(ProtonMontage,'WindowState','minimized');
-    montage(Proton.ProtonRegistered,'DisplayRange',[0 max(Proton.ProtonRegistered(:))*0.8])%unregistered for these
-    savefig('ProtonMontage.fig')
-    close(gcf)
+    if MainInput.NoProtonImage == 0
+        folderName = 'Gas Exchange Analysis';
+        newFolder = fullfile(MainInput.HDataLocation, folderName);
+        mkdir(newFolder);
+        cd(newFolder);
+        ProtonMontage = figure('Name','Proton Image');set(ProtonMontage,'WindowState','minimized');
+        montage(Proton.ProtonRegistered,'DisplayRange',[0 max(Proton.ProtonRegistered(:))*0.8])%unregistered for these
+        savefig('ProtonMontage.fig')
+        close(gcf)
+    else
+        ProtonMontage = figure('Name','Proton Image');set(ProtonMontage,'WindowState','minimized');
+        montage(Proton.ProtonRegistered,'DisplayRange',[])%unregistered for these
+        savefig('ProtonMontage.fig')
+        close(gcf)
+    end
 end
-Global.exportToPPTX('addslide'); %Proton Image
-Global.exportToPPTX('addpicture',ProtonMontage);
-Global.exportToPPTX('addtext',sprintf('Proton Image'),'Position',[0 0 5 3]);
-
+if MainInput.NoProtonImage == 0
+    Global.exportToPPTX('addslide'); %Proton Image
+    Global.exportToPPTX('addpicture',ProtonMontage);
+    Global.exportToPPTX('addtext',sprintf('Proton Image'),'Position',[0 0 5 3]);
+end
 cd(outputpath)
 ProtonMaskMontage = openfig('ProtonMaskMontage.fig');
 Global.exportToPPTX('addslide'); %Proton Mask
