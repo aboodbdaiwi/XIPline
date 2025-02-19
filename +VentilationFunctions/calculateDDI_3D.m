@@ -182,12 +182,12 @@ function [Ventilation] = calculateDDI_3D(Ventilation,Proton,MainInput)
     close all;
     % read tiff
     cd(DDI_outputpath)
-    tiff_info = imfinfo('DDI2Dmap.tif'); % return tiff structure, one element per image
+    tiff_info = imfinfo('DDI3Dmap.tif'); % return tiff structure, one element per image
     % tiff_stack = imread('BinnedVent.tif', 1) ; % read in first image
     DDI3Dmap = uint8(zeros(tiff_info(1).Height ,tiff_info(1).Width ,3,length(tiff_info)));
     %concatenate each successive tiff to tiff_stack
     for ii = 2 : size(tiff_info, 1)
-        temp_tiff = imread('DDI2Dmap.tif', ii);
+        temp_tiff = imread('DDI3Dmap.tif', ii);
         DDI3Dmap(:,:,:,ii) = temp_tiff;
     end
     Ventilation.DDI3Dmap = DDI3Dmap;
