@@ -25,16 +25,18 @@ if width <= 128
         removeSize = 2;  
         sideColumns = 5; 
     else
-        removeSize = 3;  
-        sideColumns = 10; 
+        removeSize = 3;   % def 3
+        sideColumns = 10;  % def 10 % 
+        % removeSize = 3;  
+        % sideColumns = 5;         
     end
 elseif width <= 256
     if strcmp(Ventilation.SliceOrientation,'transversal') 
         removeSize = 6; % def 6
-        sideColumns = 10; % def 15 %  10 for axial slices works better 
+        sideColumns = 10; % 10 for axial slices works better 
     else
         removeSize = 6; % def 6
-        sideColumns = 15; % def 15 %  12 for axial slices works better 
+        sideColumns = 15; % def 15 
     end    
 else
     removeSize = 12;
@@ -114,7 +116,7 @@ else
      lastClusterMax = secondLastClusterMax;
 end
 
-threshold = secondLastClusterMin + ((lastClusterMax-secondLastClusterMin)/20);
+threshold = secondLastClusterMin + ((lastClusterMax-secondLastClusterMin)/7); % 7 for 3He and 20 for 129Xe, however 7 works better for 129Xe
 
 % secondLastClusterMin
 % secondLastClusterMax

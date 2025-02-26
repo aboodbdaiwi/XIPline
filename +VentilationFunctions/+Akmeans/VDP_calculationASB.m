@@ -29,6 +29,7 @@ temp_handles.vessel_thresh = 80;
 temp_handles.view = MainInput.SliceOrientation;
 temp_handles.helium_voxelsize = prod(MainInput.PixelSpacing)*MainInput.SliceThickness*1e-6;
 [defect_mask,~,~,vessel_mask,transformed_proton,low_intn_perc,ventilation_mask] = VentilationFunctions.Akmeans.ventilation_defect_by_kmeans(temp_handles);
+% imslice(ventilation_mask)
 % % %
 volume_struct= VentilationFunctions.Akmeans.calculate_percent_defect(defect_mask,temp_handles);
 

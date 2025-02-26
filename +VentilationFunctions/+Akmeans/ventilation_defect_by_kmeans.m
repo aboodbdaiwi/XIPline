@@ -84,9 +84,7 @@ end
 if isfield(temp_handles,'proton_transform') && ~temp_handles.proton_trasform
     frangi_proton = temp_handles.proton; %fiesta
 else
-    frangi_proton = transformed_data;%ssfse
-    
-    
+    frangi_proton = transformed_data;%ssfse  
 end
 num_clusters = 4;
 %% 2D Frangifilter
@@ -129,7 +127,7 @@ if ~isfield(temp_handles,'vessel_mask')
     vessel_stack_binarized=vessel_stack_binarized.*shrunk_lungmask;
     % vessel_stack_binarized=VesselnessFilter_mu(lungsmask,transformed_data,1);
     
-    %%
+    
     vessel_mask_cleaned=vessel_stack_binarized-dilated_lung;
     vessel_mask_cleaned(vessel_mask_cleaned<0)=0;
     
@@ -168,15 +166,12 @@ end
 %%
 % cluster_option=2;
 %%
-if strcmp(temp_handles.view,'coronal')
-    
+if strcmp(temp_handles.view,'coronal')    
     cluster_stack = VentilationFunctions.Akmeans.ventCluster(he,lungsmask_corrected,num_clusters,cluster_option);
 else
     cluster_stack=zeros(nRows,nCols,nSlices);
     for n_sl=1:nSlices
         cluster_stack(:,:,n_sl) = VentilationFunctions.Akmeans.ventCluster(he(:,:,n_sl),lungsmask_corrected(:,:,n_sl),num_clusters,cluster_option);
-        
-        
     end
 end
 kmeans_cutoff=1;
@@ -187,7 +182,7 @@ VVmask(cluster_stack(:)<=kmeans_cutoff & cluster_stack(:)>0)=1;
 defect_mask=zeros(size(cluster_stack));
 defect_mask(VVmask(:)==1)=1;
 cleaned_mask = defect_mask;
-
+% imslice(cleaned_mask)
 if debug
     %     temp_handles.plotting_range=get_plotting_range(lungsmask);
     %     title_string = 'raw helium';
@@ -218,116 +213,118 @@ defect_slice_flag = zeros(nSlices,1);
 se3 = strel('disk',3);
 se2=strel('disk',2);
 %% ADAPTIVE K-MEANS: morphometric correction of partial voluming
-for sl=valid_lung_slice_list
-    %     this_lung_edge = lungsmask(:,:,sl)-imerode(lungsmask(:,:,sl),se1);
-    %     dilated_lung_mask = imdilate(this_lung_edge,se);
-    dilated_lung_mask = lungsmask(:,:,sl)-imerode(lungsmask(:,:,sl),se2);
-    dilated_outter_boundary=imdilate(outter_boundary(:,:,sl),se4).*dilated_lung_mask;
-    
-    
-    this_lobe_mask = double(temp_handles.lobemask(:,:,sl));
-    
-    dilated_lung_mask_3pixels = lungsmask(:,:,sl)-imerode(lungsmask(:,:,sl),se3);%imdilate(this_lung_edge,se3);
-    
-    this_defect_kmeans = cleaned_mask(:,:,sl);
-    
-    if temp_handles.vessel_removal
-        defect_mask_shrunk = this_defect_kmeans-dilated_lung_mask-truncated_vessel_mask(:,:,sl);
-    else
-        % For obstructive lung disease with persistent focal defect (e.g.
-        % CF), vessels are likely merged into large defects. vessel removal
-        % may not be necessary.
-        defect_mask_shrunk = this_defect_kmeans-dilated_lung_mask;
-        truncated_vessel_mask = zeros(nRows,nCols,nSlices);
-    end
-    defect_mask_shrunk(defect_mask_shrunk<0)=0;
-    defect_mask_shrunk_cleaned=defect_mask_shrunk;
-    
-    cc=bwconncomp(defect_mask_shrunk_cleaned,8);
-    if cc.NumObjects==0
-        this_labeled_mask=zeros(nRows,nCols);
-    else
-        this_labeled_mask=double(labelmatrix(cc));
-        major_length = regionprops(cc,'MajorAxisLength');
-        minor_length = regionprops(cc,'MinorAxisLength');
-        axisLength=[cat(1,major_length.MajorAxisLength),cat(1,minor_length.MinorAxisLength)];
-        axisRatio = axisLength(:,1)./axisLength(:,2);
-        eccentricity_struct = regionprops(cc,'Eccentricity');
-        eccentricity=cat(1,eccentricity_struct.Eccentricity);
-        extent_struct = regionprops(cc,'Extent');
-        extent = cat(1,extent_struct.Extent);
-        num = length(unique(this_labeled_mask))-1;
-        lung_bounary_struct = regionprops(cc,dilated_lung_mask_3pixels,'MeanIntensity');
-        lung_boundary_intn = cat(1,lung_bounary_struct.MeanIntensity);
-        
-        for n_ob=1:num
-            object_mask = zeros(nRows,nCols);
-            object_mask(this_labeled_mask==n_ob)=n_ob;
-            dilated_object_mask=imdilate(object_mask,se);
-                        if sum(vasculature_slices==sl)==1
-                            lost_object_edge_pixels=find((dilated_outter_boundary+dilated_object_mask)==(n_ob+1));
-                        else
-            lost_object_edge_pixels=find((dilated_lung_mask+dilated_object_mask)==(n_ob+1));
-                        end
-            if ~isempty(lost_object_edge_pixels)
-                object_mask(lost_object_edge_pixels)=n_ob;
-            end
-            eroded_defect = imerode(object_mask,se);
-            eroded_pixels = sum(eroded_defect(:)>0);
-            
-            %% penalize more on 1) inner lung boundaries where vessels may be attached to
-            % and 2) tubular shaped vessels that were not caught up by
-            % the vessel mask
-            if sum(vasculature_slices==sl)==1 %vessels
-                
-                if (eccentricity(n_ob)>.85 && axisRatio(n_ob)>3 && eroded_pixels<20) && isempty(lost_object_edge_pixels)
-                    
-                    this_labeled_mask(this_labeled_mask==n_ob)=0;
-                    lost_object_edge_pixels=[];
-                    
-                end
-            end
-            %% Correct for partial voluming-remove defects aligned along the lung edges.
-            boundary_overlap = dilated_lung_mask_3pixels.*object_mask;
-            if eroded_pixels==0 || (sum(boundary_overlap(:))/sum(object_mask(:))>0.6 && eroded_pixels<10)%(lung_boundary_intn(n_ob)>0.7 && extent(n_ob)<0.3)|| eroded_pixels==0
-                this_labeled_mask(this_labeled_mask==n_ob)=0;
-                lost_object_edge_pixels=[];
-            end
-            %% Clean up the false defects that occurred due to mismatch proton
-            % and 3He due to the appearance of diaphragm
-            if ~isempty(lost_object_edge_pixels)
-                dilated_defect = imdilate(object_mask,se3);
-                lost_object_edge_pixels=unique([lost_object_edge_pixels;find((this_defect_kmeans+dilated_defect)==(n_ob+1))]);
-            end
-            this_labeled_mask(lost_object_edge_pixels)=n_ob;
-            if sum(diaphragm_slices==sl)==1
-                object_mask(lost_object_edge_pixels)=n_ob;
-                lobe_defect = double(this_lobe_mask).*object_mask;
-                overlapped_lobevalues=unique(lobe_defect)/n_ob;
-                overlapped_lobevalues(overlapped_lobevalues==0)=[];
-                defect_lobe_ratio=zeros(length(overlapped_lobevalues),1);
-                for n_v=1:length(overlapped_lobevalues)
-                    lobe_no=overlapped_lobevalues(n_v);
-                    defect_lobe_ratio(n_v)=sum(lobe_defect(:)==lobe_no*n_ob)/sum(this_lobe_mask(:)== lobe_no);
-                end
-                
-                %                 if ~isempty(defect_lobe_ratio) && max(defect_lobe_ratio)>.15
-                %                     this_labeled_mask(this_labeled_mask==n_ob & cleaned_mask(:,:,sl-1)==0)=0;
-                %
-                %
-                %                 end
-            end
-            
-            
-        end
-    end
-    this_labeled_mask(this_labeled_mask>0)=1;
-    cleaned_mask(:,:,sl)=this_labeled_mask;
-    if sum(this_labeled_mask(:))~=0
-        defect_slice_flag(sl) = 1;
-    end
-end
+% for sl=valid_lung_slice_list
+%     %     this_lung_edge = lungsmask(:,:,sl)-imerode(lungsmask(:,:,sl),se1);
+%     %     dilated_lung_mask = imdilate(this_lung_edge,se);
+%     dilated_lung_mask = lungsmask(:,:,sl)-imerode(lungsmask(:,:,sl),se2);
+%     dilated_outter_boundary=imdilate(outter_boundary(:,:,sl),se4).*dilated_lung_mask;
+% 
+% 
+%     this_lobe_mask = double(temp_handles.lobemask(:,:,sl));
+% 
+%     dilated_lung_mask_3pixels = lungsmask(:,:,sl)-imerode(lungsmask(:,:,sl),se3);%imdilate(this_lung_edge,se3);
+% 
+%     this_defect_kmeans = cleaned_mask(:,:,sl);
+% 
+%     if temp_handles.vessel_removal
+%         defect_mask_shrunk = this_defect_kmeans-dilated_lung_mask-truncated_vessel_mask(:,:,sl);
+%     else
+%         % For obstructive lung disease with persistent focal defect (e.g.
+%         % CF), vessels are likely merged into large defects. vessel removal
+%         % may not be necessary.
+%         defect_mask_shrunk = this_defect_kmeans-dilated_lung_mask;
+%         truncated_vessel_mask = zeros(nRows,nCols,nSlices);
+%     end
+%     defect_mask_shrunk(defect_mask_shrunk<0)=0;
+%     defect_mask_shrunk_cleaned=defect_mask_shrunk;
+% 
+%     cc=bwconncomp(defect_mask_shrunk_cleaned,8);
+%     if cc.NumObjects==0
+%         this_labeled_mask=zeros(nRows,nCols);
+%     else
+%         this_labeled_mask=double(labelmatrix(cc));
+%         major_length = regionprops(cc,'MajorAxisLength');
+%         minor_length = regionprops(cc,'MinorAxisLength');
+%         axisLength=[cat(1,major_length.MajorAxisLength),cat(1,minor_length.MinorAxisLength)];
+%         axisRatio = axisLength(:,1)./axisLength(:,2);
+%         eccentricity_struct = regionprops(cc,'Eccentricity');
+%         eccentricity=cat(1,eccentricity_struct.Eccentricity);
+%         extent_struct = regionprops(cc,'Extent');
+%         extent = cat(1,extent_struct.Extent);
+%         num = length(unique(this_labeled_mask))-1;
+%         lung_bounary_struct = regionprops(cc,dilated_lung_mask_3pixels,'MeanIntensity');
+%         lung_boundary_intn = cat(1,lung_bounary_struct.MeanIntensity);
+% 
+%         for n_ob=1:num
+%             object_mask = zeros(nRows,nCols);
+%             object_mask(this_labeled_mask==n_ob)=n_ob;
+%             dilated_object_mask=imdilate(object_mask,se);
+%                         if sum(vasculature_slices==sl)==1
+%                             lost_object_edge_pixels=find((dilated_outter_boundary+dilated_object_mask)==(n_ob+1));
+%                         else
+%             lost_object_edge_pixels=find((dilated_lung_mask+dilated_object_mask)==(n_ob+1));
+%                         end
+%             if ~isempty(lost_object_edge_pixels)
+%                 object_mask(lost_object_edge_pixels)=n_ob;
+%             end
+%             eroded_defect = imerode(object_mask,se);
+%             eroded_pixels = sum(eroded_defect(:)>0);
+% 
+%             %% penalize more on 1) inner lung boundaries where vessels may be attached to
+%             % and 2) tubular shaped vessels that were not caught up by
+%             % the vessel mask
+%             if sum(vasculature_slices==sl)==1 %vessels
+% 
+%                 if (eccentricity(n_ob)>.85 && axisRatio(n_ob)>3 && eroded_pixels<20) && isempty(lost_object_edge_pixels)
+% 
+%                     this_labeled_mask(this_labeled_mask==n_ob)=0;
+%                     lost_object_edge_pixels=[];
+% 
+%                 end
+%             end
+%             %% Correct for partial voluming-remove defects aligned along the lung edges.
+%             boundary_overlap = dilated_lung_mask_3pixels.*object_mask;
+%             if eroded_pixels==0 || (sum(boundary_overlap(:))/sum(object_mask(:))>0.6 && eroded_pixels<10)%(lung_boundary_intn(n_ob)>0.7 && extent(n_ob)<0.3)|| eroded_pixels==0
+%                 this_labeled_mask(this_labeled_mask==n_ob)=0;
+%                 lost_object_edge_pixels=[];
+%             end
+%             %% Clean up the false defects that occurred due to mismatch proton
+%             % and 3He due to the appearance of diaphragm
+%             if ~isempty(lost_object_edge_pixels)
+%                 dilated_defect = imdilate(object_mask,se3);
+%                 lost_object_edge_pixels=unique([lost_object_edge_pixels;find((this_defect_kmeans+dilated_defect)==(n_ob+1))]);
+%             end
+%             this_labeled_mask(lost_object_edge_pixels)=n_ob;
+%             if sum(diaphragm_slices==sl)==1
+%                 object_mask(lost_object_edge_pixels)=n_ob;
+%                 lobe_defect = double(this_lobe_mask).*object_mask;
+%                 overlapped_lobevalues=unique(lobe_defect)/n_ob;
+%                 overlapped_lobevalues(overlapped_lobevalues==0)=[];
+%                 defect_lobe_ratio=zeros(length(overlapped_lobevalues),1);
+%                 for n_v=1:length(overlapped_lobevalues)
+%                     lobe_no=overlapped_lobevalues(n_v);
+%                     defect_lobe_ratio(n_v)=sum(lobe_defect(:)==lobe_no*n_ob)/sum(this_lobe_mask(:)== lobe_no);
+%                 end
+% 
+%                 %                 if ~isempty(defect_lobe_ratio) && max(defect_lobe_ratio)>.15
+%                 %                     this_labeled_mask(this_labeled_mask==n_ob & cleaned_mask(:,:,sl-1)==0)=0;
+%                 %
+%                 %
+%                 %                 end
+%             end
+% 
+% 
+%         end
+%     end
+%     this_labeled_mask(this_labeled_mask>0)=1;
+%     cleaned_mask(:,:,sl)=this_labeled_mask;
+%     if sum(this_labeled_mask(:))~=0
+%         defect_slice_flag(sl) = 1;
+%     end
+% end
 cleaned_mask = cleaned_mask.*logical(temp_handles.lungsmask);
+% imslice(cleaned_mask)
+
 %% VENTILATION MAP
 fprintf('low_intn_perc = %6.3f\n',low_intn_percent);
 % cluster_stack2 = ventCluster2(he_ori,lungsmask_corrected,num_clusters,cluster_option);
@@ -392,6 +389,6 @@ ventilation_mask = vent_stack.*bounded_mask;
 ventilation_mask (cleaned_mask==1 & bounded_mask==1)= 1;
 
 ventilation_mask=ventilation_mask.*bounded_mask;
-
+% imslice(vent_stack)
 
 cleaned_mask = cleaned_mask.*double(temp_handles.lobemask);
