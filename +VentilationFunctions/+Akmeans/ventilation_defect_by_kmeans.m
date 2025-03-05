@@ -219,7 +219,6 @@ se2=strel('disk',2);
 %     dilated_lung_mask = lungsmask(:,:,sl)-imerode(lungsmask(:,:,sl),se2);
 %     dilated_outter_boundary=imdilate(outter_boundary(:,:,sl),se4).*dilated_lung_mask;
 % 
-% 
 %     this_lobe_mask = double(temp_handles.lobemask(:,:,sl));
 % 
 %     dilated_lung_mask_3pixels = lungsmask(:,:,sl)-imerode(lungsmask(:,:,sl),se3);%imdilate(this_lung_edge,se3);

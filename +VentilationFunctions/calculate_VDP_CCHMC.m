@@ -557,6 +557,17 @@ end
 % each Montage. 
 %%% get rid of the gray frame in each montage
 close all;
+zeroImage = zeros(size(scaledImage2));  %scaledImage2
+zeroMontage = figure('Name','zero Image');set(zeroMontage,'WindowState','minimized');
+montage(reshape(zeroImage,[size(zeroImage,1), size(zeroImage,2), 1, size(zeroImage,3)]),...
+    'Size',[1 size(zeroImage,3)]);
+set(gca,'units','pixels'); % set the axes units to pixels
+x = get(gca,'position'); % get the position of the axes
+set(gcf,'units','pixels'); % set the figure units to pixels
+y = get(gcf,'position'); % get the figure position
+set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
+set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
+
 VentscaledImage = scaledImage2(:,:,slice_indices);
 VentMontage = figure('Name','Vent Image');set(VentMontage,'WindowState','minimized');
 montage(reshape(VentscaledImage,[size(VentscaledImage,1), size(VentscaledImage,2), 1, size(VentscaledImage,3)]),...
