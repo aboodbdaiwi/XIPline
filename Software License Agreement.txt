@@ -33,7 +33,7 @@ The XIPline application was developed and belongs to the Center for Pulmonary Im
 -------------------------------------------------------------------------
 6. Publications and Acknowledgments
 - Attribution: If the Licensee uses XIPline in published research, the Licensee must appropriately cite the software and any associated publications, including the following citation (or as indicated in software documentation):
- - Citation: Abdullah S. Bdaiwi, Matthew M. Willmering, Joseph W. Plummer, Riaz Hussain, David J. Roach, Jason C. Woods, Laura L. Walkup, and Zackary I. Cleveland “129Xe Image Processing Pipeline (XIPline): Open-Source, Graphical User Interface Application for Hyperpolarized 129Xe MRI Analysis”. MRM, (pending publication).
+ - Citation: Bdaiwi, A.S., Willmering, M.M., Plummer, J.W., Hussain, R., Roach, D.J., Parra‐Robles, J., Niedbalski, P.J., Woods, J.C., Walkup, L.L. and Cleveland, Z.I., 2025. 129Xe Image Processing Pipeline: An open‐source, graphical user interface application for the analysis of hyperpolarized 129Xe MRI. Magnetic Resonance in Medicine, 93(3), pp.1220-1237..
 - Contributions in Publications: The Licensee agrees to acknowledge the Center for Pulmonary Imaging at Cincinnati Children's Hospital Medical Center in any publication that results from the use of the software. The Licensee may consult with the Licensor regarding collaborative authorship on publications.
 
 -------------------------------------------------------------------------
