@@ -1,7 +1,7 @@
 
-function [Proton,MainInput,GasExchange] = GeneralRegisterProton_to_Xenon(...
+function [Proton, Ventilation, GasExchange, MainInput] = GeneralRegisterProton_to_Xenon(...
     Proton,...
-    XeImage,...
+    Ventilation,...
     MainInput,GasExchange)
 %   Inputs:
 %          
@@ -22,15 +22,15 @@ function [Proton,MainInput,GasExchange] = GeneralRegisterProton_to_Xenon(...
 moving1 = double(Proton.Image);
 if strcmp(MainInput.AnalysisType,'Ventilation')
     try
-        fixed1 = XeImage.Image;
+        fixed1 = Ventilation.Image;
     catch
-        fixed1 = XeImage;
+        fixed1 = Ventilation;
     end
 elseif strcmp(MainInput.AnalysisType,'GasExchange')
     try
-        fixed1 = XeImage.VentImage;
+        fixed1 = Ventilation.VentImage;
     catch
-        fixed1 = XeImage;
+        fixed1 = Ventilation;
     end
 end
 %     figure; Global.imslice(fixed1);
@@ -99,16 +99,12 @@ H_RecMatrix = Proton.H_RecMatrix;
 disp('performing registration, please wait...');
 % match number of slices 
 if (MainInput.SliceSelection == 1) && any(size(moving1) ~= size(fixed1))
+    Ventilation.Image = Ventilation.Image(:,:,MainInput.Xestart:MainInput.Xeend);
+    Proton.Image = Proton.Image(:,:,MainInput.Hstart:MainInput.Hend);        
+  
     moving1 = squeeze(moving1(:,:,MainInput.Hstart:MainInput.Hend));
     fixed1 = squeeze(fixed1(:,:,MainInput.Xestart:MainInput.Xeend));
-    % maxsize = max(size(fixed1,1), size(fixed1,2));
-    % if size(fixed1, 1) ~= size(fixed1, 2) 
-    %     resizefixed1 = zeros(maxsize, maxsize, size(fixed1,3));
-    %     for i = 1:size(fixed1, 3)
-    %         resizefixed1(:,:,i) = imresize(squeeze(fixed1(:,:,i)),[maxsize, maxsize]);
-    %     end
-    %     fixed1 = resizefixed1;
-    % end    
+    % maxsize = max(size(fixed1,1), size(fixed1,2));   
     % if size(moving1, 1) ~= size(fixed1, 1) || size(moving1, 2) ~= size(fixed1, 2)
     %     resizemoving1 = zeros(size(fixed1,1), size(fixed1,2), size(moving1,3));
     %     for i = 1:size(moving1, 3)

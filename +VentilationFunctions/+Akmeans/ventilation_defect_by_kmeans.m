@@ -210,8 +210,8 @@ if debug
     figure,plot_defect_mask(cluster_stack,defect_mask,temp_handles,temp_handles.plotting_range,title_string);
 end
 defect_slice_flag = zeros(nSlices,1);
-se3 = strel('disk',3);
-se2=strel('disk',2);
+se3 = strel('disk',2);
+se2=strel('disk',1);
 %% ADAPTIVE K-MEANS: morphometric correction of partial voluming
 % for sl=valid_lung_slice_list
 %     %     this_lung_edge = lungsmask(:,:,sl)-imerode(lungsmask(:,:,sl),se1);

@@ -11,8 +11,16 @@ maskarray = Ventilation.LungMask;
 % defect analysis
 temp_handles.proton_used = 'SSFSE'; % hard code for now
 temp_handles.proton = Proton.Image;
+
+% Apply dilation
+se = strel('disk', 2);
+dilated_mask = zeros(size(maskarray));
+for i =1:size(maskarray,3)
+    dilated_mask(:,:,i) = double(imdilate(maskarray(:,:,i), se) > 0);
+end
+
 temp_handles.he = Ventilation.Image; %xe.img;
-temp_handles.lungsmask = maskarray;
+temp_handles.lungsmask = dilated_mask; % maskarray
 temp_handles.vessel_mask = Ventilation.VesselMask;
 temp_handles.lobemask = maskarray;
 temp_handles.ventmaskbinary = maskarray;
@@ -30,7 +38,8 @@ temp_handles.view = MainInput.SliceOrientation;
 temp_handles.helium_voxelsize = prod(MainInput.PixelSpacing)*MainInput.SliceThickness*1e-6;
 [defect_mask,~,~,vessel_mask,transformed_proton,low_intn_perc,ventilation_mask] = VentilationFunctions.Akmeans.ventilation_defect_by_kmeans(temp_handles);
 % imslice(ventilation_mask)
-% % %
+ventilation_mask = ventilation_mask.*maskarray;
+defect_mask = defect_mask.*maskarray;
 volume_struct= VentilationFunctions.Akmeans.calculate_percent_defect(defect_mask,temp_handles);
 
 ventP_raw_cor = VentilationFunctions.Akmeans.classify_ventilation_levles(ventilation_mask,temp_handles.lungsmask);
