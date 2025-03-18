@@ -4,7 +4,16 @@ function [Ventilation] = clustering_3DASB(Ventilation)
 % helium-3 (3He) images, using K-means clustering. ***3D SEGMENTATION***
 
 % heSlices = Ventilation.Image;
-heSlices = Ventilation.Image.*Ventilation.LungMask;
+% Apply dilation
+maskarray = Ventilation.LungMask;
+se = strel('disk', 2);
+dilated_mask = zeros(size(maskarray));
+for i =1:size(maskarray,3)
+    dilated_mask(:,:,i) = double(imdilate(maskarray(:,:,i), se) > 0);
+end
+
+heSlices = Ventilation.Image.*dilated_mask;
+% heSlices = Ventilation.Image.*Ventilation.LungMask;
 heSlices (isnan(heSlices)) = 0;
 % lungmask = Ventilation.LungMask;
 %% initialization
@@ -154,7 +163,7 @@ for slice = 1:numberOfslices
     clusters_3D(:,:,slice) = clusterI;
     heSlicesMask_3D(:,:,slice) = mask;
 end
-Ventilation.clusters_3D = clusters_3D;
+Ventilation.clusters_3D = clusters_3D.*maskarray;
 % imslice(clusters_3D)
 
 end %function

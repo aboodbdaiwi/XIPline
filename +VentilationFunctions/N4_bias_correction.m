@@ -29,9 +29,15 @@ function [N4, Bias] = N4_bias_correction(MR, maskarray, parentPath)
 %% Potential Inputs
 % Set location of exe and temp images
 %location of N4BiasFieldCorrection
+
 N4Path = mfilename('fullpath');
 idcs = strfind(N4Path,filesep);%determine location of file separators
 N4Path = [N4Path(1:idcs(end)-1),filesep];%remove file
+
+if isempty(N4Path)
+    N4Path = 'C:\XIPline\';
+end
+
 % maskarray = flip(maskarray,3);
 if ~exist('maskarray','var')
     maskarray = Segmentation.SegmentLungthresh(MR,1,1); 
