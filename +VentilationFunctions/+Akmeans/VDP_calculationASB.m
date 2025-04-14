@@ -13,7 +13,13 @@ temp_handles.proton_used = 'SSFSE'; % hard code for now
 temp_handles.proton = Proton.Image;
 
 % Apply dilation
-se = strel('disk', 2);
+if size(maskarray, 1) <= 128
+    se = strel('disk', 2);
+elseif size(maskarray, 1) <= 192
+    se = strel('disk', 4);
+else
+    se = strel('disk', 6);    
+end
 dilated_mask = zeros(size(maskarray));
 for i =1:size(maskarray,3)
     dilated_mask(:,:,i) = double(imdilate(maskarray(:,:,i), se) > 0);

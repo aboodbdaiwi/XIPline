@@ -299,7 +299,7 @@ if strcmp(MainInput.denoiseXe,'yes')
         
         for i = 1:size(Image,3)
             for j = 1:size(Image,4)
-                Image(:,:,i,j) = Global.bm3d.BM3D(squeeze(Image(:,:,i,j)), 0.01);
+                Image(:,:,i,j) = Global.bm3d.BM3D(squeeze(Image(:,:,i,j)), 0.01); % 0.01
             end
         end
         Diffusion.Image = Image;

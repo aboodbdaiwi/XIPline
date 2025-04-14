@@ -125,13 +125,14 @@ set(gca, 'XColor', 'none', 'yColor', 'none', 'xtick', [], 'ytick', [], 'Color', 
 colorbar(gca, 'Ticks', [1.5,2.5,3.5,4.5,5.5], 'TickLabels', [1, 2,3,4,5], ...
     'FontSize', 10, 'FontWeight', 'bold');
 % Save the colormap image
-set(gcf,'PaperPositionMode','auto')
+set(gcf,'PaperPositionMode','auto');  
 % print('kmeans_VDPmap','-dpng','-r300')
 saveas(gca,'kmeans_VDPmap.png');
 close all;
 %% write tiff and read back VDPVent maps
 clc
-tiff = figure('MenuBar','none','ToolBar','none','DockControls','off','Resize','off','WindowState','minimized');%figure for tiffs
+% tiff = figure('Visible', 'off');  % Create the figure completely invisible
+tiff = figure('MenuBar','none','ToolBar','none','DockControls','off','Resize','off','WindowState','minimized','Visible', 'off');%figure for tiffs
 ax1 = axes('Parent',tiff);ax2 = axes('Parent',tiff);%make axis for both images
 set(ax1,'Visible','off');set(ax2,'Visible','off');%turn off axis
 set(ax1,'units','inches');set(ax2,'units','inches');%make axis units inches
@@ -147,9 +148,7 @@ class_0_inside_lung = (segmentation == 0) & (maskarray == 1);
 class_1to4_inside_lung = (segmentation >= 1) & (maskarray == 1);
 VDPmap(class_0_inside_lung) = 2;
 VDPmap(class_1to4_inside_lung) = 1;
-
 % imslice(VDPmap); colormap(cmap)
-
 
 cmap = [0 0 0;  0 1 0; 1 0 0];
 for slice = 1:size(VDPmap,3)
@@ -158,6 +157,7 @@ for slice = 1:size(VDPmap,3)
 %     imshow(VDPmap(:,:,slice).*2, cmap, 'DisplayRange', [0 4]);
     Xdata = getframe(gcf);
     X = Xdata.cdata; 
+
     if (slice == 1)
         imwrite(X,[outputpath,'\kmeansDefectmap.tif'],'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
     else

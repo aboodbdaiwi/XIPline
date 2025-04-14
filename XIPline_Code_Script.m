@@ -24,7 +24,7 @@ cd(MainInput.XeDataLocation)
 [GasExResults, CalResults] = Calibration.XeCTC_Calibration_MRD(MainInput); 
 % the rest of the calculations is in the main interface 
 
-%% Image analysis
+%% Image analysis (Load Images)
 clc; clear; close all; % start with fresh variables, etc.
 MainInput.Institute = '';
 MainInput.Scanner = '';
@@ -43,15 +43,15 @@ MainInput.RegistrationType = '';
 MainInput.PatientInfo = '';
 
 % 1) choose the type of analysis
-MainInput.AnalysisType = 'GasExchange';  % 'Ventilation', 'Diffusion', 'GasExchange'
+MainInput.AnalysisType = 'Ventilation';  % 'Ventilation', 'Diffusion', 'GasExchange'
 
 % 2) Do you have protom images? 
-MainInput.NoProtonImage = 1;  % 1: There is no proton images  % 0: There is  proton images   
+MainInput.NoProtonImage = 0;  % 1: There is no proton images  % 0: There is  proton images   
 
 MainInput.Institute = 'XeCTC';  % 'CCHMC', 'XeCTC', 'Duke'
-MainInput.Scanner = 'GE'; % Siemens, Philips, GE
+MainInput.Scanner = 'Philips'; % Siemens, Philips, GE
 MainInput.ScannerSoftware = '5.9.0'; % '5.3.1', '5.6.1','5.9.0'
-MainInput.SequenceType = '3D Radial'; % '2D GRE', '3D Radial'
+MainInput.SequenceType = '2D GRE'; % '2D GRE', '3D Radial'
 MainInput.denoiseXe= 'no';
 % diary Log.txt
 [filename, path] = uigetfile('*.*','Select xenon data file');
@@ -108,8 +108,17 @@ if MainInput.NoProtonImage == 0
 end
 % Ventilation.Image = flipdim(Ventilation.Image,3); 
 % Ventilation.Image = permute(Ventilation.Image,[3 2 1]); % 
-% Rotated = imrotate(Diffusion.Image,-90);
-      
+% A = flip(Ventilation.Image,1);
+% A = flip(A,2);
+% Ventilation.Image = A;
+% 
+% A = flip(Proton.Image,1);
+% A = flip(A,2);
+% Proton.Image = A;
+% 
+% Global.imslice(A)
+
+
 %% Registration 
 
 % Move from 1st to 3rd dim and flip Z (optional)
@@ -129,6 +138,7 @@ cd(MainInput.XeDataLocation)
 %Proton.Image = P_image; % Use only for interpulation
 % 
 % diary LogFile_LoadingData
+MainInput.SkipRegistration = 1;
 MainInput.RegistrationType = 'affine'; % 'translation' | 'rigid' | 'similarity' | 'affine'
 % enable this code in case number of slices is different between xe and H
 MainInput.SliceSelection = 0;
@@ -196,12 +206,12 @@ MainInput.thresholdlevel = 0.6; % 'threshold'
 MainInput.SE = 1;
 
 MainInput.SegmentManual = 'Freehand'; % 'AppSegmenter' || 'Freehand'
-MainInput.SliceOrientation = 'isotropic'; % 'coronal' ||'transversal' || 'sagittal' ||'isotropic'
+MainInput.SliceOrientation = 'coronal'; % 'coronal' ||'transversal' || 'sagittal' ||'isotropic'
 [Proton,Ventilation,Diffusion,GasExchange] = Segmentation.PerformSegmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
 
 % create vessle mask
 if strcmp(MainInput.AnalysisType,'Ventilation')                
-    MainInput.SegmentVessels = 1; % 0 || 1
+    MainInput.SegmentVessels = 0; % 0 || 1
 elseif strcmp(MainInput.AnalysisType,'Diffusion')
     MainInput.SegmentVessels = 0; % 0 || 1
 elseif strcmp(MainInput.AnalysisType,'GasExchange')
@@ -260,7 +270,7 @@ cd(MainInput.XeDataLocation)
 Ventilation.N4Analysis = 1;
 Ventilation.IncompleteThresh = 60;
 Ventilation.RFCorrect = 0;
-Ventilation.CompleteThresh = 15;
+Ventilation.CompleteThresh = Ventilation.IncompleteThresh/2;
 Ventilation.HyperventilatedThresh = 200;
 Ventilation.HeterogeneityIndex = 'yes';
 Ventilation.ThreshAnalysis = 'yes'; % 'yes'; || 'no'
@@ -278,15 +288,15 @@ Ventilation.GLRLM_Analysis = 'no'; % 'yes'; || 'no'
 
 switch Ventilation.LB_Normalization
     case 'mean'
-        Ventilation.Thresholds = [0.609909, 0.827439, 0.998199, 1.143472, 1.27208];  % median
-        Ventilation.Hdist = [-2.100652, 1.154155, 0.238074]; 
+        Ventilation.Thresholds = [0.33, 0.66, 1, 1.33, 1.66];  % mean
+        Ventilation.Hdist = [3.001911, 0.571907, 0.642521];
     case 'median'
-        Ventilation.Thresholds = [0.609909, 0.827439, 0.998199, 1.143472, 1.27208];  % median
-        Ventilation.Hdist = [-2.100652, 1.154155, 0.238074]; 
+        Ventilation.Thresholds = [0.373575, 0.64127, 1.001436, 1.463481, 2.036159];  % median
+        Ventilation.Hdist = [3.001911, 0.571907, 0.642521]; 
     case 'percentile'
-        Ventilation.Thresholds = [0.448181, 0.621903, 0.752298, 0.860778, 0.955443]; % percentile
-        Ventilation.Hdist = [-2.515712, 0.87849, 0.188364]; 
-end
+        Ventilation.Thresholds = [0.142408, 0.288563, 0.471081, 0.685923, 0.930321]; % percentile
+        Ventilation.Hdist = [2.31181, 0.271049, 0.293436]; 
+end 
 
 
 [Ventilation] = VentilationFunctions.Ventilation_Analysis(Ventilation, Proton, MainInput);

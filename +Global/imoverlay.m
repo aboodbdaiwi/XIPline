@@ -106,11 +106,11 @@ if isempty(haxes) || ~ishandle(haxes)
     haxes = axes;
     set(haxes,'Position',[0,0,1,1]);
     movegui(f,'center');
-    
+
     % Create colormap
     cmapSize = 100; % default size of 60 shows visible discretization
     if ischar(cmap)
-        
+
         try
             cmap = eval([cmap '(' num2str(cmapSize) ');']);
         catch
@@ -120,6 +120,18 @@ if isempty(haxes) || ~ishandle(haxes)
     end
     colormap(cmap);
 end
+% if isempty(haxes) || ~ishandle(haxes)
+%     % If no axes is provided, create a completely hidden figure and axes
+%     f = figure('Visible','off', ...
+%                'Units','pixels', ...
+%                'Renderer','opengl', ...
+%                'IntegerHandle','off');
+%     haxes = axes('Parent', f, 'Position', [0,0,1,1], 'Visible', 'off');
+%     colormap(haxes, cmap);  % set colormap for hidden axes
+% else
+%     f = ancestor(haxes, 'figure'); % get the parent figure
+%     colormap(haxes, cmap);
+% end
 
 % To have a grayscale background, replicate image to 3-channels
 B = repmat(mat2gray(double(B),double(climB)),[1,1,3]);
@@ -127,7 +139,7 @@ B = repmat(mat2gray(double(B),double(climB)),[1,1,3]);
 % Display the back image
 axes(haxes);
 hB = imagesc(B);axis image off;
-% set(gca,'Position',[0,0,1,1]);
+% set(gca,'Position',[0,0,1,1]); set(gca,'WindowState', 'minimized');
 
 % Add the front image on top of the back image
 hold on;
@@ -141,10 +153,10 @@ set(hF,'XData',get(hB,'XData'),...
 alphadata = alpha.*(F >= climF(1));
 set(hF,'AlphaData',alphadata);
 
-if exist('f')
-    set(f,'Visible','on');
+if exist('f', 'var') && isvalid(f)
+    set(f, 'Visible', 'off');
+    set(f, 'WindowState', 'minimized');
 end
-
 
     % Novel colormaps
     %

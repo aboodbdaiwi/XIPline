@@ -28,7 +28,7 @@ if strcmp(MainInput.AnalysisType,'Ventilation')
     end
 elseif strcmp(MainInput.AnalysisType,'GasExchange')
     try
-        fixed1 = Ventilation.VentImage;
+        fixed1 = GasExchange.VentImage;
     catch
         fixed1 = Ventilation;
     end
@@ -77,6 +77,7 @@ else
 end
 RegistrationType = MainInput.RegistrationType;
 if strcmp(MainInput.AnalysisType,'GasExchange')
+    H_RecMatrix = Proton.H_RecMatrix;
     DataLocation = fullfile(MainInput.XeDataLocation,'Gas Exchange Analysis');
 else
     DataLocation = fullfile(MainInput.XeDataLocation,'Ventilation Analysis');
@@ -84,7 +85,6 @@ end
 %     figure; Global.imslice(moving1);
 
 cd(DataLocation)
-H_RecMatrix = Proton.H_RecMatrix;
 % if strcmp(MainInput.AnalysisType,'Ventilation') == 1 
 %     mkdir([MainInput.XeDataLocation '\Ventilation Analysis']);
 %     DataLocation = [MainInput.XeDataLocation,'\Ventilation Analysfullfis'];
@@ -124,7 +124,19 @@ if (MainInput.SliceSelection == 1) && any(size(moving1) ~= size(fixed1))
         [fixed1] = Global.match_n_slices(Im1,Im2);
         nSlice = size(Im1,3);
     end
-    
+else
+    nSlice =  size(fixed1,3);
+    if size(moving1,3) < size(fixed1,3)
+        Im1 = fixed1;
+        Im2 = moving1;
+        [moving1] = Global.match_n_slices(Im1,Im2);   
+        nSlice = size(Im1,3);
+    elseif size(moving1,3) > size(fixed1,3)
+        Im1 = moving1;
+        Im2 = fixed1;
+        [fixed1] = Global.match_n_slices(Im1,Im2);
+        nSlice = size(Im1,3);
+    end
 end
 
 
@@ -182,38 +194,41 @@ LungMask = imerode(LungMask, se);
 % end
 movingVolume = moving;
 fixedVolume = fixed;
-
-% helperVolumeRegistration(fixedVolume,movingVolume);
-% centerFixed = size(fixedVolume)/2;
-% centerMoving = size(movingVolume)/2;
-% figure
-% imshowpair(movingVolume(:,:,centerMoving(3)), fixedVolume(:,:,centerFixed(3)));
-% title('Unregistered Axial Slice')
-[optimizer,metric] = imregconfig('multimodal');
-Rfixed  = imref3d(size(fixedVolume),XeVoxelInfo.PixelSize2,XeVoxelInfo.PixelSize1,XeVoxelInfo.SliceThickness);
-Rmoving = imref3d(size(movingVolume),ProtonVoxelInfo.PixelSize2,ProtonVoxelInfo.PixelSize1,ProtonVoxelInfo.SliceThickness);
-% Rmoving.XWorldLimits
-% Rmoving.PixelExtentInWorldX
-% Rmoving.ImageExtentInWorldX
-optimizer.InitialRadius = 0.00005;
-% movingRegisteredVolume = imregister(movingVolume,Rmoving, fixedVolume,Rfixed, 'rigid', optimizer, metric);
-% figure
-% imshowpair(movingRegisteredVolume(:,:,centerFixed(3)), fixedVolume(:,:,centerFixed(3)));
-% title('Axial Slice of Registered Volume')
-% helperVolumeRegistration(fixedVolume,movingRegisteredVolume);
-geomtform = imregtform(movingVolume,Rmoving, fixedVolume,Rfixed, RegistrationType, optimizer, metric);
-tform = geomtform;
-% geomtform.T
-% centerXWorld = mean(Rmoving.XWorldLimits);
-% centerYWorld = mean(Rmoving.YWorldLimits);
-% centerZWorld = mean(Rmoving.ZWorldLimits);
-% [xWorld,yWorld,zWorld] = transformPointsForward(geomtform,centerXWorld,centerYWorld,centerZWorld);
-% [r,c,p] = worldToSubscript(Rfixed,xWorld,yWorld,zWorld);
-ProtonRegistered = imwarp(movingVolume,Rmoving,geomtform,'bicubic','OutputView',Rfixed);
-if strcmp(MainInput.AnalysisType,'GasExchange')
-    ProtonHRRegistered = imwarp(Proton.ProtonImageHR,Rmoving,geomtform,'bicubic','OutputView',Rfixed);
+if MainInput.SkipRegistration == 0
+    % helperVolumeRegistration(fixedVolume,movingVolume);
+    % centerFixed = size(fixedVolume)/2;
+    % centerMoving = size(movingVolume)/2;
+    % figure
+    % imshowpair(movingVolume(:,:,centerMoving(3)), fixedVolume(:,:,centerFixed(3)));
+    % title('Unregistered Axial Slice')
+    [optimizer,metric] = imregconfig('multimodal');
+    Rfixed  = imref3d(size(fixedVolume),XeVoxelInfo.PixelSize2,XeVoxelInfo.PixelSize1,XeVoxelInfo.SliceThickness);
+    Rmoving = imref3d(size(movingVolume),ProtonVoxelInfo.PixelSize2,ProtonVoxelInfo.PixelSize1,ProtonVoxelInfo.SliceThickness);
+    % Rmoving.XWorldLimits
+    % Rmoving.PixelExtentInWorldX
+    % Rmoving.ImageExtentInWorldX
+    optimizer.InitialRadius = 0.00005;
+    % movingRegisteredVolume = imregister(movingVolume,Rmoving, fixedVolume,Rfixed, 'rigid', optimizer, metric);
+    % figure
+    % imshowpair(movingRegisteredVolume(:,:,centerFixed(3)), fixedVolume(:,:,centerFixed(3)));
+    % title('Axial Slice of Registered Volume')
+    % helperVolumeRegistration(fixedVolume,movingRegisteredVolume);
+    geomtform = imregtform(movingVolume,Rmoving, fixedVolume,Rfixed, RegistrationType, optimizer, metric);
+    tform = geomtform;
+    % geomtform.T
+    % centerXWorld = mean(Rmoving.XWorldLimits);
+    % centerYWorld = mean(Rmoving.YWorldLimits);
+    % centerZWorld = mean(Rmoving.ZWorldLimits);
+    % [xWorld,yWorld,zWorld] = transformPointsForward(geomtform,centerXWorld,centerYWorld,centerZWorld);
+    % [r,c,p] = worldToSubscript(Rfixed,xWorld,yWorld,zWorld);
+    ProtonRegistered = imwarp(movingVolume,Rmoving,geomtform,'bicubic','OutputView',Rfixed);
+    if strcmp(MainInput.AnalysisType,'GasExchange')
+        ProtonHRRegistered = imwarp(Proton.ProtonImageHR,Rmoving,geomtform,'bicubic','OutputView',Rfixed);
+    end
+    % figure; imslice(ProtonRegistered)
+else
+    ProtonRegistered = moving;
 end
-% figure; imslice(ProtonRegistered)
 %% stor data
 for slice =1:size(fixedVolume,3)
     A = ProtonRegistered(:,:,slice);
@@ -223,10 +238,12 @@ end
 ProtonRegistered = ProtonRegistered(:,:,1:nSlice);
 ProtonRegisteredColored = ProtonRegisteredColored(:,:,:,1:nSlice);
 Proton.ProtonRegistered = ProtonRegistered;
-Proton.Rmoving = Rmoving;
-Proton.Rfixed = Rfixed;
-Proton.optimizer = optimizer;
-Proton.geomtform = geomtform;
+if MainInput.SkipRegistration == 0
+    Proton.Rmoving = Rmoving;
+    Proton.Rfixed = Rfixed;
+    Proton.optimizer = optimizer;
+    Proton.geomtform = geomtform;
+end
 Proton.ProtonRegisteredColored = permute(ProtonRegisteredColored,[1 2 4 3]);
 % figure; orthosliceViewer(Proton.ProtonRegisteredColored)
 %% view

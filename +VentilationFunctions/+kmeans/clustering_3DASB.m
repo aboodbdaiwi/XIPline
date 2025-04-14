@@ -6,14 +6,22 @@ function [Ventilation] = clustering_3DASB(Ventilation)
 % heSlices = Ventilation.Image;
 % Apply dilation
 maskarray = Ventilation.LungMask;
-se = strel('disk', 2);
+if size(maskarray, 1) <= 128
+    se = strel('disk', 2);
+elseif size(maskarray, 1) <= 192
+    se = strel('disk', 4);
+else
+    se = strel('disk', 6);    
+end
 dilated_mask = zeros(size(maskarray));
 for i =1:size(maskarray,3)
     dilated_mask(:,:,i) = double(imdilate(maskarray(:,:,i), se) > 0);
 end
 
-heSlices = Ventilation.Image.*dilated_mask;
+%heSlices = Ventilation.Image.*dilated_mask;
 % heSlices = Ventilation.Image.*Ventilation.LungMask;
+heSlices = Ventilation.Image;
+
 heSlices (isnan(heSlices)) = 0;
 % lungmask = Ventilation.LungMask;
 %% initialization
