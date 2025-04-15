@@ -8,7 +8,7 @@ maskarray = Ventilation.LungMask;
 Ventilation.SliceOrientation = MainInput.SliceOrientation;
 
 % k-means clustering using our previous code.
-[Ventilation] = VentilationFunctions.kmeans.clustering_3DASB(Ventilation);
+[Ventilation] = VentilationFunctions.kmeans.clustering_3DASB(Ventilation, MainInput);
 clusters_3D = Ventilation.clusters_3D;
 
 % Xemaskd = Ventilation.Image.*Ventilation.LungMask;

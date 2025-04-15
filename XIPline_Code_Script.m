@@ -48,7 +48,7 @@ MainInput.AnalysisType = 'Ventilation';  % 'Ventilation', 'Diffusion', 'GasExcha
 % 2) Do you have protom images? 
 MainInput.NoProtonImage = 0;  % 1: There is no proton images  % 0: There is  proton images   
 
-MainInput.Institute = 'XeCTC';  % 'CCHMC', 'XeCTC', 'Duke'
+MainInput.Institute = 'XeCTC';  % 'CCHMC', 'XeCTC', 'Duke',  'London'
 MainInput.Scanner = 'Philips'; % Siemens, Philips, GE
 MainInput.ScannerSoftware = '5.9.0'; % '5.3.1', '5.6.1','5.9.0'
 MainInput.SequenceType = '2D GRE'; % '2D GRE', '3D Radial'
@@ -108,13 +108,13 @@ if MainInput.NoProtonImage == 0
 end
 % Ventilation.Image = flipdim(Ventilation.Image,3); 
 % Ventilation.Image = permute(Ventilation.Image,[3 2 1]); % 
-% A = flip(Ventilation.Image,1);
-% A = flip(A,2);
-% Ventilation.Image = A;
-% 
-% A = flip(Proton.Image,1);
-% A = flip(A,2);
-% Proton.Image = A;
+A = flip(Ventilation.Image,1);
+A = flip(A,2);
+Ventilation.Image = A;
+
+A = flip(Proton.Image,1);
+A = flip(A,2);
+Proton.Image = A;
 % 
 % Global.imslice(A)
 
@@ -267,17 +267,17 @@ close all;
 cd(MainInput.XeDataLocation)
 
 % diary LogFile_LoadingData
-Ventilation.N4Analysis = 1;
+Ventilation.N4Analysis = 0;
 Ventilation.IncompleteThresh = 60;
 Ventilation.RFCorrect = 0;
-Ventilation.CompleteThresh = Ventilation.IncompleteThresh/2;
+Ventilation.CompleteThresh = 15; %Ventilation.IncompleteThresh/2;
 Ventilation.HyperventilatedThresh = 200;
 Ventilation.HeterogeneityIndex = 'yes';
 Ventilation.ThreshAnalysis = 'yes'; % 'yes'; || 'no'
-Ventilation.LB_Analysis = 'yes'; % 'yes'; || 'no'
+Ventilation.LB_Analysis = 'no'; % 'yes'; || 'no'
 Ventilation.LB_Normalization = 'percentile'; % 'mean'; || 'median' || 'percentile'            
-Ventilation.Kmeans = 'yes';  % 'yes'; || 'no'
-Ventilation.AKmeans = 'yes';  % 'yes'; || 'no'
+Ventilation.Kmeans = 'no';  % 'yes'; || 'no'
+Ventilation.AKmeans = 'no';  % 'yes'; || 'no'
 Ventilation.DDI2D = 'no';  % 'yes'; || 'no'
 Ventilation.DDI3D = 'no';  % 'yes'; || 'no'
 Ventilation.ImageResolution = [3, 3, 15];

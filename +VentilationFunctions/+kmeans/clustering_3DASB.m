@@ -1,4 +1,4 @@
-function [Ventilation] = clustering_3DASB(Ventilation)
+function [Ventilation] = clustering_3DASB(Ventilation, MainInput)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % This function was designed to segment ventilated areas in hyperpolarized 
 % helium-3 (3He) images, using K-means clustering. ***3D SEGMENTATION***
@@ -18,12 +18,16 @@ for i =1:size(maskarray,3)
     dilated_mask(:,:,i) = double(imdilate(maskarray(:,:,i), se) > 0);
 end
 
-%heSlices = Ventilation.Image.*dilated_mask;
-% heSlices = Ventilation.Image.*Ventilation.LungMask;
-heSlices = Ventilation.Image;
+if strcmp(MainInput.Institute,'London')
+    heSlices = Ventilation.Image;
+else
+    heSlices = Ventilation.Image.*dilated_mask;
+    % heSlices = Ventilation.Image.*Ventilation.LungMask;
+end
 
 heSlices (isnan(heSlices)) = 0;
 % lungmask = Ventilation.LungMask;
+
 %% initialization
 % tic
 k = 4; %number of clusters for clustering whole 3He MRI 
