@@ -43,14 +43,14 @@ MainInput.RegistrationType = '';
 MainInput.PatientInfo = '';
 
 % 1) choose the type of analysis
-MainInput.AnalysisType = 'Ventilation';  % 'Ventilation', 'Diffusion', 'GasExchange'
+MainInput.AnalysisType = 'Diffusion';  % 'Ventilation', 'Diffusion', 'GasExchange'
 
 % 2) Do you have protom images? 
-MainInput.NoProtonImage = 0;  % 1: There is no proton images  % 0: There is  proton images   
+MainInput.NoProtonImage = 1;  % 1: There is no proton images  % 0: There is  proton images   
 
-MainInput.Institute = 'XeCTC';  % 'CCHMC', 'XeCTC', 'Duke',  'London'
+MainInput.Institute = 'CCHMC';  % 'CCHMC', 'XeCTC', 'Duke',  'London'
 MainInput.Scanner = 'Philips'; % Siemens, Philips, GE
-MainInput.ScannerSoftware = '5.9.0'; % '5.3.1', '5.6.1','5.9.0'
+MainInput.ScannerSoftware = '5.6.1'; % '5.3.1', '5.6.1','5.9.0'
 MainInput.SequenceType = '2D GRE'; % '2D GRE', '3D Radial'
 MainInput.denoiseXe= 'no';
 % diary Log.txt
@@ -108,13 +108,13 @@ if MainInput.NoProtonImage == 0
 end
 % Ventilation.Image = flipdim(Ventilation.Image,3); 
 % Ventilation.Image = permute(Ventilation.Image,[3 2 1]); % 
-A = flip(Ventilation.Image,1);
-A = flip(A,2);
-Ventilation.Image = A;
-
-A = flip(Proton.Image,1);
-A = flip(A,2);
-Proton.Image = A;
+% A = flip(Ventilation.Image,1);
+% A = flip(A,2);
+% Ventilation.Image = A;
+% 
+% A = flip(Proton.Image,1);
+% A = flip(A,2);
+% Proton.Image = A;
 % 
 % Global.imslice(A)
 
@@ -138,7 +138,7 @@ cd(MainInput.XeDataLocation)
 %Proton.Image = P_image; % Use only for interpulation
 % 
 % diary LogFile_LoadingData
-MainInput.SkipRegistration = 1;
+MainInput.SkipRegistration = 0;
 MainInput.RegistrationType = 'affine'; % 'translation' | 'rigid' | 'similarity' | 'affine'
 % enable this code in case number of slices is different between xe and H
 MainInput.SliceSelection = 0;
@@ -198,15 +198,15 @@ clc
 cd(MainInput.XeDataLocation)
 
 % diary Log.txt
-MainInput.SegmentationMethod = 'Auto'; % 'Threshold' || 'Manual' || 'Auto'
-MainInput.SegmentAnatomy = 'Parenchyma'; % 'Airway'; || 'Parenchyma'
+MainInput.SegmentationMethod = 'Threshold'; % 'Threshold' || 'Manual' || 'Auto'
+MainInput.SegmentAnatomy = 'Airway'; % 'Airway'; || 'Parenchyma'
 MainInput.Imagestosegment = 'Xenon';  % 'Xe & Proton Registered' | 'Xenon' | 'Registered Proton'
 
-MainInput.thresholdlevel = 0.6; % 'threshold' 
+MainInput.thresholdlevel = 0.3; % 'threshold' 
 MainInput.SE = 1;
 
 MainInput.SegmentManual = 'Freehand'; % 'AppSegmenter' || 'Freehand'
-MainInput.SliceOrientation = 'coronal'; % 'coronal' ||'transversal' || 'sagittal' ||'isotropic'
+MainInput.SliceOrientation = 'transversal'; % 'coronal' ||'transversal' || 'sagittal' ||'isotropic'
 [Proton,Ventilation,Diffusion,GasExchange] = Segmentation.PerformSegmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
 
 % create vessle mask
@@ -273,10 +273,10 @@ Ventilation.RFCorrect = 0;
 Ventilation.CompleteThresh = 15; %Ventilation.IncompleteThresh/2;
 Ventilation.HyperventilatedThresh = 200;
 Ventilation.HeterogeneityIndex = 'yes';
-Ventilation.ThreshAnalysis = 'yes'; % 'yes'; || 'no'
+Ventilation.ThreshAnalysis = 'no'; % 'yes'; || 'no'
 Ventilation.LB_Analysis = 'no'; % 'yes'; || 'no'
 Ventilation.LB_Normalization = 'percentile'; % 'mean'; || 'median' || 'percentile'            
-Ventilation.Kmeans = 'no';  % 'yes'; || 'no'
+Ventilation.Kmeans = 'yes';  % 'yes'; || 'no'
 Ventilation.AKmeans = 'no';  % 'yes'; || 'no'
 Ventilation.DDI2D = 'no';  % 'yes'; || 'no'
 Ventilation.DDI3D = 'no';  % 'yes'; || 'no'
@@ -305,11 +305,11 @@ end
 clc
 cd(MainInput.XeDataLocation)
 % diary Log.txt
-MainInput.PatientAge = '17';
-Diffusion.ADCFittingType = 'Log Linear'; % 'Log Weighted Linear' | 'Log Linear' | 'Non-Linear' | 'Bayesian'
+MainInput.PatientAge = '7';
+Diffusion.ADCFittingType = 'Log Weighted Linear'; % 'Log Weighted Linear' | 'Log Linear' | 'Non-Linear' | 'Bayesian'
 Diffusion.ADCAnalysisType = 'human'; % human | animals;  % human | animals
-Diffusion.bvalues = '[0, 6.25, 12.5, 18.75, 25]';
-% Diffusion.bvalues = '[0, 7.5, 15]';
+% Diffusion.bvalues = '[0, 6.25, 12.5, 18.75, 25]';
+Diffusion.bvalues = '[0, 7.5, 15]';
 % Diffusion.bvalues = '[0, 10, 20, 30]'; % for T-Scanner
 
 Diffusion.ADCLB_Analysis = 'yes'; % 'yes'; || 'no'
@@ -319,8 +319,8 @@ Diffusion.ADCLB_RefSD = '5e-5*age+0.0121';
 Diffusion.MorphometryAnalysis = 'yes';  % yes || no
 Diffusion.MorphometryAnalysisType = 'human'; % human | animals
 Diffusion.MA_WinBUGSPath = 'C:\Users\BAS8FL\Desktop\WinBUGS14';
-Diffusion.CMMorphometry = 'yes';  % yes || no
-Diffusion.SEMMorphometry = 'yes';  % yes || no
+Diffusion.CMMorphometry = 'no';  % yes || no
+Diffusion.SEMMorphometry = 'no';  % yes || no
 Diffusion.Do = 0.14; % cm2/s
 Diffusion.Delta = 3.5; % ms
 

@@ -24,7 +24,7 @@ else
     heSlices = Ventilation.Image.*dilated_mask;
     % heSlices = Ventilation.Image.*Ventilation.LungMask;
 end
-
+ % figure; Global.imslice(heSlices)
 heSlices (isnan(heSlices)) = 0;
 % lungmask = Ventilation.LungMask;
 
