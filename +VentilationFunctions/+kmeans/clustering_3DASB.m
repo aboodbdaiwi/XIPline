@@ -21,7 +21,8 @@ end
 if strcmp(MainInput.Institute,'London')
     heSlices = Ventilation.Image;
 else
-    heSlices = Ventilation.Image.*dilated_mask;
+    % heSlices = Ventilation.Image.*dilated_mask;
+    heSlices = Ventilation.Image.*maskarray;
     % heSlices = Ventilation.Image.*Ventilation.LungMask;
 end
  % figure; Global.imslice(heSlices)

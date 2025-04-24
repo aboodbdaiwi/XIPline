@@ -71,17 +71,27 @@ if isempty(valid_lobe_labels) || length(valid_lobe_labels)<5
                    fprintf(' Unable to identify lobes in the mid lung slice #%d.\n',n_sl);
                    return;
             end
-            %% calculate the centers of the left and right lungs
-            lobe_centers = zeros(nLungPieces,2);
+            %% Calculate the centers of the left and right lungs
+            lobe_centers = zeros(nLungPieces, 2);
+            RUL_center = [NaN, NaN];  % default if not assigned
+            LUL_center = [NaN, NaN];
+            
             for n_ob = 1:nLungPieces
-                this_lobe = zeros(nRows,nCols);
-
+                this_lobe = zeros(nRows, nCols);
                 this_lobe(labeled_mask(:) == n_ob) = 1;
-                lobe_contours = VentilationFunctions.Akmeans.mask2poly(this_lobe,'Exact','CW');
-                invalids = (lobe_contours(:,1)<0 | lobe_contours(:,2)<0);
+            
+                lobe_contours = VentilationFunctions.Akmeans.mask2poly(this_lobe, 'Exact', 'CW');
+                invalids = (lobe_contours(:,1) < 0 | lobe_contours(:,2) < 0);
                 lobe_contours(invalids,:) = [];
-                lobe_centers(n_ob,:) = mean(lobe_contours);
-                if n_ob == 2
+            
+                if ~isempty(lobe_contours)
+                    lobe_centers(n_ob,:) = mean(lobe_contours);
+                else
+                    lobe_centers(n_ob,:) = [NaN, NaN];  % fallback if no valid contour
+                end
+            
+                % Assign RUL and LUL if there are at least two lung pieces
+                if nLungPieces >= 2 && n_ob == 2
                     if lobe_centers(1,1) < lobe_centers(2,1)
                         RUL_center = lobe_centers(1,:);
                         LUL_center = lobe_centers(2,:);
@@ -89,56 +99,66 @@ if isempty(valid_lobe_labels) || length(valid_lobe_labels)<5
                         RUL_center = lobe_centers(2,:);
                         LUL_center = lobe_centers(1,:);
                     end
-                end                                            
-                
+                end
             end
-            %% Use the left and right lung center to classify all other slices
-            temp_handles.lobemaskRUL = zeros(nRows,nCols,nSlices);
-            temp_handles.lobemaskLUL = zeros(nRows,nCols,nSlices);
+
+            % Initialize masks
+            temp_handles.lobemaskRUL = zeros(nRows, nCols, nSlices);
+            temp_handles.lobemaskLUL = zeros(nRows, nCols, nSlices);
             
             for sl = contoured_slices.'
                 slice_lobemask = temp_handles.lungsmask(:,:,sl);
-                if sum(slice_lobemask(:))>0
-                    slice_lobemask = bwareaopen(slice_lobemask,30); % remove small area
-                    [labeled_mask,nObj] = bwlabel(slice_lobemask);
-                    
-                    
-                    
-                    if  (sl>contoured_slices(1)+1 && sl<contoured_slices(end)-2) && nObj<2 % split connected lungs
+                if sum(slice_lobemask(:)) > 0
+                    slice_lobemask = bwareaopen(slice_lobemask, 30);  % Remove small areas
+                    [labeled_mask, nObj] = bwlabel(slice_lobemask);
+            
+                    % Attempt to separate connected lungs in mid-slices
+                    if (sl > contoured_slices(1) + 1 && sl < contoured_slices(end) - 2) && nObj < 2
                         separated_lung = VentilationFunctions.Akmeans.separate_connected_lung(slice_lobemask);
-                    [labeled_mask,nObj] = bwlabel(separated_lung);
-
+                        [labeled_mask, nObj] = bwlabel(separated_lung);
                     end
-                        
-                    nob_pixels = zeros(nObj,1);
+            
+                    nob_pixels = zeros(nObj, 1);
                     for n_ob = 1:nObj
-                        nob_pixels(n_ob) = sum(labeled_mask(:)==n_ob);
+                        nob_pixels(n_ob) = sum(labeled_mask(:) == n_ob);
                     end
-                    [~,sorted_ob_index] = sort(nob_pixels,'descend');
-%                     if length(sorted_ob_index)>1
+            
+                    [~, sorted_ob_index] = sort(nob_pixels, 'descend');
+            
+                    % Initialize for current slice
+                    lobe_centers = NaN(nObj, 2);
+            
                     for n_ob = 1:nObj
-                        
-                        this_lobe = zeros(nRows,nCols);
-                        this_lobe(labeled_mask(:) == sorted_ob_index(n_ob))=1;
-                        lobe_contours = VentilationFunctions.Akmeans.mask2poly(this_lobe,'Exact','CW');
-                        invalids = (lobe_contours(:,1)<0 | lobe_contours(:,2)<0);
-                        lobe_contours(invalids,:) = [];
-                        lobe_centers(n_ob,:) = mean(lobe_contours);
-                        if abs(lobe_centers(n_ob,1)-RUL_center(1))<abs(lobe_centers(n_ob,1)-LUL_center(1))
-                            temp_handles.lobemaskRUL(:,:,sl) = temp_handles.lobemaskRUL(:,:,sl) + this_lobe;
-                            
-                        else
-                            temp_handles.lobemaskLUL(:,:,sl) = temp_handles.lobemaskLUL(:,:,sl)+ this_lobe; 
-                            
+                        this_lobe = zeros(nRows, nCols);
+                        this_lobe(labeled_mask(:) == sorted_ob_index(n_ob)) = 1;
+            
+                        % Extract contours and compute centroid
+                        lobe_contours = VentilationFunctions.Akmeans.mask2poly(this_lobe, 'Exact', 'CW');
+                        invalids = (lobe_contours(:,1) < 0 | lobe_contours(:,2) < 0);
+                        lobe_contours(invalids, :) = [];
+            
+                        if ~isempty(lobe_contours)
+                            lobe_centers(n_ob, :) = mean(lobe_contours);
+            
+                            % Decide assignment using known RUL and LUL centers
+                            if all(~isnan(RUL_center)) && all(~isnan(LUL_center))
+                                if abs(lobe_centers(n_ob, 1) - RUL_center(1)) < abs(lobe_centers(n_ob, 1) - LUL_center(1))
+                                    temp_handles.lobemaskRUL(:,:,sl) = temp_handles.lobemaskRUL(:,:,sl) + this_lobe;
+                                else
+                                    temp_handles.lobemaskLUL(:,:,sl) = temp_handles.lobemaskLUL(:,:,sl) + this_lobe;
+                                end
+                            else
+                                % If only one known center or fallback case, assign to RUL
+                                temp_handles.lobemaskRUL(:,:,sl) = temp_handles.lobemaskRUL(:,:,sl) + this_lobe;
+                            end
                         end
                     end
-%                     elseif length(sorted_ob_index)==1
-                       
-                        
-%                     end
                 end
             end
-            temp_handles.lobemask = temp_handles.lobemaskRUL*2+temp_handles.lobemaskLUL*5;
+            
+            % Combine masks
+            temp_handles.lobemask = temp_handles.lobemaskRUL * 2 + temp_handles.lobemaskLUL * 5;
+
         end
         
 else

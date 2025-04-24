@@ -117,7 +117,11 @@ Notes = '';
 try
     ScanDate = hdr.measurementInformation.seriesDate;
 catch
-    ScanDate = hdr.studyInformation.studyDate;
+    try
+        ScanDate = hdr.studyInformation.studyDate;
+    catch
+        ScanDate = 'NoScanDate';
+    end
 end
 XeTR = hdr.sequenceParameters.TR(1)*2/1000;%account for 2 acqs, convert to s
 if strcmp(MainInput.Scanner,'Siemens')

@@ -1,9 +1,11 @@
 function [data,traj] = get_ute_data(ute_file)
-
-parent_path = which('LoadData.ismrmrd.DataImport.get_ute_data');
-idcs = strfind(parent_path,filesep);%determine location of file separators
-parent_path = parent_path(1:idcs(end-1)-1);
-
+try
+    parent_path = which('LoadData.ismrmrd.DataImport.get_ute_data');
+    idcs = strfind(parent_path,filesep);%determine location of file separators
+    parent_path = parent_path(1:idcs(end-1)-1);
+catch 
+    parent_path = cd;
+end
 twix = LoadData.ismrmrd.DataImport.mapVBVD(ute_file);
 if length(twix) > 1
     twix = twix{end};
@@ -24,4 +26,8 @@ if contains(Seq_Name,'xe_radial_Dixon')
 elseif contains(Seq_Name,'SPIRAL')
     data = permute(data,[1 3 2]);
     traj = LoadData.ismrmrd.DataImport.seek_spiral_traj(twix);
+else
+    data = data(:,:,:,end);
+    data = permute(data,[1 3 2]);
+    traj = LoadData.ismrmrd.DataImport.gas_exchange_traj_gen(size(data,1),size(data,2),twix);
 end

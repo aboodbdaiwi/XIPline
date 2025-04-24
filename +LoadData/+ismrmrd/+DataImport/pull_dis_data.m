@@ -21,11 +21,13 @@ function [Dis_Fid,Gas_Fid,Dis_Traj,Gas_Traj,Params,Post_Cal] = pull_dis_data(Xe_
 %       Ramp_Time (gradient ramp time (usually 100))
 %       freq (center frequency in Hz)
 %       freq_offset (offset of dissolved from gas)
-
-parent_path = which('DataImport.pull_dis_data');
-idcs = strfind(parent_path,filesep);%determine location of file separators
-parent_path = parent_path(1:idcs(end-1)-1);%remove file
-
+try 
+    parent_path = which('DataImport.pull_dis_data');
+    idcs = strfind(parent_path,filesep);%determine location of file separators
+    parent_path = parent_path(1:idcs(end-1)-1);%remove file
+catch
+    parent_path = cd;
+end
 
 Xe_Dat_twix = LoadData.ismrmrd.DataImport.mapVBVD(Xe_file,'ignoreSeg');
 Xe_Dat_twix.flagIgnoreSeg = 1;
@@ -52,12 +54,73 @@ elseif contains(Seq_Name,'SPIRAL_Rad_DIXON')
 else
     error('Unable to identify Dissolved Phase Sequence Used');
 end
+if Xe_Dat_twix.hdr.Config.NEco > 1
+    Ver = 'Abood_mEcho';
+end
 
 %% Read in data based on version
 Post_Cal = nan;
 %For my parameter settings, this is a good way to do things... but probably
 %not perfectly generic.
 switch Ver
+    case 'Abood_mEcho'
+        
+            %Issues with memory using the twix object. Use this one instead
+        Xe_Raw = LoadData.ismrmrd.DataImport.ReadSiemensMeasVD13_idea(Xe_file);
+        fid = Xe_Raw.rawdata;
+        loop = Xe_Raw.loopcounters;
+        %Relevant Columns are 1, 5, and 7 - Reshape data to be in the shape
+        %pts, projections,contrast(gas/dis),repetitions
+        NEco = Xe_Dat_twix.hdr.Config.NEco;
+        first_nrep = find(loop(:,7)==1,2); %index 1 will be first index of pre-spectra
+        first_nrep = first_nrep(2); %this index will be first index of images
+        last_rep = find(loop(:,7)==1,1,'last'); %this index will be first index of post-spectra
+        Spec_Pre = zeros(max(loop(1:first_nrep,7)),loop(1,16));
+        Im_Raw = zeros(max(loop(:,1)),loop(first_nrep,16),2,NEco);
+        Spec_Post = zeros(size(loop,1)-last_rep+1,loop(last_rep,16));
+        for i = 1:size(loop,1)
+            %get pre-spectroscopy data
+            if loop(i,4) == 1 && loop(i,29) < 0.5*size(loop,1)
+                Spec_Pre(loop(i,7),:) = fid(i,1:loop(1,16));
+            elseif loop(i,4) == 33
+                Im_Raw(loop(i,1),:,loop(i,5)) = fid(i,1:loop(first_nrep,16));
+            else
+                Spec_Post(loop(i,7),:) = fid(i,1:loop(last_rep,16));
+            end
+        end
+        % Reshape: 4000 = 1000 × 2 (echo) × 2 (acq type)
+        croppedFID = fid(1:max(loop(:,1))*2*NEco,1:loop(first_nrep,16));
+        FID_reshaped = reshape(croppedFID, [max(loop(:,1)), NEco, 2, loop(first_nrep,16)]);
+        
+        % [pts, projections x echo x acquisition type]
+        FID_final = permute(FID_reshaped, [1, 4, 2, 3]);
+        Im_Raw = squeeze(FID_final(:,:,1,:));
+        
+        Xe_Raw = Im_Raw;
+        Dis_Fid = transpose(Xe_Raw(:,:,2));
+        Gas_Fid = transpose(Xe_Raw(:,:,1));
+        Post_Cal = Spec_Post;
+        Gas_Traj = LoadData.ismrmrd.DataImport.gas_exchange_traj_gen(size(Gas_Fid,1),size(Gas_Fid,2),Xe_Dat_twix);
+        Dis_Traj = LoadData.ismrmrd.DataImport.gas_exchange_traj_gen(size(Dis_Fid,1),size(Dis_Fid,2),Xe_Dat_twix);
+        Params.imsize = Xe_Dat_twix.hdr.MeasYaps.sKSpace.lBaseResolution;
+        Params.TR = (Xe_Dat_twix.hdr.MeasYaps.alTR{1}/1000)*2;
+        Params.TE = (Xe_Dat_twix.hdr.MeasYaps.alTE{1}/1000);
+        Params.GasFA = Xe_Dat_twix.hdr.MeasYaps.adFlipAngleDegree{2};
+        Params.DisFA = Xe_Dat_twix.hdr.MeasYaps.adFlipAngleDegree{1};
+        Params.freq_offset = Xe_Dat_twix.hdr.MeasYaps.sWipMemBlock.alFree{17};
+        Params.freq = Xe_Dat_twix.hdr.Dicom.lFrequency;
+        Params.Dwell = Xe_Dat_twix.hdr.MeasYaps.sRXSPEC.alDwellTime{1,1}*1e-9;
+        scanDate = Xe_Dat_twix.hdr.Phoenix.tReferenceImage0; 
+        scanDate = strsplit(scanDate,'.');
+        scanDate = scanDate{end};
+        scanDateStr = [scanDate(1:4),'-',scanDate(5:6),'-',scanDate(7:8)];
+        Params.scandatestr = scanDateStr;
+        Params.FOV = Xe_Dat_twix.hdr.Config.ReadFoV;
+        Params.GE_FOV = 400;
+        Params.GE_Voxel = 6.25;  
+        Params.Cal_Dwell = Xe_Dat_twix.hdr.MeasYaps.sWipMemBlock.adFree{15}*1e-6/2;
+        Params.Ramp_Time = Xe_Dat_twix.hdr.MeasYaps.sWipMemBlock.alFree{8};
+
     case 'Mugler_spec'
             %Issues with memory using the twix object. Use this one instead
         Xe_Raw = LoadData.ismrmrd.DataImport.ReadSiemensMeasVD13_idea(Xe_file);

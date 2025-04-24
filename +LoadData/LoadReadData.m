@@ -228,7 +228,7 @@ elseif strcmp(MainInput.XeDataext,'.dat') && strcmp(MainInput.Scanner,'Siemens')
             MainInput.ReconImageMode = 'xenon';
             [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
             Diffusion.Image = Image;
-        elseif strcmp(MainInput.AnalysisType,'GasExchange') == 1 
+        elseif strcmp(MainInput.AnalysisType,'GasExchange')  
             try
                 LoadData.ismrmrd.Siemens.xpdixon_2303_2_mrd(filename,Xe_name,fullfile(XeDataLocation,[Xe_name '.h5']));
             catch
@@ -322,7 +322,7 @@ end
 %% 
 if (isnumeric(MainInput.NoProtonImage) && MainInput.NoProtonImage == 0) || ...
    (ischar(MainInput.NoProtonImage) && strcmp(MainInput.NoProtonImage, 'no'))
-    try 
+    % try 
         cd(MainInput.HDataLocation)
         if strcmp(MainInput.AnalysisType,'Ventilation')                 
             mkdir([MainInput.HDataLocation '\Ventilation Analysis']);  
@@ -448,10 +448,10 @@ if (isnumeric(MainInput.NoProtonImage) && MainInput.NoProtonImage == 0) || ...
         end 
         Proton.Image = (Proton.Image - min(Proton.Image(:)))./(max(Proton.Image(:)) - min(Proton.Image(:)));
 
-    catch
-        disp('no proton images is selected')
-        MainInput.NoProtonImage = 1;
-    end
+    % catch
+    %     disp('something went wrong, please check log file')
+    %     MainInput.NoProtonImage = 1;
+    % end
 end % end of Load/Read Proton data 
 
 close all;

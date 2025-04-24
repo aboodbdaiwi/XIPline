@@ -43,15 +43,15 @@ MainInput.RegistrationType = '';
 MainInput.PatientInfo = '';
 
 % 1) choose the type of analysis
-MainInput.AnalysisType = 'Diffusion';  % 'Ventilation', 'Diffusion', 'GasExchange'
+MainInput.AnalysisType = 'GasExchange';  % 'Ventilation', 'Diffusion', 'GasExchange'
 
 % 2) Do you have protom images? 
-MainInput.NoProtonImage = 1;  % 1: There is no proton images  % 0: There is  proton images   
+MainInput.NoProtonImage = 0;  % 1: There is no proton images  % 0: There is  proton images   
 
-MainInput.Institute = 'CCHMC';  % 'CCHMC', 'XeCTC', 'Duke',  'London'
-MainInput.Scanner = 'Philips'; % Siemens, Philips, GE
-MainInput.ScannerSoftware = '5.6.1'; % '5.3.1', '5.6.1','5.9.0'
-MainInput.SequenceType = '2D GRE'; % '2D GRE', '3D Radial'
+MainInput.Institute = 'XeCTC';  % 'CCHMC', 'XeCTC', 'Duke',  'London'
+MainInput.Scanner = 'Siemens'; % Siemens, Philips, GE
+MainInput.ScannerSoftware = '5.9.0'; % '5.3.1', '5.6.1','5.9.0'
+MainInput.SequenceType = '3D Radial'; % '2D GRE', '3D Radial'
 MainInput.denoiseXe= 'no';
 % diary Log.txt
 [filename, path] = uigetfile('*.*','Select xenon data file');

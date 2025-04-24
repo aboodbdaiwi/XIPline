@@ -50,8 +50,11 @@ file_loc = file_loc{end-1};
 %%
 % extract favorite variables from the header
 Seq_name = twix_obj.hdr.Config.SequenceDescription;
-weight = twix_obj.hdr.Dicom.flUsedPatientWeight;  %
+weight = twix_obj.hdr.Dicom.flUsedPatientWeight;  
+try
 ref_amp = twix_obj.hdr.Spice.TransmitterReferenceAmplitude; % Reference amplitude entered
+catch
+end
 te = twix_obj.hdr.Phoenix.alTE{1}; 
 tr = twix_obj.hdr.Config.TR;
 dwell_time = twix_obj.hdr.MeasYaps.sRXSPEC.alDwellTime{1,1};  % appears most robust and generic
@@ -82,9 +85,14 @@ if isfield(twix_obj.hdr.Phoenix, 'sWiPMemBlock')
     end 
 elseif isfield(twix_obj.hdr.Phoenix, 'sWipMemBlock')
     % UVA twix file
-    VRef = twix_obj.hdr.Phoenix.sWipMemBlock.alFree{1};
-    rf_amp1 = twix_obj.hdr.Phoenix.sTXSPEC.aRFPULSE{2}.flAmplitude;  % dissolved phase
-    rf_amp2 = twix_obj.hdr.Phoenix.sTXSPEC.aRFPULSE{3}.flAmplitude;  % calibration
+    try
+        VRef = twix_obj.hdr.Phoenix.sWipMemBlock.alFree{1};
+        rf_amp1 = twix_obj.hdr.Phoenix.sTXSPEC.aRFPULSE{2}.flAmplitude;  % dissolved phase
+        rf_amp2 = twix_obj.hdr.Phoenix.sTXSPEC.aRFPULSE{3}.flAmplitude;  % calibration
+    catch
+        rf_amp1 = [];
+        rf_amp2 = [];
+    end
 else
     disp('WARNING: twix file type not supported, cannot determine reference voltage')
 end 

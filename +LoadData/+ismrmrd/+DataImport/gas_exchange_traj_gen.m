@@ -61,7 +61,7 @@ if str2double(Seq_Name((end-3):end)) >= 2102
     Angs(:,(Angs(1,:)==0 & Angs(2,:) ==0)) = [];
     Angs = Angs'/10000;
 else
-    Angs = DataImport.duke_halton_random_mex(NPro,3);
+    Angs = LoadData.ismrmrd.DataImport.duke_halton_random_mex(NPro,3);
 end
 
 traj = zeros(3,NPts,NPro);

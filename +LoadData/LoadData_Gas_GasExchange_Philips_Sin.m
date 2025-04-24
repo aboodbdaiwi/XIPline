@@ -175,6 +175,11 @@ disp('Importing Data...')
 %Load in FIDs
 [XeData,XeInfo] = GasExchangeFunctions.loadLISTDATA([XeDataFile.folder,'\',XeDataFile.name]);
 XeData = squeeze(XeData);
+if length(size(XeData)) > 3
+    XeData = squeeze(XeData(:,:,:,1)); % take first echo only
+end
+% plot(abs(XeData(:,1,1)),'Color',[0.5 0 0],'LineWidth',1);
+
 
 if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
     %Dissolved k-space

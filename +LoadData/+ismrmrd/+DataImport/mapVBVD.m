@@ -155,7 +155,7 @@ if ~exist('filename','var') || isempty(filename)
 else
     if ischar(filename)
         % assume that complete path is given
-        if  ~strcmpi(filename(end-3:end),'.dat');
+        if  ~strcmpi(filename(end-3:end),'.dat')
             filename=[filename '.dat'];   %% adds filetype ending to file
         end
     else
@@ -341,7 +341,7 @@ if (strcmp(version, 'vb')) % not implemented/tested for vd, yet
                     %                    end;
                     if (mod(length(rawfactors),2) ~= 0)
                         error('Error reading rawfactors');
-                    end;
+                    end
                     %note the transpose, this makes the vector
                     %multiplication during the read easier
                     arg.rawDataCorrectionFactors = rawfactors(1:2:end).' + 1i*rawfactors(2:2:end).';

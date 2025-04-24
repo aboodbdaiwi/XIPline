@@ -58,7 +58,10 @@ cd(outputpath)
 Proton.outputfolder = outputpath;
 %% Import Acquisition Information
 disp('Importing Acquisition Information...')
-HSin = GasExchangeFunctions.loadSIN([HSinFile.folder,'\',HSinFile.name]);
+folder = HSinFile(end).folder;
+Sinname = HSinFile(end).name;
+SinFullPath = fullfile(folder,Sinname);
+HSin = GasExchangeFunctions.loadSIN(SinFullPath);
 
 H_AcqMatrix = HSin.scan_resolutions.vals(1);
 if strcmp(ScanVersion,'Xe_CTC') %recon 2x interpolated
@@ -104,10 +107,10 @@ disp('Importing Data Completed.')
 %% Calculate Trajectories
 disp('Calculating Trajectories...')
 if strcmp(ScanVersion,'Xe_CTC')
-    HTraj = GasExchangeFunctions.philipsradialcoords(1.25,2,[HSinFile.folder,'\',HSinFile.name]); %1.25us delay, Haltoned Spiral
+    HTraj = GasExchangeFunctions.philipsradialcoords(1.25,2,SinFullPath); %1.25us delay, Haltoned Spiral
     HTraj = permute(HTraj,[4 3 2 1]);
 else
-    HTraj = GasExchangeFunctions.philipsradialcoords(1.65,1,[HSinFile.folder,'\',HSinFile.name]); %1.65us delay, GM
+    HTraj = GasExchangeFunctions.philipsradialcoords(1.65,1,SinFullPath); %1.65us delay, GM
     HTraj = permute(HTraj,[4 3 2 1]);
     HTraj = GasExchangeFunctions.SortUTETraj_AcqOrder(GasExchangeFunctions.reshapeUTETraj(HTraj), [H_nsamp, H_nprof, H_interleaves], HOrder);%reshape and order
 end
