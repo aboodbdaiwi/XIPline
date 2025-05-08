@@ -21,7 +21,7 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
             % resize xenon images 
             if strcmp(MainInput.SegmentType, 'gx_3D_1ch_iso') || strcmp(MainInput.SegmentType, 'gx_3D_2ch_iso')
                 Im_size = [112, 112, 112];
-                if size(Ventilation.Image) ~= Im_size
+                if ~isequal(size(Ventilation.Image), Im_size)
                     Xe_Img = imresize3(Ventilation.Image, Im_size);
                 else
                     Xe_Img = Ventilation.Image;
@@ -48,7 +48,7 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
                 % resize
                 if strcmp(MainInput.SegmentType, 'gx_3D_1ch_iso') || strcmp(MainInput.SegmentType, 'gx_3D_2ch_iso')
                     Im_size = [112, 112, 112];
-                    if size(Proton.ProtonRegistered) ~= Im_size
+                    if ~isequal(size(Proton.ProtonRegistered), Im_size)
                         H_Img = imresize3(Proton.ProtonRegistered, Im_size);
                     else
                         H_Img = Proton.ProtonRegistered;
@@ -117,7 +117,7 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
             %     Im_size = [112, 112, 112];
             % end
             Im_size = [112, 112, 112];
-            if size(GasExchange.VentImage) ~= Im_size
+            if ~isequal(size(GasExchange.VentImage), Im_size)
                 Xe_Img = imresize3(GasExchange.VentImage, Im_size);
             else
                 Xe_Img = GasExchange.VentImage;
@@ -126,7 +126,7 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
             % resize proton images
             if strcmp(MainInput.NoProtonImage, 'no') || MainInput.NoProtonImage == 0
                 % resize
-                if size(Proton.ProtonRegistered,1) ~= Im_size || size(Proton.ProtonRegistered,2) ~= Im_size
+                if ~isequal(size(Proton.ProtonRegistered), Im_size)
                     H_Img = imresize3(Proton.ProtonRegistered, Im_size);
                 else
                     H_Img = Proton.ProtonRegistered;
