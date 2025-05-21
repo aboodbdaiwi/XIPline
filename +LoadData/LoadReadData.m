@@ -79,7 +79,8 @@ if strcmp(MainInput.XeDataext,'.dcm')
                         Image = permute(Image, [1 2 4 3]);
                     case 'slice interleave'
                         Image = reshape(Image, [size(Image,1),size(Image,2),size(Image,3)/Nb,Nb]);
-                end   
+                end  
+                % Image = flip(Image,4);
 %                 for i = 1:length(FileNames)
 %                     img = squeeze(Image(:,:,i));
 %                     SignalMean(i) = mean(img(:));
