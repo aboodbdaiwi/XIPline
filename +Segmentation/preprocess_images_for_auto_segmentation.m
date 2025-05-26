@@ -41,7 +41,7 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
             end
 
             % run N4
-            [Xe_Img, ~] = Segmentation.N4_bias_correction(Xe_Img, MainInput.XeDataLocation);
+            % [Xe_Img, ~] = Segmentation.N4_bias_correction(Xe_Img, MainInput.XeDataLocation);
 
             % normalize
             Xe_Img = Xe_Img./max(Xe_Img(:));
@@ -103,7 +103,7 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
                 Xe_Img = Diffusion.Image(:,:,:,1);
             end
             % run N4
-            [Xe_Img, ~] = Segmentation.N4_bias_correction(Xe_Img, MainInput.XeDataLocation);
+            % [Xe_Img, ~] = Segmentation.N4_bias_correction(Xe_Img, MainInput.XeDataLocation);
             
             % normalize
             Xe_Img = Xe_Img./max(Xe_Img(:));
@@ -129,7 +129,7 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
                 Xe_Img = GasExchange.VentImage;
             end
             % run N4
-            [Xe_Img, ~] = Segmentation.N4_bias_correction(Xe_Img, MainInput.XeDataLocation);            
+            % [Xe_Img, ~] = Segmentation.N4_bias_correction(Xe_Img, MainInput.XeDataLocation);            
             Xe_Img = double(Xe_Img./max(Xe_Img(:)));
             
             % resize proton images

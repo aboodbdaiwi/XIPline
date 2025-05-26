@@ -12,6 +12,10 @@ if isempty(N4Path)
     N4Path = 'C:\XIPline\';
 end
 maskarray = ones(size(MR));
+if parentPath(end) ~= '\'
+    parentPath = [parentPath, '\'];
+end
+
 % Export Image and Mask temporarily for use in N4
 niftiwrite(abs(MR+0.001),[parentPath,'Image.nii']); % Image
 niftiwrite(abs(maskarray),[parentPath,'Weight.nii']); % Weight
@@ -27,8 +31,8 @@ cmd = ['"',N4Path,'N4BiasFieldCorrection.exe"',...%run bias correction
 system(cmd);
 
 %% Import Results
-N4 = double(niftiread(strcat(parentPath,"CorrectedImage.nii")));
-Bias = double(niftiread(strcat(parentPath,"Bias.nii")));
+N4 = double(niftiread(fullfile(parentPath,'CorrectedImage.nii')));
+Bias = double(niftiread(fullfile(parentPath,'Bias.nii')));
 
 %% Delete Temp Files
 delete([parentPath,'Image.nii']);
