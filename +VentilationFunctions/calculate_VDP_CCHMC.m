@@ -654,22 +654,33 @@ Mask_Vent_RegMontagePosition = get(gcf,'position');
 
 % save ppt 
 cd(DataPath)
-ReportTitle = 'Ventilation_Analysis';
 %Start new presentation
 isOpen  = Global.exportToPPTX(); 
 if ~isempty(isOpen) %If PowerPoint already started, then close first and then open a new one
     Global.exportToPPTX('close');
 end
-ppt_file_name = 'Ventilation_Analysis.pptx';
+% Generate filename with today's date
+today = datetime('today');
+date_str = datestr(today, 'yyyymmdd');
+ppt_file_name = ['Ventilation_Analysis_', date_str, '.pptx'];
+ReportTitle = ['Ventilation_Analysis_', date_str];
+% Create or open the presentation
 if isfile(ppt_file_name)
-    disp('file existed')
-    Global.exportToPPTX('open',ppt_file_name);
-    Global.exportToPPTX('switchslide',1);
+    disp('File existed')
+    Global.exportToPPTX('open', ppt_file_name);
+    Global.exportToPPTX('switchslide', 1);
 else            
-    Global.exportToPPTX('new','Dimensions',[16 9], ...
-        'Title',ReportTitle, ...
-        'Author','CPIR @ CCHMC');
-end 
+    Global.exportToPPTX('new', 'Dimensions', [16 9], ...
+        'Title', ReportTitle, ...
+        'Author', 'CPIR @ CCHMC');
+
+    % % Add human-readable date to the slide (e.g., "June 12, 2025")
+    % formatted_date = datestr(today, 'mmmm dd, yyyy');
+    % Global.exportToPPTX('addtext', ['Date: ', formatted_date], ...
+    %     'Position', [12, 0.2, 4, 1], 'FontSize', 12, ...
+    %     'FontWeight', 'normal', 'HorizontalAlignment', 'right');
+end
+
 scalefactor = 16/NumSliceView; 
 %Add slides
 Global.exportToPPTX('addslide'); % Image/mask/VDP

@@ -85,21 +85,23 @@ NormMR3(maskarraytrachea == 0) = [];
 %% 3) Generate bins for the linear binned data:
 % 
 switch Ventilation.LB_Normalization
-    case 'mean'
+    case 'LBmean'
         NFactor = mean(NormMR3(:));
         ScaledVentImage2 = NormMR2/NFactor;
         NormMR4 = ScaledVentImage2;
         NormMR4(maskarraytrachea == 0) = [];
         Im99percentile = prctile(NormMR4,99.9); % 99.5th percentile
         ScaledVentImage2(ScaledVentImage2 >= Im99percentile) = Im99percentile;      
-    case 'median'
-        NFactor = median(NormMR3(:)); 
+    case 'GLBmean'
+        NormMR3vv = NormMR3(NormMR3 > 0.5 * mean(NormMR3(:)));
+        NFactor = mean(NormMR3vv(:));
+        % NFactor = mean(NormMR3(:)); 
         ScaledVentImage2 = NormMR2/NFactor;
         NormMR4 = ScaledVentImage2;
         NormMR4(maskarraytrachea == 0) = [];
         Im99percentile = prctile(NormMR4,99.9); % 99.5th percentile
         ScaledVentImage2(ScaledVentImage2 >= Im99percentile) = Im99percentile;
-    case 'percentile'
+    case 'GLBpercentile'
         NormMR2 = (NormMR2 - min(NormMR2(:)))/(max(NormMR2(:)) - min(NormMR2(:)));
         NFactor = prctile((NormMR2(maskarray4(:))),99.5); % 99.5th percentile
         ScaledVentImage2 = NormMR2/NFactor;
@@ -624,24 +626,27 @@ set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
 DefectArrayMontagePosition=get(gcf,'position'); 
 
-% save ppt 
-ReportTitle = 'Ventilation_Analysis';
 %Start new presentation
-
-isOpen  = Global.exportToPPTX();
+isOpen  = Global.exportToPPTX(); 
 if ~isempty(isOpen) %If PowerPoint already started, then close first and then open a new one
     Global.exportToPPTX('close');
 end
-ppt_file_name = 'Ventilation_Analysis.pptx';
-if isfile(ppt_file_name)           
-    disp('file existed');
-    Global.exportToPPTX('open',ppt_file_name);
-    Global.exportToPPTX('switchslide',1);
+% Generate filename with today's date
+today = datetime('today');
+date_str = datestr(today, 'yyyymmdd');
+ppt_file_name = ['Ventilation_Analysis_', date_str, '.pptx'];
+ReportTitle = ['Ventilation_Analysis_', date_str];
+% Create or open the presentation
+if isfile(ppt_file_name)
+    disp('File existed')
+    Global.exportToPPTX('open', ppt_file_name);
+    Global.exportToPPTX('switchslide', 1);
 else            
-    Global.exportToPPTX('new','Dimensions',[16 9], ...
-        'Title',ReportTitle, ...
-        'Author','CPIR @ CCHMC');
-end 
+    Global.exportToPPTX('new', 'Dimensions', [16 9], ...
+        'Title', ReportTitle, ...
+        'Author', 'CPIR @ CCHMC');
+end
+
 %Add slides
 Global.exportToPPTX('addslide'); % Image/mask/VDP
 Global.exportToPPTX('addtext',sprintf('LB VDP-Normalization: %s', Ventilation.LB_Normalization),'Position',[5 0 7 1],'Color','b','FontSize',25);

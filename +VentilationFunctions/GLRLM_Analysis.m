@@ -255,22 +255,26 @@ writetable(GLRLMSummary,[parentPath, outputPath,'GLRLMSummary.xlsx'],'Sheet',1)
 
 %% save ppt 
 cd(parentPath)
-ReportTitle = 'Ventilation_Analysis';
 %Start new presentation
-isOpen  = Global.exportToPPTX();
+isOpen  = Global.exportToPPTX(); 
 if ~isempty(isOpen) %If PowerPoint already started, then close first and then open a new one
     Global.exportToPPTX('close');
 end
-ppt_file_name = 'Ventilation_Analysis.pptx';
+% Generate filename with today's date
+today = datetime('today');
+date_str = datestr(today, 'yyyymmdd');
+ppt_file_name = ['Ventilation_Analysis_', date_str, '.pptx'];
+ReportTitle = ['Ventilation_Analysis_', date_str];
+% Create or open the presentation
 if isfile(ppt_file_name)
-    disp('file existed')
-    Global.exportToPPTX('open',ppt_file_name);
-    Global.exportToPPTX('switchslide',1);
+    disp('File existed')
+    Global.exportToPPTX('open', ppt_file_name);
+    Global.exportToPPTX('switchslide', 1);
 else            
-    Global.exportToPPTX('new','Dimensions',[16 9], ...
-        'Title',ReportTitle, ...
-        'Author','CPIR @ CCHMC');
-end 
+    Global.exportToPPTX('new', 'Dimensions', [16 9], ...
+        'Title', ReportTitle, ...
+        'Author', 'CPIR @ CCHMC');
+end
 %Add slides
 Global.exportToPPTX('addslide'); % angles
 Global.exportToPPTX('addtext',sprintf(foldername),'Position',[6 0 7 1],'Color','b','FontSize',25);
