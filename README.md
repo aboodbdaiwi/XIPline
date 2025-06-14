@@ -3,6 +3,7 @@
 # 129Xenon Image Processing Pipeline (XIPline)
 
 XIPline application is developed at the [CPIR](https://www.cincinnatichildrens.org/research/divisions/c/cpir). 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15660895.svg)](https://doi.org/10.5281/zenodo.15660895)
 
 ## Table of contents:
 
@@ -73,6 +74,7 @@ Personal email: abdaiwi89@gmail.com
 Website: [CPIR](https://www.cincinnatichildrens.org/research/divisions/c/cpir)
 
 [please cite this paper](https://onlinelibrary.wiley.com/doi/full/10.1002/mrm.30347): Bdaiwi AS, Willmering MM, Plummer JW, et al. 129Xe Image Processing Pipeline: An open-source, graphical user interface application for the analysis of hyperpolarized 129 Xe MRI. Magn Reson Med.2024;1-18. doi: 10.1002/mrm.30347
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15660895.svg)](https://doi.org/10.5281/zenodo.15660895)
 
 ## Updates:
 
