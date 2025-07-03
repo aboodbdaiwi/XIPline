@@ -39,7 +39,7 @@ maskarray = double(Ventilation.LungMask);
 
 MRvv = double(MR);
 NormMR = MRvv.*(maskarray>0);
-incomplete = 0.33;
+incomplete = 0.5;
 defectmask = VentilationFunctions.medFilter(double(NormMR<(mean(NormMR(NormMR>0))*incomplete)*(maskarray>0)));
 Ventilation.SNRdefectmask = defectmask;
 % maskarray = double(Ventilation.LungMask + Ventilation.VesselMask);

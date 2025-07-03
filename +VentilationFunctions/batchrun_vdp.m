@@ -1,0 +1,652 @@
+function batchrun_vdp(PatientID,...
+                        SequenceType,...
+                        ReconType,...
+                        VoxelSize,...
+                        SliceOrientation,...
+                        vent_file,...
+                        anat_file,...
+                        analysisFolder,...
+                        mask_file_name)
+%----------------------------- initial inputs -----------------------------
+warning('off', 'all'); % Turn off all warnings 'off' | 'on'
+
+xedatapath = vent_file;
+Hdatapath = anat_file;
+
+Diffusion = '';
+GasExchange = '';
+MainInput.AnalysisType = 'Ventilation';
+MainInput.Institute = 'CCHMC'; 
+MainInput.Scanner = 'Philips';
+MainInput.ScannerSoftware = '5.9.0'; % R-scanner
+% MainInput.SequenceType = '2D GRE';
+MainInput.analysissesFolder = analysisFolder;
+
+Outputs = [];
+Outputs.PatientID = PatientID;
+Outputs.XeImagepath = vent_file;
+Outputs.HImagepath = anat_file;
+Outputs.analysispath = analysisFolder;
+Outputs.SequenceType = SequenceType;
+Outputs.ReconType = ReconType;
+try
+    Outputs.AnalysisCode_hash = Global.get_git_hashobject;%use git to find hash of commit used
+    Outputs.AnalysisCode_hash = Outputs.AnalysisCode_hash(1:40);%remove enter at end
+catch
+    Outputs.AnalysisCode_hash = 'TEST';%If not connected to git, can't determine hash so state test
+end
+Outputs.AnalysisCode_path = 'https://github.com/cchmc-cpir/Db_129Xe_Vent_Analysis';
+Outputs.AnalysisDate = datestr(datetime('today'), 'yyyy-mm-dd');
+
+% Check if we have anatomical images or not
+if isempty(Hdatapath)
+    MainInput.NoProtonImage = 'yes';  % There is no proton images
+else
+    MainInput.NoProtonImage = 'no';    % There is  proton images 
+end
+
+analysisSubfolder = fullfile(analysisFolder, 'Ventilation_Analysis');
+if ~exist(analysisSubfolder, 'dir')
+    mkdir(analysisSubfolder);
+end
+
+%----------------------------- load data -----------------------------
+% Extract the file names
+[path,filename] = fileparts(xedatapath);
+XeFullPath = xedatapath;
+XeDataLocation = path;
+[~,XeFileName,xe_ext] = fileparts(xedatapath);
+
+MainInput.XeFullPath = XeFullPath;
+MainInput.XeDataLocation = XeDataLocation;
+MainInput.XeFileName = filename;
+MainInput.XeDataext = xe_ext;
+cd(MainInput.XeDataLocation)
+
+Outputs.XeFullPath = XeFullPath;
+Outputs.XeDataLocation = XeDataLocation;
+Outputs.XeFileName = XeFileName;
+Outputs.XeDataext = xe_ext;
+
+% select proton
+if strcmp(MainInput.NoProtonImage, 'no') == 1
+    [path, filename] = fileparts(Hdatapath);
+    HFullPath = Hdatapath;
+    HDataLocation = path;
+    [~,HFileName,H_ext] = fileparts(HFullPath);
+
+    MainInput.HFullPath = HFullPath;
+    MainInput.HDataLocation = HDataLocation;
+    MainInput.HFileName = filename;
+    MainInput.HDataext = H_ext;
+
+    Outputs.HFullPath = HFullPath;
+    Outputs.HDataLocation = HDataLocation;
+    Outputs.HFileName = HFileName;
+    Outputs.XeDataext = H_ext;
+end
+MainInput.denoiseXe = 'no';
+[Ventilation, ~, ~, Proton] = LoadData.LoadReadData(MainInput);
+Ventilation.Image = double(Ventilation.Image);
+Ventilation.outputpath = analysisSubfolder;
+% Ventilation.Image = Ventilation.Image(:,:,1:2:end);
+% figure; Global.imslice(Ventilation.Image,'Ventilation')
+
+if strcmp(MainInput.XeDataext, '.nii') || strcmp(MainInput.XeDataext, '.gz') 
+    A = Ventilation.Image;
+    if (size(A,1) < size(A,3)) 
+        A = permute(A,[3 2 1]); 
+        A = flipud(A);
+        % A = imrotate(A,-90*2);
+        % A = flip(A,1);  
+        % A = flip(A,2);
+        % % A = flip(A,3);
+        Ventilation.Image = A;    
+        % figure; Global.imslice(A,'Ventilation')
+    elseif (size(A,2) < size(A,3))
+        A = permute(A,[1 3 2]); 
+        A = imrotate(A,-90);
+        % A = flip(A,1);  
+        A = flip(A,2);
+        % % A = flip(A,3);
+        Ventilation.Image = A;    
+        % figure; Global.imslice(A,'Ventilation')        
+    else
+        A = imrotate(A,-90*2);
+        % A = flip(A,1);  
+        % A = flip(A,2);
+        % A = flip(A,3);
+        Ventilation.Image = A; 
+    end
+end
+% figure; Global.imslice(Ventilation.Image,'Ventilation')
+
+if strcmp(MainInput.NoProtonImage, 'no')
+    if strcmp(MainInput.HDataext, '.nii') || strcmp(MainInput.HDataext, '.gz') 
+        A = Proton.Image;
+        A = permute(A,[2 3 1]); 
+        A = imrotate(A,-90);
+        A = flip(A,1);  
+        A = flip(A,2);
+        % A = flip(A,3);
+        Proton.Image = A;  
+    end
+end
+% figure; Global.imslice(A,'Ventilation')
+
+  
+% figure; Global.imslice(Proton.Image,'Proton')
+% -----------------------------registration-----------------------------
+if strcmp(MainInput.NoProtonImage, 'no') 
+    MainInput.RegistrationType = 'affine'; % 'translation' | 'rigid' | 'similarity' | 'affine'
+    % check if xenon and proton have the same number of slices
+    if size(Ventilation.Image,3) == size(Proton.Image,3)
+        MainInput.SliceSelection = 0;
+    else
+        MainInput.SliceSelection = 1;
+        MainInput.Xestart = 1;
+        MainInput.Xeend = size(Ventilation.Image,3);
+        MainInput.Hstart = 1;
+        MainInput.Hend = size(Proton.Image,3);
+    end
+
+    Xesize = size(Ventilation.Image);
+    Hsize = size(Proton.Image);
+    sizeRatio = Hsize./Xesize;
+    
+    MainInput.XeVoxelInfo.PixelSize1 = sizeRatio(1);
+    MainInput.XeVoxelInfo.PixelSize2 = sizeRatio(2);
+    MainInput.XeVoxelInfo.SliceThickness = sizeRatio(3);
+    
+    MainInput.ProtonVoxelInfo.PixelSize1 = 1;
+    MainInput.ProtonVoxelInfo.PixelSize2 = 1;
+    MainInput.ProtonVoxelInfo.SliceThickness = 1;
+    
+    [Proton] = Registration.PerformRegistration(Proton,Ventilation,GasExchange,MainInput);
+     % S = orthosliceViewer(Proton.ProtonRegisteredColored);
+else
+    Proton.ProtonRegistered = zeros(size(Ventilation.Image));
+    Proton.ProtonRegisteredColored = zeros(size(Ventilation.Image));
+end
+
+
+% -----------------------------segmentation-----------------------------
+% Check if mask_file_name is empty
+if isempty(mask_file_name)
+    SegmentMaskMode = 0; % 0 = new AI mask, 1 = load exisitng mask
+    disp('The mask_file_name is empty.');
+else
+    SegmentMaskMode = 1; % 0 = new AI mask, 1 = load exisitng mask
+    disp('The mask_file_name is not empty.');
+end
+
+%SegmentMaskMode = 1; % 0 = new AI mask, 1 = load exisitng mask
+if SegmentMaskMode == 0
+    cd(MainInput.XeDataLocation)
+    
+    % diary Log.txt
+    MainInput.SegmentationMethod = 'Auto'; % 'Threshold' || 'Manual' || 'Auto'
+    MainInput.SegmentAnatomy = 'Parenchyma'; % 'Airway'; || 'Parenchyma'
+    MainInput.Imagestosegment = 'Xenon';  % 'Xe & Proton Registered' | 'Xenon' | 'Registered Proton'
+    
+    MainInput.thresholdlevel = 1; % 'threshold' 
+    MainInput.SE = 1;
+    
+    MainInput.SegmentManual = 'Freehand'; % 'AppSegmenter' || 'Freehand'
+    MainInput.SliceOrientation = SliceOrientation; % 'coronal' ||'transversal' || 'sagittal' ||'isotropic'
+    [Proton,Ventilation,~,~] = Segmentation.PerformSegmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
+
+    if exist('Ventilation.AirwayMask', 'var')
+        % skip
+    else
+        Ventilation.AirwayMask = zeros(size(Ventilation.LungMask));
+    end
+else
+    % % List all files in the analysispath folder
+    % files = dir(fullfile(analysispath, '*.gz')); %.nii
+    
+    % % Extract the file names
+    % fileNames = {files.name};
+    % maskpath = fullfile(analysispath,fileNames{end});
+    % figure; Global.imslice(Ventilation.Image,'Image')
+    % figure; Global.imslice(Ventilation.Image,'Ventilation.Image')
+    testmask = Segmentation.SegmentLungthresh(Ventilation.Image,3,1); 
+    structuringElementSize = 2;
+    se = strel('disk', structuringElementSize); % Create a disk-shaped structuring element
+    testmask = double(imclose(testmask, se)); % Perform morphological closing
+    structuringElementSize = 2; % Size of the structuring element
+    % Create a structuring element for erosion
+    se = strel('cube', structuringElementSize); % Create a cube-shaped structuring element
+    % Perform erosion to shrink the binary mask
+    testmask = imerode(testmask, se); % Perform erosion
+    % figure; Global.imslice(testmask,'testmask')
+    
+    % maskpath = fullfile(analysispath,mask_file_name);
+    [~,~,mask_ext] = fileparts(mask_file_name);
+    if strcmp(mask_ext, '.gz') || strcmp(mask_ext, '.nii')
+        try
+            Mask = LoadData.load_nii(mask_file_name);
+        catch
+            Mask = LoadData.load_untouch_nii(mask_file_name);
+        end
+        A = double(Mask.img);
+    elseif strcmp(mask_ext, '.dcm')
+        A = double(squeeze(dicomread(mask_file_name)));
+    end
+    % figure; Global.imslice(A,'A')
+    B = A;
+    sizeArray1 = size(Ventilation.Image);
+    sizeArray2 = size(A);
+    
+    % Check if slices in the 3d dimension 
+    if ~isequal(sizeArray1, sizeArray2)
+        minIndex = find(sizeArray2 == min(sizeArray2));
+        if minIndex == 1
+            B = permute(B, [2, 3, minIndex]);
+        elseif minIndex == 2
+            B = permute(B, [1, 3, minIndex]);
+        elseif minIndex == 3
+            B = permute(B, [1, 2, minIndex]);
+        end
+    else
+        % Display a message indicating that the sizes match
+        disp('Array sizes are the same.');
+    end
+    
+    % check if number of mask slices don't match number of vent image slices
+    if size(B,3) ~= size(Ventilation.Image,3)
+        tempmask = zeros(size(Ventilation.Image));
+        sliceIndex = zeros(1,size(testmask, 3));
+        for slice = 1:size(testmask, 3)
+            % Check if any pixel has a value of 1 in the current slice
+            if any(testmask(:, :, slice) == 1, 'all')
+                sliceIndex(slice) = 1;
+            end
+        end
+        startslice = find(sliceIndex);
+        if length(startslice) == size(B,3)
+            tempmask(:,:,startslice(1):startslice(end)) = B;
+        else
+            try
+                tempmask(:,:,startslice(1):startslice(1)+size(B,3)-1) = B;
+            catch
+                disp('mask has to be fixed manually')
+            end
+        end
+        B = tempmask;
+    end
+    %figure; Global.imslice(B,'B')
+    % check if orientation between mask and vent image is matching
+    [DiceScore] = Global.DiceCoeff(testmask, B);
+    if DiceScore.DSC < 0.7 % play with this thershold if it's still not working
+        DSC = zeros(3,4,3,2);
+        for op = 1:3
+            if op == 1
+                for i = 1:4
+                    C = imrotate(B,90*i);
+                    [DiceScore] = Global.DiceCoeff(testmask, C);
+                    DSC(op,i,1,1) = DiceScore.DSC;
+                end
+            elseif op == 2
+                for i = 1:4
+                    C = imrotate(B,90*i);
+                    for j = 1:3
+                        C = flip(C,j);
+                        [DiceScore] = Global.DiceCoeff(testmask, C);
+                        DSC(op,i,j,1) = DiceScore.DSC;
+                    end
+                end
+            elseif op == 3
+                for i = 1:4
+                    C = imrotate(B,90*i);
+                    for j = 1:3
+                        C = flip(C,j);
+                        for k = 1:2
+                            C = flip(C,k+1);
+                            [DiceScore] = Global.DiceCoeff(testmask, C);
+                            DSC(op,i,j,k) = DiceScore.DSC;
+                        end
+                    end
+                end
+            end
+    
+        end
+        [~, linearIndex] = max(DSC(:));
+        [indx1, indx2, indx3, indx4] = ind2sub(size(DSC), linearIndex);
+        if indx1 == 1
+            D = imrotate(B,90*indx2); 
+        elseif indx1 == 2
+            D = imrotate(B,90*indx2); 
+            D = flip(D,indx3);
+        elseif indx1 == 3
+            D = imrotate(B,90*indx2); 
+            D = flip(D,indx3);
+            D = flip(D,indx4);
+        end
+    %     figure; Global.imslice(D,'mask')
+        B = D;
+    end
+    Ventilation.LungMask = B;
+    Ventilation.AirwayMask = zeros(size(Ventilation.LungMask));
+    % figure; Global.imslice(D,'Image')
+    % figure; Global.imslice(Ventilation.Image,'Image')
+    % % figure; Global.imslice(Proton.Image,'proton')
+    % figure; Global.imslice(Ventilation.LungMask,'mask')
+
+end
+% B = A;
+% B = flip(B,1);
+% % % % B = rot90(B);
+% B = flip(B,2);
+% B = flip(B,3);
+% 
+% % Define the target size for the new array (224x224x10)
+% targetSize = [224 224 size(B, 3)];
+% 
+% % Create a new array of zeros with the target size
+% A_centered = zeros(targetSize);
+% 
+% % Calculate the starting index to place A in the center of A_centered
+% startX = floor((targetSize(1) - size(B, 1)) / 2) + 1;
+% startY = floor((targetSize(2) - size(B, 2)) / 2) + 1;
+% 
+% % Place the original array A into the center of A_centered
+% A_centered(startX:startX+size(B,1)-1, startY:startY+size(B,2)-1, :) = B;
+% B = double(A_centered > 0);
+% shifted_mask = zeros(size(B));
+% % 
+% % Shift the mask 2 pixels to the left for all slices
+% shifted_mask(11:end, 1:end-15, :) = B(1:end-10, 16:end, :);
+% % shifted_mask(11:end, 16:end, :) = B(1:end-10, 1:end-15, :);
+% Ventilation.LungMask = B;
+% figure; Global.imslice(Ventilation.LungMask,'mask')
+% figure; Global.imslice(B,'mask')
+% figure; Global.imslice(Ventilation.Image,'Image')
+
+% Ventilation.LungMask(:,95:end,14) = testmask(:,95:end,14);
+% Ventilation.LungMask = double(Ventilation.LungMask > 0);
+
+if ischar(VoxelSize)
+    VoxelSize = eval(VoxelSize);
+end
+Ventilation.DDI3Dx = VoxelSize(1);
+Ventilation.DDI3Dy = VoxelSize(2);
+Ventilation.DDI3Dz = VoxelSize(3);
+
+Ventilation.ImageResolution = [VoxelSize(1), VoxelSize(2), VoxelSize(2)];
+MainInput.PixelSpacing = Ventilation.ImageResolution(1:2);
+MainInput.SliceThickness = Ventilation.ImageResolution(3);
+
+MainInput.SegmentVessels = 0;
+MainInput.vesselImageMode = 'xenon'; % xenon || proton
+switch MainInput.vesselImageMode
+    case 'xenon'
+        MainInput.frangi_thresh = 0.25;
+    case 'proton'  
+        MainInput.frangi_thresh = 0.2; % you can change this threshold to increase or decrease the mask
+end
+
+if MainInput.SegmentVessels == 1
+    [Ventilation] = Segmentation.Vasculature_filter(Proton, Ventilation, MainInput);
+else
+    Ventilation.VesselMask = zeros(size(Ventilation.Image));
+    Ventilation.vessel_stack = zeros(size(Ventilation.Image));
+end
+maskarray = double(Ventilation.LungMask + Ventilation.VesselMask);
+maskarray(maskarray > 1) = 0;
+Ventilation.LungMask = double(maskarray);
+
+% ----------------------------- VDP -----------------------------
+Ventilation.cincibiasfieldcorr = 0;
+Ventilation.N4Analysis = 0;
+Ventilation.IncompleteThresh = 60;
+Ventilation.RFCorrect = 0;
+Ventilation.CompleteThresh = round(Ventilation.IncompleteThresh/2); % change from 15% to half of the IncompleteThresh
+Ventilation.HyperventilatedThresh = 200;
+Ventilation.HeterogeneityIndex = 'yes';
+Ventilation.ThreshAnalysis = 'yes'; % 'yes'; || 'no'
+Ventilation.LB_Analysis = 'no'; % 'yes'; || 'no'
+Ventilation.LB_Normalization = 'median'; % 'mean'; || 'median' || 'percentile'            
+Ventilation.Kmeans = 'no';  % 'yes'; || 'no'
+Ventilation.AKmeans = 'no';  % 'yes'; || 'no'
+Ventilation.DDI2D = 'no';  % 'yes'; || 'no'
+Ventilation.DDI3D = 'no';  % 'yes'; || 'no'
+Ventilation.DDIDefectMap = 'Threshold';
+Ventilation.GLRLM_Analysis = 'yes'; % 'yes'; || 'no'
+
+switch Ventilation.LB_Normalization
+    case 'mean'
+        Ventilation.Thresholds = [0.609909, 0.827439, 0.998199, 1.143472, 1.27208];  % median
+        Ventilation.Hdist = [-2.100652, 1.154155, 0.238074]; 
+    case 'median'
+        Ventilation.Thresholds = [0.609909, 0.827439, 0.998199, 1.143472, 1.27208];  % median
+        Ventilation.Hdist = [-2.100652, 1.154155, 0.238074]; 
+    case 'percentile'
+        Ventilation.Thresholds = [0.448181, 0.621903, 0.752298, 0.860778, 0.955443]; % percentile
+        Ventilation.Hdist = [-2.515712, 0.87849, 0.188364]; 
+end
+
+Proton.AnatImage_Reg = Proton.ProtonRegistered;
+Proton.AnatImage_RegColored = Proton.ProtonRegisteredColored;
+
+% run without N4
+[Ventilation] = VentilationFunctions.Ventilation_Analysis(Ventilation, Proton, MainInput);
+close all;
+% uncorr
+Outputs.SNR_slice = Ventilation.SNR_slice;
+Outputs.Overall_SNR = Ventilation.SNR_lung;
+Outputs.SNRvv_slice = Ventilation.SNRvv_slice;
+Outputs.SNR_vv = Ventilation.SNR_vv;
+
+if strcmp(Ventilation.HeterogeneityIndex, 'yes')
+    Outputs.uncorr.sliceMeanCV = Ventilation.sliceMeanCV;
+    Outputs.uncorr.sliceVHI = Ventilation.sliceVHI;
+    Outputs.uncorr.overallMeanCV = Ventilation.overallMeanCV;
+    Outputs.uncorr.overallVHI = Ventilation.overallVHI;
+end
+    
+if strcmp(Ventilation.ThreshAnalysis, 'yes') == 1
+    Outputs.uncorr.TH60.Thresholds = Ventilation.Thresholds;
+    Outputs.uncorr.TH60.VDP = Ventilation.VDP;
+    BinPrecent = [Ventilation.legend1,Ventilation.legend2,Ventilation.legend3,Ventilation.legend4];
+    Outputs.uncorr.TH60.BinPrecent = strrep(BinPrecent, '%', 'p');
+    matches = regexp(Outputs.uncorr.TH60.BinPrecent, '\((.*?)p\)', 'tokens');
+    Outputs.uncorr.TH60.BinPrecentValues = str2double([matches{:}]);
+end
+if strcmp(Ventilation.DDI2D, 'yes') == 1
+    Outputs.uncorr.TH60.DDI2D.DDI2D_meanSlice = Ventilation.DDI2D_meanSlice;
+    Outputs.uncorr.TH60.DDI2D.DDI2D_stdSlice = Ventilation.DDI2D_stdSlice;
+    Outputs.uncorr.TH60.DDI2D.DDI2D_mean = Ventilation.DDI2D_mean;
+    Outputs.uncorr.TH60.DDI2D.DDI2D_std = Ventilation.DDI2D_std; 
+    Outputs.uncorr.TH60.DDI2D.DDI2D_max = Ventilation.DDI2D_max;
+end
+if strcmp(Ventilation.DDI3D, 'yes') == 1
+    Outputs.uncorr.TH60.DDI3D.DDI3D_meanSlice = Ventilation.DDI3D_meanSlice;
+    Outputs.uncorr.TH60.DDI3D.DDI3D_stdSlice = Ventilation.DDI3D_stdSlice;
+    Outputs.uncorr.TH60.DDI3D.DDI3D_mean = Ventilation.DDI3D_mean;
+    Outputs.uncorr.TH60.DDI3D.DDI3D_std = Ventilation.DDI3D_std; 
+    Outputs.uncorr.TH60.DDI3D.DDI3D_max = Ventilation.DDI3D_max;
+end
+% Outputs.uncorr.Kmeans.VDP = Ventilation.KmeansVDP;
+% Outputs.uncorr.Kmeans.segmentation = Ventilation.Kmeans_segmentation;
+% Outputs.uncorr.Kmeans.Defectmap = Ventilation.kmeansDefectmap; 
+if strcmp(Ventilation.GLRLM_Analysis, 'yes') == 1
+    Outputs.uncorr.GLRLM.SRE = Ventilation.SRE;
+    Outputs.uncorr.GLRLM.LRE = Ventilation.LRE;
+    Outputs.uncorr.GLRLM.GLN = Ventilation.GLN;
+    Outputs.uncorr.GLRLM.RLN = Ventilation.RLN;
+    Outputs.uncorr.GLRLM.RP = Ventilation.RP;
+    Outputs.uncorr.GLRLM.LGRE = Ventilation.LGRE;
+    Outputs.uncorr.GLRLM.HGRE = Ventilation.HGRE;
+    Outputs.uncorr.GLRLM.SRLGR = Ventilation.SRLGR;
+    Outputs.uncorr.GLRLM.SRHGE = Ventilation.SRHGE;
+    Outputs.uncorr.GLRLM.LRLGE = Ventilation.LRLGE;
+    Outputs.uncorr.GLRLM.LRHGE = Ventilation.LRHGE;
+end
+% save output as a .json file
+cd(analysisSubfolder)
+txt = jsonencode(Outputs.uncorr);
+fid=fopen('uncorr_Outputs.json','w');
+fprintf(fid,txt);
+fclose('all');
+
+Outputs.uncorr.Image = double(Ventilation.Image);
+Outputs.uncorr.LungMask = double(Ventilation.LungMask);
+Outputs.uncorr.AirwayMask = double(Ventilation.AirwayMask);
+Outputs.uncorr.VesselMask = double(Ventilation.VesselMask);
+Outputs.uncorr.Mask_Vent_Reg = double(Ventilation.LungMask);
+Outputs.uncorr.AnatImage = Proton.Image;
+if strcmp(Ventilation.HeterogeneityIndex, 'yes')
+    Outputs.uncorr.CV_maps = Ventilation.CV_maps;
+end
+if strcmp(Ventilation.ThreshAnalysis, 'yes') == 1
+    Outputs.uncorr.TH60.VDP_hist = Ventilation.VDP_hist;
+    Outputs.uncorr.TH60.DefectArray = Ventilation.defectArray;
+    Outputs.uncorr.TH60.VentDefectmap = Ventilation.VentDefectmap;
+end
+if strcmp(Ventilation.DDI2D, 'yes') == 1
+    Outputs.uncorr.TH60.DDI2D.DDI2D_DDImap = Ventilation.DDI2D_DDImap;
+    Outputs.uncorr.TH60.DDI2D.DDI2D_Stat = Ventilation.DDI2D_Stat;
+end
+if strcmp(Ventilation.DDI3D, 'yes') == 1
+    Outputs.uncorr.TH60.DDI3D.DDI3D_DDImap = Ventilation.DDI3D_DDImap;
+    Outputs.uncorr.TH60.DDI3D.DDI3D_Stat = Ventilation.DDI3D_Stat;
+end
+if strcmp(Ventilation.GLRLM_Analysis, 'yes') == 1
+    Outputs.uncorr.GLRLM.output = Ventilation.GLRLM;
+end
+
+% run with N4
+Ventilation.N4Analysis = 1;
+Ventilation.cincibiasfieldcorr = 0;
+% Ventilation.LB_Analysis = 'no'; % 'yes'; || 'no'
+% Ventilation.GLRLM_Analysis = 'no'; % 'yes'; || 'no'
+% 
+MainInput.MaskFullPath = mask_file_name;
+if Ventilation.N4Analysis == 1
+    [Ventilation] = VentilationFunctions.Ventilation_Analysis(Ventilation, Proton, MainInput);
+    close all;
+    
+    % N4 - 2024 settings (Abood)
+    Outputs.N4Bias.SNR_slice = Ventilation.SNR_slice;
+    Outputs.N4Bias.Overall_SNR = Ventilation.SNR_lung;
+    Outputs.N4Bias.SNRvv_slice = Ventilation.SNRvv_slice;
+    Outputs.N4Bias.SNR_vv = Ventilation.SNR_vv;
+
+    if strcmp(Ventilation.HeterogeneityIndex, 'yes')
+        Outputs.N4Bias.sliceMeanCV = Ventilation.sliceMeanCV;
+        Outputs.N4Bias.sliceVHI = Ventilation.sliceVHI;
+        Outputs.N4Bias.overallMeanCV = Ventilation.overallMeanCV;
+        Outputs.N4Bias.overallVHI = Ventilation.overallVHI;
+    end
+    if strcmp(Ventilation.ThreshAnalysis, 'yes') == 1
+        Outputs.N4Bias.TH60.Thresholds = Ventilation.Thresholds;
+        Outputs.N4Bias.TH60.VDP = Ventilation.VDP;
+        BinPrecent = [Ventilation.legend1,Ventilation.legend2,Ventilation.legend3,Ventilation.legend4];
+        Outputs.N4Bias.TH60.BinPrecent = strrep(BinPrecent, '%', 'p');
+        matches = regexp(Outputs.N4Bias.TH60.BinPrecent, '\((.*?)p\)', 'tokens');
+        Outputs.N4Bias.TH60.BinPrecentValues = str2double([matches{:}]);
+    end
+
+    if strcmp(Ventilation.DDI2D, 'yes') == 1
+        Outputs.N4Bias.TH60.DDI2D.DDI2D_meanSlice = Ventilation.DDI2D_meanSlice;
+        Outputs.N4Bias.TH60.DDI2D.DDI2D_stdSlice = Ventilation.DDI2D_stdSlice;
+        Outputs.N4Bias.TH60.DDI2D.DDI2D_mean = Ventilation.DDI2D_mean;
+        Outputs.N4Bias.TH60.DDI2D.DDI2D_std = Ventilation.DDI2D_std; 
+        Outputs.N4Bias.TH60.DDI2D.DDI2D_max = Ventilation.DDI2D_max;
+    end
+    if strcmp(Ventilation.DDI2D, 'yes') == 1
+        Outputs.N4Bias.TH60.DDI3D.DDI3D_meanSlice = Ventilation.DDI3D_meanSlice;
+        Outputs.N4Bias.TH60.DDI3D.DDI3D_stdSlice = Ventilation.DDI3D_stdSlice;
+        Outputs.N4Bias.TH60.DDI3D.DDI3D_mean = Ventilation.DDI3D_mean;
+        Outputs.N4Bias.TH60.DDI3D.DDI3D_std = Ventilation.DDI3D_std; 
+        Outputs.N4Bias.TH60.DDI3D.DDI3D_max = Ventilation.DDI3D_max;
+    end
+    
+%     Outputs.N4Bias.Kmeans.VDP = Ventilation.KmeansVDP;
+%     Outputs.N4Bias.Kmeans.segmentation = Ventilation.Kmeans_segmentation;
+%     Outputs.N4Bias.Kmeans.Defectmap = Ventilation.kmeansDefectmap;
+    if strcmp(Ventilation.GLRLM_Analysis, 'yes') == 1
+        Outputs.N4Bias.GLRLM.SRE = Ventilation.SRE;
+        Outputs.N4Bias.GLRLM.LRE = Ventilation.LRE;
+        Outputs.N4Bias.GLRLM.GLN = Ventilation.GLN;
+        Outputs.N4Bias.GLRLM.RLN = Ventilation.RLN;
+        Outputs.N4Bias.GLRLM.RP = Ventilation.RP;
+        Outputs.N4Bias.GLRLM.LGRE = Ventilation.LGRE;
+        Outputs.N4Bias.GLRLM.HGRE = Ventilation.HGRE;
+        Outputs.N4Bias.GLRLM.SRLGR = Ventilation.SRLGR;
+        Outputs.N4Bias.GLRLM.SRHGE = Ventilation.SRHGE;
+        Outputs.N4Bias.GLRLM.LRLGE = Ventilation.LRLGE;
+        Outputs.N4Bias.GLRLM.LRHGE = Ventilation.LRHGE;
+    end
+    % save output as a .json file
+    cd(analysisSubfolder)
+    txt = jsonencode(Outputs.N4Bias);
+    fid=fopen('N4Bias_Outputs.json','w');
+    fprintf(fid,txt);
+    fclose('all');
+    
+    Outputs.N4Bias.Image = double(Ventilation.Image);
+    Outputs.N4Bias.LungMask = double(Ventilation.LungMask);
+    Outputs.N4Bias.AirwayMask = double(Ventilation.AirwayMask);
+    Outputs.N4Bias.VesselMask = double(Ventilation.VesselMask);
+    Outputs.N4Bias.Mask_Vent_Reg = double(Ventilation.LungMask);
+    Outputs.N4Bias.AnatImage = Proton.Image;
+    if strcmp(Ventilation.HeterogeneityIndex, 'yes')
+        Outputs.N4Bias.CV_maps = Ventilation.CV_maps;
+    end
+    if strcmp(Ventilation.ThreshAnalysis, 'yes') == 1
+        Outputs.N4Bias.TH60.VDP_hist = Ventilation.VDP_hist;
+        Outputs.N4Bias.TH60.DefectArray = Ventilation.defectArray;
+        Outputs.N4Bias.TH60.VentDefectmap = Ventilation.VentDefectmap;
+    end
+    if strcmp(Ventilation.DDI2D, 'yes') == 1
+        Outputs.N4Bias.TH60.DDI2D.DDI2D_DDImap = Ventilation.DDI2D_DDImap;
+        Outputs.N4Bias.TH60.DDI2D.DDI2D_Stat = Ventilation.DDI2D_Stat;
+    end
+    if strcmp(Ventilation.DDI3D, 'yes') == 1
+        Outputs.N4Bias.TH60.DDI3D.DDI3D_DDImap = Ventilation.DDI3D_DDImap;
+        Outputs.N4Bias.TH60.DDI3D.DDI3D_Stat = Ventilation.DDI3D_Stat;
+    end
+    if strcmp(Ventilation.GLRLM_Analysis, 'yes') == 1
+        Outputs.N4Bias.GLRLM.output = Ventilation.GLRLM;
+    end
+
+end
+
+
+%------This part is experimental for now -CBM ---------------
+
+% run with cinci_bias_field_correction.py settings N4
+Ventilation.N4Analysis = 0;
+Ventilation.cincibiasfieldcorr = 1;
+% Ventilation.LB_Analysis = 'no'; % 'yes'; || 'no'
+% Ventilation.GLRLM_Analysis = 'no'; % 'yes'; || 'no'
+% 
+MainInput.MaskFullPath = mask_file_name;
+if Ventilation.cincibiasfieldcorr == 1
+    [Ventilation] = VentilationFunctions.Ventilation_Analysis(Ventilation, Proton, MainInput);
+    close all;
+end
+%------------------------------------------------------------
+
+
+
+
+% Check if the directory specified by analysisSubfolder exists, create it if necessary
+if ~exist(analysisSubfolder, 'dir')
+    mkdir(analysisSubfolder);
+end
+% save output as a .json file
+cd(analysisSubfolder)
+txt = jsonencode(Outputs);
+fid=fopen('Outputs.json','w');
+fprintf(fid,txt);
+fclose('all');
+% Save Outputs to the MAT-file
+save(fullfile(analysisSubfolder, 'workspace.mat'));
+save(fullfile(analysisSubfolder, 'Ventilation_Analysis_Outputs.mat'), 'Outputs');
+clearvars
+% Global.tts('Ventilation Analysis completed');
+end
+

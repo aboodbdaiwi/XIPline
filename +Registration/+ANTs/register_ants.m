@@ -13,12 +13,12 @@
     %   Registered images moving1_reg and moving2_reg
     clc;
     image_static = Ventilation.Image; 
-    image_moving1 = Proton.Image;  
+    image_moving1 = Proton.ProtonRegistered; % Proton.Image;  
     % image_moving2 = Ventilation.LungMask;
 
-    ANTSPath = mfilename('fullpath');
-    idcs = strfind(ANTSPath,filesep);%determine location of file separators
-    ANTSPath = [ANTSPath(1:idcs(end)-1),filesep];%remove file
+    % ANTSPath = mfilename('fullpath');
+    % idcs = strfind(ANTSPath,filesep);%determine location of file separators
+    % ANTSPath = [ANTSPath(1:idcs(end)-1),filesep];%remove file
     ANTSPath = 'D:\Github\XIPline\+Registration\ANTs';
     % Set paths
 
@@ -30,13 +30,13 @@
     % Define file paths
     pathInputStatic = fullfile(tmp_path, 'image_static.nii');
     pathInputMoving1 = fullfile(tmp_path, 'image_moving1.nii');
-    pathInputMoving2 = fullfile(tmp_path, 'image_moving2.nii');
+    % pathInputMoving2 = fullfile(tmp_path, 'image_moving2.nii');
     pathOutputPrefix = fullfile(tmp_path, 'thisTransform_');
     pathOutputMoving1 = fullfile(tmp_path, 'moving_reg.nii.gz');
-    pathOutputMoving2 = fullfile(tmp_path, 'transform_reg.nii.gz');
+    % pathOutputMoving2 = fullfile(tmp_path, 'transform_reg.nii.gz');
     pathReg = fullfile(ANTSPath, 'antsRegistration.exe');
-    pathApply = fullfile(ANTSPath, 'antsApplyTransforms.exe');
-    tdata = fullfile(tmp_path, 'thisTransform_0GenericAffine.mat');
+    % pathApply = fullfile(ANTSPath, 'antsApplyTransforms.exe');
+    % tdata = fullfile(tmp_path, 'thisTransform_0GenericAffine.mat');
 
     % Save the inputs as NIfTI files
     niftiwrite(abs(image_static), pathInputStatic);

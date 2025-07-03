@@ -26,17 +26,17 @@ switch MainInput.AnalysisType
     case 'Ventilation'
         ReportTitle='Ventilation_Analysis';
         ppt_file_name = 'Ventilation_Analysis.pptx';
-        analysis_folder = '\Ventilation Analysis';
+        analysis_folder = '\Ventilation_Analysis';
     case 'Diffusion'
         ReportTitle='Diffusion_Analysis';
         ppt_file_name = 'Diffusion_Analysis.pptx';
-        analysis_folder = '\Diffusion Analysis';
+        analysis_folder = '\Diffusion_Analysis';
     case 'GasExchange'
         ReportTitle='GasExchange_Analysis';
         ppt_file_name = 'GasExchange_Analysis.pptx';
-        analysis_folder = '\Gas Exchange Analysis';
+        analysis_folder = '\GasExchange_Analysis';
 end 
-outputpath = [MainInput.XeDataLocation,analysis_folder];
+outputpath = [MainInput.OutputPath,analysis_folder];
 cd(outputpath)
 
 if exist(ppt_file_name, 'file') == 2            
@@ -92,6 +92,9 @@ Global.exportToPPTX('close');
 ppt = actxserver('PowerPoint.Application');
 presentation = ppt.Presentations.Open([outputpath,'\',ppt_file_name]);
 outputPath = [outputpath,'\',ReportTitle,'_Patient_Report.pdf'];
+if exist(outputPath, 'file')
+    delete(outputPath);  % remove existing PDF to avoid overwrite conflict
+end 
 presentation.SaveAs(outputPath, 32);
 presentation.Close();
 ppt.Quit();

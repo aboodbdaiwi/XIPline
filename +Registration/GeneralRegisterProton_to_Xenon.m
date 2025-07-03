@@ -75,12 +75,12 @@ else
     ProtonVoxelInfo = MainInput.ProtonVoxelInfo;
     XeVoxelInfo = MainInput.XeVoxelInfo;
 end
-RegistrationType = MainInput.RegistrationType;
+TransformType = MainInput.TransformType;
 if strcmp(MainInput.AnalysisType,'GasExchange')
     H_RecMatrix = Proton.H_RecMatrix;
-    DataLocation = fullfile(MainInput.XeDataLocation,'Gas Exchange Analysis');
+    DataLocation = fullfile(MainInput.XeDataLocation,'GasExchange_Analysis');
 else
-    DataLocation = fullfile(MainInput.XeDataLocation,'Ventilation Analysis');
+    DataLocation = fullfile(MainInput.XeDataLocation,'Ventilation_Analysis');
 end
 %     figure; Global.imslice(moving1);
 
@@ -213,7 +213,7 @@ if MainInput.SkipRegistration == 0
     % imshowpair(movingRegisteredVolume(:,:,centerFixed(3)), fixedVolume(:,:,centerFixed(3)));
     % title('Axial Slice of Registered Volume')
     % helperVolumeRegistration(fixedVolume,movingRegisteredVolume);
-    geomtform = imregtform(movingVolume,Rmoving, fixedVolume,Rfixed, RegistrationType, optimizer, metric);
+    geomtform = imregtform(movingVolume,Rmoving, fixedVolume,Rfixed, TransformType, optimizer, metric);
     tform = geomtform;
     % geomtform.T
     % centerXWorld = mean(Rmoving.XWorldLimits);
@@ -297,7 +297,6 @@ if strcmp(MainInput.AnalysisType,'GasExchange')
     end
     savefig('Registerationfig.fig')
     close(gcf)
-    
     
     Proton.LungMask = LungMask;
     Proton.tform = tform;

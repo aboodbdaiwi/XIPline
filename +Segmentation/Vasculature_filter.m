@@ -91,7 +91,13 @@ Ventilation.VesselMask = VesselMask;
 Ventilation.vessel_stack = vessel_stack;
 
 disp('Save NIFTI')
-niftiwrite((fliplr(rot90(VesselMask,-1))),[MainInput.XeDataLocation,'\vessel_mask.nii'],'Compressed',true);
+outputFile = fullfile(MainInput.XeDataLocation, 'vessel_mask.nii');
+
+if ~isfile(outputFile)
+    niftiwrite(fliplr(rot90(VesselMask, -1)), outputFile, 'Compressed', true);
+end
+
+% niftiwrite((fliplr(rot90(VesselMask,-1))),[MainInput.XeDataLocation,'\vessel_mask.nii'],'Compressed',true);
 % niftiwrite((fliplr(rot90(vessel_stack,-1))),[MainInput.XeDataLocation,'\vessel_stack.nii'],'Compressed',true);
 % 
 % save_data=[MainInput.XeDataLocation,'\','VesselMask','.mat'];

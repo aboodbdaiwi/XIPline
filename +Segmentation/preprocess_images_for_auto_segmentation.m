@@ -41,7 +41,7 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
             end
 
             % run N4
-            % [Xe_Img, ~] = Segmentation.N4_bias_correction(Xe_Img, MainInput.XeDataLocation);
+            [Xe_Img, ~] = Segmentation.N4_bias_correction(Xe_Img, MainInput.XeDataLocation);
 
             % normalize
             Xe_Img = Xe_Img./max(Xe_Img(:));
@@ -57,9 +57,9 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
                         H_Img = Proton.ProtonRegistered;
                     end
                 else
-                    if size(Proton.Image,1) ~= Im_size || size(Proton.Image,2) ~= Im_size
-                        H_Img = zeros(Im_size,Im_size,size(Proton.Image,3));
-                        for i = 1:size(Proton.Image,3)
+                    if size(Proton.ProtonRegistered,1) ~= Im_size || size(Proton.ProtonRegistered,2) ~= Im_size
+                        H_Img = zeros(Im_size,Im_size,size(Proton.ProtonRegistered,3));
+                        for i = 1:size(Proton.ProtonRegistered,3)
                             H_Img(:,:,i) = imresize(Proton.ProtonRegistered(:,:,i),[Im_size,Im_size]);
                         end
                     else
@@ -129,7 +129,7 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
                 Xe_Img = GasExchange.VentImage;
             end
             % run N4
-            % [Xe_Img, ~] = Segmentation.N4_bias_correction(Xe_Img, MainInput.XeDataLocation);            
+            %[Xe_Img, ~] = Segmentation.N4_bias_correction(Xe_Img, MainInput.XeDataLocation);            
             Xe_Img = double(Xe_Img./max(Xe_Img(:)));
             
             % resize proton images

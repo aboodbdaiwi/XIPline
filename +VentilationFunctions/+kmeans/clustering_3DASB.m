@@ -138,7 +138,7 @@ else
      lastClusterMax = secondLastClusterMax;
 end
 
-threshold = secondLastClusterMin + ((lastClusterMax-secondLastClusterMin)/7); % 7 for 3He and 20 for 129Xe, however 7 works better for 129Xe
+threshold = secondLastClusterMin + ((lastClusterMax-secondLastClusterMin)/7); % 7 for 3He and 20 for 129Xe by Rechal Edday, however 7 works better for 129Xe
 
 % secondLastClusterMin
 % secondLastClusterMax

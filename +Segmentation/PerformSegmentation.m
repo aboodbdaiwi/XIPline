@@ -60,7 +60,11 @@ switch MainInput.SegmentationMethod
         sourcemodel5Path = [FunctionDirectory,'\+Segmentation\3DGasExchange_Xe_100e_20250324.hdf5'];
         sourcemodel6Path = [FunctionDirectory,'\+Segmentation\3DGasExchange_Xe_HLR_100e_20250324.hdf5'];
         sourcemodel7Path = [FunctionDirectory,'\+Segmentation\2DDiff_Xe_axial_2000e_20240118.hdf5'];
-
+        try
+            copyfile(sourcemodel1Path, destinationFolderPath); % force to copy
+        catch
+            disp('Python script is not there')
+        end
 
         cd(modelsFolderPath);
         if ~exist(fullfile(modelsFolderPath, '2DVent_Xe_axial_1000e_20250509.hdf5'), 'file') ||...
@@ -244,7 +248,7 @@ switch MainInput.SegmentationMethod
                 load([destinationFolderPath,'\AutoMask.mat']);
                 Mask = AutoMask > 0;
                 disp('auto mask process Completed.')
-
+                %imslice(AutoMask)
                 switch MainInput.AnalysisType
                     case 'Ventilation'
                         if size(Mask,1) ~= size(Ventilation.Image,1) || size(Mask,2) ~= size(Ventilation.Image,2)
@@ -301,7 +305,7 @@ switch MainInput.SegmentationMethod
                         case 'Ventilation'
                            Ventilation.Mask = Mask;
                            Ventilation.LungMask = lungmask;
-                           Ventilation.AirwayMask = airwaymask;                       
+                           Ventilation.AirwayMask = airwaymask;                             
                         case 'Diffusion'
                            Diffusion.Mask = Mask;
                            Diffusion.LungMask = lungmask;
@@ -329,6 +333,11 @@ switch MainInput.SegmentationMethod
         end
         cd(MainInput.XeDataLocation)
 end 
+try
+   Ventilation.UncorrectedImage = Ventilation.Image; 
+catch
+
+end
   
 end
 

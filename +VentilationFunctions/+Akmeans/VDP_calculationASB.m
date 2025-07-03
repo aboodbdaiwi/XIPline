@@ -102,7 +102,7 @@ re_seg(msk2d == 0) = NaN;
 % cmap = [1 0 0; 1 0.7143 0; 0.4 0.7 0.4; 0 1 0; 0 0 1];
 cmap = [1 0 0; 0 1 0; 0 1 0; 0 1 0; 0 1 0];
 % % %plot and see the colormap
-outputpath = [Ventilation.parentPath, '\VDP Analysis'];
+outputpath = [Ventilation.parentPath, '\VDP_Analysis'];
 mkdir(outputpath);
 cd(outputpath);
 
@@ -183,8 +183,8 @@ VDPmap= defect_mask;
 % imslice(VDPmap)
 cus_colormap = zeros(100,3);
 % colorgradient = 0:0.01:0.99;
-cus_colormap(:,1) = 0;
-cus_colormap(:,2) = 1;
+cus_colormap(:,1) = 1;
+cus_colormap(:,2) = 0;
 cus_colormap(:,3) = 0;
 
 for slice = 1:size(VDPmap,3)
@@ -318,6 +318,141 @@ fprintf('PowerPoint file has been saved\n');
             fprintf('PowerPoint file has been saved\n');               
 close all;
 
+
+%% Output mask images with ventilation overlays:
+% Create a folder for the ventilation images:
+
+cd(outputpath);
+cus_colormap = zeros(100,3);
+% colorgradient = 0:0.01:0.99;
+cus_colormap(:,1) = 1; % Red channel
+cus_colormap(:,2) = 0; % Green channel
+cus_colormap(:,3) = 1; % Blue channel
+
+% Vent_img = Ventilation.Image;
+% Vent_img = Vent_img./max(Vent_img(:));
+% Vent_image_colored = ones(size(Ventilation.Image,1),size(Ventilation.Image,2),size(Ventilation.Image,3), 3);
+% ch1 = 1;
+% ch2 = 0;
+% ch3 = 1;
+% Vent_image_colored(:,:,:,1) = Vent_img .* ch1;
+% Vent_image_colored(:,:,:,2) = Vent_img .* ch2;
+% Vent_image_colored(:,:,:,3) = Vent_img .* ch3;
+% orthosliceViewer((Vent_image_colored));
+
+tiff = figure('MenuBar','none','ToolBar','none','DockControls','off','Resize','off','WindowState','minimized');%figure for tiffs
+ax1 = axes('Parent',tiff);ax2 = axes('Parent',tiff);%make axis for both images
+set(ax1,'Visible','off');set(ax2,'Visible','off');%turn off axis
+set(ax1,'units','inches');set(ax2,'units','inches');%make axis units inches
+set(ax1,'position',[0 0 2 2]);set(ax2,'position',[0 0 2 2]);%make axis same as image
+set(gcf,'units','inches'); % set the figure units to pixels
+set(gcf,'position',[1 1 2 2])% set the position of the figure to axes
+disp('Saving Vent Tiff...')
+
+% Normalize the intensity of the original image to fall between [0,1].
+MR = Ventilation.Image;
+MR2 = MR / max(MR,[], 'all');
+scaledImage = zeros(size(MR2));
+scaledImage2 = zeros(size(MR2));
+for m = 1:size(MR2,3)
+    scaledImage(:,:,m) = MR2(:,:,m);
+    scaledImage2(:,:,m) = scaledImage(:,:,m);
+%     outputFileName = sprintf('Img_%d.png',m);
+%     fullFileName = fullfile(outputPath, outputFileName);
+%     imwrite(scaledImage2(:,:,m),fullFileName,'png');
+end
+
+% %Mask images
+% MR4 = uint16(Ventilation.Image);
+% 
+% for m2 = 1:size(MR4,3)
+%     scaledImage4(:,:,m2) = imadjust(MR4(:,:,m2));
+%     scaledImage5(:,:,m2) = adapthisteq(scaledImage4(:,:,m2));
+% end
+% scaledImage5 = double(scaledImage5);
+% scaledImage5 = scaledImage5 - min(scaledImage5(:));
+% scaledImage5 = scaledImage5 ./ max(scaledImage5(:));
+
+for slice=1:size(maskarray,3) %repeat for rest of slices
+    [~,~] = Global.imoverlay(squeeze(abs(scaledImage2(:,:,slice))),squeeze(Ventilation.LungMask(:,:,slice)),[1,100],[0,max(scaledImage2(:))],cus_colormap,0.4,gca);
+    colormap(gca,cus_colormap)   
+%     X = print('-RGBImage',['-r',num2str(size(VentBinMap2,2)/2)]);%2 inches
+%      hImage = get( gca, 'Children' ); 
+%      X = hImage.CData;   
+     Xdata = getframe(gcf);
+     X = Xdata.cdata;     
+    if (slice == 1)
+        imwrite(X,[outputpath,'\Mask_Vent_Reg.tif'],'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
+    else
+        imwrite(X,[outputpath,'\Mask_Vent_Reg.tif'],'WriteMode','append','Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%append tiff
+    end
+end
+disp('Mask_Vent_Reg Tiff Completed.')
+close all;
+% read tiff
+cd(outputpath)
+tiff_info = imfinfo('Mask_Vent_Reg.tif'); % return tiff structure, one element per image
+% tiff_stack = imread('BinnedVent.tif', 1) ; % read in first image
+Mask_Vent_Reg = uint8(zeros(tiff_info(1).Height ,tiff_info(1).Width ,3,length(tiff_info)));
+%concatenate each successive tiff to tiff_stack
+for ii = 1 : size(tiff_info, 1)
+    temp_tiff = imread('Mask_Vent_Reg.tif', ii);
+    Mask_Vent_Reg(:,:,:,ii) = temp_tiff;
+end
+Mask_Vent_Reg = permute(Mask_Vent_Reg,[1 2 4 3]);
+Ventilation.Mask_Vent_Reg = Mask_Vent_Reg;
+%% Histogram
+
+% Extract voxel values within lung
+XeVals = Ventilation.Image(Ventilation.LungMask > 0);
+ClusterVals = Ventilation.Aksegmentation(Ventilation.LungMask > 0);
+
+% Define bin edges and cluster colors
+edges = linspace(0, prctile(XeVals,99), 200);  % or adjust based on your data range
+binCenters = (edges(1:end-1) + edges(2:end)) / 2;
+
+% Define colors (adjust to match your aesthetic)
+clusterColors = [
+    0.9 0.2 0.2;   % Cluster 1 (red)
+    0.95 0.6 0.1;  % Cluster 2 (orange)
+    0.4 0.8 0.4;   % Cluster 3 (green)
+    0.2 0.2 0.8    % Cluster 5 (blue)
+];
+
+% Create figure
+figure; hold on;
+
+% Plot histogram for each cluster
+for c = 1:4
+    vals_c = XeVals(ClusterVals == c);
+    hc = histogram(vals_c, edges, ...
+        'FaceColor', clusterColors(c,:), ...
+        'EdgeColor', 'none', ...
+        'FaceAlpha', 1.0);
+end
+
+% Plot overall density curve (optional)
+[f, xi] = ksdensity(XeVals, 'Support', 'positive');
+plot(xi, f * numel(XeVals) * (edges(2)-edges(1)), 'k--', 'LineWidth', 1.5);
+
+% Labeling
+xlabel('Ventilation Value', 'FontSize', 14);
+ylabel('Voxel Count', 'FontSize', 14);
+title('Adaptive K-means Clustered Histogram', 'FontSize', 14);
+xlim([0 prctile(XeVals,99)]);
+set(gca,'FontSize',14)
+% Optional: Add vertical cluster boundaries
+% (e.g., using means or centroids if available)
+box on;
+set(gcf,'PaperPosition',[0 0 6 3.5]);
+cd(outputpath);
+% print([foldername + 'Ventilation_Histogram'],'-dpng','-r300');
+saveas(gca,'Adaptive_Kmeans_Histogram.png');
+close all;
+% write report
+VentilationFunctions.AKmeansVDP_Report(Ventilation,Proton, MainInput);
+
+%%
 save_data=[parentPath,'\','Ventilation_Analysis','.mat'];
 save(save_data); 
 

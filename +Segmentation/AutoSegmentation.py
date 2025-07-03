@@ -32,6 +32,7 @@ def Segment3D(SegmentType):
     # % load model
     if SegmentType == 'vent_2D_1ch_cor':
         model = load_model(modelFolder+'2DVent_Xe_coronal_1000e_20250509.hdf5',compile=False) 
+        #model = load_model(modelFolder+'2DVent_XeCTC_20250603_1000epochs.hdf5',compile=False) 
     elif SegmentType == 'vent_2D_2ch_cor':
         model = load_model(modelFolder+'2DVent_Xe_H_coronal_1000e_20230528.hdf5',compile=False) 
     elif SegmentType == 'vent_2D_1ch_axi':
@@ -39,9 +40,11 @@ def Segment3D(SegmentType):
     elif SegmentType == 'diff_2D_1ch_axi':
         model = load_model(modelFolder+'2DDiff_Xe_axial_2000e_20240118.hdf5',compile=False)         
     elif SegmentType == 'gx_3D_1ch_iso':
-        model = load_model(modelFolder+'3DGasExchange_Xe_100e_20250324.hdf5',compile=False) 
+        #model = load_model(modelFolder+'3DGasExchange_Xe_100e_20250324.hdf5',compile=False) 
+        model = load_model(modelFolder+'3DGasExchange_Xe_200e_20230623.hdf5',compile=False) 
     elif SegmentType == 'gx_3D_2ch_iso':
-        model = load_model(modelFolder+'3DGasExchange_Xe_HLR_100e_20250324.hdf5',compile=False) 
+        #model = load_model(modelFolder+'3DGasExchange_Xe_HLR_100e_20250324.hdf5',compile=False) 
+        model = load_model(modelFolder+'3DGasExchange_Xe_HLR_1000e_20230623.hdf5',compile=False) 
             
     #% predict mask for each slice
     if SegmentType == 'vent_2D_1ch_cor' or SegmentType == 'vent_2D_2ch_cor' or SegmentType == 'vent_2D_1ch_axi' or SegmentType == 'diff_2D_1ch_axi':
@@ -59,10 +62,10 @@ def Segment3D(SegmentType):
             X_test_tmp[:,:,:,:,0] = X_test
             X_test = X_test_tmp
         gen_masks = model.predict(X_test)
-        gen_masks = gen_masks > 0.2
+        gen_masks = gen_masks > 0.6
         gen_masks = gen_masks[0]
     gen_masks = gen_masks.astype(float)
-    lungmask = gen_masks #[0]
+    lungmask = gen_masks #[0] 
 
     return lungmask
 

@@ -1,4 +1,4 @@
-function [imag_vol, path, FileNames] = DICOM_Load(DataPath)
+function [imag_vol, path, FileNames, info] = DICOM_Load(DataPath)
 %% A function to read in lung masks segmented in Amira and exported as DICOM Files
 % 
 % Written by Z.I. Cleveland 03/25/2015
@@ -54,8 +54,10 @@ if num_files > 1
         end
         
         % Read Instance Number (0020,0013)
-        if isfield(info, 'InstanceNumber')
+        if isfield(info, 'InstanceNumber') && ~isempty(info.InstanceNumber)
             instanceNumbers(indx) = info.InstanceNumber;
+        else
+            instanceNumbers(indx) = indx;
         end
         
         % Read Acquisition Time (0008,0032)
@@ -156,7 +158,8 @@ if num_files > 1
     end
 
 elseif num_files == 1
-    imag_vol = squeeze(dicomread(FileNames{1}));     
+    imag_vol = squeeze(dicomread(FileNames{1}));  
+    info = dicominfo(FileNames{1});
 end
 
 % Save data if required

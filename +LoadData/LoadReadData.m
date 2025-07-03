@@ -1,5 +1,5 @@
 
-function [Ventilation, Diffusion, GasExchange, Proton] = LoadReadData(MainInput)
+function [Ventilation, Diffusion, GasExchange, Proton, MainInput] = LoadReadData(MainInput)
 %   Inputs:
 %      
 %   Outputs:
@@ -46,29 +46,62 @@ Proton.H_RecMatrix = [];
 Proton.ProtonMax = [];
 
 %% Load/Read Xenon data 
+
+
+try
+    MainInput.AnalysisCode_hash = Global.get_git_hashobject;%use git to find hash of commit used
+    MainInput.AnalysisCode_hash = MainInput.AnalysisCode_hash(end-8:40);%remove enter at end
+catch
+    MainInput.AnalysisCode_hash = 'TEST';%If not connected to git, can't determine hash so state test
+end
+% Assign default OutputPath if not provided
+if ~isfield(MainInput, 'OutputPath') || isempty(MainInput.OutputPath)
+    MainInput.OutputPath = MainInput.XeDataLocation;
+end
+
 cd(MainInput.XeDataLocation)
 if strcmp(MainInput.AnalysisType,'Ventilation')                 
-    mkdir([MainInput.XeDataLocation '\Ventilation Analysis']);
-    outputpath = [MainInput.XeDataLocation '\Ventilation Analysis'];
+    mkdir([MainInput.OutputPath '\Ventilation_Analysis']);
+    outputpath = [MainInput.OutputPath '\Ventilation_Analysis'];
     Ventilation.outputpath = outputpath;    
 elseif strcmp(MainInput.AnalysisType,'Diffusion')
-    mkdir([MainInput.XeDataLocation '\Diffusion Analysis']);
-    outputpath = [MainInput.XeDataLocation '\Diffusion Analysis'];
+    mkdir([MainInput.OutputPath '\Diffusion_Analysis']);
+    outputpath = [MainInput.OutputPath '\Diffusion_Analysis'];
     Diffusion.outputpath = outputpath;
 elseif strcmp(MainInput.AnalysisType,'GasExchange')
-    mkdir([MainInput.XeDataLocation '\Gas Exchange Analysis']);
-
-    mkdir([MainInput.XeDataLocation '\Gas Exchange Analysis']);
-    outputpath = [MainInput.XeDataLocation '\Gas Exchange Analysis'];
+    mkdir([MainInput.OutputPath '\GasExchange_Analysis']);
+    mkdir([MainInput.XeDataLocation '\GasExchange_Analysis']);
+    outputpath = [MainInput.OutputPath '\GasExchange_Analysis'];
     GasExchange.outputpath = outputpath;
 end
 
+if strcmp(MainInput.XeDataext,'.dcm')  
+    MainInput.Recon = 'Online';
+else
+    MainInput.Recon = 'Offline';
+end
+
 if strcmp(MainInput.XeDataext,'.dcm')          
-    [Image, file_folder, FileNames] = LoadData.DICOM_Load(MainInput.XeDataLocation);    
+    [Image, file_folder, FileNames, DicomInfo] = LoadData.DICOM_Load(MainInput.XeDataLocation);       
+    try
+        if isfield(DicomInfo, 'AcquisitionDate')
+            MainInput.ScanDate = DicomInfo.AcquisitionDate;
+        elseif isfield(DicomInfo, 'SeriesDate')
+            MainInput.ScanDate = DicomInfo.SeriesDate;
+        elseif isfield(DicomInfo, 'StudyDate')
+            MainInput.ScanDate = DicomInfo.StudyDate;
+        else
+            MainInput.ScanDate = '00000000';
+        end
+    catch
+        MainInput.ScanDate = '00000000';
+    end
+          
     if strcmp(MainInput.AnalysisType,'Ventilation')                  
         Ventilation.Image = Image;
         Ventilation.filename = FileNames;
         Ventilation.folder = file_folder;
+        Ventilation.DicomInfo = DicomInfo;
     elseif strcmp(MainInput.AnalysisType,'Diffusion') 
         if length(size(Image)) == 3
             try               
@@ -96,10 +129,11 @@ if strcmp(MainInput.XeDataext,'.dcm')
         Diffusion.Image = Image;
         Diffusion.filename = FileNames;
         Diffusion.folder = file_folder;
-
+        Diffusion.DicomInfo = DicomInfo;
     elseif strcmp(MainInput.AnalysisType,'GasExchange') == 1 
         % not supported yet
     end
+    
 elseif strcmp(MainInput.XeDataext,'.mat') 
 %         DataFiles = dir([MainInput.XeDataLocation,'\*.mat']);
         file_name = MainInput.XeFileName;
@@ -185,12 +219,15 @@ elseif strcmp(MainInput.XeDataext,'.data')  && strcmp(MainInput.Scanner, 'Philip
         Ventilation.filename = file_name;
         Ventilation.folder = file_folder;     
 
-    elseif strcmp(MainInput.AnalysisType,'Ventilation') == 1 && strcmp(MainInput.SequenceType, '2D GRE') == 1 && strcmp(MainInput.ScannerSoftware, '5.9.0') == 1                
+    elseif strcmp(MainInput.AnalysisType,'Ventilation') == 1 && strcmp(MainInput.SequenceType, '2D GRE') == 1 && strcmp(MainInput.ScannerSoftware, '5.9.0')                
         [Image, file_folder, file_name] = LoadData.LoadData_Gas_VentDiff_Philips_GRE_R590(MainInput);
         Ventilation.Image = Image;
         Ventilation.filename = file_name;
         Ventilation.folder = file_folder;          
-        
+
+    elseif strcmp(MainInput.AnalysisType,'Ventilation') && strcmp(MainInput.SequenceType, '2D Spiral') == 1 && strcmp(MainInput.ScannerSoftware, '5.9.0')                 
+        [Ventilation, MainInput] = LoadData.philips_XeVent_2DSpiral_recon(MainInput, Ventilation); 
+
     elseif strcmp(MainInput.AnalysisType,'Diffusion') == 1  && strcmp(MainInput.SequenceType, '2D GRE') == 1 ...
             && (strcmp(MainInput.ScannerSoftware, '5.3.1') == 1 || strcmp(MainInput.ScannerSoftware, '5.6.1') == 1)
         [Image, file_folder, file_name] = LoadData.LoadData_Gas_VentDiff_Philips_GRE(MainInput);
@@ -287,23 +324,52 @@ end
 if strcmp(MainInput.denoiseXe,'yes')
     if strcmp(MainInput.AnalysisType,'Ventilation')
         Ventilation.Image = (Ventilation.Image - min(Ventilation.Image(:)))./(max(Ventilation.Image(:)) - min(Ventilation.Image(:)));
-        sd = (squeeze(Ventilation.Image(end,:,:)));
-        sd = sd(sd ~= 0);
-        sd = std(sd);
-        for i = 1:size(Ventilation.Image,3)
-                Ventilation.Image(:,:,i) = Global.bm3d.BM3D(squeeze(Ventilation.Image(:,:,i)), sd); %MainInput.denoiseSD
-        end
+        % sd = (squeeze(Ventilation.Image(end,:,:)));
+        % sd = sd(sd ~= 0);
+        % sd = std(sd);
+        % for i = 1:size(Ventilation.Image,3)
+        %         Ventilation.Image(:,:,i) = Global.bm3d.BM3D(squeeze(Ventilation.Image(:,:,i)), sd); %MainInput.denoiseSD
+        % end
         % imslice(Ventilation.Image)
+        Ventilation.tMPPCA.window = str2num(MainInput.denoisewindow);
+        mask = true(size(Ventilation.Image,1), size(Ventilation.Image,2));
+        [denoised, Sigma2, P, SNR_gain] = Global.tMPPCA.denoise_recursive_tensor( ...
+            Ventilation.Image, ...
+            Ventilation.tMPPCA.window, ...
+            'mask', mask, ...
+            'indices', {[1 2], 3}, ... 
+            'opt_shrink', true ...
+        );         
+        Ventilation.tMPPCA.denoised= denoised;
+        Ventilation.tMPPCA.SNR_gain= SNR_gain;
+        Ventilation.tMPPCA.P= P;
+        Ventilation.tMPPCA.Sigma2= Sigma2;
+        Ventilation.Image = denoised;
     elseif strcmp(MainInput.AnalysisType,'Diffusion')
         Image = Diffusion.Image;
-        Image = (Image - min(Image(:)))./(max(Image(:)) - min(Image(:)));
-        
-        for i = 1:size(Image,3)
-            for j = 1:size(Image,4)
-                Image(:,:,i,j) = Global.bm3d.BM3D(squeeze(Image(:,:,i,j)), 0.01); % 0.01
-            end
-        end
-        Diffusion.Image = Image;
+        Diffusion.Image = (Image - min(Image(:)))./(max(Image(:)) - min(Image(:)));
+        % 
+        % for i = 1:size(Image,3)
+        %     for j = 1:size(Image,4)
+        %         Image(:,:,i,j) = Global.bm3d.BM3D(squeeze(Image(:,:,i,j)), 0.01); % 0.01
+        %     end
+        % end
+        % Diffusion.Image = Image;
+        Diffusion.tMPPCA.window = str2num(MainInput.denoisewindow);
+        mask = true(size(Diffusion.Image,1),size(Diffusion.Image,2),size(Diffusion.Image,3));  % Or your lung mask
+        [denoised, Sigma2, P, SNR_gain] = Global.tMPPCA.denoise_recursive_tensor( ...
+            Diffusion.Image, ...
+            Diffusion.tMPPCA.window, ...
+            'mask', mask, ...
+            'indices', {[1 2 3], 4}, ...
+            'opt_shrink', true ...
+        );      
+        Diffusion.tMPPCA.denoised= denoised;
+        Diffusion.tMPPCA.SNR_gain= SNR_gain;
+        Diffusion.tMPPCA.P= P;
+        Diffusion.tMPPCA.Sigma2= Sigma2;
+        Diffusion.Image = denoised;
+
     elseif strcmp(MainInput.AnalysisType,'GasExchange')
     % we can't apply denoising on complex data         
     %             GasExchange.VentImage
@@ -326,17 +392,17 @@ if (isnumeric(MainInput.NoProtonImage) && MainInput.NoProtonImage == 0) || ...
     % try 
         cd(MainInput.HDataLocation)
         if strcmp(MainInput.AnalysisType,'Ventilation')                 
-            mkdir([MainInput.HDataLocation '\Ventilation Analysis']);  
+            mkdir([MainInput.HDataLocation '\Ventilation_Analysis']);  
         elseif strcmp(MainInput.AnalysisType,'Diffusion')
         elseif strcmp(MainInput.AnalysisType,'GasExchange')          
-            mkdir([MainInput.HDataLocation '\Gas Exchange Analysis']);
+            mkdir([MainInput.HDataLocation '\GasExchange_Analysis']);
         end
         if strcmp(MainInput.HDataext,'.dcm')               
-            [HImage, file_folder, file_name] = LoadData.DICOM_Load(MainInput.HDataLocation);
+            [HImage, file_folder, file_name, DicomInfo] = LoadData.DICOM_Load(MainInput.HDataLocation);
             Proton.Image = double(HImage);
             Proton.filename = file_name;
             Proton.folder = file_folder;
-            
+            Proton.DicomInfo = DicomInfo;
         elseif strcmp(MainInput.HDataext,'.mat') == 1 
             DataFiles = dir([MainInput.HDataLocation,'\*.mat']);
             file_name = DataFiles.name;
@@ -358,7 +424,12 @@ if (isnumeric(MainInput.NoProtonImage) && MainInput.NoProtonImage == 0) || ...
             end        
             file_name = DataFiles.name;
             file_folder = DataFiles.folder;
-            A1 = LoadData.load_nii([file_folder ,'\',file_name]); % Original
+
+            try
+                A1 = LoadData.load_nii([file_folder ,'\',file_name]); % Original
+            catch
+                A1 = LoadData.load_nii([file_folder ,'\',file_name]); % Original
+            end
             A=A1.img;
             A = double(squeeze(A));
             I90=imrotate(A,90);
@@ -380,6 +451,9 @@ if (isnumeric(MainInput.NoProtonImage) && MainInput.NoProtonImage == 0) || ...
                 Proton.Image = Image;
                 Proton.filename = file_name;
                 Proton.folder = file_folder; 
+            elseif strcmp(MainInput.AnalysisType,'Ventilation') && strcmp(MainInput.SequenceType, '2D Spiral') && strcmp(MainInput.ScannerSoftware, '5.9.0')               
+                [Proton, MainInput] = LoadData.philips_Hanat_2DSpiral_recon(MainInput, Proton);
+
             elseif strcmp(MainInput.AnalysisType,'GasExchange') && strcmp(MainInput.SequenceType, '3D Radial')        
                 PixelShift = GasExchange.PixelShift; 
                 if sum(PixelShift) > 1

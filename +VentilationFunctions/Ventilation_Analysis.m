@@ -1,5 +1,5 @@
 
-function [Ventilation] = Ventilation_Analysis (Ventilation,Proton,MainInput)
+function [Ventilation] = Ventilation_Analysis(Ventilation,Proton,MainInput)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%% Matlab script for processing VDP Analysis  %%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -22,8 +22,8 @@ function [Ventilation] = Ventilation_Analysis (Ventilation,Proton,MainInput)
 % settings:
 close all;
 % f = waitbar(0,'Processing ventilation analysis...');
-% pause(.1)
-Ventilation.Image = double(Ventilation.Image);
+% pause(.1) 
+Ventilation.Image = double(Ventilation.UncorrectedImage);
 Ventilation.LungMask = double(Ventilation.LungMask);
 Ventilation.AirwayMask = double(Ventilation.AirwayMask);
 
@@ -39,11 +39,10 @@ Ventilation.HyperventilatedThresh); % Hyperventilated threshold
 Ventilation.MedianFilter = 'yes';
 % Usage: settings = Functions.input_params(medfilter, RFcorrection,
 % savedata, calculateSNR, N4, incomplete, complete, hyper)
-Ventilation.Image = double(Ventilation.Image);
+
 MR = Ventilation.Image;
-Ventilation.UncorrectedImage = MR;
-mkdir([MainInput.XeDataLocation '\Ventilation Analysis']);
-parentPath = [MainInput.XeDataLocation '\Ventilation Analysis\'];
+mkdir([MainInput.OutputPath '\Ventilation_Analysis']);
+parentPath = [MainInput.OutputPath '\Ventilation_Analysis\'];
 Ventilation.parentPath = parentPath;
 %parentPath = [MainInput.XeDataLocation,'\'];
 FileNames = Ventilation.filename;
@@ -55,6 +54,34 @@ catch
     Ventilation.AirwayMask = zeros(size(Ventilation.LungMask));
     airwaymask = Ventilation.AirwayMask;
 end
+%% Healthy Reference
+Ventilation.HealthyRef.Date = '20250627'; 
+Ventilation.HealthyRef.CoV = '≤0.3';
+Ventilation.HealthyRef.VHI = '~8';
+
+% TH method
+Ventilation.HealthyRef.TH.VDPULN = '≤5';
+Ventilation.HealthyRef.TH.LVV = '15±5';
+Ventilation.HealthyRef.TH.HVV = '15±5';
+
+% LB method
+Ventilation.HealthyRef.LB.VDPULN = '≤5';
+Ventilation.HealthyRef.LB.LVV = '15±5';
+Ventilation.HealthyRef.LB.HVV = '15±5';
+% Kmeans method
+Ventilation.HealthyRef.HK.VDPULN = '≤5';
+Ventilation.HealthyRef.HK.LVV = '15±5';
+Ventilation.HealthyRef.HK.HVV = '15±5';
+% AKmeans method
+Ventilation.HealthyRef.AK.VDPULN = '≤5';
+Ventilation.HealthyRef.AK.LVV = '15±5';
+Ventilation.HealthyRef.AK.HVV = '15±5';
+
+Ventilation.HealthyRef.skewness = '0±0';
+Ventilation.HealthyRef.kurtosis = '5.6±1.3';
+Ventilation.HealthyRef.DDI2D = '≤1±0.5';
+Ventilation.HealthyRef.DDI3D = '≤1±0.5';
+Ventilation.HealthyRef.AgeCorrected = 'No';
 
 %% Calculate SNR:
 switch settings.calculate_SNR
@@ -117,12 +144,12 @@ switch settings.N4_bias_analysis
         
         % Apply rotations and flip to account for niftiwrite rotation.
         N4_2 = imrotate(N4,90); 
-        N4_2 = flipdim(N4_2,1);
+        N4_2 = flip(N4_2,1);
         
         % Save images as Nifti.
-        NameN4 = Name + "N4";
+        % NameN4 = Name + "N4";
 %         niftiwrite(abs(N4_2),[parentPath,char(NameN4)]);
-        niftiwrite(abs(N4_2),[parentPath + "Ventilation_ImagesN4"]); % Or do this until we have a naming convention        
+        niftiwrite(abs(N4_2),parentPath + "Ventilation_ImagesN4"); % Or do this until we have a naming convention        
         MR = double(N4);
         Ventilation.Image_uncorrected = Ventilation.Image;
         Ventilation.Image = MR;
@@ -146,7 +173,10 @@ if MainInput.NoProtonImage == 1
     Proton.ProtonRegistered = zeros(size(MR));
     Proton.ProtonRegisteredColored = zeros(size(MR));
 end
-
+%% Skewness
+lung_voxels = Ventilation.Image(maskarray == 1);
+Ventilation.skewness = skewness(double(lung_voxels));
+Ventilation.kurtosis = kurtosis(double(lung_voxels)); 
 %% 8) Calculate VDP:
 % Note: VDP can be calculated with or without the median filter performed
 % on the mask regions. This dependency will be contained within the
@@ -174,7 +204,7 @@ if strcmp(Ventilation.ThreshAnalysis,'yes')   % 'yes'; || 'no'
     %     [Ventilation] = VentilationFunctions.calculate_VDP(MR, maskarray, complete, incomplete, hyper, medfilter, N4_bias_analysis, parentPath,Overall_SNR,Ventilation,Proton,MainInput);    
     % end
     % Display the final VDP:
-    disp(['The overall ventilation defect percentage is: ',num2str(Ventilation.VDP),'%'])
+    disp(['The overall ventilation defect percentage is: ',num2str(Ventilation.Threshold.VDP),'%'])
 end 
 close all;
 %%  Perform linear binning ventilation analysis:
@@ -195,11 +225,11 @@ if strcmp(Ventilation.LB_Analysis,'yes') == 1
     maskarraytrachea(airwaymask == 1)=0;    
     maskarraytrachea2 = maskarraytrachea;
     
-    niftiwrite(maskarraytrachea2,[parentPath + "Lung_and_Trachea_mask"]);
+    niftiwrite(maskarraytrachea2,parentPath + "Lung_and_Trachea_mask");
     Ventilation.maskarraytrachea = maskarraytrachea;
 
     % 10) Perform linear binning ventilation analysis:
-    N4_bias_analysis = settings.N4_bias_analysis;
+    % N4_bias_analysis = settings.N4_bias_analysis;
 
 %     if settings.N4_bias_analysis == "yes"
 % %         ventmean = 0.6786; % Defined by data collected up to Jan 2021.
@@ -243,7 +273,7 @@ close all;
 if strcmp(Ventilation.DDI2D,'yes') || strcmp(Ventilation.DDI3D,'yes')
     switch Ventilation.DDIDefectMap
         case 'Threshold'
-            defect_mask = Ventilation.defectArray;
+            defect_mask = Ventilation.Threshold.defectArray;
             defect_mask(defect_mask > 2) = 0;
             defect_mask = double(defect_mask > 0);
             defectMap = double(Ventilation.LungMask) + defect_mask;  
@@ -278,6 +308,28 @@ if Ventilation.GLRLM_Analysis == "yes" % 'yes'; || 'no'
 %     waitbar(.90,f,'Performing Texture Analysis ...');
 %     pause(.1)     
     cd(parentPath)
+    switch Ventilation.GLRLMDefectMap
+        case 'Threshold'
+            defect_mask = Ventilation.Threshold.defectArray;
+            defect_mask(defect_mask > 2) = 0;
+            defect_mask = double(defect_mask > 0);
+            defectMap = double(Ventilation.LungMask) + defect_mask;  
+        case 'Linear Binning'
+            defect_mask = Ventilation.VentBinMap2;
+            defect_mask(defect_mask > 1) = 0;
+            defectMap = double(Ventilation.LungMask) + defect_mask; 
+        case 'Kmeans'
+            defect_mask = Ventilation.Kmeans_segmentation;
+            defect_mask(defect_mask > 0 & defect_mask < 2) = 1;
+            defect_mask(defect_mask > 1) = 0;
+            defectMap = double(Ventilation.LungMask) + defect_mask; 
+        case 'AKmeans'
+            defect_mask = Ventilation.Akmeans_defect_mask;
+            defect_mask(defect_mask > 0 & defect_mask < 2) = 1;
+            defect_mask(defect_mask > 1) = 0;
+            defectMap = double(Ventilation.LungMask) + defect_mask;             
+    end
+    Ventilation.defectMap_forGLRLM = defectMap;    
     [Ventilation] = VentilationFunctions.GLRLM_Analysis(Ventilation);
 end 
 close all;

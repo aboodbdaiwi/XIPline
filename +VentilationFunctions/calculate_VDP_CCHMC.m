@@ -38,7 +38,7 @@ warning('off','all') % Suppress all the tiff warnings
 % else
 %     disp('User must declare whether or they are analyzing N4 corrected images. Check settings/input_params(), and make sure N4_bias_analysis = yes or no.')
 % end
-foldername = "VDP Analysis\";
+foldername = "VDP_Analysis\";
 % Ensure only useful signal is operated on:
 maskarray = double(maskarray);
 MR = double(MR);
@@ -152,7 +152,7 @@ set(gcf,'PaperPosition',[0 0 7.5 3.5]);
 mkdir(foldername)
 cd(foldername)
 % print([foldername + 'Ventilation_Histogram'],'-dpng','-r300');
-saveas(gca,'Ventilation_Histogram.png');
+saveas(gca,'TH_Histogram.png');
 %% Output mask images with proton overlays:
 % Create a folder for the ventilation images:
 outputPath = char([DataPath + foldername]);
@@ -705,7 +705,7 @@ Global.exportToPPTX('addpicture',DefectArrayMontage,'Position',...
 % Global.exportToPPTX('addpicture',ProtonImages,'Position',...
 %     [0 5.2 NumSliceView NumSliceView*(VentMontagePosition(4)/VentMontagePosition(3))]);
 
-VDP_hist = imread([outputPath ,'Ventilation_Histogram.png']);    
+VDP_hist = imread([outputPath ,'TH_Histogram.png']);    
 %   Global.exportToPPTX('addpicture',VDP_hist,'Position',[0 5 8.5 8.5*(size(VDP_hist,1)/size(VDP_hist,2))]);
 Global.exportToPPTX('addtext',['129Xe-Vent Images (SNR=',num2str(Overall_SNR),')'],'Position',[0 0.4 4.2 0.4],'Color','r','FontSize',20,'BackgroundColor','k');
 Global.exportToPPTX('addtext','Anatomical Proton','Position',[0 1.6 3 0.4],'Color','r','FontSize',20,'BackgroundColor','k');
@@ -732,22 +732,26 @@ legend2 = sprintf('%0.2f±%0.2f (%0.1f%%)',md_Incomplete,sd_Incomplete,Incomplete
 legend3 = sprintf('%0.2f±%0.2f (%0.1f%%)',md_Complete,sd_Complete, Complete);
 legend4 = sprintf('%0.2f±%0.2f (%0.1f%%)',md_Hyper,sd_Hyper, Hyper);
 
-Ventilation.VDP = VDP;
-Ventilation.VentscaledImage = VentscaledImage;
-Ventilation.DefectArray = DefectArray;
+Ventilation.Threshold.VDP = VDP;
+Ventilation.Threshold.VentscaledImage = VentscaledImage;
+Ventilation.Threshold.DefectArray = DefectArray;
 dmap = defectArray;
 dmap(dmap == 0) = 3;
 dmap = dmap.* maskarray;
 array_temp = dmap; % Create a temporary copy
 dmap(array_temp == 1) = 2; % Change 1s to 2s
 dmap(array_temp == 2) = 1; % Change 2s to 1s
-Ventilation.defectArray = dmap;
-Ventilation.VDP_hist = VDP_hist;
-Ventilation.VentDefectmap = VentDefectmap;
-Ventilation.legend1 = legend1;
-Ventilation.legend2 = legend2;
-Ventilation.legend3 = legend3;
-Ventilation.legend4 = legend4;
+Ventilation.Threshold.defectArray = dmap;
+Ventilation.Threshold.VDP_hist = VDP_hist;
+Ventilation.Threshold.VentDefectmap = VentDefectmap;
+Ventilation.Threshold.THBins = [Complete,Incomplete,Normal,Hyper];
+Ventilation.Threshold.legend1 = legend1;
+Ventilation.Threshold.legend2 = legend2;
+Ventilation.Threshold.legend3 = legend3;
+Ventilation.Threshold.legend4 = legend4;
+
+% write report
+VentilationFunctions.ThresholdVDP_Report(Ventilation,Proton, MainInput);
 
 save_title = [foldername + "VDPThresholdAnalysis.mat"];
 save(save_title);

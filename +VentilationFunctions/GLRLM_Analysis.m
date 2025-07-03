@@ -1,4 +1,4 @@
-function [Ventilation] = GLRLM_Analysis(Ventilation,Image,parentPath)
+function [Ventilation] = GLRLM_Analysis(Ventilation)
 %GRAYCOPROPS Properties of gray-level run-length matrix.
 %  -------------------------------------------
 %  STATS = GRAYCOPROPS(GLRLM,PROPERTIES) Each element in  GLRLM, (r,c),
@@ -44,9 +44,13 @@ cd(parentPath)
 maskarray = double(Ventilation.LungMask + Ventilation.VesselMask);
 maskarray(maskarray > 1) = 0;
 maskarray = double(maskarray);
-Image = Ventilation.Image.*maskarray;
 
-foldername = "GLRLM Analysis\";
+% remove defects from image
+VentLungMask = double(Ventilation.defectMap_forGLRLM == 1);
+
+Image = Ventilation.Image.*maskarray.*VentLungMask;
+%figure; imslice(Image);
+foldername = "GLRLM_Analysis\";
 mkdir(foldername)
 outputPath = char(foldername);
 cd(outputPath)

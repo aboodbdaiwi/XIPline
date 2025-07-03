@@ -53,7 +53,7 @@ Overall_SNR = Ventilation.SNR_lung;
 Thresholds = Ventilation.Thresholds;
 
 cd(parentPath)
-foldername = "VDP Analysis\";
+foldername = "VDP_Analysis\";
 mkdir(foldername)
 LB_outputpath = char(foldername);
 LB_outputpath = [parentPath, LB_outputpath];
@@ -450,8 +450,14 @@ hold on;
 
 % Add vertical lines for the thresholds
 for i = 1:length(Thresholds)
-    xline(Thresholds(i), '--', 'LineWidth', 1.5, 'Label', sprintf('Threshold %.3f', Thresholds(i)));
+    xline(Thresholds(i), '--', ...
+        'LineWidth', 1.5, ...
+        'Label', sprintf('Threshold %.3f', Thresholds(i)), ...
+        'LabelHorizontalAlignment', 'left', ...
+        'LabelVerticalAlignment', 'top', ...
+        'FontSize', 14);
 end
+
 
 % Add labels and title for clarity
 xlabel('Ventilation Value');
@@ -492,11 +498,16 @@ legend5 = sprintf(' StdDev:%0.4f%    '  ,LB_std);
 % legend([legend1  legend2  legend3  legend4   legend5]);
 title1 = sprintf('Ventilation Defect Percentage %0.1f%%',LB_VDP);
 title({title1},'Fontweight','bold','FontSize',12)
-set(gca,'FontSize',14)
+set(gca,'FontSize',18)
 % print([foldername + 'Ventilation_Histogram'],'-dpng','-r300');
 cd(LB_outputpath)
 saveas(gca,'LB_Ventilation_Histogram.png');
 hold off
+
+lung_voxels = ScaledVentImagenan2(maskarray == 1);
+
+% Compute skewness
+Ventilation.LB_skewness = skewness(double(lung_voxels));
 %% %% write tiff and read back BinnedVent maps
 %Tiffs (Binned Images)
 tiff = figure('MenuBar','none','ToolBar','none','DockControls','off','Resize','off','WindowState','minimized');%figure for tiffs
@@ -713,6 +724,10 @@ Ventilation.VentHigh2Percent = round(VentHigh2Percent,2);
 Ventilation.BinsPercent = [Ventilation.VentLow1Percent,Ventilation.VentLow2Percent,...
     Ventilation.VentNormal1Percent,Ventilation.VentLow2Percent,...
     Ventilation.VentHigh1Percent,Ventilation.VentHigh2Percent];
+
+% write report
+VentilationFunctions.LBVDP_Report(Ventilation,Proton, MainInput);
+
 save_title = [LB_outputpath, 'LinearBinningAnalysis.mat'];
 save(save_title);
 end % end of function
