@@ -70,7 +70,7 @@ Ventilation.HealthyRef.LB.VDPULN = '≤5';
 Ventilation.HealthyRef.LB.LVV = '15±5';
 Ventilation.HealthyRef.LB.HVV = '15±5';
 % Kmeans method
-Ventilation.HealthyRef.HK.VDPULN = '≤5';
+Ventilation.HealthyRef.HK.VDPULN = '≤3';
 Ventilation.HealthyRef.HK.LVV = '15±5';
 Ventilation.HealthyRef.HK.HVV = '15±5';
 % AKmeans method
@@ -162,8 +162,8 @@ switch settings.N4_bias_analysis
 end
 %% %% save image and mask
 % Generate timestamp suffix
-timestamp = lower(datestr(now, '_yyyymmdd_HHMM'));
-
+timestamp = lower(datestr(now, '_yyyymmddHHMM')); % e.g., '_202507161430'
+Ventilation.timestamp = timestamp(2:end);         % removes the leading '_'
 % ==== File Deletion Helper Function ====
 delete_if_exist = @(pattern) cellfun(@(f) delete(fullfile(parentPath, f)), ...
     {dir(fullfile(parentPath, pattern)).name}, 'UniformOutput', false);
@@ -344,7 +344,7 @@ if Ventilation.GLRLM_Analysis == "yes" % 'yes'; || 'no'
 %     f = waitbar(.75,'Performing Linear Binning Analysis ...');
 %     waitbar(.90,f,'Performing Texture Analysis ...');
 %     pause(.1)     
-    cd(parentPath)
+    cd(parentPath)    
     switch Ventilation.GLRLMDefectMap
         case 'Threshold'
             defect_mask = Ventilation.Threshold.defectArray;
@@ -370,6 +370,22 @@ if Ventilation.GLRLM_Analysis == "yes" % 'yes'; || 'no'
     [Ventilation] = VentilationFunctions.GLRLM_Analysis(Ventilation);
 end 
 close all;
+%% write report
+if strcmp(Ventilation.writereport,'yes')
+    if strcmp(Ventilation.ThreshAnalysis,'yes')
+        VentilationFunctions.ThresholdVDP_Report(Ventilation,Proton, MainInput);
+    end
+    if strcmp(Ventilation.LB_Analysis,'yes')
+        VentilationFunctions.LBVDP_Report(Ventilation,Proton, MainInput);
+    end
+    if strcmp(Ventilation.Kmeans,'yes')
+        VentilationFunctions.KmeansVDP_Report(Ventilation,Proton, MainInput);
+    end
+    if strcmp(Ventilation.AKmeans,'yes')
+        VentilationFunctions.AKmeansVDP_Report(Ventilation,Proton, MainInput);
+    end    
+end
+
 %% %% save maps in mat file
 save_data=[parentPath,'\','Ventilation_Analysis','.mat'];
 save(save_data);  

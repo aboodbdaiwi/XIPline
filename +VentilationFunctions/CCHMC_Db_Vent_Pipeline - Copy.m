@@ -1,14 +1,25 @@
-function batchrun_vdp(PatientID,...
-                        SequenceType,...
-                        ReconType,...
-                        VoxelSize,...
-                        SliceOrientation,...
-                        vent_file,...
-                        anat_file,...
-                        analysisFolder,...
-                        mask_file_name)
+function CCHMC_Db_Vent_Pipeline(MainInput)
 %----------------------------- initial inputs -----------------------------
 warning('off', 'all'); % Turn off all warnings 'off' | 'on'
+
+SubjectID = MainInput.SubjectID;
+Age = MainInput.Age;
+Sex = MainInput.Sex;
+Disease = MainInput.Disease;
+ScanDate = MainInput.ScanDate;
+Scanner = MainInput.Scanner;
+ScannerSoftware = MainInput.ScannerSoftware;
+SequenceType = MainInput.SequenceType;
+ReconType = MainInput.ReconType;
+denoiseXe = MainInput.denoiseXe;
+Analyst = MainInput.Analyst;
+VoxelSize = MainInput.VoxelSize;
+SliceOrientation = MainInput.SliceOrientation;
+vent_file = MainInput.vent_file;
+anat_file = MainInput.anat_file;
+analysisFolder = MainInput.analysisFolder;
+mask_file_name = MainInput.mask_file_name;
+MainInput.OutputPath = analysisFolder;
 
 xedatapath = vent_file;
 Hdatapath = anat_file;
@@ -17,25 +28,22 @@ Diffusion = '';
 GasExchange = '';
 MainInput.AnalysisType = 'Ventilation';
 MainInput.Institute = 'CCHMC'; 
-MainInput.Scanner = 'Philips';
-MainInput.ScannerSoftware = '5.9.0'; % R-scanner
-% MainInput.SequenceType = '2D GRE';
 MainInput.analysissesFolder = analysisFolder;
+MainInput.CCHMC_DbVentAnalysis = 'yes';
 
 Outputs = [];
-Outputs.PatientID = PatientID;
+Outputs.PatientID = SubjectID;
+Outputs.Age = Age;
+Outputs.Sex = Sex;
+Outputs.Disease = Disease;
+Outputs.ScanDate = ScanDate;
 Outputs.XeImagepath = vent_file;
 Outputs.HImagepath = anat_file;
 Outputs.analysispath = analysisFolder;
 Outputs.SequenceType = SequenceType;
 Outputs.ReconType = ReconType;
-try
-    Outputs.AnalysisCode_hash = Global.get_git_hashobject;%use git to find hash of commit used
-    Outputs.AnalysisCode_hash = Outputs.AnalysisCode_hash(1:40);%remove enter at end
-catch
-    Outputs.AnalysisCode_hash = 'TEST';%If not connected to git, can't determine hash so state test
-end
-Outputs.AnalysisCode_path = 'https://github.com/cchmc-cpir/Db_129Xe_Vent_Analysis';
+
+Outputs.AnalysisCode_path = 'https://github.com/aboodbdaiwi/XIPline';
 Outputs.AnalysisDate = datestr(datetime('today'), 'yyyy-mm-dd');
 
 % Check if we have anatomical images or not
@@ -86,9 +94,10 @@ if strcmp(MainInput.NoProtonImage, 'no') == 1
     Outputs.XeDataext = H_ext;
 end
 MainInput.denoiseXe = 'no';
-[Ventilation, ~, ~, Proton] = LoadData.LoadReadData(MainInput);
+[Ventilation, ~, ~, Proton, MainInput] = LoadData.LoadReadData(MainInput);
 Ventilation.Image = double(Ventilation.Image);
 Ventilation.outputpath = analysisSubfolder;
+Outputs.AnalysisCode_hash = MainInput.AnalysisCode_hash; 
 % Ventilation.Image = Ventilation.Image(:,:,1:2:end);
 % figure; Global.imslice(Ventilation.Image,'Ventilation')
 
@@ -137,38 +146,45 @@ end
   
 % figure; Global.imslice(Proton.Image,'Proton')
 % -----------------------------registration-----------------------------
+MainInput.SkipRegistration = 0;
 if strcmp(MainInput.NoProtonImage, 'no') 
-    MainInput.RegistrationType = 'affine'; % 'translation' | 'rigid' | 'similarity' | 'affine'
-    % check if xenon and proton have the same number of slices
-    if size(Ventilation.Image,3) == size(Proton.Image,3)
-        MainInput.SliceSelection = 0;
-    else
-        MainInput.SliceSelection = 1;
-        MainInput.Xestart = 1;
-        MainInput.Xeend = size(Ventilation.Image,3);
-        MainInput.Hstart = 1;
-        MainInput.Hend = size(Proton.Image,3);
+    try
+        MainInput.RegistrationType = 'ANTs'; 
+        MainInput.TransformType = 'rigid'; % 'translation' | 'rigid' | 'similarity' | 'affine'
+        [Proton] = Registration.PerformRegistration(Proton,Ventilation,GasExchange,MainInput);        
+    catch
+        MainInput.RegistrationType = 'Multimodal'; 
+        MainInput.TransformType = 'affine'; % 'translation' | 'rigid' | 'similarity' | 'affine'
+        % check if xenon and proton have the same number of slices
+        if size(Ventilation.Image,3) == size(Proton.Image,3)
+            MainInput.SliceSelection = 0;
+        else
+            MainInput.SliceSelection = 1;
+            MainInput.Xestart = 1;
+            MainInput.Xeend = size(Ventilation.Image,3);
+            MainInput.Hstart = 1;
+            MainInput.Hend = size(Proton.Image,3);
+        end
+    
+        Xesize = size(Ventilation.Image);
+        Hsize = size(Proton.Image);
+        sizeRatio = Hsize./Xesize;
+        
+        MainInput.XeVoxelInfo.PixelSize1 = sizeRatio(1);
+        MainInput.XeVoxelInfo.PixelSize2 = sizeRatio(2);
+        MainInput.XeVoxelInfo.SliceThickness = sizeRatio(3);
+        
+        MainInput.ProtonVoxelInfo.PixelSize1 = 1;
+        MainInput.ProtonVoxelInfo.PixelSize2 = 1;
+        MainInput.ProtonVoxelInfo.SliceThickness = 1;
+        
+        [Proton] = Registration.PerformRegistration(Proton,Ventilation,GasExchange,MainInput);
+         % S = orthosliceViewer(Proton.ProtonRegisteredColored);
     end
-
-    Xesize = size(Ventilation.Image);
-    Hsize = size(Proton.Image);
-    sizeRatio = Hsize./Xesize;
-    
-    MainInput.XeVoxelInfo.PixelSize1 = sizeRatio(1);
-    MainInput.XeVoxelInfo.PixelSize2 = sizeRatio(2);
-    MainInput.XeVoxelInfo.SliceThickness = sizeRatio(3);
-    
-    MainInput.ProtonVoxelInfo.PixelSize1 = 1;
-    MainInput.ProtonVoxelInfo.PixelSize2 = 1;
-    MainInput.ProtonVoxelInfo.SliceThickness = 1;
-    
-    [Proton] = Registration.PerformRegistration(Proton,Ventilation,GasExchange,MainInput);
-     % S = orthosliceViewer(Proton.ProtonRegisteredColored);
 else
     Proton.ProtonRegistered = zeros(size(Ventilation.Image));
     Proton.ProtonRegisteredColored = zeros(size(Ventilation.Image));
 end
-
 
 % -----------------------------segmentation-----------------------------
 % Check if mask_file_name is empty
@@ -406,24 +422,25 @@ Ventilation.HyperventilatedThresh = 200;
 Ventilation.HeterogeneityIndex = 'yes';
 Ventilation.ThreshAnalysis = 'yes'; % 'yes'; || 'no'
 Ventilation.LB_Analysis = 'no'; % 'yes'; || 'no'
-Ventilation.LB_Normalization = 'median'; % 'mean'; || 'median' || 'percentile'            
+Ventilation.LB_Normalization = 'LBmean'; % 'LBmean'; || 'GLBmean' || 'GLBpercentile'            
 Ventilation.Kmeans = 'no';  % 'yes'; || 'no'
 Ventilation.AKmeans = 'no';  % 'yes'; || 'no'
 Ventilation.DDI2D = 'no';  % 'yes'; || 'no'
 Ventilation.DDI3D = 'no';  % 'yes'; || 'no'
 Ventilation.DDIDefectMap = 'Threshold';
 Ventilation.GLRLM_Analysis = 'yes'; % 'yes'; || 'no'
+Ventilation.GLRLMDefectMap = 'Threshold';
 
 switch Ventilation.LB_Normalization
-    case 'mean'
-        Ventilation.Thresholds = [0.609909, 0.827439, 0.998199, 1.143472, 1.27208];  % median
-        Ventilation.Hdist = [-2.100652, 1.154155, 0.238074]; 
-    case 'median'
-        Ventilation.Thresholds = [0.609909, 0.827439, 0.998199, 1.143472, 1.27208];  % median
-        Ventilation.Hdist = [-2.100652, 1.154155, 0.238074]; 
-    case 'percentile'
-        Ventilation.Thresholds = [0.448181, 0.621903, 0.752298, 0.860778, 0.955443]; % percentile
-        Ventilation.Hdist = [-2.515712, 0.87849, 0.188364]; 
+    case 'LBmean'
+        Ventilation.LBThresholds = [0.33, 0.66, 1, 1.33, 1.66];  % mean
+        Ventilation.Hdist = [3.001911, 0.571907, 0.642521];
+    case 'GLBmean'
+        Ventilation.LBThresholds = [0.479751, 0.739117, 0.985809, 1.223886, 1.455482]; % 
+        Ventilation.Hdist = [2.452006, 0.540731, 0.550411]; 
+    case 'GLBpercentile'
+        Ventilation.LBThresholds = [0.139851, 0.286702, 0.469945, 0.685309, 0.929902]; % percentile
+        Ventilation.Hdist = [2.291109, 0.269959, 0.293713]; 
 end
 
 Proton.AnatImage_Reg = Proton.ProtonRegistered;
@@ -432,6 +449,7 @@ Proton.AnatImage_RegColored = Proton.ProtonRegisteredColored;
 % run without N4
 [Ventilation] = VentilationFunctions.Ventilation_Analysis(Ventilation, Proton, MainInput);
 close all;
+Outputs.timestamp = Ventilation.timestamp;
 % uncorr
 Outputs.SNR_slice = Ventilation.SNR_slice;
 Outputs.Overall_SNR = Ventilation.SNR_lung;
@@ -446,12 +464,11 @@ if strcmp(Ventilation.HeterogeneityIndex, 'yes')
 end
     
 if strcmp(Ventilation.ThreshAnalysis, 'yes') == 1
-    Outputs.uncorr.TH60.Thresholds = Ventilation.Thresholds;
-    Outputs.uncorr.TH60.VDP = Ventilation.VDP;
-    BinPrecent = [Ventilation.legend1,Ventilation.legend2,Ventilation.legend3,Ventilation.legend4];
-    Outputs.uncorr.TH60.BinPrecent = strrep(BinPrecent, '%', 'p');
-    matches = regexp(Outputs.uncorr.TH60.BinPrecent, '\((.*?)p\)', 'tokens');
-    Outputs.uncorr.TH60.BinPrecentValues = str2double([matches{:}]);
+    Outputs.uncorr.TH60.Thresholds = Ventilation.Threshold.Thresholds;
+    Outputs.uncorr.TH60.VDP = Ventilation.Threshold.VDP;
+    Outputs.uncorr.TH60.BinPrecentValues = Ventilation.Threshold.THBins; 
+    Outputs.uncorr.TH60.vdp_per_slice_local = Ventilation.Threshold.vdp_per_slice_local;
+    Outputs.uncorr.TH60.vdp_per_slice_global = Ventilation.Threshold.vdp_per_slice_global;    
 end
 if strcmp(Ventilation.DDI2D, 'yes') == 1
     Outputs.uncorr.TH60.DDI2D.DDI2D_meanSlice = Ventilation.DDI2D_meanSlice;
@@ -484,11 +501,11 @@ if strcmp(Ventilation.GLRLM_Analysis, 'yes') == 1
     Outputs.uncorr.GLRLM.LRHGE = Ventilation.LRHGE;
 end
 % save output as a .json file
-cd(analysisSubfolder)
-txt = jsonencode(Outputs.uncorr);
-fid=fopen('uncorr_Outputs.json','w');
-fprintf(fid,txt);
-fclose('all');
+% cd(analysisSubfolder)
+% txt = jsonencode(Outputs.uncorr);
+% fid=fopen('uncorr_Outputs.json','w');
+% fprintf(fid,txt);
+% fclose('all');
 
 Outputs.uncorr.Image = double(Ventilation.Image);
 Outputs.uncorr.LungMask = double(Ventilation.LungMask);
@@ -500,9 +517,9 @@ if strcmp(Ventilation.HeterogeneityIndex, 'yes')
     Outputs.uncorr.CV_maps = Ventilation.CV_maps;
 end
 if strcmp(Ventilation.ThreshAnalysis, 'yes') == 1
-    Outputs.uncorr.TH60.VDP_hist = Ventilation.VDP_hist;
-    Outputs.uncorr.TH60.DefectArray = Ventilation.defectArray;
-    Outputs.uncorr.TH60.VentDefectmap = Ventilation.VentDefectmap;
+    Outputs.uncorr.TH60.VDP_hist = Ventilation.Threshold.VDP_hist;
+    Outputs.uncorr.TH60.defectArray = Ventilation.Threshold.defectArray;
+    Outputs.uncorr.TH60.VentDefectmap = Ventilation.Threshold.VentDefectmap;
 end
 if strcmp(Ventilation.DDI2D, 'yes') == 1
     Outputs.uncorr.TH60.DDI2D.DDI2D_DDImap = Ventilation.DDI2D_DDImap;
@@ -521,7 +538,17 @@ Ventilation.N4Analysis = 1;
 Ventilation.cincibiasfieldcorr = 0;
 % Ventilation.LB_Analysis = 'no'; % 'yes'; || 'no'
 % Ventilation.GLRLM_Analysis = 'no'; % 'yes'; || 'no'
-% 
+switch Ventilation.LB_Normalization
+    case 'LBmean'
+        Ventilation.LBThresholds = [0.33, 0.66, 1, 1.33, 1.66];  % mean
+        Ventilation.Hdist = [0.001029, 0.995768, 0.24409];
+    case 'GLBmean'
+        Ventilation.LBThresholds = [0.479751, 0.739117, 0.985809, 1.223886, 1.455482];  % median
+        Ventilation.Hdist = [0.000464, 0.981203, 0.243749]; 
+    case 'GLBpercentile'
+        Ventilation.LBThresholds = [0.28893, 0.462393, 0.622368, 0.77374, 0.918873]; % percentile
+        Ventilation.Hdist = [-1.186698, 0.738826, 0.198451]; 
+end   
 MainInput.MaskFullPath = mask_file_name;
 if Ventilation.N4Analysis == 1
     [Ventilation] = VentilationFunctions.Ventilation_Analysis(Ventilation, Proton, MainInput);
@@ -540,12 +567,9 @@ if Ventilation.N4Analysis == 1
         Outputs.N4Bias.overallVHI = Ventilation.overallVHI;
     end
     if strcmp(Ventilation.ThreshAnalysis, 'yes') == 1
-        Outputs.N4Bias.TH60.Thresholds = Ventilation.Thresholds;
-        Outputs.N4Bias.TH60.VDP = Ventilation.VDP;
-        BinPrecent = [Ventilation.legend1,Ventilation.legend2,Ventilation.legend3,Ventilation.legend4];
-        Outputs.N4Bias.TH60.BinPrecent = strrep(BinPrecent, '%', 'p');
-        matches = regexp(Outputs.N4Bias.TH60.BinPrecent, '\((.*?)p\)', 'tokens');
-        Outputs.N4Bias.TH60.BinPrecentValues = str2double([matches{:}]);
+        Outputs.N4Bias.TH60.Thresholds =Ventilation.Threshold.Thresholds;
+        Outputs.N4Bias.TH60.VDP = Ventilation.Threshold.VDP;
+        Outputs.N4Bias.TH60.BinPrecentValues = Ventilation.Threshold.THBins; 
     end
 
     if strcmp(Ventilation.DDI2D, 'yes') == 1
@@ -579,12 +603,12 @@ if Ventilation.N4Analysis == 1
         Outputs.N4Bias.GLRLM.LRLGE = Ventilation.LRLGE;
         Outputs.N4Bias.GLRLM.LRHGE = Ventilation.LRHGE;
     end
-    % save output as a .json file
-    cd(analysisSubfolder)
-    txt = jsonencode(Outputs.N4Bias);
-    fid=fopen('N4Bias_Outputs.json','w');
-    fprintf(fid,txt);
-    fclose('all');
+    % % save output as a .json file
+    % cd(analysisSubfolder)
+    % txt = jsonencode(Outputs.N4Bias);
+    % fid=fopen('N4Bias_Outputs.json','w');
+    % fprintf(fid,txt);
+    % fclose('all');
     
     Outputs.N4Bias.Image = double(Ventilation.Image);
     Outputs.N4Bias.LungMask = double(Ventilation.LungMask);
@@ -596,9 +620,11 @@ if Ventilation.N4Analysis == 1
         Outputs.N4Bias.CV_maps = Ventilation.CV_maps;
     end
     if strcmp(Ventilation.ThreshAnalysis, 'yes') == 1
-        Outputs.N4Bias.TH60.VDP_hist = Ventilation.VDP_hist;
-        Outputs.N4Bias.TH60.DefectArray = Ventilation.defectArray;
-        Outputs.N4Bias.TH60.VentDefectmap = Ventilation.VentDefectmap;
+        Outputs.N4Bias.TH60.VDP_hist = Ventilation.Threshold.VDP_hist;
+        Outputs.N4Bias.TH60.DefectArray = Ventilation.Threshold.defectArray;
+        Outputs.N4Bias.TH60.VentDefectmap = Ventilation.Threshold.VentDefectmap;    
+        Outputs.N4Bias.TH60.vdp_per_slice_local = Ventilation.Threshold.vdp_per_slice_local;
+        Outputs.N4Bias.TH60.vdp_per_slice_global = Ventilation.Threshold.vdp_per_slice_global;
     end
     if strcmp(Ventilation.DDI2D, 'yes') == 1
         Outputs.N4Bias.TH60.DDI2D.DDI2D_DDImap = Ventilation.DDI2D_DDImap;
@@ -617,32 +643,32 @@ end
 
 %------This part is experimental for now -CBM ---------------
 
-% run with cinci_bias_field_correction.py settings N4
-Ventilation.N4Analysis = 0;
-Ventilation.cincibiasfieldcorr = 1;
-% Ventilation.LB_Analysis = 'no'; % 'yes'; || 'no'
-% Ventilation.GLRLM_Analysis = 'no'; % 'yes'; || 'no'
-% 
-MainInput.MaskFullPath = mask_file_name;
-if Ventilation.cincibiasfieldcorr == 1
-    [Ventilation] = VentilationFunctions.Ventilation_Analysis(Ventilation, Proton, MainInput);
-    close all;
-end
+% % run with cinci_bias_field_correction.py settings N4
+% Ventilation.N4Analysis = 0;
+% Ventilation.cincibiasfieldcorr = 1;
+% % Ventilation.LB_Analysis = 'no'; % 'yes'; || 'no'
+% % Ventilation.GLRLM_Analysis = 'no'; % 'yes'; || 'no'
+% % 
+% MainInput.MaskFullPath = mask_file_name;
+% if Ventilation.cincibiasfieldcorr == 1
+%     [Ventilation] = VentilationFunctions.Ventilation_Analysis(Ventilation, Proton, MainInput);
+%     close all;
+% end
 %------------------------------------------------------------
 
-
-
+OutputJSONFile = fullfile(analysisSubfolder, 'Outputs.json');
+Global.exportStructToJSON(Outputs, OutputJSONFile);
 
 % Check if the directory specified by analysisSubfolder exists, create it if necessary
 if ~exist(analysisSubfolder, 'dir')
     mkdir(analysisSubfolder);
 end
-% save output as a .json file
-cd(analysisSubfolder)
-txt = jsonencode(Outputs);
-fid=fopen('Outputs.json','w');
-fprintf(fid,txt);
-fclose('all');
+% % save output as a .json file
+% cd(analysisSubfolder)
+% txt = jsonencode(Outputs);
+% fid=fopen('Outputs.json','w');
+% fprintf(fid,txt);
+% fclose('all');
 % Save Outputs to the MAT-file
 save(fullfile(analysisSubfolder, 'workspace.mat'));
 save(fullfile(analysisSubfolder, 'Ventilation_Analysis_Outputs.mat'), 'Outputs');

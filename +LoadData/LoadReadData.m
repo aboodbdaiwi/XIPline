@@ -75,26 +75,32 @@ elseif strcmp(MainInput.AnalysisType,'GasExchange')
     GasExchange.outputpath = outputpath;
 end
 
-if strcmp(MainInput.XeDataext,'.dcm')  
-    MainInput.Recon = 'Online';
-else
-    MainInput.Recon = 'Offline';
+if ~isfield(MainInput, 'Recon')
+    if strcmp(MainInput.XeDataext,'.dcm')  
+        MainInput.Recon = 'Online';
+    else
+        MainInput.Recon = 'Offline';
+    end
 end
 
-if strcmp(MainInput.XeDataext,'.dcm')          
-    [Image, file_folder, FileNames, DicomInfo] = LoadData.DICOM_Load(MainInput.XeDataLocation);       
-    try
-        if isfield(DicomInfo, 'AcquisitionDate')
-            MainInput.ScanDate = DicomInfo.AcquisitionDate;
-        elseif isfield(DicomInfo, 'SeriesDate')
-            MainInput.ScanDate = DicomInfo.SeriesDate;
-        elseif isfield(DicomInfo, 'StudyDate')
-            MainInput.ScanDate = DicomInfo.StudyDate;
-        else
+if strcmp(MainInput.XeDataext,'.dcm')         
+    if strcmp(MainInput.CCHMC_DbVentAnalysis,'yes')
+        [Image, file_folder, FileNames, DicomInfo] = LoadData.Single_DICOM_Load(MainInput.vent_file);  
+    else
+        [Image, file_folder, FileNames, DicomInfo] = LoadData.DICOM_Load(MainInput.XeDataLocation);     
+        try
+            if isfield(DicomInfo, 'AcquisitionDate')
+                MainInput.ScanDate = DicomInfo.AcquisitionDate;
+            elseif isfield(DicomInfo, 'SeriesDate')
+                MainInput.ScanDate = DicomInfo.SeriesDate;
+            elseif isfield(DicomInfo, 'StudyDate')
+                MainInput.ScanDate = DicomInfo.StudyDate;
+            else
+                MainInput.ScanDate = '00000000';
+            end
+        catch
             MainInput.ScanDate = '00000000';
-        end
-    catch
-        MainInput.ScanDate = '00000000';
+        end        
     end
           
     if strcmp(MainInput.AnalysisType,'Ventilation')                  
@@ -397,8 +403,12 @@ if (isnumeric(MainInput.NoProtonImage) && MainInput.NoProtonImage == 0) || ...
         elseif strcmp(MainInput.AnalysisType,'GasExchange')          
             mkdir([MainInput.HDataLocation '\GasExchange_Analysis']);
         end
-        if strcmp(MainInput.HDataext,'.dcm')               
-            [HImage, file_folder, file_name, DicomInfo] = LoadData.DICOM_Load(MainInput.HDataLocation);
+        if strcmp(MainInput.HDataext,'.dcm')      
+            if strcmp(MainInput.CCHMC_DbVentAnalysis,'yes')
+                [HImage, file_folder, file_name, DicomInfo] = LoadData.Single_DICOM_Load(MainInput.anat_file);  
+            else
+                [HImage, file_folder, file_name, DicomInfo] = LoadData.DICOM_Load(MainInput.HDataLocation);  
+            end
             Proton.Image = double(HImage);
             Proton.filename = file_name;
             Proton.folder = file_folder;

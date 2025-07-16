@@ -527,10 +527,6 @@ cd(outputpath);
 saveas(gca,'Adaptive_Kmeans_Histogram.png');
 close all;
 
-% write report
-if strcmp(Ventilation.writereport,'yes')
-    VentilationFunctions.AKmeansVDP_Report(Ventilation,Proton, MainInput);
-end
 %%
 save_data=[parentPath,'\','Ventilation_Analysis','.mat'];
 save(save_data); 

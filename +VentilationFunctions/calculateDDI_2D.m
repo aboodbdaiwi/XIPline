@@ -129,7 +129,7 @@ function [Ventilation] = calculateDDI_2D(Ventilation,Proton,MainInput)
     Ventilation.DDI2D_max = max(DDI(:));
     Ventilation.DDI2D_Stat = DDIStat;
     %% %% write tiff and read it back 
-    DDI_outputpath = [Ventilation.outputpath, '\VDP Analysis\'];
+    DDI_outputpath = [Ventilation.outputpath, '\VDP_Analysis\'];
     mkdir(DDI_outputpath);
     cd(DDI_outputpath);
     tiff = figure('MenuBar','none','ToolBar','none','DockControls','off','Resize','off','WindowState','minimized');%figure for tiffs

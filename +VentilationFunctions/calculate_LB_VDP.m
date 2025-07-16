@@ -50,7 +50,7 @@ ventmean = mean(Ventilation.Thresholds);
 ventstd = std(Ventilation.Thresholds);
 parentPath = Ventilation.parentPath;
 Overall_SNR = Ventilation.SNR_lung;
-Thresholds = Ventilation.Thresholds;
+Thresholds = Ventilation.LBThresholds;
 
 cd(parentPath)
 foldername = "VDP_Analysis\";
@@ -799,10 +799,6 @@ Ventilation.BinsPercent = [Ventilation.VentLow1Percent,Ventilation.VentLow2Perce
     Ventilation.VentNormal1Percent,Ventilation.VentLow2Percent,...
     Ventilation.VentHigh1Percent,Ventilation.VentHigh2Percent];
 
-% write report
-if strcmp(Ventilation.writereport,'yes')
-    VentilationFunctions.LBVDP_Report(Ventilation,Proton, MainInput);
-end
 save_title = [LB_outputpath, 'LinearBinningAnalysis.mat'];
 save(save_title);
 end % end of function

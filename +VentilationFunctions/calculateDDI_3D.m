@@ -155,7 +155,7 @@ function [Ventilation] = calculateDDI_3D(Ventilation,Proton,MainInput)
     Ventilation.DDI3D_max = max(DDI(:));
     Ventilation.DDI3D_Stat = DDIStat;
         %% %% write tiff and read back BinnedVent maps
-    DDI_outputpath = [Ventilation.outputpath, '\VDP Analysis\'];
+    DDI_outputpath = [Ventilation.outputpath, '\VDP_Analysis\'];
     mkdir(DDI_outputpath);
     cd(DDI_outputpath);
     tiff = figure('MenuBar','none','ToolBar','none','DockControls','off','Resize','off','WindowState','minimized');%figure for tiffs

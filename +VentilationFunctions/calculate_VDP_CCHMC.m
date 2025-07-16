@@ -25,7 +25,7 @@ hyper = Ventilation.HyperventilatedThresh;
 medfilter = Ventilation.MedianFilter;
 DataPath = Ventilation.parentPath;
 Overall_SNR = Ventilation.SNR_lung;
-
+Ventilation.Threshold.Thresholds = [complete,incomplete,hyper];
 
 cd(DataPath)
 close all; 
@@ -793,6 +793,14 @@ fprintf('PowerPoint file has been saved\n');
 
 close all;
 %% compute VDP per Slice
+dmap = defectArray;
+dmap(dmap == 0) = 3;
+dmap = dmap.* maskarray;
+array_temp = dmap; % Create a temporary copy
+dmap(array_temp == 1) = 2; % Change 1s to 2s
+dmap(array_temp == 2) = 1; % Change 2s to 1s
+Ventilation.Threshold.defectArray = dmap;
+
 defect_mask = Ventilation.Threshold.defectArray;
 defect_mask(defect_mask > 2) = 0;
 defect_mask = double(defect_mask > 0);
@@ -810,13 +818,7 @@ legend4 = sprintf('%0.2f±%0.2f (%0.1f%%)',md_Hyper,sd_Hyper, Hyper);
 Ventilation.Threshold.VDP = VDP;
 Ventilation.Threshold.VentscaledImage = VentscaledImage;
 Ventilation.Threshold.DefectArray = DefectArray;
-dmap = defectArray;
-dmap(dmap == 0) = 3;
-dmap = dmap.* maskarray;
-array_temp = dmap; % Create a temporary copy
-dmap(array_temp == 1) = 2; % Change 1s to 2s
-dmap(array_temp == 2) = 1; % Change 2s to 1s
-Ventilation.Threshold.defectArray = dmap;
+
 Ventilation.Threshold.VDP_hist = VDP_hist;
 Ventilation.Threshold.VentDefectmap = VentDefectmap;
 Ventilation.Threshold.THBins = [Complete,Incomplete,Normal,Hyper];
@@ -825,10 +827,6 @@ Ventilation.Threshold.legend2 = legend2;
 Ventilation.Threshold.legend3 = legend3;
 Ventilation.Threshold.legend4 = legend4;
 
-% write report
-if strcmp(Ventilation.writereport,'yes')
-    VentilationFunctions.ThresholdVDP_Report(Ventilation,Proton, MainInput);
-end
 save_title = [foldername + "VDPThresholdAnalysis.mat"];
 save(save_title);
 

@@ -118,11 +118,13 @@ for n = 1:size(MR,3)
 end
 SNR_slice(isnan(SNR_slice))=0;
 SNR_slice(isinf(SNR_slice)) = 0;
-SNR_slice = SNR_slice(SNR_slice ~= 0);
+SNR_slice(SNR_slice < 0) = 0;
+% SNR_slice = SNR_slice(SNR_slice ~= 0);
 
 SNRvv_slice(isnan(SNRvv_slice))=0;
 SNRvv_slice(isinf(SNRvv_slice)) = 0;
-SNRvv_slice = SNRvv_slice(SNRvv_slice ~= 0);
+SNRvv_slice(SNRvv_slice < 0) = 0;
+% SNRvv_slice = SNRvv_slice(SNRvv_slice ~= 0);
 
 overall_mean = mean(MR(maskarray == 1), "all", 'omitnan');
 overall_std = std(MR(backgroundmask == 1), 0,"all", 'omitnan');
