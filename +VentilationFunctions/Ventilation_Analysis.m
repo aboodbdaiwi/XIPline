@@ -54,10 +54,11 @@ catch
     Ventilation.AirwayMask = zeros(size(Ventilation.LungMask));
     airwaymask = Ventilation.AirwayMask;
 end
+
 %% Healthy Reference
 Ventilation.HealthyRef.Date = '20250627'; 
-Ventilation.HealthyRef.CoV = '≤0.3';
-Ventilation.HealthyRef.VHI = '~8';
+Ventilation.HealthyRef.CoV = '0.1-0.15';
+Ventilation.HealthyRef.VHI = '6-8';
 
 % TH method
 Ventilation.HealthyRef.TH.VDPULN = '≤5';
@@ -83,6 +84,7 @@ Ventilation.HealthyRef.DDI2D = '≤1±0.5';
 Ventilation.HealthyRef.DDI3D = '≤1±0.5';
 Ventilation.HealthyRef.AgeCorrected = 'No';
 
+Ventilation.writereport = 'yes';
 %% Calculate SNR:
 switch settings.calculate_SNR
     case "yes"
@@ -158,6 +160,41 @@ switch settings.N4_bias_analysis
     otherwise
         disp('Input error. Check inputs/outputs of input_params().')
 end
+%% %% save image and mask
+% Generate timestamp suffix
+timestamp = lower(datestr(now, '_yyyymmdd_HHMM'));
+
+% ==== File Deletion Helper Function ====
+delete_if_exist = @(pattern) cellfun(@(f) delete(fullfile(parentPath, f)), ...
+    {dir(fullfile(parentPath, pattern)).name}, 'UniformOutput', false);
+
+% ==== Delete any older matching files ====
+delete_if_exist('image*.nii*');
+delete_if_exist('lungmask*.nii*');
+delete_if_exist('airwaymask*.nii*');
+
+% Image
+img_name = lower(['image' timestamp '.nii']);
+niftiwrite(abs(fliplr(rot90(Ventilation.Image, -1))), fullfile(parentPath, img_name), 'Compressed', true);
+info = niftiinfo(fullfile(parentPath, [img_name '.gz']));
+info.Description = 'Package Version: Version1';
+niftiwrite(abs(fliplr(rot90(Ventilation.Image, -1))), fullfile(parentPath, img_name), info, 'Compressed', true);
+
+% Lung mask
+lung_name = lower(['lungmask' timestamp '.nii']);
+niftiwrite(abs(fliplr(rot90(Ventilation.LungMask, -1))), fullfile(parentPath, lung_name), 'Compressed', true);
+info = niftiinfo(fullfile(parentPath, [lung_name '.gz']));
+info.Description = 'Package Version: Version1';
+niftiwrite(abs(fliplr(rot90(Ventilation.LungMask, -1))), fullfile(parentPath, lung_name), info, 'Compressed', true);
+
+% Airway mask
+airway_name = lower(['airwaymask' timestamp '.nii']);
+niftiwrite(abs(fliplr(rot90(Ventilation.AirwayMask, -1))), fullfile(parentPath, airway_name), 'Compressed', true);
+info = niftiinfo(fullfile(parentPath, [airway_name '.gz']));
+info.Description = 'Package Version: Version1';
+niftiwrite(abs(fliplr(rot90(Ventilation.AirwayMask, -1))), fullfile(parentPath, airway_name), info, 'Compressed', true);
+
+
 %% calculate ventilation heterogeneity
 if strcmp(Ventilation.HeterogeneityIndex,'yes') 
     [Ventilation] = VentilationFunctions.calculate_VHI(Ventilation);
@@ -336,6 +373,13 @@ close all;
 %% %% save maps in mat file
 save_data=[parentPath,'\','Ventilation_Analysis','.mat'];
 save(save_data);  
+
+VentilationExcelFile = fullfile(parentPath, 'Ventilation_workspace.xlsx');
+Global.exportStructToExcel(Ventilation, VentilationExcelFile);
+MainInputExcelFile = fullfile(parentPath, 'MainInput_workspace.xlsx');
+Global.exportStructToExcel(MainInput, MainInputExcelFile);
+ProtonExcelFile = fullfile(parentPath, 'Proton_workspace.xlsx');
+Global.exportStructToExcel(Proton, ProtonExcelFile);
 
 disp('ventilation analysis completed');
 close all;

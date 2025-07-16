@@ -47,10 +47,8 @@ if width <= 128
         removeSize = 2;  
         sideColumns = 5; 
     else
-        removeSize = 3;   % def 3
-        sideColumns = 10;  % def 10 % 
-        % removeSize = 3;  
-        % sideColumns = 5;         
+        removeSize = 3;   
+        sideColumns = 5;         
     end
 elseif width <= 256
     if strcmp(Ventilation.SliceOrientation,'transversal') 

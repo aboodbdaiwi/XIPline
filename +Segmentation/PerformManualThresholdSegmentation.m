@@ -66,7 +66,7 @@ switch MainInput.SegmentAnatomy
                         LungMask = Segmentation.FreehandSegment(Image_to_Segment); 
                         % LungMask = Segmentation.SegmentLungParenchyma(Image_to_Segment); 
                     case 'AppSegmenter'
-%                         VolumSegmt = volumeSegmenter(Image);
+%                         VolumSegmt = volumeSegmenter(Image);                                         
                         volumeSegmenter(Image_to_Segment);
 %                         uiwait(VolumSegmt)
                         cd(MainInput.XeDataLocation)

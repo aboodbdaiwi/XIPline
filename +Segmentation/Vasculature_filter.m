@@ -94,7 +94,7 @@ disp('Save NIFTI')
 outputFile = fullfile(MainInput.XeDataLocation, 'vessel_mask.nii');
 
 if ~isfile(outputFile)
-    niftiwrite(fliplr(rot90(VesselMask, -1)), outputFile, 'Compressed', true);
+    % niftiwrite(fliplr(rot90(VesselMask, -1)), outputFile, 'Compressed', true);
 end
 
 % niftiwrite((fliplr(rot90(VesselMask,-1))),[MainInput.XeDataLocation,'\vessel_mask.nii'],'Compressed',true);

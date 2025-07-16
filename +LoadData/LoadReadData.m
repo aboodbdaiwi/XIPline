@@ -212,8 +212,8 @@ elseif (strcmp(MainInput.XeDataext,'.h5') || strcmp(MainInput.XeDataext,'.mrd'))
     end
 elseif strcmp(MainInput.XeDataext,'.data')  && strcmp(MainInput.Scanner, 'Philips')  
     MainInput.ReconImageMode = 'xenon';
-    if strcmp(MainInput.AnalysisType,'Ventilation') == 1 && strcmp(MainInput.SequenceType, '2D GRE') == 1 ...
-            && (strcmp(MainInput.ScannerSoftware, '5.3.1') == 1 || strcmp(MainInput.ScannerSoftware, '5.6.1') == 1)
+    if strcmp(MainInput.AnalysisType,'Ventilation')  && strcmp(MainInput.SequenceType, '2D GRE')  ...
+            && (strcmp(MainInput.ScannerSoftware, '5.3.1') || strcmp(MainInput.ScannerSoftware, '5.6.1') )
         [Image, file_folder, file_name] = LoadData.LoadData_Gas_VentDiff_Philips_GRE(MainInput.XeDataLocation);
         Ventilation.Image = Image;
         Ventilation.filename = file_name;
@@ -225,17 +225,17 @@ elseif strcmp(MainInput.XeDataext,'.data')  && strcmp(MainInput.Scanner, 'Philip
         Ventilation.filename = file_name;
         Ventilation.folder = file_folder;          
 
-    elseif strcmp(MainInput.AnalysisType,'Ventilation') && strcmp(MainInput.SequenceType, '2D Spiral') == 1 && strcmp(MainInput.ScannerSoftware, '5.9.0')                 
+    elseif strcmp(MainInput.AnalysisType,'Ventilation') && strcmp(MainInput.SequenceType, '2D Spiral') && strcmp(MainInput.ScannerSoftware, '5.9.0')                 
         [Ventilation, MainInput] = LoadData.philips_XeVent_2DSpiral_recon(MainInput, Ventilation); 
 
-    elseif strcmp(MainInput.AnalysisType,'Diffusion') == 1  && strcmp(MainInput.SequenceType, '2D GRE') == 1 ...
-            && (strcmp(MainInput.ScannerSoftware, '5.3.1') == 1 || strcmp(MainInput.ScannerSoftware, '5.6.1') == 1)
+    elseif strcmp(MainInput.AnalysisType,'Diffusion')  && strcmp(MainInput.SequenceType, '2D GRE')  ...
+            && (strcmp(MainInput.ScannerSoftware, '5.3.1')  || strcmp(MainInput.ScannerSoftware, '5.6.1') )
         [Image, file_folder, file_name] = LoadData.LoadData_Gas_VentDiff_Philips_GRE(MainInput);
         Diffusion.Image = Image;
         Diffusion.filename = file_name;
         Diffusion.folder = file_folder;
 
-    elseif strcmp(MainInput.AnalysisType,'Diffusion') == 1  && strcmp(MainInput.SequenceType, '2D GRE') == 1 && strcmp(MainInput.ScannerSoftware, '5.9.0') == 1 
+    elseif strcmp(MainInput.AnalysisType,'Diffusion') && strcmp(MainInput.SequenceType, '2D GRE') && strcmp(MainInput.ScannerSoftware, '5.9.0') 
         [Image, file_folder, file_name] = LoadData.LoadData_Gas_VentDiff_Philips_GRE_R590(MainInput);
         Diffusion.Image = Image;
         Diffusion.filename = file_name;

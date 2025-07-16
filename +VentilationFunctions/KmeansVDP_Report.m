@@ -177,7 +177,7 @@ function KmeansVDP_Report(Ventilation, Proton, MainInput)
     
     figVDP = makeTwoRowMontage(Ventilation.kmeansDefectmap2, 'VDP Map');
     
-    MVent = Ventilation.Mask_Vent_Reg;  % fallback
+    MVent = Ventilation.Mask_Vent_boundaries;  % fallback
     if ndims(MVent) == 4  && size(MVent,4) == 3% grayscale: [X Y Z 1]
         MVent = permute(MVent, [1 2 4 3]);  % 
         MVent = squeeze(MVent);  % remove singleton dimension

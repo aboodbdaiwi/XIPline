@@ -56,7 +56,8 @@ function [Ventilation] = calculate_VHI(Ventilation)
 
     NormMR = image.*(maskarray>0);
     incomplete = 0.33;
-    defectmask = VentilationFunctions.medFilter(double(NormMR<(mean(NormMR(NormMR>0))*incomplete)*(maskarray>0)));
+    % defectmask = VentilationFunctions.medFilter(double(NormMR<(mean(NormMR(NormMR>0))*incomplete)*(maskarray>0)));
+    defectmask = double(NormMR<(mean(NormMR(NormMR>0))*incomplete)*(maskarray>0));
 
     % Initialize outputs
     CV_maps = zeros(rows, cols, slices);  % To store CV maps for all slices

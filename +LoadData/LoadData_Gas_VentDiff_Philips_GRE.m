@@ -44,6 +44,7 @@ function [Image, parentPath, filename] = LoadData_Gas_VentDiff_Philips_GRE(MainI
         else
                 filter = 1;
         end
+        Image = zeros(128,128,slices,nbs);
         for sl =1:slices
             for b = 1:nbs
                 data_slice = diffK(:,:,sl,b).*filter;
@@ -52,10 +53,27 @@ function [Image, parentPath, filename] = LoadData_Gas_VentDiff_Philips_GRE(MainI
                 recon_slice(:, (1+kx/kx_oversample_factor):end)=[]; 
                 diffimgcmplx(:,:,sl,b) = recon_slice;
                 diffimg(:,:,sl,b) = abs(diffimgcmplx(:,:,sl,b)); % make magnitude data
-                Image(:,:,sl,b) = imresize(diffimg(:,:,sl,b),[128 , 128]);
+                % Get original image size
+                [origY, origX] = size(diffimg(:,:,sl,b));
+                
+                % Compute uniform scaling factor
+                scale = 128 / max(origY, origX);
+                newY = round(origY * scale);
+                newX = round(origX * scale);
+                
+                % Resize using uniform scale
+                resized_img = imresize(diffimg(:,:,sl,b), [newY, newX]);
+                
+                % Pad to 128x128
+                padded_img = zeros(128, 128);
+                startY = floor((128 - newY)/2) + 1;
+                startX = floor((128 - newX)/2) + 1;
+                padded_img(startY:startY+newY-1, startX:startX+newX-1) = resized_img;
+                Image(:,:,sl,b) = padded_img;
+
             end
         end
-        Image = rot90(rot90(diffimg));    
+        Image = rot90(rot90(Image));    
         
     elseif length(size(diffK)) <= 3
             data_size = size(diffK);
@@ -72,6 +90,7 @@ function [Image, parentPath, filename] = LoadData_Gas_VentDiff_Philips_GRE(MainI
             else
                     filter = 1;
             end
+            Image = zeros(128,128,slices);
             for sl =1:slices
                     data_slice = diffK(:,:,sl).*filter;
                     recon_slice = fftshift(fft2(data_slice),2);
@@ -79,9 +98,18 @@ function [Image, parentPath, filename] = LoadData_Gas_VentDiff_Philips_GRE(MainI
                     recon_slice(:, (1+kx/kx_oversample_factor):end)=[]; 
                     diffimgcmplx(:,:,sl) = recon_slice;
                     diffimg(:,:,sl) = abs(diffimgcmplx(:,:,sl)); % make magnitude data
-                    Image(:,:,sl) = imresize(diffimg(:,:,sl),[128 , 128]);
+                [origY, origX] = size(diffimg(:,:,sl));
+                scale = 128 / max(origY, origX);
+                newY = round(origY * scale);
+                newX = round(origX * scale);
+                resized_img = imresize(diffimg(:,:,sl), [newY, newX]);
+                
+                padded_img = zeros(128, 128);
+                startY = floor((128 - newY)/2) + 1;
+                startX = floor((128 - newX)/2) + 1;
+                padded_img(startY:startY+newY-1, startX:startX+newX-1) = resized_img;                
+                Image(:,:,sl) = padded_img;
             end
-            
-            Image = rot90(rot90(diffimg));  
+            Image = rot90(rot90(Image));  
     end
 end
