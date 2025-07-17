@@ -33,7 +33,7 @@ function exportStructToJSON(dataStruct, outputJSONFile)
                 elseif numel(val) <= 100
                     flatMap(fullKey) = val(:)';  % row vector
                 else
-                    flatMap(fullKey) = sprintf('Size: [%s]', num2str(size(val)));
+                    flatMap(fullKey) = sprintf('[%s]', num2str(size(val)));
                 end
 
             elseif isstruct(val)

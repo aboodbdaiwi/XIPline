@@ -44,12 +44,13 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
             [Xe_Img, ~] = Segmentation.N4_bias_correction(Xe_Img, MainInput.XeDataLocation);
 
             % Normalize each slice independently
-            for sl = 1:size(Xe_Img, 3)
-                max_val = max(Xe_Img(:, :, sl), [], 'all');
-                if max_val > 0
-                    Xe_Img(:, :, sl) = Xe_Img(:, :, sl) ./ max_val;
-                end
-            end
+            Xe_Img = Xe_Img/max(Xe_Img(:));
+            % for sl = 1:size(Xe_Img, 3)
+            %     max_val = max(Xe_Img(:, :, sl), [], 'all');
+            %     if max_val > 0
+            %         Xe_Img(:, :, sl) = Xe_Img(:, :, sl) ./ max_val;
+            %     end
+            % end
 
             % resize proton images
             if (strcmp(MainInput.NoProtonImage, 'no') || MainInput.NoProtonImage == 0) && strcmp(MainInput.Imagestosegment, 'Proton & Xe Registered') 

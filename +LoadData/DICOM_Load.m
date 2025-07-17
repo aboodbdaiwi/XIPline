@@ -140,18 +140,20 @@ if num_files > 1
             imag_vol = reshapedArray;
             % Display the size of the reshaped array to verify
             disp(size(reshapedArray));
-            if length(size(imag_vol)) > 3 && size(imag_vol,4) == 2
-                imagD1 = squeeze(imag_vol(:,:,:,1));
-                imagD2 = squeeze(imag_vol(:,:,:,2));
-                meanD1 = mean(imagD1(:));
-                meanD2 = mean(imagD2(:));
-                if meanD1 >= meanD2
-                    imag_vol = imagD1;
-                else
-                    imag_vol = imagD2;
+            if ndims(imag_vol) > 3
+                numVolumes = size(imag_vol, 4);
+                meanVals = zeros(1, numVolumes);
+            
+                % Compute mean intensity for each 3D volume along the 4th dimension
+                for i = 1:numVolumes
+                    vol = squeeze(imag_vol(:,:,:,i));
+                    meanVals(i) = mean(vol(:));
                 end
+            
+                % Find the volume with the highest mean
+                [~, maxIdx] = max(meanVals);
+                imag_vol = squeeze(imag_vol(:,:,:,maxIdx));
             end
-
         end
     catch
         disp('slices are stored without sorting')

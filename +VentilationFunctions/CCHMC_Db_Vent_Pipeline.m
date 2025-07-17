@@ -42,9 +42,10 @@ Outputs.HImagepath = anat_file;
 Outputs.analysispath = analysisFolder;
 Outputs.SequenceType = SequenceType;
 Outputs.ReconType = ReconType;
+Outputs.MaskPath = mask_file_name; 
 
 Outputs.AnalysisCode_path = 'https://github.com/aboodbdaiwi/XIPline';
-Outputs.AnalysisDate = datestr(datetime('today'), 'yyyy-mm-dd');
+Outputs.AnalysisDate = str2double(datestr(datetime('today'), 'yyyymmdd'));
 
 % Check if we have anatomical images or not
 if isempty(Hdatapath)
@@ -71,7 +72,7 @@ MainInput.XeFileName = filename;
 MainInput.XeDataext = xe_ext;
 cd(MainInput.XeDataLocation)
 
-Outputs.XeFullPath = XeFullPath;
+% Outputs.XeFullPath = XeFullPath;
 Outputs.XeDataLocation = XeDataLocation;
 Outputs.XeFileName = XeFileName;
 Outputs.XeDataext = xe_ext;
@@ -88,7 +89,7 @@ if strcmp(MainInput.NoProtonImage, 'no') == 1
     MainInput.HFileName = filename;
     MainInput.HDataext = H_ext;
 
-    Outputs.HFullPath = HFullPath;
+    % Outputs.HFullPath = HFullPath;
     Outputs.HDataLocation = HDataLocation;
     Outputs.HFileName = HFileName;
     Outputs.XeDataext = H_ext;
@@ -451,7 +452,7 @@ MainInput.MaskFullPath = mask_file_name;
 
 [Ventilation] = VentilationFunctions.Ventilation_Analysis(Ventilation, Proton, MainInput);
 close all;
-Outputs.timestamp = Ventilation.timestamp;
+Outputs.timestamp = str2double(Ventilation.timestamp);
 Outputs.SNR_slice = Ventilation.SNR_slice;
 Outputs.Overall_SNR = Ventilation.SNR_lung;
 Outputs.SNRvv_slice = Ventilation.SNRvv_slice;

@@ -28,7 +28,7 @@ MainInput.VoxelSize = '[3,3,15]';
 MainInput.SliceOrientation = 'transversal'; % 'coronal' ||'transversal' || 'sagittal' ||'isotropic'
 MainInput.vent_file = 'D:\OneDrive - cchmc\Lab\Random Subject analysis\sub-186H_0468\ses-20230120\vent\sub-0468_ses-20230120_acq-2.dcm';
 MainInput.anat_file = 'D:\OneDrive - cchmc\Lab\Random Subject analysis\sub-186H_0468\ses-20230120\anatvent\sub-0468_ses-20230120_acq-1.dcm';
-MainInput.analysisFolder = 'D:\OneDrive - cchmc\Lab\Random Subject analysis\sub-186H_0468\ses-20230120\analysis';
+MainInput.analysisFolder = 'D:\OneDrive - cchmc\Lab\Random Subject analysis\sub-186H_0468\ses-20230120\analysis\acq_1_rec_2';
 MainInput.mask_file_name = '';
 print_output = 1; % 0 for stop printing 
 
