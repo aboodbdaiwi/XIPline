@@ -8,7 +8,7 @@ XIPline application is developed at the [CPIR](https://www.cincinnatichildrens.o
 
 ## Table of contents:
 
-1. [Setup](#Running the Application)
+1. [Running the Application](#Running the Application)
 
 2. [Usage](#Usage)
 
