@@ -80,7 +80,6 @@ Personal email: abdaiwi89@gmail.com
 Website: [CPIR](https://www.cincinnatichildrens.org/research/divisions/c/cpir)
 
 If you use this software, please cite:
-[Please cite this paper](https://onlinelibrary.wiley.com/doi/full/10.1002/mrm.30347):
 > Bdaiwi AS, Willmering MM, Plummer JW, et al. *129Xe Image Processing Pipeline: An open-source, graphical user interface application for the analysis of hyperpolarized 129Xe MRI*. Magn Reson Med. 2024;1–18. https://doi.org/10.1002/mrm.30347
 > 
  
