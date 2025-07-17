@@ -6,8 +6,8 @@
 *.h5
 *.mat
 *.hdf5
-*.exe
 *.spec
+*.exe
 *.asv
 *.html
 *.fdl
