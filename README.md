@@ -85,12 +85,13 @@ Website: [CPIR](https://www.cincinnatichildrens.org/research/divisions/c/cpir)
 
 ## Updates:
 
-| **Task**                                               |     **Date**    | 
-|--------------------------------------------------------|-----------------|
-| Add new ventilation analysis report   | July 17, 2025    | 
-| Add offline recon for 2D spiral Philips ventilation images   | July 17, 2025    | 
-| Add ANTs and manual registration for the ventilation analysis   | July 17, 2025    | 
-| Remove Python requirement for AI segmentation models   | July 17, 2025    | 
-| Updates AI segmentation models                  | May 20, 2025    | 
+| **Task**                                                                 | **Date**        |
+|--------------------------------------------------------------------------|-----------------|
+| Add new ventilation analysis report                                      | July 17, 2025   |
+| Add offline reconstruction for 2D spiral Philips ventilation images      | July 17, 2025   |
+| Add ANTs and manual registration for ventilation analysis                | July 17, 2025   |
+| Remove Python requirement for AI segmentation models                     | July 17, 2025   |
+| Update AI segmentation models                                            | May 20, 2025    |
+
 
 
