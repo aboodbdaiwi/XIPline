@@ -47,17 +47,12 @@ When implementing new features, or debugging, we recommend using the debugging M
 3. This directory includes all required components:
    - AI segmentation models
    - Offline reconstruction scripts
-     
-4 - Install [Python](https://www.python.org/downloads/) 3.10.2 and make sure to add the Python path to the environment variables.
-
-Please refer to `User_Manual.pdf` document for more detailed steps. 
 
 These components are essential for image reconstruction, registration, and segmentation.
 
 
 ##### For GE Data: Waveform Files
  Add waveform files in the `C:\XIPline\GE\waveforms` folder. Please refer to `User_Manual.pdf` document for more detailed steps. 
-
 
 
 ## Usage
