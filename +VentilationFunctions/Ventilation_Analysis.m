@@ -373,15 +373,31 @@ close all;
 %% write report
 if strcmp(Ventilation.writereport,'yes')
     if strcmp(Ventilation.ThreshAnalysis,'yes')
+        files = dir(fullfile(Ventilation.outputpath, 'ThresholdVDP_Report*.pptx')); 
+        for i = 1:length(files)
+            delete(fullfile(Ventilation.outputpath, files(i).name));
+        end
         VentilationFunctions.ThresholdVDP_Report(Ventilation,Proton, MainInput);
     end
     if strcmp(Ventilation.LB_Analysis,'yes')
+        files = dir(fullfile(Ventilation.outputpath, 'LBVDP_Report*.pptx'));
+        for i = 1:length(files)
+            delete(fullfile(Ventilation.outputpath, files(i).name));
+        end        
         VentilationFunctions.LBVDP_Report(Ventilation,Proton, MainInput);
     end
     if strcmp(Ventilation.Kmeans,'yes')
+        files = dir(fullfile(Ventilation.outputpath, 'KmeansVDP_Report*.pptx'));
+        for i = 1:length(files)
+            delete(fullfile(Ventilation.outputpath, files(i).name));
+        end          
         VentilationFunctions.KmeansVDP_Report(Ventilation,Proton, MainInput);
     end
     if strcmp(Ventilation.AKmeans,'yes')
+        files = dir(fullfile(Ventilation.outputpath, 'AKmeansVDP_Report*.pptx'));
+        for i = 1:length(files)
+            delete(fullfile(Ventilation.outputpath, files(i).name));
+        end          
         VentilationFunctions.AKmeansVDP_Report(Ventilation,Proton, MainInput);
     end    
 end

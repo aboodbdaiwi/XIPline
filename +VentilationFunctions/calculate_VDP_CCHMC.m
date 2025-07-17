@@ -291,72 +291,72 @@ Ventilation.Mask_Vent_Reg = Mask_Vent_Reg;
 
 %% Output mask boundaries  with ventilation overlays:
 % Create a folder for the ventilation images:
-if ~isfield(Ventilation, 'Mask_Vent_boundaries')  
-    outputPath = char([DataPath + foldername]);
-    cd(outputPath);
-    cus_colormap = zeros(100,3);
-    
-    cus_colormap(:,1) = 1; % Red channel
-    cus_colormap(:,2) = 0; % Green channel
-    cus_colormap(:,3) = 1; % Blue channel
-    
-    tiff = figure('MenuBar','none','ToolBar','none','DockControls','off','Resize','off','WindowState','minimized');%figure for tiffs
-    ax1 = axes('Parent',tiff);ax2 = axes('Parent',tiff);%make axis for both images
-    set(ax1,'Visible','off');set(ax2,'Visible','off');%turn off axis
-    set(ax1,'units','inches');set(ax2,'units','inches');%make axis units inches
-    set(ax1,'position',[0 0 2 2]);set(ax2,'position',[0 0 2 2]);%make axis same as image
-    set(gcf,'units','inches'); % set the figure units to pixels
-    set(gcf,'position',[1 1 2 2])% set the position of the figure to axes
-    disp('Saving Vent Tiff...')
-    
-    % Normalize the intensity of the original image to fall between [0,1].
-    MR = Ventilation.Image;
-    MR2 = MR / max(MR,[], 'all');
-    
-    for slice=1:size(maskarray,3) %repeat for rest of slices
-        maskboundaries = bwboundaries(Ventilation.LungMask(:,:,slice));
-        % Check if bwboundaries returned an empty 0x1 cell
-        if isempty(maskboundaries) && isequal(size(maskboundaries), [0, 1])
-            maskboundaries = zeros(size(MR2(:,:,slice)));
-        else
-            % Convert boundary points to a binary mask
-            maskImg = false(size(Ventilation.LungMask(:,:,slice)));
-            for k = 1:length(maskboundaries)
-                boundary = maskboundaries{k};
-                maskImg(sub2ind(size(maskImg), boundary(:,1), boundary(:,2))) = true;
-            end
-            % Thicken boundary using morphological dilation
-            se = strel('disk', 1);  % Use radius=1 or larger for thicker lines
-            thickMask = imdilate(maskImg, se);
-            maskboundaries = double(thickMask);
-            % maskboundaries = double(maskImg);
+
+outputPath = char([DataPath + foldername]);
+cd(outputPath);
+cus_colormap = zeros(100,3);
+
+cus_colormap(:,1) = 1; % Red channel
+cus_colormap(:,2) = 0; % Green channel
+cus_colormap(:,3) = 1; % Blue channel
+
+tiff = figure('MenuBar','none','ToolBar','none','DockControls','off','Resize','off','WindowState','minimized');%figure for tiffs
+ax1 = axes('Parent',tiff);ax2 = axes('Parent',tiff);%make axis for both images
+set(ax1,'Visible','off');set(ax2,'Visible','off');%turn off axis
+set(ax1,'units','inches');set(ax2,'units','inches');%make axis units inches
+set(ax1,'position',[0 0 2 2]);set(ax2,'position',[0 0 2 2]);%make axis same as image
+set(gcf,'units','inches'); % set the figure units to pixels
+set(gcf,'position',[1 1 2 2])% set the position of the figure to axes
+disp('Saving Vent Tiff...')
+
+% Normalize the intensity of the original image to fall between [0,1].
+MR = Ventilation.Image;
+MR2 = MR / max(MR,[], 'all');
+
+for slice=1:size(maskarray,3) %repeat for rest of slices
+    maskboundaries = bwboundaries(Ventilation.LungMask(:,:,slice));
+    % Check if bwboundaries returned an empty 0x1 cell
+    if isempty(maskboundaries) && isequal(size(maskboundaries), [0, 1])
+        maskboundaries = zeros(size(MR2(:,:,slice)));
+    else
+        % Convert boundary points to a binary mask
+        maskImg = false(size(Ventilation.LungMask(:,:,slice)));
+        for k = 1:length(maskboundaries)
+            boundary = maskboundaries{k};
+            maskImg(sub2ind(size(maskImg), boundary(:,1), boundary(:,2))) = true;
         end
-    
-        [~,~] = Global.imoverlay(squeeze(abs(MR2(:,:,slice))),squeeze(maskboundaries),[1,100],[0,max(MR2(:))],cus_colormap,1,gca);
-        colormap(gca,cus_colormap)     
-        Xdata = getframe(gcf);
-        X = Xdata.cdata;     
-        if (slice == 1)
-            imwrite(X,[outputPath,'\maskboundaries.tif'],'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
-        else
-            imwrite(X,[outputPath,'\maskboundaries.tif'],'WriteMode','append','Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%append tiff
-        end
+        % Thicken boundary using morphological dilation
+        se = strel('disk', 1);  % Use radius=1 or larger for thicker lines
+        thickMask = imdilate(maskImg, se);
+        maskboundaries = double(thickMask);
+        % maskboundaries = double(maskImg);
     end
-    disp('maskboundariesTiff Completed.')
-    close all;
-    % read tiff
-    cd(outputPath)
-    tiff_info = imfinfo('maskboundaries.tif'); % return tiff structure, one element per image
-    % tiff_stack = imread('BinnedVent.tif', 1) ; % read in first image
-    Mask_Vent_boundaries = uint8(zeros(tiff_info(1).Height ,tiff_info(1).Width ,3,length(tiff_info)));
-    %concatenate each successive tiff to tiff_stack
-    for ii = 1 : size(tiff_info, 1)
-        temp_tiff = imread('maskboundaries.tif', ii);
-        Mask_Vent_boundaries(:,:,:,ii) = temp_tiff;
+
+    [~,~] = Global.imoverlay(squeeze(abs(MR2(:,:,slice))),squeeze(maskboundaries),[1,100],[0,max(MR2(:))],cus_colormap,1,gca);
+    colormap(gca,cus_colormap)     
+    Xdata = getframe(gcf);
+    X = Xdata.cdata;     
+    if (slice == 1)
+        imwrite(X,[outputPath,'\maskboundaries.tif'],'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
+    else
+        imwrite(X,[outputPath,'\maskboundaries.tif'],'WriteMode','append','Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%append tiff
     end
-    Mask_Vent_boundaries = permute(Mask_Vent_boundaries,[1 2 4 3]);
-    Ventilation.Mask_Vent_boundaries = Mask_Vent_boundaries;
 end
+disp('maskboundariesTiff Completed.')
+close all;
+% read tiff
+cd(outputPath)
+tiff_info = imfinfo('maskboundaries.tif'); % return tiff structure, one element per image
+% tiff_stack = imread('BinnedVent.tif', 1) ; % read in first image
+Mask_Vent_boundaries = uint8(zeros(tiff_info(1).Height ,tiff_info(1).Width ,3,length(tiff_info)));
+%concatenate each successive tiff to tiff_stack
+for ii = 1 : size(tiff_info, 1)
+    temp_tiff = imread('maskboundaries.tif', ii);
+    Mask_Vent_boundaries(:,:,:,ii) = temp_tiff;
+end
+Mask_Vent_boundaries = permute(Mask_Vent_boundaries,[1 2 4 3]);
+Ventilation.Mask_Vent_boundaries = Mask_Vent_boundaries;
+
 %% Output ventilation images with defect overlays:
 % figure; Global.imslice(MR)
 % figure; Global.imslice(scaledImage)

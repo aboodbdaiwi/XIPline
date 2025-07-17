@@ -88,19 +88,19 @@ if strcmp(MainInput.XeDataext,'.dcm')
         [Image, file_folder, FileNames, DicomInfo] = LoadData.Single_DICOM_Load(MainInput.vent_file);  
     else
         [Image, file_folder, FileNames, DicomInfo] = LoadData.DICOM_Load(MainInput.XeDataLocation);     
-        try
-            if isfield(DicomInfo, 'AcquisitionDate')
-                MainInput.ScanDate = DicomInfo.AcquisitionDate;
-            elseif isfield(DicomInfo, 'SeriesDate')
-                MainInput.ScanDate = DicomInfo.SeriesDate;
-            elseif isfield(DicomInfo, 'StudyDate')
-                MainInput.ScanDate = DicomInfo.StudyDate;
-            else
-                MainInput.ScanDate = '00000000';
-            end
-        catch
-            MainInput.ScanDate = '00000000';
-        end        
+        % try
+        %     if isfield(DicomInfo, 'AcquisitionDate')
+        %         MainInput.ScanDate = DicomInfo.AcquisitionDate;
+        %     elseif isfield(DicomInfo, 'SeriesDate')
+        %         MainInput.ScanDate = DicomInfo.SeriesDate;
+        %     elseif isfield(DicomInfo, 'StudyDate')
+        %         MainInput.ScanDate = DicomInfo.StudyDate;
+        %     else
+        %         MainInput.ScanDate = '00000000';
+        %     end
+        % catch
+        %     MainInput.ScanDate = '00000000';
+        % end        
     end
           
     if strcmp(MainInput.AnalysisType,'Ventilation')                  
