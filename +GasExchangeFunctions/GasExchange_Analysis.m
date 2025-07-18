@@ -106,8 +106,8 @@ end
 
 DataLocation = MainInput.XeDataLocation;
 cd(DataLocation)
-mkdir([DataLocation '\Gas Exchange Analysis']);
-outputpath = [DataLocation '\Gas Exchange Analysis'];
+mkdir([DataLocation '\GasExchange_Analysis']);
+outputpath = [DataLocation '\GasExchange_Analysis'];
 cd(outputpath)
 
 ProtonMaskMontage = figure('Name','Lung Mask');set(ProtonMaskMontage,'WindowState','minimized');
@@ -590,6 +590,16 @@ niftiwrite(abs(fliplr(rot90(ProtonImage,-1))),[outputpath,'\ProtonImage.nii'],'C
 info = niftiinfo([outputpath,'\ProtonImage.nii.gz']);
 info.Description = strcat('Package Version: ', ReconVersion);
 niftiwrite(abs(fliplr(rot90(ProtonImage,-1))),[outputpath,'\ProtonImage.nii'],info,'Compressed',true);
+
+niftiwrite(abs(fliplr(rot90(Proton.ProtonHRRegistered,-1))),[outputpath,'\ProtonHRRegistered.nii'],'Compressed',true);
+info = niftiinfo([outputpath,'\ProtonHRRegistered.nii.gz']);
+info.Description = strcat('Package Version: ', ReconVersion);
+niftiwrite(abs(fliplr(rot90(Proton.ProtonHRRegistered,-1))),[outputpath,'\ProtonHRRegistered.nii'],info,'Compressed',true);
+
+niftiwrite(abs(fliplr(rot90(Proton.ProtonRegistered,-1))),[outputpath,'\ProtonRegistered.nii'],'Compressed',true);
+info = niftiinfo([outputpath,'\ProtonRegistered.nii.gz']);
+info.Description = strcat('Package Version: ', ReconVersion);
+niftiwrite(abs(fliplr(rot90(Proton.ProtonRegistered,-1))),[outputpath,'\ProtonRegistered.nii'],info,'Compressed',true);
 
 niftiwrite(abs(fliplr(rot90(LungMask,-1))),[outputpath,'\ProtonMask.nii'],'Compressed',true);
 info = niftiinfo([outputpath,'\ProtonMask.nii.gz']);

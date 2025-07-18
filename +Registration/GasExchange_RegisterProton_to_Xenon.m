@@ -24,12 +24,10 @@ function [Proton,GasExchange] = GasExchange_RegisterProton_to_Xenon(Proton,GasEx
 %   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
 
 %% Register Proton to Xenon
-ProtonImage = Proton.Image;
-try
-    ProtonImageHR = Proton.ProtonImageHR;
-catch
-    ProtonImageHR = Proton.Image;
-end
+
+ProtonImage = Proton.ProtonImageLR;
+ProtonImageHR = Proton.ProtonImageHR;
+
 UncorrectedVentImage = GasExchange.UncorrectedVentImage;
 VentImage = GasExchange.VentImage;
 H_RecMatrix = Proton.H_RecMatrix;
@@ -81,22 +79,32 @@ optimizer.Epsilon = 1e-12;
 optimizer.InitialRadius = 0.00005;
 optimizer.MaximumIterations = 500;
 tform = imregtform(abs(ProtonReg), abs(VentReg), 'affine', optimizer, metric,'InitialTransformation',tformSimilarity,'PyramidLevels',4); %affine transform using inital similarity transform
-ProtonRegistered = imwarp(abs(ProtonImage), tform,'OutputView',imref3d(size(abs(VentImage))));
+ProtonLRRegistered = imwarp(abs(ProtonImage), tform,'OutputView',imref3d(size(abs(VentImage))));
 ProtonHRRegistered = imwarp(abs(ProtonImageHR), tform,'OutputView',imref3d(size(abs(VentImage))));
 ProtonMaskRegistred = logical(imwarp(abs(LungMask), tform,'OutputView',imref3d(size(abs(VentImage)))));
-
+ProtonRegistered = ProtonHRRegistered;
+ProtonImage = ProtonImageHR;
 disp('Registering Proton Image to Gas Image Completed.')
 
 %Determine Slices to Plot
+cleaned_mask = ProtonMaskRegistred;  % initialize output mask
+num_slices = size(ProtonMaskRegistred, 3);  % assume slicing along 3rd dim (axial)
+for i = 1:num_slices
+    slice_sum = sum(ProtonMaskRegistred(:,:,i), 'all');
+    if slice_sum < 50
+        cleaned_mask(:,:,i) = 0;
+    end
+end
+
 %Coronal
-Co_MaskVoxels = squeeze(sum(ProtonMaskRegistred,[1,2]));
+Co_MaskVoxels = squeeze(sum(cleaned_mask,[1,2]));
 Co_StartIndex = find(Co_MaskVoxels,1,'first');
 Co_EndIndex = find(Co_MaskVoxels,1,'last');
 Co_MiddleIndex = round((Co_StartIndex+Co_EndIndex)/2);
 Co_Step = floor((Co_EndIndex-Co_StartIndex)/NumPlotSlices);
 Slices_Co = (Co_MiddleIndex-Co_Step*(NumPlotSlices-1)/2):Co_Step:(Co_MiddleIndex+Co_Step*(NumPlotSlices-1)/2);
 %Axial
-Ax_MaskVoxels = squeeze(sum(ProtonMaskRegistred,[2,3]));
+Ax_MaskVoxels = squeeze(sum(cleaned_mask,[2,3]));
 Ax_StartIndex = find(Ax_MaskVoxels,1,'first');
 Ax_EndIndex = find(Ax_MaskVoxels,1,'last');
 Ax_MiddleIndex = round((Ax_StartIndex+Ax_EndIndex)/2);
@@ -144,7 +152,8 @@ Proton.tform = tform;
 Proton.Slices_Co = Slices_Co; 
 Proton.Slices_Ax = Slices_Ax; 
 Proton.optimizer = optimizer;
-Proton.ProtonRegistered = ProtonRegistered;
+Proton.ProtonRegistered = ProtonRegistered; 
+Proton.ProtonLRRegistered = ProtonLRRegistered;
 Proton.ProtonHRRegistered = ProtonHRRegistered;
 Proton.ProtonMaskRegistred = ProtonMaskRegistred;
 Proton.ProtonRegisteredColored = permute(ProtonRegisteredColored,[1 2 4 3]);

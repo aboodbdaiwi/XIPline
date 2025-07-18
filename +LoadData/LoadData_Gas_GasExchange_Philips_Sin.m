@@ -31,9 +31,8 @@ function [GasExchange] = LoadData_Gas_GasExchange_Philips_Sin(GasDataLocation,In
 %       SigDynamics
 %
 %   Example: 
-%   GasExchangeFunctions_ProcessSingleSubject('C:\Users\mwillmering\Documents\Subject1')
 % 
-%   Package: https://github.com/cchmc-cpir/CCHMC-Gas-Exchange-Processing-Package
+%   Package: https://github.com/aboodbdaiwi/XIPline
 %
 %   Author: Matthew Willmering
 %   Work email: matthew.willmering@cchmc.org
@@ -52,8 +51,8 @@ idcs = strfind(FunctionDirectory,filesep);%determine location of file separators
 FunctionDirectory = FunctionDirectory(1:idcs(end)-1);%remove file
 
 cd(GasDataLocation)
-mkdir([GasDataLocation '\Gas Exchange Analysis']);
-outputpath = [GasDataLocation '\Gas Exchange Analysis'];
+mkdir([GasDataLocation '\GasExchange_Analysis']);
+outputpath = [GasDataLocation '\GasExchange_Analysis'];
 
 ReconVersion = 'TEST';%If not connected to git, can't determine hash so state test
 NumPlotSlices = 7;%must be odd to work as expected
@@ -175,11 +174,14 @@ disp('Importing Data...')
 %Load in FIDs
 [XeData,XeInfo] = GasExchangeFunctions.loadLISTDATA([XeDataFile.folder,'\',XeDataFile.name]);
 XeData = squeeze(XeData);
-if length(size(XeData)) > 3
-    XeData = squeeze(XeData(:,:,:,1)); % take first echo only
+if strcmp(ScanVersion,'CCHMC') 
+    %skip
+else
+    if length(size(XeData)) > 3
+        XeData = squeeze(XeData(:,:,:,1)); % take first echo only
+    end
+    % plot(abs(XeData(:,1,1)),'Color',[0.5 0 0],'LineWidth',1);
 end
-% plot(abs(XeData(:,1,1)),'Color',[0.5 0 0],'LineWidth',1);
-
 
 if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
     %Dissolved k-space
@@ -265,7 +267,7 @@ else
 end
 disp('Importing Data Completed.')
 
-
+GasExchange.OvsFactor = OvsFactor;
 %% Calculate Trajectories
 disp('Calculating Trajectories...')
 if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
@@ -286,8 +288,17 @@ else
     if (strcmp(Scanner,'3T-R'))%R5.3.1
         XeTraj = GasExchangeFunctions.philipsradialcoords(0.36,1,[FunctionDirectory,'\V3 Scan Info\20191008_162511_Dissolved_Xe_20191008 - 3T-R.sin']); %0.36us delay, GM, from non-spectroscopy version
     else%3T-T1; R5.6.0 dMN
-        XeTraj = GasExchangeFunctions.philipsradialcoords(0.36,1,[FunctionDirectory,'\V3 Scan Info\20200210_133229_Dissolved_Xe_20191008 - 3T-T1.sin']); %0.36us delay, GM, from non-spectroscopy version
+        del = 0.36;
+        if mod(OvsFactor,1) % strange situation for some cases that were based on 57 points readout
+            del = -1;
+        end
+        XeTraj = GasExchangeFunctions.philipsradialcoords(del,1,[FunctionDirectory,'\V3 Scan Info\20200210_133229_Dissolved_Xe_20191008 - 3T-T1.sin']); %0.36us delay, GM, from non-spectroscopy version
     end
+    del = 1.65;
+    if mod(OvsFactor,1) % strange situation for some cases that were based on 57 points readout
+        del = -1.65;
+    end
+
     XeTraj = permute(XeTraj,[4 3 2 1]);
     XeTraj = GasExchangeFunctions.SortUTETraj_AcqOrder(GasExchangeFunctions.reshapeUTETraj(XeTraj), [XeImg_nsamp, Xe_nprof, Xe_interleaves], XeOrder);%reshape and order
 end

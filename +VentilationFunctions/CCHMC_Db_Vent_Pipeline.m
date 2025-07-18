@@ -529,7 +529,7 @@ if strcmp(Ventilation.GLRLM_Analysis, 'yes') == 1
     Outputs.GLRLM.output = Ventilation.GLRLM;
 end
 
-OutputJSONFile = fullfile(analysisSubfolder, 'Outputs.json');
+OutputJSONFile = fullfile(analysisSubfolder, 'Ventilation_Analysis.json');
 Global.exportStructToJSON(Outputs, OutputJSONFile);
 
 % Check if the directory specified by analysisSubfolder exists, create it if necessary

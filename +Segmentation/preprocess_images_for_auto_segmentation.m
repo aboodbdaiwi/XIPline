@@ -141,10 +141,15 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
             % resize proton images
             if strcmp(MainInput.NoProtonImage, 'no') || MainInput.NoProtonImage == 0
                 % resize
-                if ~isequal(size(Proton.ProtonRegistered), Im_size)
-                    H_Img = imresize3(Proton.ProtonRegistered, Im_size);
+                try
+                    ProtonImage = Proton.ProtonLRRegistered;
+                catch
+                    ProtonImage = Proton.ProtonRegistered;
+                end
+                if ~isequal(size(ProtonImage), Im_size)
+                    H_Img = imresize3(ProtonImage, Im_size);
                 else
-                    H_Img = Proton.ProtonRegistered;
+                    H_Img = ProtonImage;
                 end
                 % normalize
                 H_Img = double(H_Img./max(H_Img(:)));

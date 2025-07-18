@@ -207,15 +207,17 @@ if strcmp(MainInput.Scanner,'Siemens')
     ProtonImage = flip(ProtonImage,2);
 end
 ProtonImageHR = ProtonImage;
-% figure; imslice(ProtonImageHR)
+
 %Correct Bias
 disp('Correcting Proton Bias...')
-ProtonImage = medfilt3(ProtonImage, [7 7 7]);%remove undersampling artifacts
-ProtonImage = imgaussfilt3(ProtonImage, 0.5);%reduce noise
-[ProtonImage, ~] = GasExchangeFunctions.Dissolved_ProtonBiasCorrection(ProtonImage);
+ProtonImageLR = medfilt3(ProtonImage, [7 7 7]);%remove undersampling artifacts
+ProtonImageLR = imgaussfilt3(ProtonImageLR, 0.5);%reduce noise
+[ProtonImageLR, ~] = GasExchangeFunctions.Dissolved_ProtonBiasCorrection(ProtonImageLR);
+[ProtonImageHR, ~] = GasExchangeFunctions.Dissolved_ProtonBiasCorrection(ProtonImageHR);
 
 % Determine Levels
-ProtonMax = prctile(abs(ProtonImage(:)),99.99);
+ProtonMax = prctile(abs(ProtonImageLR(:)),99.99);
+
 
 disp('Proton Bias Corrected.')  
 cd(outputpath)
@@ -225,9 +227,11 @@ montage(abs(ProtonImage(H_RecMatrix:2*H_RecMatrix,H_RecMatrix:2*H_RecMatrix,H_Re
 savefig('ProtonMontage.fig')
 close(gcf)
 
-Proton.Image = double(ProtonImage);
+Proton.Image = double(ProtonImageHR);
+Proton.ProtonImageLR = double(ProtonImageLR);
 Proton.ProtonImageHR = double(ProtonImageHR);
-Proton.folder = MainInput.HDataLocation;
+Proton.filename = file_name;
+Proton.folder = ProtonDataLocation;
 Proton.H_RecMatrix = H_RecMatrix;
 Proton.ProtonMax = ProtonMax;
 

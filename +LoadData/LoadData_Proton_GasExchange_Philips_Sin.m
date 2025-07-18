@@ -1,5 +1,5 @@
 
-function [Proton] = LoadData_Proton_GasExchange_Philips_Sin(ProtonDataLocation,PixelShift,Institute,Proton)
+function [Proton] = LoadData_Proton_GasExchange_Philips_Sin(ProtonDataLocation,PixelShift,Institute,Proton,GasExchange)
 %   Will process the resulting proton mri data
 %   for V3 and XeCTC versions of the data
 %   Requires a folder with the Dissolved_Xe raw/lab/sin files,
@@ -16,9 +16,8 @@ function [Proton] = LoadData_Proton_GasExchange_Philips_Sin(ProtonDataLocation,P
 %      ProtonImage
 %
 %   Example: 
-%   LoadData_Proton_GasExchange_Philips_Sin('C:\Users\mwillmering\Documents\Subject1')
 %
-%   Package: https://github.com/cchmc-cpir/CCHMC-Gas-Exchange-Processing-Package
+%   Package: https://github.com/aboodbdaiwi/XIPline
 %
 %   Author: Matthew Willmering
 %   Work email: matthew.willmering@cchmc.org
@@ -52,10 +51,11 @@ HDataFile = DataFiles(1);
 disp('Looking For Necessary Files Completed.')
 
 cd(ProtonDataLocation)
-mkdir([ProtonDataLocation '\Gas Exchange Analysis']);
-outputpath = [ProtonDataLocation '\Gas Exchange Analysis'];
+mkdir([ProtonDataLocation '\GasExchange_Analysis']);
+outputpath = [ProtonDataLocation '\GasExchange_Analysis'];
 cd(outputpath)
 Proton.outputfolder = outputpath;
+OvsFactor = GasExchange.OvsFactor;
 %% Import Acquisition Information
 disp('Importing Acquisition Information...')
 folder = HSinFile(end).folder;
@@ -110,7 +110,11 @@ if strcmp(ScanVersion,'Xe_CTC')
     HTraj = GasExchangeFunctions.philipsradialcoords(1.25,2,SinFullPath); %1.25us delay, Haltoned Spiral
     HTraj = permute(HTraj,[4 3 2 1]);
 else
-    HTraj = GasExchangeFunctions.philipsradialcoords(1.65,1,SinFullPath); %1.65us delay, GM
+    del = 1.65;
+    if mod(OvsFactor,1) % strange situation for some cases that were based on 57 points readout
+        del = -1.65;
+    end    
+    HTraj = GasExchangeFunctions.philipsradialcoords(del,1,SinFullPath); %1.65us delay, GM
     HTraj = permute(HTraj,[4 3 2 1]);
     HTraj = GasExchangeFunctions.SortUTETraj_AcqOrder(GasExchangeFunctions.reshapeUTETraj(HTraj), [H_nsamp, H_nprof, H_interleaves], HOrder);%reshape and order
 end
@@ -209,14 +213,16 @@ end
 ProtonImage = GasExchangeFunctions.SOS_Coil_Combine(ProtonImage);%Combine Coils
 disp('Reconstructing UTE Image Competed.')
 ProtonImageHR = ProtonImage;
+
 %Correct Bias
 disp('Correcting Proton Bias...')
-% ProtonImage = medfilt3(ProtonImage, [7 7 7]);%remove undersampling artifacts
-% ProtonImage = imgaussfilt3(ProtonImage, 0.5);%reduce noise
-% [ProtonImage, ~] = GasExchangeFunctions.Dissolved_ProtonBiasCorrection(ProtonImage);
+ProtonImageLR = medfilt3(ProtonImage, [7 7 7]);%remove undersampling artifacts
+ProtonImageLR = imgaussfilt3(ProtonImageLR, 0.5);%reduce noise
+[ProtonImageLR, ~] = GasExchangeFunctions.Dissolved_ProtonBiasCorrection(ProtonImageLR);
+[ProtonImageHR, ~] = GasExchangeFunctions.Dissolved_ProtonBiasCorrection(ProtonImageHR);
 
 % Determine Levels
-ProtonMax = prctile(abs(ProtonImage(:)),99.99);
+ProtonMax = prctile(abs(ProtonImageLR(:)),99.99);
 
 disp('Proton Bias Corrected.')  
 cd(outputpath)
@@ -226,7 +232,8 @@ montage(abs(ProtonImageHR(H_RecMatrix:2*H_RecMatrix,H_RecMatrix:2*H_RecMatrix,H_
 savefig('ProtonMontage.fig')
 close(gcf)
 
-Proton.Image = double(ProtonImage);
+Proton.Image = double(ProtonImageHR);
+Proton.ProtonImageLR = double(ProtonImageLR);
 Proton.ProtonImageHR = double(ProtonImageHR);
 Proton.filename = file_name;
 Proton.folder = ProtonDataLocation;

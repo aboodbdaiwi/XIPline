@@ -4,7 +4,7 @@ function [Ventilation, Diffusion, GasExchange, Proton, MainInput] = LoadReadData
 %      
 %   Outputs:
 %                   
-%   Package: https://github.com/aboodbdaiwi/HP129Xe_Analysis_App
+%   Package: https://github.com/aboodbdaiwi/XIPline
 %
 %   Author: Abdullah S. Bdaiwi
 %   Work email: abdullah.bdaiwi@cchmc.org
@@ -14,6 +14,7 @@ function [Ventilation, Diffusion, GasExchange, Proton, MainInput] = LoadReadData
 %   Please add updates at the end. Ex: 3/10/24 - ASB: update .... 
 
 % Initialize output variables
+clc;
 Ventilation.Image = [];
 Ventilation.filename = [];
 Ventilation.folder = [];
@@ -471,7 +472,7 @@ if (isnumeric(MainInput.NoProtonImage) && MainInput.NoProtonImage == 0) || ...
                 else
                     PixelShift = [0; 0; 0];
                 end
-                [Proton] = LoadData.LoadData_Proton_GasExchange_Philips_Sin(MainInput.HDataLocation,PixelShift,MainInput.Institute);
+                [Proton] = LoadData.LoadData_Proton_GasExchange_Philips_Sin(MainInput.HDataLocation,PixelShift,MainInput.Institute,Proton,GasExchange);
             end
         elseif (strcmp(MainInput.HDataext,'.h5') || strcmp(MainInput.HDataext,'.mrd'))              
             if strcmp(MainInput.AnalysisType,'Ventilation')  
