@@ -83,7 +83,9 @@ if ~isfield(MainInput, 'Recon')
         MainInput.Recon = 'Offline';
     end
 end
-
+if ~isfield(MainInput, 'CCHMC_DbVentAnalysis')
+    MainInput.CCHMC_DbVentAnalysis = 'no';
+end
 if strcmp(MainInput.XeDataext,'.dcm')         
     if strcmp(MainInput.CCHMC_DbVentAnalysis,'yes')
         [Image, file_folder, FileNames, DicomInfo] = LoadData.Single_DICOM_Load(MainInput.vent_file);  
