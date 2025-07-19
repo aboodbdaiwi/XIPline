@@ -1,10 +1,10 @@
 function [Ventilation] = VDP_calculationASB(Ventilation,Proton,MainInput)
 
 % load the deformed lung/lobe mask. 
-maskarray = Ventilation.LungMask;
-% maskarray = double(Ventilation.LungMask + Ventilation.VesselMask);
-% maskarray(maskarray > 1) = 0;
-% maskarray = double(maskarray);
+maskarray = double(Ventilation.LungMask);
+maskarray(Ventilation.AirwayMask == 1) = 0;
+maskarray(Ventilation.VesselMask == 1) = 0;
+
 Ventilation.SliceOrientation = MainInput.SliceOrientation;
 
 % k-means clustering using our previous code.
@@ -250,13 +250,13 @@ MR = Ventilation.Image;
 MR2 = MR / max(MR,[], 'all');
 
 for slice=1:size(maskarray,3) %repeat for rest of slices
-    maskboundaries = bwboundaries(Ventilation.LungMask(:,:,slice));
+    maskboundaries = bwboundaries(maskarray(:,:,slice));
     % Check if bwboundaries returned an empty 0x1 cell
     if isempty(maskboundaries) && isequal(size(maskboundaries), [0, 1])
         maskboundaries = zeros(size(MR2(:,:,slice)));
     else
         % Convert boundary points to a binary mask
-        maskImg = false(size(Ventilation.LungMask(:,:,slice)));
+        maskImg = false(size(maskarray(:,:,slice)));
         for k = 1:length(maskboundaries)
             boundary = maskboundaries{k};
             maskImg(sub2ind(size(maskImg), boundary(:,1), boundary(:,2))) = true;
@@ -458,7 +458,7 @@ end
 % scaledImage5 = scaledImage5 ./ max(scaledImage5(:));
 
 for slice=1:size(maskarray,3) %repeat for rest of slices
-    [~,~] = Global.imoverlay(squeeze(abs(scaledImage2(:,:,slice))),squeeze(Ventilation.LungMask(:,:,slice)),[1,100],[0,max(scaledImage2(:))],cus_colormap,0.4,gca);
+    [~,~] = Global.imoverlay(squeeze(abs(scaledImage2(:,:,slice))),squeeze(maskarray(:,:,slice)),[1,100],[0,max(scaledImage2(:))],cus_colormap,0.4,gca);
     colormap(gca,cus_colormap)   
 %     X = print('-RGBImage',['-r',num2str(size(VentBinMap2,2)/2)]);%2 inches
 %      hImage = get( gca, 'Children' ); 
@@ -489,15 +489,15 @@ Ventilation.Mask_Vent_Reg = Mask_Vent_Reg;
 defect_mask = Ventilation.Kmeans_segmentation;
 defect_mask(defect_mask > 0 & defect_mask < 2) = 1;
 defect_mask(defect_mask > 1) = 0;
-defectMap = double(Ventilation.LungMask) + defect_mask; 
+defectMap = double(maskarray) + defect_mask; 
 [vdp_per_slice_local, vdp_per_slice_global] = VentilationFunctions.computeVDPperSlice(defectMap);
 Ventilation.Kmeans_vdp_per_slice_local = vdp_per_slice_local;
 Ventilation.Kmeans_vdp_per_slice_global = vdp_per_slice_global;
 %% Histogram
 
 % Extract voxel values within lung
-XeVals = Ventilation.Image(Ventilation.LungMask > 0);
-ClusterVals = Ventilation.Kmeans_segmentation(Ventilation.LungMask > 0);
+XeVals = Ventilation.Image(maskarray > 0);
+ClusterVals = Ventilation.Kmeans_segmentation(maskarray > 0);
 
 % Define bin edges and cluster colors
 edges = linspace(0, prctile(XeVals,99), 200);  % or adjust based on your data range

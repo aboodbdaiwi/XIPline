@@ -14,10 +14,11 @@ function [Ventilation] = calculate_VDP_CCHMC(Ventilation,Proton,MainInput)
 
 %% VDP Calculation Code:
 MR = Ventilation.Image;
+
 maskarray = double(Ventilation.LungMask);
-% maskarray = double(Ventilation.LungMask + Ventilation.VesselMask);
-% maskarray(maskarray > 1) = 0;
-% maskarray = double(maskarray);
+maskarray(Ventilation.AirwayMask == 1) = 0;
+maskarray(Ventilation.VesselMask == 1) = 0;
+
 complete = Ventilation.CompleteThresh;
 % complete = Ventilation.NoiseCompleteThresh;
 incomplete = Ventilation.IncompleteThresh;

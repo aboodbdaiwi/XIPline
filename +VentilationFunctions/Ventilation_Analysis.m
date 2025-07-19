@@ -46,7 +46,7 @@ parentPath = [MainInput.OutputPath '\Ventilation_Analysis\'];
 Ventilation.parentPath = parentPath;
 %parentPath = [MainInput.XeDataLocation,'\'];
 FileNames = Ventilation.filename;
-maskarray = double(Ventilation.LungMask);
+
 try
     Ventilation.AirwayMask = double(Ventilation.AirwayMask);
     airwaymask = Ventilation.AirwayMask;
@@ -55,6 +55,30 @@ catch
     airwaymask = Ventilation.AirwayMask;
 end
 
+if ~isfield(Ventilation, 'VesselMask')
+    Ventilation.VesselMask = zeros(size(Ventilation.LungMask));
+else
+    Ventilation.VesselMask = double(Ventilation.VesselMask);
+end
+
+combined_mask = zeros(size(Ventilation.LungMask), 'double');
+
+% Assign labels with priority: vessels > airway > lung
+combined_mask(Ventilation.LungMask > 0) = 1;
+combined_mask(Ventilation.AirwayMask > 0) = 2;
+combined_mask(Ventilation.VesselMask > 0) = 3;
+Ventilation.combined_mask = combined_mask;
+
+maskarray = double(Ventilation.LungMask);
+maskarray(Ventilation.AirwayMask == 1) = 0;
+maskarray(Ventilation.VesselMask == 1) = 0;
+
+% maskarray = double(Ventilation.LungMask - Ventilation.VesselMask);
+% maskarray(maskarray > 1) = 0;
+% maskarray(maskarray < 1) = 0;
+
+maskarray = double(maskarray);
+% imslice(maskarray)
 %% Healthy Reference
 Ventilation.HealthyRef.Date = '20250627'; 
 Ventilation.HealthyRef.CoV = '0.1-0.15';
@@ -170,8 +194,10 @@ delete_if_exist = @(pattern) cellfun(@(f) delete(fullfile(parentPath, f)), ...
 
 % ==== Delete any older matching files ====
 delete_if_exist('image*.nii*');
+delete_if_exist('combined_mask*.nii*');
 delete_if_exist('lungmask*.nii*');
 delete_if_exist('airwaymask*.nii*');
+delete_if_exist('vesselsmask*.nii*');
 
 % Image
 img_name = lower(['image' timestamp '.nii']);
@@ -179,6 +205,13 @@ niftiwrite(abs(fliplr(rot90(Ventilation.Image, -1))), fullfile(parentPath, img_n
 info = niftiinfo(fullfile(parentPath, [img_name '.gz']));
 info.Description = 'Package Version: Version1';
 niftiwrite(abs(fliplr(rot90(Ventilation.Image, -1))), fullfile(parentPath, img_name), info, 'Compressed', true);
+
+% combined_mask
+combined_mask_name = lower(['combined_mask' timestamp '.nii']);
+niftiwrite(abs(fliplr(rot90(Ventilation.combined_mask, -1))), fullfile(parentPath, combined_mask_name), 'Compressed', true);
+info = niftiinfo(fullfile(parentPath, [combined_mask_name '.gz']));
+info.Description = 'Package Version: Version1';
+niftiwrite(abs(fliplr(rot90(Ventilation.combined_mask, -1))), fullfile(parentPath, combined_mask_name), info, 'Compressed', true);
 
 % Lung mask
 lung_name = lower(['lungmask' timestamp '.nii']);
@@ -193,6 +226,13 @@ niftiwrite(abs(fliplr(rot90(Ventilation.AirwayMask, -1))), fullfile(parentPath, 
 info = niftiinfo(fullfile(parentPath, [airway_name '.gz']));
 info.Description = 'Package Version: Version1';
 niftiwrite(abs(fliplr(rot90(Ventilation.AirwayMask, -1))), fullfile(parentPath, airway_name), info, 'Compressed', true);
+
+% Vessels mask
+vessels_name = lower(['vesselsmask' timestamp '.nii']);
+niftiwrite(abs(fliplr(rot90(Ventilation.VesselMask, -1))), fullfile(parentPath, vessels_name), 'Compressed', true);
+info = niftiinfo(fullfile(parentPath, [vessels_name '.gz']));
+info.Description = 'Package Version: Version1';
+niftiwrite(abs(fliplr(rot90(Ventilation.VesselMask, -1))), fullfile(parentPath, vessels_name), info, 'Compressed', true);
 
 
 %% calculate ventilation heterogeneity
@@ -215,78 +255,20 @@ lung_voxels = Ventilation.Image(maskarray == 1);
 Ventilation.skewness = skewness(double(lung_voxels));
 Ventilation.kurtosis = kurtosis(double(lung_voxels)); 
 %% 8) Calculate VDP:
-% Note: VDP can be calculated with or without the median filter performed
-% on the mask regions. This dependency will be contained within the
-% calculate_VDP function.
-if strcmp(Ventilation.ThreshAnalysis,'yes')   % 'yes'; || 'no'
-%     f = waitbar(.20,'Calculating SNR...');
-%     waitbar(.50,f,'Performing Thershold Analysis ...');
-%     pause(.1)    
 
-    % Call the calculate_VDP() function. Make sure you call the correct data
-    % depending on N4 bias correction (N4) vs original (MR):
-%     if settings.N4_bias_analysis == "yes"
-%          [VDP,VentscaledImage,DefectArray,VDP_hist,VentDefectmap] = VentilationFunctions.calculate_VDP(N4, maskarray, complete, incomplete, hyper, medfilter, N4_bias_analysis, parentPath,Overall_SNR,Proton,MainInput);
-%     elseif settings.N4_bias_analysis == "no"
-%          [VDP,VentscaledImage,DefectArray,VDP_hist,VentDefectmap] = VentilationFunctions.calculate_VDP(MR, maskarray, complete, incomplete, hyper, medfilter, N4_bias_analysis, parentPath,Overall_SNR,Proton,MainInput);
-%     else
-%         disp('Neither original or N4 bias corrected images were declared. Declare these in the input_params() function.')
-%      end
+if strcmp(Ventilation.ThreshAnalysis,'yes')   % 'yes'; || 'no'
 
     [Ventilation] = VentilationFunctions.calculate_VDP_CCHMC(Ventilation,Proton,MainInput);    
 
-    % if strcmp(MainInput.Institute,'XeCTC') == 1 || strcmp(MainInput.Institute,'CCHMC') == 1
-    %     [Ventilation] = VentilationFunctions.calculate_VDP_CCHMC(MR, maskarray, complete, incomplete, hyper, medfilter, N4_bias_analysis, parentPath,Overall_SNR,Ventilation,Proton,MainInput);    
-    % else    
-    %     [Ventilation] = VentilationFunctions.calculate_VDP(MR, maskarray, complete, incomplete, hyper, medfilter, N4_bias_analysis, parentPath,Overall_SNR,Ventilation,Proton,MainInput);    
-    % end
-    % Display the final VDP:
     disp(['The overall ventilation defect percentage is: ',num2str(Ventilation.Threshold.VDP),'%'])
 end 
 close all;
 %%  Perform linear binning ventilation analysis:
 if strcmp(Ventilation.LB_Analysis,'yes') == 1 
-%     f = waitbar(.50,'Performing Thershold Analysis ...');
-%     waitbar(.75,f,'Performing Linear Binning Analysis ...');
-%     pause(.1)     
-    % Note: This section is highly dependent on whether N4 bias correction is
-    % applied. N4 bias correction is applied in this case INSIDE the
-    % calculate_LB_VDP() function. It uses the same optimization parameters as
-    % the N4 correction function used earlier in this script.
-    
-    % 9) Segment the trachea for linear binning analysis:
-%     maskarraytrachea2 = imrotate(maskarraytrachea,90); % niftiwrite likes to rotate and flip, account for this
-%     maskarraytrachea2 = flipdim(maskarraytrachea2,1);
-
     maskarraytrachea = maskarray;
     maskarraytrachea(airwaymask == 1)=0;    
-    maskarraytrachea2 = maskarraytrachea;
-    
-    niftiwrite(maskarraytrachea2,parentPath + "Lung_and_Trachea_mask");
     Ventilation.maskarraytrachea = maskarraytrachea;
-
-    % 10) Perform linear binning ventilation analysis:
-    % N4_bias_analysis = settings.N4_bias_analysis;
-
-%     if settings.N4_bias_analysis == "yes"
-% %         ventmean = 0.6786; % Defined by data collected up to Jan 2021.
-% %         ventstd =  0.1395; % Defined by data collected up to Jan 2021.
-%         % Important! We don't use the N4 corrected images that we had earlier.
-%         % We perform N4 correction using the new trachea + lung mask inside
-%         % the calculate_LB_VDP() function. The N4 function uses the same
-%         % optimization strategy as before.
-%         [LB_VDP, LB_mean, LB_std,VentscaledImage,Ventcolormap,LB_Venthist] = VentilationFunctions.calculate_LB_VDP(MR, maskarray, maskarraytrachea, ventmean, ventstd, parentPath, N4_bias_analysis, Overall_SNR, Proton,MainInput);
-% 
-%     elseif settings.N4_bias_analysis == "no"
-% %         ventmean = 0.5421; % Default (non-N4 corrected, based on data up to Jan 2021)
-% %         ventstd = 0.1509; % Default (non-N4 corrected, based on data up to Jan 2021)
-%         [LB_VDP, LB_mean, LB_std,VentscaledImage,Ventcolormap,LB_Venthist] = VentilationFunctions.calculate_LB_VDP(MR, maskarray, maskarraytrachea, ventmean, ventstd, parentPath, N4_bias_analysis, Overall_SNR, Proton,MainInput);
-%     else
-%         disp('Neither original or N4 bias corrected images were declared. Declare these in the input_params() function.')
-%     end
-    
     [Ventilation] = VentilationFunctions.calculate_LB_VDP(Ventilation,Proton,MainInput);    
-
 end
 close all;
 %% K-means VDP
@@ -313,21 +295,21 @@ if strcmp(Ventilation.DDI2D,'yes') || strcmp(Ventilation.DDI3D,'yes')
             defect_mask = Ventilation.Threshold.defectArray;
             defect_mask(defect_mask > 2) = 0;
             defect_mask = double(defect_mask > 0);
-            defectMap = double(Ventilation.LungMask) + defect_mask;  
+            defectMap = double(maskarray) + defect_mask;  
         case 'Linear Binning'
             defect_mask = Ventilation.VentBinMap2;
             defect_mask(defect_mask > 1) = 0;
-            defectMap = double(Ventilation.LungMask) + defect_mask; 
+            defectMap = double(maskarray) + defect_mask; 
         case 'Kmeans'
             defect_mask = Ventilation.Kmeans_segmentation;
             defect_mask(defect_mask > 0 & defect_mask < 2) = 1;
             defect_mask(defect_mask > 1) = 0;
-            defectMap = double(Ventilation.LungMask) + defect_mask; 
+            defectMap = double(maskarray) + defect_mask; 
         case 'AKmeans'
             defect_mask = Ventilation.Akmeans_defect_mask;
             defect_mask(defect_mask > 0 & defect_mask < 2) = 1;
             defect_mask(defect_mask > 1) = 0;
-            defectMap = double(Ventilation.LungMask) + defect_mask;             
+            defectMap = double(maskarray) + defect_mask;             
     end
     Ventilation.defectMap_forDDI = defectMap;
 end
@@ -350,21 +332,21 @@ if Ventilation.GLRLM_Analysis == "yes" % 'yes'; || 'no'
             defect_mask = Ventilation.Threshold.defectArray;
             defect_mask(defect_mask > 2) = 0;
             defect_mask = double(defect_mask > 0);
-            defectMap = double(Ventilation.LungMask) + defect_mask;  
+            defectMap = double(maskarray) + defect_mask;  
         case 'Linear Binning'
             defect_mask = Ventilation.VentBinMap2;
             defect_mask(defect_mask > 1) = 0;
-            defectMap = double(Ventilation.LungMask) + defect_mask; 
+            defectMap = double(maskarray) + defect_mask; 
         case 'Kmeans'
             defect_mask = Ventilation.Kmeans_segmentation;
             defect_mask(defect_mask > 0 & defect_mask < 2) = 1;
             defect_mask(defect_mask > 1) = 0;
-            defectMap = double(Ventilation.LungMask) + defect_mask; 
+            defectMap = double(maskarray) + defect_mask; 
         case 'AKmeans'
             defect_mask = Ventilation.Akmeans_defect_mask;
             defect_mask(defect_mask > 0 & defect_mask < 2) = 1;
             defect_mask(defect_mask > 1) = 0;
-            defectMap = double(Ventilation.LungMask) + defect_mask;             
+            defectMap = double(maskarray) + defect_mask;             
     end
     Ventilation.defectMap_forGLRLM = defectMap;    
     [Ventilation] = VentilationFunctions.GLRLM_Analysis(Ventilation);

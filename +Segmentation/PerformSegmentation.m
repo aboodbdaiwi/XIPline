@@ -239,22 +239,26 @@ switch MainInput.SegmentationMethod
         [~, MainInput] = Segmentation.preprocess_images_for_auto_segmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
         cd(MainInput.AutoSegmentPath)  
 
-        %Step 2: Run external recon executable
-        exePath = 'C:\XIPline\segmentation\AutoSegmentation.exe';
-        [status, cmdout] = system(['"', exePath, '"']);
-
-        if status ~= 0
-            error('Failed to run AutoSegmentation.exe:\n%s', cmdout);
-        end
-
         if strcmp(SegmentType, 'not_supported') == 0
-            % run python script 
-            cd(destinationFolderPath)
-            command = string(strcat('python AutoSegmentation.py',{' '},SegmentType));
-            % LungMask = system(command);
+            switch  MainInput.AIScript
+                case 'Python'
+                    % run python script 
+                    cd(destinationFolderPath)
+                    command = string(strcat('python AutoSegmentation.py',{' '},SegmentType));
+                    LungMask = system(command);                            
+                case 'Executable'
+                    %Step 2: Run external recon executable
+                    exePath = 'C:\XIPline\segmentation\AutoSegmentation.exe';
+                    [status, cmdout] = system(['"', exePath, '"']);
+            
+                    if status ~= 0
+                        error('Failed to run AutoSegmentation.exe:\n%s', cmdout);
+                    end
+            end            
+
             % load auto mask
             cd(destinationFolderPath);
-            if exist('AutoMask.mat')
+            if exist('AutoMask.mat', 'file')
                 load([destinationFolderPath,'\AutoMask.mat']);
                 Mask = AutoMask > 0;
                 disp('auto mask process Completed.')

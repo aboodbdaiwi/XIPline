@@ -845,7 +845,7 @@ Global.exportToPPTX('addslide'); %Signal Dynamics
 Global.exportToPPTX('addpicture',SigDynamics);
 Global.exportToPPTX('addtext',sprintf('Signal Dynamics'),'Position',[0 0 5 3]);
 try
-    cd([Proton.folder, '\Gas Exchange Analysis'])
+    cd([Proton.folder, '\GasExchange_Analysis'])
     ProtonMontage = openfig('ProtonMontage.fig');
 catch
     if MainInput.NoProtonImage == 0
@@ -886,7 +886,7 @@ Global.exportToPPTX('addpicture',CorrVentMontage);
 Global.exportToPPTX('addtext',sprintf(['Corrected Ventilation Image-\nUncorrected SNR: ', num2str(VentSNR)]),'Position',[0 0 5 3]);
 
 try
-    Registration = openfig('Registerationfig.fig');
+    Registrationfig = openfig('Registerationfig.fig');
 catch
     Registrationfig = figure('Name','Registration','units','normalized','outerposition',[0 0 1 4/NumPlotSlices]);set(Registrationfig,'WindowState','minimized');
     set(Registrationfig,'color','white','Units','inches','Position',[0.25 0.25 2*NumPlotSlices 4*2+1])

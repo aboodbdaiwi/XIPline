@@ -52,13 +52,15 @@ if mask_existing == 1
     lungmask(Mask == 1)= 1;
     airwaymask = zeros(size(Mask));
     airwaymask(Mask == 2)= 1;  
-    
+    vesselmask = zeros(size(Mask));
+    vesselmask(Mask == 3)= 1;     
     % store mask
     switch MainInput.AnalysisType
         case 'Ventilation'
            Ventilation.Mask = Mask;
            Ventilation.LungMask = lungmask;
-           Ventilation.AirwayMask = airwaymask;                       
+           Ventilation.AirwayMask = airwaymask;     
+           Ventilation.VesselMask = vesselmask; 
         case 'Diffusion'
            Diffusion.Mask = Mask;
            Diffusion.LungMask = lungmask;
@@ -71,24 +73,24 @@ if mask_existing == 1
            GasExchange.AirwayMask = airwaymask;                           
     end    
     
-    % Save images and maskes
-    mkdir([MainInput.XeDataLocation, '\Mask']);
-    % Mask 
-    niftiwrite(abs(fliplr(rot90(Mask,-1))),[MainInput.XeDataLocation,'\Mask\Mask.nii'],'Compressed',true);
-    info = niftiinfo([MainInput.XeDataLocation,'\Mask\Mask.nii.gz']);
-    info.Description = strcat('Package Version: ', 'Version1');
-    niftiwrite(abs(fliplr(rot90(Mask,-1))),[MainInput.XeDataLocation,'\Mask.nii'],info,'Compressed',true);
-    % lung mask
-    niftiwrite(abs(fliplr(rot90(lungmask,-1))),[MainInput.XeDataLocation,'\Mask\LungMask.nii'],'Compressed',true);
-    info = niftiinfo([MainInput.XeDataLocation,'\Mask\LungMask.nii.gz']);
-    info.Description = strcat('Package Version: ', 'Version1');
-    niftiwrite(abs(fliplr(rot90(lungmask,-1))),[MainInput.XeDataLocation,'\Mask\LungMask.nii'],info,'Compressed',true);
-    % airway mask
-    niftiwrite(abs(fliplr(rot90(airwaymask,-1))),[MainInput.XeDataLocation,'\Mask\AirwayMask.nii'],'Compressed',true);
-    info = niftiinfo([MainInput.XeDataLocation,'\Mask\AirwayMask.nii.gz']);
-    info.Description = strcat('Package Version: ', 'Version1');
-    niftiwrite(abs(fliplr(rot90(airwaymask,-1))),[MainInput.XeDataLocation,'\Mask\AirwayMask.nii'],info,'Compressed',true);
-                    
+    % % Save images and maskes
+    % mkdir([MainInput.XeDataLocation, '\Mask']);
+    % % Mask 
+    % niftiwrite(abs(fliplr(rot90(Mask,-1))),[MainInput.XeDataLocation,'\Mask\Mask.nii'],'Compressed',true);
+    % info = niftiinfo([MainInput.XeDataLocation,'\Mask\Mask.nii.gz']);
+    % info.Description = strcat('Package Version: ', 'Version1');
+    % niftiwrite(abs(fliplr(rot90(Mask,-1))),[MainInput.XeDataLocation,'\Mask.nii'],info,'Compressed',true);
+    % % lung mask
+    % niftiwrite(abs(fliplr(rot90(lungmask,-1))),[MainInput.XeDataLocation,'\Mask\LungMask.nii'],'Compressed',true);
+    % info = niftiinfo([MainInput.XeDataLocation,'\Mask\LungMask.nii.gz']);
+    % info.Description = strcat('Package Version: ', 'Version1');
+    % niftiwrite(abs(fliplr(rot90(lungmask,-1))),[MainInput.XeDataLocation,'\Mask\LungMask.nii'],info,'Compressed',true);
+    % % airway mask
+    % niftiwrite(abs(fliplr(rot90(airwaymask,-1))),[MainInput.XeDataLocation,'\Mask\AirwayMask.nii'],'Compressed',true);
+    % info = niftiinfo([MainInput.XeDataLocation,'\Mask\AirwayMask.nii.gz']);
+    % info.Description = strcat('Package Version: ', 'Version1');
+    % niftiwrite(abs(fliplr(rot90(airwaymask,-1))),[MainInput.XeDataLocation,'\Mask\AirwayMask.nii'],info,'Compressed',true);
+    % 
     % update app progress message statement           
     MainInput.Status = 'Lung Mask Segmentation completed....';              
 else

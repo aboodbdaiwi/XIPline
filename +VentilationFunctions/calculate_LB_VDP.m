@@ -38,14 +38,11 @@ function [Ventilation] = calculate_LB_VDP(Ventilation,Proton,MainInput)
 
 %% extract variables 
 MR = Ventilation.Image;
-maskarray = Ventilation.LungMask;
-% maskarray = double(Ventilation.LungMask + Ventilation.VesselMask);
-% maskarray(maskarray > 1) = 0;
-% maskarray = double(maskarray);
-airwaymask = Ventilation.AirwayMask;
-maskarraytrachea = maskarray;
-maskarraytrachea(airwaymask == 1)=0;    
-Ventilation.maskarraytrachea = maskarraytrachea;
+maskarray = double(Ventilation.LungMask);
+maskarray(Ventilation.AirwayMask == 1) = 0;
+maskarray(Ventilation.VesselMask == 1) = 0;
+
+Ventilation.maskarraytrachea = maskarray;
 ventmean = mean(Ventilation.LBThresholds);
 ventstd = std(Ventilation.LBThresholds);
 parentPath = Ventilation.parentPath;
@@ -73,15 +70,15 @@ cd(LB_outputpath)
 % end
 
 % Make a logical array of the trachea:
-maskarray4 = logical(maskarraytrachea);
+maskarray4 = logical(maskarray);
 VentImage = MR;
 % apply median filter; 
 VentImage = VentilationFunctions.medFilter(VentImage);
 
-NormMR2 = VentImage.*(maskarraytrachea > 0); % Normalize
+NormMR2 = VentImage.*(maskarray > 0); % Normalize
 NormMR2 = (NormMR2 - min(NormMR2(:)))/(max(NormMR2(:)) - min(NormMR2(:)));
 NormMR3 = NormMR2; % Normalize
-NormMR3(maskarraytrachea == 0) = [];
+NormMR3(maskarray == 0) = [];
 %% 3) Generate bins for the linear binned data:
 % 
 switch Ventilation.LB_Normalization
@@ -89,7 +86,7 @@ switch Ventilation.LB_Normalization
         NFactor = mean(NormMR3(:));
         ScaledVentImage2 = NormMR2/NFactor;
         NormMR4 = ScaledVentImage2;
-        NormMR4(maskarraytrachea == 0) = [];
+        NormMR4(maskarray == 0) = [];
         Im99percentile = prctile(NormMR4,99.9); % 99.5th percentile
         ScaledVentImage2(ScaledVentImage2 >= Im99percentile) = Im99percentile;      
     case 'GLBmean'
@@ -98,7 +95,7 @@ switch Ventilation.LB_Normalization
         % NFactor = mean(NormMR3(:)); 
         ScaledVentImage2 = NormMR2/NFactor;
         NormMR4 = ScaledVentImage2;
-        NormMR4(maskarraytrachea == 0) = [];
+        NormMR4(maskarray == 0) = [];
         Im99percentile = prctile(NormMR4,99.9); % 99.5th percentile
         ScaledVentImage2(ScaledVentImage2 >= Im99percentile) = Im99percentile;
     case 'GLBpercentile'
@@ -263,11 +260,11 @@ if size(Ventilation.Image,3) > 35
     Image_3D = 1;
     nrow = ceil(sqrt(size(Ventilation.Image,3)));
     % Initialize an empty vector to store indices of slices with no zeros
-    slices_with_no_zeros = zeros(1,size(Ventilation.LungMask,3));    
+    slices_with_no_zeros = zeros(1,size(maskarray,3));    
     % Loop through each slice
-    for slice_idx = 1:size(Ventilation.LungMask,3)
+    for slice_idx = 1:size(maskarray,3)
         % Extract the current slice
-        current_slice = Ventilation.LungMask(:, :, slice_idx);
+        current_slice = maskarray(:, :, slice_idx);
         
         % Check if all elements in the current slice are non-zero
         if sum(current_slice(:)) > 0
@@ -317,7 +314,7 @@ set(gcf,'position',[1 1 2 2])% set the position of the figure to axes
 disp('Saving Vent Tiff...')
 %Mask images
 for slice=1:size(maskarray,3) %repeat for rest of slices
-    [~,~] = Global.imoverlay(squeeze(abs(Proton.ProtonRegistered(:,:,slice))),squeeze(Ventilation.LungMask(:,:,slice)),[1,100],[0,0.99*max(Proton.ProtonRegistered(:))],cus_colormap,0.6,gca);
+    [~,~] = Global.imoverlay(squeeze(abs(Proton.ProtonRegistered(:,:,slice))),squeeze(maskarray(:,:,slice)),[1,100],[0,0.99*max(Proton.ProtonRegistered(:))],cus_colormap,0.6,gca);
     colormap(gca,cus_colormap)   
 %     X = print('-RGBImage',['-r',num2str(size(VentBinMap2,2)/2)]);%2 inches
 %      hImage = get( gca, 'Children' ); 
@@ -371,13 +368,13 @@ MR = Ventilation.Image;
 MR2 = MR / max(MR,[], 'all');
 
 for slice=1:size(maskarray,3) %repeat for rest of slices
-    maskboundaries = bwboundaries(Ventilation.LungMask(:,:,slice));
+    maskboundaries = bwboundaries(maskarray(:,:,slice));
     % Check if bwboundaries returned an empty 0x1 cell
     if isempty(maskboundaries) && isequal(size(maskboundaries), [0, 1])
         maskboundaries = zeros(size(MR2(:,:,slice)));
     else
         % Convert boundary points to a binary mask
-        maskImg = false(size(Ventilation.LungMask(:,:,slice)));
+        maskImg = false(size(maskarray(:,:,slice)));
         for k = 1:length(maskboundaries)
             boundary = maskboundaries{k};
             maskImg(sub2ind(size(maskImg), boundary(:,1), boundary(:,2))) = true;
@@ -777,7 +774,7 @@ writetable(Vent_BinTable,[LB_outputpath,excel_file_name],'Sheet',1)
 %% compute VDP per Slice
 defect_mask = VentBinMap2;
 defect_mask(defect_mask > 1) = 0;
-defectMap = double(Ventilation.LungMask) + defect_mask; 
+defectMap = double(maskarray) + defect_mask; 
 [vdp_per_slice_local, vdp_per_slice_global] = VentilationFunctions.computeVDPperSlice(defectMap);
 Ventilation.LB_vdp_per_slice_local = vdp_per_slice_local;
 Ventilation.LB_vdp_per_slice_global = vdp_per_slice_global;
