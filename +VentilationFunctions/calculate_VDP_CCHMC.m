@@ -237,15 +237,15 @@ disp('Saving Vent Tiff...')
 % Normalize the intensity of the original image to fall between [0,1].
 MR = Ventilation.Image;
 MR2 = MR / max(MR,[], 'all');
-scaledImage = zeros(size(MR2));
-scaledImage2 = zeros(size(MR2));
-for m = 1:size(MR2,3)
-    scaledImage(:,:,m) = MR2(:,:,m);
-    scaledImage2(:,:,m) = scaledImage(:,:,m);
+scaledImage = MR2;
+scaledImage2 = MR2;
+% for m = 1:size(MR2,3)
+%     scaledImage(:,:,m) = MR2(:,:,m);
+%     scaledImage2(:,:,m) = scaledImage(:,:,m);
 %     outputFileName = sprintf('Img_%d.png',m);
 %     fullFileName = fullfile(outputPath, outputFileName);
 %     imwrite(scaledImage2(:,:,m),fullFileName,'png');
-end
+% end
 
 % %Mask images
 % MR4 = uint16(Ventilation.Image);
@@ -357,7 +357,73 @@ for ii = 1 : size(tiff_info, 1)
 end
 Mask_Vent_boundaries = permute(Mask_Vent_boundaries,[1 2 4 3]);
 Ventilation.Mask_Vent_boundaries = Mask_Vent_boundaries;
+%% Output mask boundaries  with proton overlays:
+% Create a folder for the ventilation images:
 
+outputPath = char([DataPath + foldername]);
+cd(outputPath);
+cus_colormap = zeros(100,3);
+
+cus_colormap(:,1) = 1; % Red channel
+cus_colormap(:,2) = 0; % Green channel
+cus_colormap(:,3) = 1; % Blue channel
+
+tiff = figure('MenuBar','none','ToolBar','none','DockControls','off','Resize','off','WindowState','minimized');%figure for tiffs
+ax1 = axes('Parent',tiff);ax2 = axes('Parent',tiff);%make axis for both images
+set(ax1,'Visible','off');set(ax2,'Visible','off');%turn off axis
+set(ax1,'units','inches');set(ax2,'units','inches');%make axis units inches
+set(ax1,'position',[0 0 2 2]);set(ax2,'position',[0 0 2 2]);%make axis same as image
+set(gcf,'units','inches'); % set the figure units to pixels
+set(gcf,'position',[1 1 2 2])% set the position of the figure to axes
+disp('Saving Vent Tiff...')
+
+% Normalize the intensity of the original image to fall between [0,1].
+HImage = Proton.Image;
+MR2 = HImage / max(HImage,[], 'all');
+
+for slice=1:size(maskarray,3) %repeat for rest of slices
+    maskboundaries = bwboundaries(Ventilation.LungMask(:,:,slice));
+    % Check if bwboundaries returned an empty 0x1 cell
+    if isempty(maskboundaries) && isequal(size(maskboundaries), [0, 1])
+        maskboundaries = zeros(size(MR2(:,:,slice)));
+    else
+        % Convert boundary points to a binary mask
+        maskImg = false(size(Ventilation.LungMask(:,:,slice)));
+        for k = 1:length(maskboundaries)
+            boundary = maskboundaries{k};
+            maskImg(sub2ind(size(maskImg), boundary(:,1), boundary(:,2))) = true;
+        end
+        % Thicken boundary using morphological dilation
+        se = strel('disk', 1);  % Use radius=1 or larger for thicker lines
+        thickMask = imdilate(maskImg, se);
+        maskboundaries = double(thickMask);
+        % maskboundaries = double(maskImg);
+    end
+
+    [~,~] = Global.imoverlay(squeeze(abs(HImage(:,:,slice))),squeeze(maskboundaries),[1,100],[0,max(HImage(:))],cus_colormap,1,gca);
+    colormap(gca,cus_colormap)     
+    Xdata = getframe(gcf);
+    X = Xdata.cdata;     
+    if (slice == 1)
+        imwrite(X,[outputPath,'\protonmaskboundaries.tif'],'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
+    else
+        imwrite(X,[outputPath,'\protonmaskboundaries.tif'],'WriteMode','append','Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%append tiff
+    end
+end
+disp('protonmaskboundaries Tiff Completed.')
+close all;
+% read tiff
+cd(outputPath)
+tiff_info = imfinfo('protonmaskboundaries.tif'); % return tiff structure, one element per image
+% tiff_stack = imread('BinnedVent.tif', 1) ; % read in first image
+Mask_Proton_boundaries = uint8(zeros(tiff_info(1).Height ,tiff_info(1).Width ,3,length(tiff_info)));
+%concatenate each successive tiff to tiff_stack
+for ii = 1 : size(tiff_info, 1)
+    temp_tiff = imread('protonmaskboundaries.tif', ii);
+    Mask_Proton_boundaries(:,:,:,ii) = temp_tiff;
+end
+Mask_Proton_boundaries = permute(Mask_Proton_boundaries,[1 2 4 3]);
+Ventilation.Mask_Proton_boundaries = Mask_Proton_boundaries;
 %% Output ventilation images with defect overlays:
 % figure; Global.imslice(MR)
 % figure; Global.imslice(scaledImage)
@@ -511,11 +577,11 @@ subplot(3,1,1)
 if Image_3D == 1
 HPXeMontage = montage(reshape(scaledImage,[size(scaledImage,1),...
     size(scaledImage,2), 1, size(scaledImage,3)]),'Size',...
-    [nrow nrow],'DisplayRange',[]);
+    [nrow nrow],'DisplayRange',[min(scaledImage(:)) max(scaledImage(:))]);
 else
 HPXeMontage = montage(reshape(scaledImage,[size(scaledImage,1),...
     size(scaledImage,2), 1, size(scaledImage,3)]),'Size',...
-    [1 size(scaledImage,3)],'DisplayRange',[]);
+    [1 size(scaledImage,3)],'DisplayRange',[min(scaledImage(:)) max(scaledImage(:))]);
 end
 
 title('Xenon Montage')

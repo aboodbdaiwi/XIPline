@@ -142,8 +142,8 @@ function [Ventilation] = calculateDDI_2D(Ventilation,Proton,MainInput)
     disp('Saving Vent Tiff...')
     %Vent Binned
     for slice=1:size(Ventilation.Image,3) %repeat for rest of slices
-        [~,~] = Global.imoverlay(squeeze(abs(Ventilation.Image(:,:,slice))),squeeze(DDI(:,:,slice)),[1,6],[0,0.9*max(Ventilation.Image(:))],colormap('parula'),1,gca);
-        colormap(gca,colormap('parula')); clim([0 25]);
+        [~,~] = Global.imoverlay(squeeze(abs(Ventilation.Image(:,:,slice))),squeeze(DDI(:,:,slice)),[0.001,25],[0,0.9*max(Ventilation.Image(:))],colormap('hsv'),0.8,gca);
+        colormap(gca,colormap('hsv')); clim([0 25]);
          Xdata = getframe(gcf);
          X = Xdata.cdata;     
         if (slice == 1)

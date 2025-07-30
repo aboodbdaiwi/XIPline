@@ -49,7 +49,13 @@ function [MainInput, Proton, Ventilation, GasExchange] = AntsRegistration(MainIn
     else
         DataLocation = fullfile(MainInput.OutputPath,'Ventilation_Analysis');
     end
-    cd(DataLocation);
+    try
+       cd(DataLocation);
+    catch 
+        DataLocation = fullfile(MainInput.OutputPath,'Ventilation Analysis');
+        cd(DataLocation);
+    end
+    
 
     % create a lung mask
     LungMask = double(Segmentation.SegmentLungthresh(fixed1,1,1));

@@ -313,6 +313,7 @@ disp('Calculating SNR Completed.')
 disp('Quantifying Images...')
 %Ventilation Quantification
 VentMean = mean(ScaledVentImage(ProtonMaskRegistered(:)));
+VentMedian = median(ScaledVentImage(ProtonMaskRegistered(:)));
 VentStd = std(ScaledVentImage(ProtonMaskRegistered(:)));
 VentBinPercents = zeros(6,1);
 for bin = 1:6
@@ -321,15 +322,16 @@ end
 
 %Dissolved/Gas Quantification
 DissolvedMean = mean(DissGasRatio(VentBinMask(:)));
+DissolvedMedian = median(DissGasRatio(VentBinMask(:)));
 DissolvedStd = std(DissGasRatio(VentBinMask(:)));
 DissolvedBinPercents = zeros(6,1);
 for bin = 1:6
     DissolvedBinPercents(bin) = sum(DissolvedBinMap(:)==bin)/sum(VentBinMask(:)==1)*100;
 end
 
-
 %Barrier/Gas Quantification
 BarrierUptakeMean = mean(BarrGasRatio(VentBinMask(:)));
+BarrierUptakeMedian = median(BarrGasRatio(VentBinMask(:)));
 BarrierUptakeStd = std(BarrGasRatio(VentBinMask(:)));
 BarrierUptakeBinPercents = zeros(8,1);
 for bin = 1:8
@@ -338,6 +340,7 @@ end
 
 %RBC/Gas Quantification
 RBCTransferMean = mean(RBCGasRatio(VentBinMask(:)));
+RBCTransferMedian = median(RBCGasRatio(VentBinMask(:)));
 RBCTransferStd = std(RBCGasRatio(VentBinMask(:)));
 RBCTransferBinPercents = zeros(6,1);
 for bin = 1:6
@@ -345,8 +348,11 @@ for bin = 1:6
 end
 
 %RBC/Barrier Quantification
-RBCBarrierMean = nanmean(RBCBarrRatio(VentBinMask(:)&~isinf(RBCBarrRatio(:))));
-RBCBarrierStd = nanstd(RBCBarrRatio(VentBinMask(:)&~isinf(RBCBarrRatio(:))));
+validMask = VentBinMask(:) & isfinite(RBCBarrRatio(:));
+validValues = RBCBarrRatio(validMask);
+RBCBarrierMean   = nanmean(validValues);
+RBCBarrierMedian = nanmedian(validValues);
+RBCBarrierStd    = nanstd(validValues);
 RBCBarrierBinPercents = zeros(6,1);
 for bin = 1:6
     RBCBarrierBinPercents(bin) = sum(RBCBarrierBinMap(:)==bin)/sum(VentBinMask(:)==1)*100;
@@ -355,6 +361,7 @@ end
 %RBC Oscillation Quantification
 %RBCOscBin1Percent
 RBCOscMean = mean(RBCOsc(RBCBinMask(:)));
+RBCOscMedian = median(RBCOsc(RBCBinMask(:)));
 RBCOscStd = std(RBCOsc(RBCBinMask(:)));
 RBCOscBinPercents = zeros(8,1);
 for bin = 1:8
@@ -397,17 +404,35 @@ RBCBarriertitle = ['RBC:Barrier Histogram (Bins %: ',[num2str(RBCBarrierBinPerce
 RBCOsctitle = ['RBC Oscillation Histogram (Bins %: ',[num2str(RBCOscBinPercents(1),'%1.2f')],', ',[num2str(RBCOscBinPercents(2),'%1.2f')],', ',[num2str(RBCOscBinPercents(3),'%1.2f')],', ',[num2str(RBCOscBinPercents(4),'%1.2f')],', ',[num2str(RBCOscBinPercents(5),'%1.2f')],[num2str(RBCOscBinPercents(6),'%1.2f')],', ',[num2str(RBCOscBinPercents(7),'%1.2f')],', ',[num2str(RBCOscBinPercents(8),'%1.2f')],')'];
 
 %Edit Names/Titles
-set(VentHistFig,'Name','Ventilation Histogram');title(VentHistFig.CurrentAxes,Ventilationtitle);ylabel(VentHistFig.CurrentAxes,'Percentage of Voxels');xlabel(VentHistFig.CurrentAxes,'Scaled Ventilation (a.u.)');
+set(VentHistFig,'Name','Ventilation Histogram');
+    title(VentHistFig.CurrentAxes,Ventilationtitle);
+    ylabel(VentHistFig.CurrentAxes,'Percentage of Voxels');
+    xlabel(VentHistFig.CurrentAxes,'Scaled Ventilation (a.u.)');
 saveas(VentHistFig,'Ventilation_Histogram.png')
-set(DissHistFig,'Name','Dissolved Histogram');title(DissHistFig.CurrentAxes,Dissolvedtitle);ylabel(DissHistFig.CurrentAxes,'Percentage of Voxels');xlabel(DissHistFig.CurrentAxes,'Dissolved/Gas Ratio');
+set(DissHistFig,'Name','Dissolved Histogram');
+    title(DissHistFig.CurrentAxes,Dissolvedtitle);
+    ylabel(DissHistFig.CurrentAxes,'Percentage of Voxels');
+    xlabel(DissHistFig.CurrentAxes,'Dissolved/Gas Ratio');
 saveas(DissHistFig,'Dissolved_Histogram.png')
-set(BarHistFig,'Name','Barrier Histogram');title(BarHistFig.CurrentAxes,BarrierUptaketitle);ylabel(BarHistFig.CurrentAxes,'Percentage of Voxels');xlabel(BarHistFig.CurrentAxes,'Barrier/Gas Ratio (Barrier-uptake)');
+set(BarHistFig,'Name','Barrier Histogram');
+    title(BarHistFig.CurrentAxes,BarrierUptaketitle);
+    ylabel(BarHistFig.CurrentAxes,'Percentage of Voxels');
+    xlabel(BarHistFig.CurrentAxes,'Barrier/Gas Ratio (Barrier-uptake)');
 saveas(BarHistFig,'Barrier_Histogram.png')
-set(RBCHistFig,'Name','RBC Histogram');title(RBCHistFig.CurrentAxes,RBCTransfertitle);ylabel(RBCHistFig.CurrentAxes,'Percentage of Voxels');xlabel(RBCHistFig.CurrentAxes,'RBC/Gas Ratio (RBC-transfer)');
+set(RBCHistFig,'Name','RBC Histogram');
+    title(RBCHistFig.CurrentAxes,RBCTransfertitle);
+    ylabel(RBCHistFig.CurrentAxes,'Percentage of Voxels');
+    xlabel(RBCHistFig.CurrentAxes,'RBC/Gas Ratio (RBC-transfer)');
 saveas(RBCHistFig,'RBC_Histogram.png')
-set(RBCBarHistFig,'Name','RBC:Barrier Histogram');title(RBCBarHistFig.CurrentAxes,RBCBarriertitle);ylabel(RBCBarHistFig.CurrentAxes,'Percentage of Voxels');xlabel(RBCBarHistFig.CurrentAxes,'RBC/Barrier Ratio');
+set(RBCBarHistFig,'Name','RBC:Barrier Histogram');
+    title(RBCBarHistFig.CurrentAxes,RBCBarriertitle);
+    ylabel(RBCBarHistFig.CurrentAxes,'Percentage of Voxels');
+    xlabel(RBCBarHistFig.CurrentAxes,'RBC/Barrier Ratio');
 saveas(RBCBarHistFig,'RBC_Barrier_Histogram.png')
-set(RBCOscHistFig,'Name','RBC Oscillation Histogram');title(RBCOscHistFig.CurrentAxes,RBCOsctitle);ylabel(RBCOscHistFig.CurrentAxes,'Percentage of Voxels');xlabel(RBCOscHistFig.CurrentAxes,'RBC oscilations (% of RBC Signal)');
+set(RBCOscHistFig,'Name','RBC Oscillation Histogram');
+    title(RBCOscHistFig.CurrentAxes,RBCOsctitle);
+    ylabel(RBCOscHistFig.CurrentAxes,'Percentage of Voxels');
+    xlabel(RBCOscHistFig.CurrentAxes,'RBC oscilations (% of RBC Signal)');
 saveas(RBCOscHistFig,'RBC_Oscillation_Histogram.png')
 
 disp('Calculating Histograms Completed.')
@@ -430,7 +455,7 @@ disp('Calculating Histograms Completed.')
 % waitbar(.50,f,'Summary Figures....');
 % pause(1)
 %Vent
-SumVentFig = figure('Name','Ventitlation Binned','units','normalized','outerposition',[0 0 1 4/NumPlotSlices]);set(SumVentFig,'WindowState','minimized');
+SumVentFig = figure('Name','Ventitlation','units','normalized','outerposition',[0 0 1 4/NumPlotSlices]);set(SumVentFig,'WindowState','minimized');
 set(SumVentFig,'color','white','Units','inches','Position',[0.25 0.25 2*NumPlotSlices 2*2])
 tiledlayout(2,NumPlotSlices,'TileSpacing','none','Padding','compact');
 for slice=1:NumPlotSlices %Plot Gas Phase Mask Bins slices
@@ -441,7 +466,7 @@ for slice=1:NumPlotSlices %Plot Gas Phase Mask Bins slices
         colorbar(gca,'north','Ticks',[])
     end
     if slice == round(NumPlotSlices/2)
-        title('Ventilation Binned','FontSize',24)
+        title('Ventilation','FontSize',24)
     end
 end
 for slice=1:NumPlotSlices %Plot Gas Phase Mask Bins slices
@@ -455,7 +480,7 @@ end
 set(SumVentFig,'WindowState','minimized');
 
 %Dissolved
-SumDissFig = figure('Name','Dissolved Binned','units','normalized','outerposition',[0 0 1 4/NumPlotSlices]);set(SumDissFig,'WindowState','minimized');
+SumDissFig = figure('Name','Dissolved','units','normalized','outerposition',[0 0 1 4/NumPlotSlices]);set(SumDissFig,'WindowState','minimized');
 set(SumDissFig,'color','white','Units','inches','Position',[0.25 0.25 2*NumPlotSlices 2*2])
 tiledlayout(2,NumPlotSlices,'TileSpacing','none','Padding','compact');
 for slice=1:NumPlotSlices %Plot Dissolved Phase Mask Bins slices
@@ -466,7 +491,7 @@ for slice=1:NumPlotSlices %Plot Dissolved Phase Mask Bins slices
         colorbar(gca,'north','Ticks',[])
     end
     if slice == round(NumPlotSlices/2)
-        title('Dissolved Binned','FontSize',24)
+        title('Dissolved','FontSize',24)
     end
 end
 for slice=1:NumPlotSlices %Plot Dissolved Phase Mask Bins slices
@@ -480,7 +505,7 @@ end
 set(SumDissFig,'WindowState','minimized');
 
 %Barrier
-SumBarrFig = figure('Name','Barrier Binned','units','normalized','outerposition',[0 0 1 4/NumPlotSlices]);set(SumBarrFig,'WindowState','minimized');
+SumBarrFig = figure('Name','Membrane','units','normalized','outerposition',[0 0 1 4/NumPlotSlices]);set(SumBarrFig,'WindowState','minimized');
 set(SumBarrFig,'color','white','Units','inches','Position',[0.25 0.25 2*NumPlotSlices 2*2])
 tiledlayout(2,NumPlotSlices,'TileSpacing','none','Padding','compact');
 for slice=1:NumPlotSlices %Plot Barrier Phase Mask Bins slices
@@ -491,7 +516,7 @@ for slice=1:NumPlotSlices %Plot Barrier Phase Mask Bins slices
         colorbar(gca,'north','Ticks',[])
     end
     if slice == round(NumPlotSlices/2)
-        title('Barrier Binned','FontSize',24)
+        title('Membrane','FontSize',24)
     end
 end
 for slice=1:NumPlotSlices %Plot Barrier Phase Mask Bins slices
@@ -505,7 +530,7 @@ end
 set(SumBarrFig,'WindowState','minimized');
 
 %RBC
-SumRBCFig = figure('Name','RBC Binned','units','normalized','outerposition',[0 0 1 4/NumPlotSlices]);set(SumRBCFig,'WindowState','minimized');
+SumRBCFig = figure('Name','RBC','units','normalized','outerposition',[0 0 1 4/NumPlotSlices]);set(SumRBCFig,'WindowState','minimized');
 set(SumRBCFig,'color','white','Units','inches','Position',[0.25 0.25 2*NumPlotSlices 2*2])
 tiledlayout(2,NumPlotSlices,'TileSpacing','none','Padding','compact');
 for slice=1:NumPlotSlices %Plot RBC Phase Mask Bins slices
@@ -516,7 +541,7 @@ for slice=1:NumPlotSlices %Plot RBC Phase Mask Bins slices
         colorbar(gca,'north','Ticks',[])
     end
     if slice == round(NumPlotSlices/2)
-        title('RBC Binned','FontSize',24)
+        title('RBC','FontSize',24)
     end
 end
 for slice=1:NumPlotSlices %Plot RBC Phase Mask Bins slices
@@ -530,7 +555,7 @@ end
 set(SumRBCFig,'WindowState','minimized');
 
 %RBC:Barrier
-SumRBCBarFig = figure('Name','RBC:Barrier Ratio Binned','units','normalized','outerposition',[0 0 1 4/NumPlotSlices]);set(SumRBCBarFig,'WindowState','minimized');
+SumRBCBarFig = figure('Name','RBC:Barrier Ratio','units','normalized','outerposition',[0 0 1 4/NumPlotSlices]);set(SumRBCBarFig,'WindowState','minimized');
 set(SumRBCBarFig,'color','white','Units','inches','Position',[0.25 0.25 2*NumPlotSlices 2*2])
 tiledlayout(2,NumPlotSlices,'TileSpacing','none','Padding','compact');
 for slice=1:NumPlotSlices %Plot RBC Barrier Mask Bins slices
@@ -541,7 +566,7 @@ for slice=1:NumPlotSlices %Plot RBC Barrier Mask Bins slices
         colorbar(gca,'north','Ticks',[])
     end
     if slice == round(NumPlotSlices/2)
-        title('RBC:Barrier Binned','FontSize',24)
+        title('RBC:Membrane','FontSize',24)
     end
 end
 for slice=1:NumPlotSlices %Plot RBC Barrier Mask Bins slices
@@ -1195,6 +1220,199 @@ GasExchange.RBCBarrierBinPercents = RBCBarrierBinPercents;
 GasExchange.RBCOscMean = RBCOscMean;
 GasExchange.RBCOscStd = RBCOscStd;
 GasExchange.RBCOscBinPercents = RBCOscBinPercents;
+%% write report
+% ------------------------------------------------------------------------
+%  Gas Exchange Analysis Report 
+% -------------------------------------------------------------------------
+GasExchange.writereport = 'yes';
+if strcmp(GasExchange.writereport,'yes')
+clc;
+
+% DEFINE INPUTS
+pptDir         = GasExchange.outputpath;
+todayStr       = datestr(now,'yyyymmdd');
+pptxFileName = ['GasExchange_Report_' todayStr];
+pptxName       = fullfile(pptDir, [pptxFileName,'.pptx']);
+
+% colored rows
+rowColors = [
+    .7 0.7 0.7;     % header
+    1 1 1;          % Mean
+    0.9 0.4 0.4;    % Defect
+    0.9 0.8 0.3;    % Low
+    0.3 0.6 0.9;    % High
+];
+
+% Open/Create PPTX
+isOpen = Global.exportToPPTX();
+if ~isempty(isOpen), Global.exportToPPTX('close'); end
+if isfile(pptxName)
+    Global.exportToPPTX('open', pptxName);
+    Global.exportToPPTX('switchslide', 1);
+else
+    Global.exportToPPTX('new','Dimensions',[16 9],'Title','Gas Exchange Analysis','Author','CPIR @ CCHMC');
+end
+
+% Add Slide
+Global.exportToPPTX('addslide');
+
+% Add Title Bar
+Global.exportToPPTX('addtext','Gas Exchange Analysis Report', 'Position',[0 -0.1 5 0.5], 'FontSize',20,'FontWeight','bold','Color',[1 0 0],'BackgroundColor',[1 1 1],'HorizontalAlignment','center');
+
+%Signal Dynamics
+SigDynamics = openfig('SigDynamics.fig');
+Global.exportToPPTX('addpicture',SigDynamics,'Position',[-0.3 6.35 6 2.65]);
+
+% Settings Table
+settinglabels = {'Subject ID','Age(y)','Sex','Disease','Scan Date','Scanner','Scan Software','Sequence','Recon','XIPline Cmt','Denoise','N4Bias','Method','Age Cor.','Image Quality','Note','ProcessDate', 'Analyst Initials'};
+settings = {MainInput.SubjectID,MainInput.Age,MainInput.Sex,MainInput.Disease, MainInput.ScanDate, MainInput.Scanner,MainInput.ScannerSoftware,MainInput.SequenceType,MainInput.Recon,MainInput.AnalysisCode_hash,'no','yes','1-Point Dixon','no','5-Excellent','',todayStr, MainInput.Analyst};
+settingsssummary = cell(18, 2);
+settingsssummary(1,:) = {
+    {'Setting','BackgroundColor',rowColors(1,:),'FontWeight','bold'},
+    {'Value','BackgroundColor',rowColors(1,:),'FontWeight','bold'}
+};
+for i = 1:numel(settinglabels)
+    settingsssummary{i+1,1} = {settinglabels{i}, 'BackgroundColor', rowColors(2,:), 'FontWeight', 'bold'};
+    settingsssummary{i+1,2} = settings{i};
+end
+Global.exportToPPTX('addtable', settingsssummary, 'Position', [0.05 0.35 2.5 3.5], ...
+    'Vert', 'middle', 'Horiz', 'center', 'FontSize', 12);
+
+% images
+Global.exportToPPTX('addpicture',SumVentFig,'Position',[4.8 0 8.5 2.5]);
+Global.exportToPPTX('addpicture',SumBarrFig,'Position',[4.8 2.1 8.5 2.5]);
+Global.exportToPPTX('addpicture',SumRBCFig,'Position',[4.8 4.2 8.5 2.5]);
+Global.exportToPPTX('addpicture',SumRBCBarFig,'Position',[4.8 6.5 8.5 2.5]);
+
+
+%------------------------Ventilation--------------------------------------
+% Histogram
+VentHist2Fig = GasExchangeFunctions.CalculateDissolvedHistogram2(...
+    ScaledVentImage(ProtonMaskRegistered(:)),...
+    VentEdges,VentThresh,SixBinMap,HealthyData.VentEdges,...
+    HealthyData.HealthyVentFit,round(VentSNR,2),round(VentMean,2),round(VentMedian,2),round(VentStd,3),VentBinPercents,'Ventilation');
+Global.exportToPPTX('addpicture',VentHist2Fig,'Position',[12.8 0.2 3.2 2]);
+
+% Ventilation Values and references Table
+valStr = {round(VentMean,2), round(VentBinPercents(1),2), round(VentBinPercents(2),2), round(VentBinPercents(5)+VentBinPercents(6),2)};
+refStr = {round(HealthyData.HealthyMeans.MeanVent,2), round(HealthyData.BinPercentMeans.Vent(1),2), round(HealthyData.BinPercentMeans.Vent(2),2), round(HealthyData.BinPercentMeans.Vent(5)+HealthyData.BinPercentMeans.Vent(6),2)};
+labels = {'Mean','Defect%','Low%','High%'};
+resultssummary = cell(4, 3);
+resultssummary(1,:) = {
+    {'Metric','BackgroundColor',rowColors(1,:),'FontWeight','bold'},
+    {'Value','BackgroundColor',rowColors(1,:),'FontWeight','bold'},
+    {'Ref.','BackgroundColor',rowColors(1,:),'FontWeight','bold'}
+};
+for i = 1:numel(labels)
+    resultssummary{i+1,1} = {labels{i}, 'BackgroundColor', rowColors(i+1,:), 'FontWeight', 'bold'};
+    resultssummary{i+1,2} = round(valStr{i},2);
+    resultssummary{i+1,3} = round(refStr{i},2);
+end
+Global.exportToPPTX('addtable', resultssummary, 'Position', [2.6 0.35 2.7 1.5], ...
+    'Vert', 'middle', 'Horiz', 'center', 'FontSize', 14);
+
+
+%------------------------Membrane--------------------------------------
+% Histogram
+MemHist2Fig = GasExchangeFunctions.CalculateDissolvedHistogram2(...
+    BarrGasRatio(VentBinMask(:)),BarEdges,BarrierThresh,...
+    EightBinMap,HealthyData.BarsEdges,...
+    HealthyData.HealthyBarsFit,round(BarrierSNR,2),round(BarrierUptakeMean,4),...
+    round(BarrierUptakeMedian,4),round(BarrierUptakeStd,4),BarrierUptakeBinPercents,'Membrane');
+Global.exportToPPTX('addpicture',MemHist2Fig,'Position',[12.8 2.3 3.2 2.1]);
+
+% Ventilation Values and references Table
+valStr = {round(BarrierUptakeMean,4), round(BarrierUptakeBinPercents(1),2), round(BarrierUptakeBinPercents(2),2), round(BarrierUptakeBinPercents(5)+BarrierUptakeBinPercents(6)+BarrierUptakeBinPercents(7)+BarrierUptakeBinPercents(8),2)};
+refStr = {round(HealthyData.HealthyMeans.MeanBarrier,4), round(HealthyData.BinPercentMeans.Barrier(1),2), round(HealthyData.BinPercentMeans.Barrier(2),2), round(HealthyData.BinPercentMeans.Barrier(5)+HealthyData.BinPercentMeans.Barrier(6)+HealthyData.BinPercentMeans.Barrier(7)+HealthyData.BinPercentMeans.Barrier(8),2)};
+labels = {'Mean','Defect%','Low%','High%'};
+resultssummary = cell(4, 3);
+resultssummary(1,:) = {
+    {'Metric','BackgroundColor',rowColors(1,:),'FontWeight','bold'},
+    {'Value','BackgroundColor',rowColors(1,:),'FontWeight','bold'},
+    {'Ref.','BackgroundColor',rowColors(1,:),'FontWeight','bold'}
+};
+for i = 1:numel(labels)
+    resultssummary{i+1,1} = {labels{i}, 'BackgroundColor', rowColors(i+1,:), 'FontWeight', 'bold'};
+    resultssummary{i+1,2} = round(valStr{i},5);
+    resultssummary{i+1,3} = round(refStr{i},5);
+end
+Global.exportToPPTX('addtable', resultssummary, 'Position', [2.6 2.45 2.7 1.5], ...
+    'Vert', 'middle', 'Horiz', 'center', 'FontSize', 14);
+
+
+
+%------------------------RBC--------------------------------------
+% Histogram
+RBCHist2Fig = GasExchangeFunctions.CalculateDissolvedHistogram2(...
+    RBCGasRatio(VentBinMask(:)),RBCEdges,RBCThresh,...
+    SixBinMap,HealthyData.RBCEdges,HealthyData.HealthyRBCsFit,...
+    round(RBCSNR,2),round(RBCTransferMean,4), round(RBCTransferMedian,4),round(RBCTransferStd,4),...
+    RBCTransferBinPercents,'RBC');
+Global.exportToPPTX('addpicture',RBCHist2Fig,'Position',[12.8 4.5 3.2 2.2]);
+
+% Ventilation Values and references Table
+valStr = {round(RBCTransferMean,4), round(RBCTransferBinPercents(1),2), round(RBCTransferBinPercents(2),2), round(RBCTransferBinPercents(5)+RBCTransferBinPercents(6),2)};
+refStr = {round(HealthyData.HealthyMeans.MeanRBC,4), round(HealthyData.BinPercentMeans.RBC(1),2), round(HealthyData.BinPercentMeans.RBC(2),2), round(HealthyData.BinPercentMeans.RBC(5)+HealthyData.BinPercentMeans.RBC(6),2)};
+labels = {'Mean','Defect%','Low%','High%'};
+resultssummary = cell(4, 3);
+resultssummary(1,:) = {
+    {'Metric','BackgroundColor',rowColors(1,:),'FontWeight','bold'},
+    {'Value','BackgroundColor',rowColors(1,:),'FontWeight','bold'},
+    {'Ref.','BackgroundColor',rowColors(1,:),'FontWeight','bold'}
+};
+for i = 1:numel(labels)
+    resultssummary{i+1,1} = {labels{i}, 'BackgroundColor', rowColors(i+1,:), 'FontWeight', 'bold'};
+    resultssummary{i+1,2} = round(valStr{i},5);
+    resultssummary{i+1,3} = round(refStr{i},5);
+end
+Global.exportToPPTX('addtable', resultssummary, 'Position', [2.6 4.55 2.7 1.5], ...
+    'Vert', 'middle', 'Horiz', 'center', 'FontSize', 14);
+
+
+%------------------------RBC:Membrane--------------------------------------
+
+% Histogram
+RBCBarHist2Fig = GasExchangeFunctions.CalculateDissolvedHistogram2(...
+    RBCBarrRatio(VentBinMask(:)),RBCBarEdges,RBCBarrThresh,SixBinRBCBarMap,...
+    HealthyData.RBCBarEdges,HealthyData.HealthyRBCBarFit,...
+    '',round(RBCBarrierMean,2), round(RBCBarrierMedian,2),round(RBCBarrierStd,2),...
+    RBCBarrierBinPercents,'RBC:Membrane');
+Global.exportToPPTX('addpicture',RBCBarHist2Fig,'Position',[12.8 6.7 3.2 2.2]);
+
+% Ventilation Values and references Table
+valStr = {round(RBCBarrierMean,2), round(RBCBarrierBinPercents(1),2), round(RBCBarrierBinPercents(2),2), round(RBCBarrierBinPercents(5)+RBCBarrierBinPercents(6),2)};
+refStr = {round(HealthyData.HealthyMeans.MeanRBCBar,2),round( HealthyData.BinPercentMeans.RBCBar(1),2), round(HealthyData.BinPercentMeans.RBCBar(2),2), round(HealthyData.BinPercentMeans.RBC(5)+HealthyData.BinPercentMeans.RBCBar(6),2)};
+labels = {'Mean','Defect%','Low%','High%'};
+resultssummary = cell(4, 3);
+resultssummary(1,:) = {
+    {'Metric','BackgroundColor',rowColors(1,:),'FontWeight','bold'},
+    {'Value','BackgroundColor',rowColors(1,:),'FontWeight','bold'},
+    {'Ref.','BackgroundColor',rowColors(1,:),'FontWeight','bold'}
+};
+for i = 1:numel(labels)
+    resultssummary{i+1,1} = {labels{i}, 'BackgroundColor', rowColors(i+1,:), 'FontWeight', 'bold'};
+    resultssummary{i+1,2} = round(valStr{i},5);
+    resultssummary{i+1,3} = round(refStr{i},5);
+end
+Global.exportToPPTX('addtable', resultssummary, 'Position', [2.6 6.85 2.7 1.5], ...
+    'Vert', 'middle', 'Horiz', 'center', 'FontSize', 14);
+
+
+% Save & close
+Global.exportToPPTX('save',pptxName);
+Global.exportToPPTX('close');
+fprintf('Report saved to %s\n',pptxName);
+
+end
+% close all;
+%% 
+
+GasExchangeExcelFile = fullfile(outputpath, 'GagExchange_workspace.xlsx');
+Global.exportStructToExcel(GasExchange, GasExchangeExcelFile);
+MainInputExcelFile = fullfile(outputpath, 'MainInput_workspace.xlsx');
+Global.exportStructToExcel(MainInput, MainInputExcelFile);
+ProtonExcelFile = fullfile(outputpath, 'Proton_workspace.xlsx');
+Global.exportStructToExcel(Proton, ProtonExcelFile);
 
 %% Export Mat File for Cohort/Additional Analysis
 disp('Exporting Workspace...')

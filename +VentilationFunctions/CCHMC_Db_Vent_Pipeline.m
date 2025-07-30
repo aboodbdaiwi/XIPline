@@ -528,8 +528,10 @@ end
 if strcmp(Ventilation.GLRLM_Analysis, 'yes') == 1
     Outputs.GLRLM.output = Ventilation.GLRLM;
 end
+Outputs.ImageQuality = '5-Excellent';
+Outputs.Note = '';
 
-OutputJSONFile = fullfile(analysisSubfolder, 'Ventilation_Analysis.json');
+OutputJSONFile = fullfile(analysisSubfolder, 'Ventilation_Analysis_01.json');
 Global.exportStructToJSON(Outputs, OutputJSONFile);
 
 % Check if the directory specified by analysisSubfolder exists, create it if necessary

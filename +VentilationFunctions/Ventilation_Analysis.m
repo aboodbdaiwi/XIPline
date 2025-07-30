@@ -81,34 +81,55 @@ maskarray = double(maskarray);
 % imslice(maskarray)
 %% Healthy Reference
 Ventilation.HealthyRef.Date = '20250627'; 
-Ventilation.HealthyRef.CoV = '0.1-0.15';
-Ventilation.HealthyRef.VHI = '6-8';
+Ventilation.HealthyRef.CoV = '0.13±0.02';
+Ventilation.HealthyRef.VHI = '7.7±1.8';
 
+Age = MainInput.Age;
 % TH method
-Ventilation.HealthyRef.TH.VDPULN = '≤5';
-Ventilation.HealthyRef.TH.LVV = '15±5';
-Ventilation.HealthyRef.TH.HVV = '15±5';
+Ventilation.HealthyRef.TH.VDPULN = ['≤',num2str(round((0.49633 + 0.060413* Age + 1.6449 * 1.9806),2))];
+Ventilation.HealthyRef.TH.LVV = '2.3±1.8';
+Ventilation.HealthyRef.TH.HVV = '0.05±0.1';
 
 % LB method
-Ventilation.HealthyRef.LB.VDPULN = '≤5';
-Ventilation.HealthyRef.LB.LVV = '15±5';
-Ventilation.HealthyRef.LB.HVV = '15±5';
+if isfield(Ventilation, 'LB_Normalization')
+    switch Ventilation.LB_Normalization
+        case 'LBmean'
+            Ventilation.HealthyRef.LB.VDPULN = ['≤', num2str(round((-0.31238 + 0.020369 * Age + 1.6449 * 0.68247),2))];
+            Ventilation.HealthyRef.LB.LVV = '6±2.3';
+            Ventilation.HealthyRef.LB.HVV = '5.5±3.3';        
+        case 'GLBmean'
+            Ventilation.HealthyRef.LB.VDPULN = ['≤', num2str(round((0.11008 + 0.051214 * Age + 1.6449 * 1.5833),2))];
+            Ventilation.HealthyRef.LB.LVV = '10.6±3';
+            Ventilation.HealthyRef.LB.HVV = '10±3.5';  
+        case 'GLBpercentile'
+            Ventilation.HealthyRef.LB.VDPULN = ['≤', num2str(round((-0.65729 + 0.06534 * Age + 1.6449 * 1.874),2))];
+            Ventilation.HealthyRef.LB.LVV = '11±8';
+            Ventilation.HealthyRef.LB.HVV = '14±8.7';  
+        otherwise
+            warning('Unrecognized LB_Normalization method: %s', Ventilation.LB_Normalization);
+    end
+else
+    warning('Field "LB_Normalization" not found in Ventilation structure.');
+end
+
 % Kmeans method
-Ventilation.HealthyRef.HK.VDPULN = '≤3';
-Ventilation.HealthyRef.HK.LVV = '15±5';
+Ventilation.HealthyRef.HK.VDPULN = ['≤',num2str(round((-0.15823 + 0.015696* Age + 1.6449 * 0.59544),2))];
+Ventilation.HealthyRef.HK.LVV = '0.8±3.4';
 Ventilation.HealthyRef.HK.HVV = '15±5';
 % AKmeans method
-Ventilation.HealthyRef.AK.VDPULN = '≤5';
-Ventilation.HealthyRef.AK.LVV = '15±5';
-Ventilation.HealthyRef.AK.HVV = '15±5';
+Ventilation.HealthyRef.AK.VDPULN = ['≤',num2str(round((-0.31238 + 0.020369* Age + 1.6449 * 0.68247),2))];
+Ventilation.HealthyRef.AK.LVV = '30±11';
+Ventilation.HealthyRef.AK.HVV = '19±4.8';
 
-Ventilation.HealthyRef.skewness = '0±0';
-Ventilation.HealthyRef.kurtosis = '5.6±1.3';
-Ventilation.HealthyRef.DDI2D = '≤1±0.5';
-Ventilation.HealthyRef.DDI3D = '≤1±0.5';
-Ventilation.HealthyRef.AgeCorrected = 'No';
+Ventilation.HealthyRef.skewness = '0.04±0.28';
+Ventilation.HealthyRef.kurtosis = '4.0±1.4';
+Ventilation.HealthyRef.DDI2D = '≤1';
+Ventilation.HealthyRef.DDI3D = '≤3';
+Ventilation.HealthyRef.AgeCorrected = 'yes';
 
 Ventilation.writereport = 'yes';
+MainInput.ImageQuality = '';
+MainInput.Note = '';
 %% Calculate SNR:
 switch settings.calculate_SNR
     case "yes"

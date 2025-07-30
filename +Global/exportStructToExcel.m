@@ -46,7 +46,7 @@ function exportStructToExcel(dataStruct, outputExcelFile)
                     outputData{row,2} = mat2str(varValue);
                 else
                     outputData{row,1} = fullVarName;
-                    outputData{row,2} = sprintf('Size: [%s]', num2str(size(varValue)));
+                    outputData{row,2} = sprintf('[%s]', num2str(size(varValue)));
                 end
                 row = row + 1;
 
@@ -66,7 +66,7 @@ function exportStructToExcel(dataStruct, outputExcelFile)
 
                 else
                     outputData{row,1} = fullVarName;
-                    outputData{row,2} = sprintf('Size: [%s]', num2str(sz));
+                    outputData{row,2} = sprintf('[%s]', num2str(sz));
                     row = row + 1;
                 end
 

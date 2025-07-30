@@ -34,8 +34,8 @@ H_RecMatrix = Proton.H_RecMatrix;
 ProtonMax = max(abs(ProtonImage(:))); %Proton.ProtonMax;
 
 cd(MainInput.XeDataLocation)
-mkdir([MainInput.XeDataLocation '\Gas Exchange Analysis']);
-outputpath = [MainInput.XeDataLocation '\Gas Exchange Analysis'];
+mkdir([MainInput.XeDataLocation '\GasExchange_Analysis']);
+outputpath = [MainInput.XeDataLocation '\GasExchange_Analysis'];
 cd(outputpath) 
 
 NewMask=1;

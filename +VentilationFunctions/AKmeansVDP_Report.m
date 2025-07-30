@@ -75,15 +75,15 @@ function AKmeansVDP_Report(Ventilation, Proton, MainInput)
         'Vert', 'middle', 'Horiz', 'center', 'FontSize', 16);
     
 
-    settinglabels = {'Scanner','Scan Software','Sequence','Recon','XIPline Commit','Denoise','N4Bias','Method','AgeCor.','ProcessDate', 'Analyst Initials'};
+    settinglabels = {'Scanner','Scan Software','Sequence','Recon','XIPline Commit','Denoise','N4Bias','Method','RefAgeCor.','Image Quality','Note','ProcessDate', 'Analyst Initials'};
     if Ventilation.N4Analysis == 0
         N4bias = 'no';
     else
         N4bias = 'yes';
     end
-    settings = {MainInput.Scanner,MainInput.ScannerSoftware,MainInput.SequenceType,MainInput.Recon,MainInput.AnalysisCode_hash,MainInput.denoiseXe,N4bias,'Adaptive Kmeans',Ventilation.HealthyRef.AgeCorrected,todayStr, MainInput.Analyst};
+    settings = {MainInput.Scanner,MainInput.ScannerSoftware,MainInput.SequenceType,MainInput.Recon,MainInput.AnalysisCode_hash,MainInput.denoiseXe,N4bias,'Adaptive Kmeans',Ventilation.HealthyRef.AgeCorrected,MainInput.ImageQuality, MainInput.Note,todayStr, MainInput.Analyst};
     % Header row
-    settingsssummary = cell(11, 2);
+    settingsssummary = cell(13, 2);
     settingsssummary(1,:) = {
         {'Setting','BackgroundColor',rowColors(end,:),'FontWeight','bold'},
         {'Value','BackgroundColor',rowColors(end,:),'FontWeight','bold'}
@@ -100,18 +100,18 @@ function AKmeansVDP_Report(Ventilation, Proton, MainInput)
     if isempty(Ventilation.overallMeanCV)
         meanCV = 'NaN';
     else
-        meanCV = num2str(Ventilation.overallMeanCV, '%.2f');
+        meanCV = Ventilation.overallMeanCV;
     end
     
     if isempty(Ventilation.overallVHI)
         vhi = 'NaN';
     else
-        vhi = num2str(Ventilation.overallVHI, '%.2f');
+        vhi = Ventilation.overallVHI;
     end
     % DDI 2D Calculation
     if strcmp(Ventilation.DDI2D, 'yes')
         if strcmp(Ventilation.DDIDefectMap, 'AKmeans')
-            DDI2D = sprintf('%.2f ± %.2f', Ventilation.DDI2D_mean, Ventilation.DDI2D_std);
+            DDI2D = Ventilation.DDI2D_mean;
         else
             DDI2D = 'NaN';
         end
@@ -122,7 +122,7 @@ function AKmeansVDP_Report(Ventilation, Proton, MainInput)
     % DDI 3D Calculation
     if strcmp(Ventilation.DDI3D, 'yes')
         if strcmp(Ventilation.DDIDefectMap, 'AKmeans')
-            DDI3D = sprintf('%.2f ± %.2f', Ventilation.DDI3D_mean, Ventilation.DDI3D_std);
+            DDI3D = Ventilation.DDI3D_mean;
         else
             DDI3D = 'NaN';
         end
@@ -131,10 +131,9 @@ function AKmeansVDP_Report(Ventilation, Proton, MainInput)
     end
 
     % Values and references
-    valStr = { Ventilation.SNR_lung, Ventilation.SNR_vv, meanCV, Ventilation.overallVHI, vhi, Ventilation.Akmeans_LVP, Ventilation.Akmeans_HVP, Ventilation.skewness, Ventilation.kurtosis, DDI2D,DDI3D };
+    valStr = { Ventilation.SNR_lung, Ventilation.SNR_vv, meanCV, vhi, Ventilation.Akmeans_VDP,  Ventilation.Akmeans_LVP, Ventilation.Akmeans_HVP, Ventilation.skewness, Ventilation.kurtosis, DDI2D,DDI3D };
     
     labels = {'SNRlung','SNRvv','CoV','VHI (%)','VDP (%)','LVV (%)','HVV (%)','skewness','kurtosis','DDI(2D)','DDI(3D)'};
-    
     
     % Header row
     resultssummary = cell(12, 3);
@@ -143,12 +142,65 @@ function AKmeansVDP_Report(Ventilation, Proton, MainInput)
         {'Value','BackgroundColor',rowColors(end,:),'FontWeight','bold'},
         {'Reference','BackgroundColor',rowColors(end,:),'FontWeight','bold'}
     };
+    % Colors
+    abnormalColor = [1 0.8 0.8]; % light red
+    normalColor = [1 1 1];       % white
     
-    % Fill rows
+    % Fill table rows
     for i = 1:numel(labels)
-        resultssummary{i+1,1} = {labels{i}, 'BackgroundColor', rowColors(i,:), 'FontWeight', 'bold'};
-        resultssummary{i+1,2} = valStr{i};
-        resultssummary{i+1,3} = refStr{i};
+        label = labels{i};
+        if isnumeric(valStr{i}) || islogical(valStr{i})
+            val = round(valStr{i}, 2);
+        else
+            val = valStr{i};  % Leave unchanged if not numeric
+        end
+        ref = refStr{i};
+    
+        % Default metric cell style
+        resultssummary{i+1,1} = {label, 'BackgroundColor', rowColors(i,:), 'FontWeight', 'bold'};
+    
+        % Default color for value cell
+        bgColor = normalColor;
+    
+        % Check if numeric and if reference is in 'mean±std' format
+        if ischar(ref) && contains(ref, '±') && isnumeric(val) && ~isnan(val)
+            try
+                % Extract mean and std using regular expression
+                tokens = regexp(ref, '([\d.]+)\s*±\s*([\d.]+)', 'tokens');
+                if ~isempty(tokens)
+                    refMean = str2double(tokens{1}{1});
+                    refSD   = str2double(tokens{1}{2});
+                    lowerBound = refMean - refSD;
+                    upperBound = refMean + refSD;
+                    % Flag abnormal value
+                    if i == 3 || i == 4 || i == 8 || i == 9
+                        if val < lowerBound || val > upperBound
+                            bgColor = abnormalColor;
+                        end
+                    else
+                        if val > upperBound
+                            bgColor = abnormalColor;
+                        end                        
+                    end
+                end
+            catch
+                warning('Could not parse reference value for %s: %s', label, ref);
+            end
+        elseif ischar(ref) && contains(ref, '≤') && isnumeric(val) && ~isnan(val)
+            % Handle one-sided reference (e.g., '≤4')
+            try
+                maxVal = str2double(erase(ref, '≤'));
+                if val > maxVal
+                    bgColor = abnormalColor;
+                end
+            catch
+                warning('Could not parse ≤ reference for %s: %s', label, ref);
+            end
+        end
+    
+        % Write value and reference to result table
+        resultssummary{i+1,2} = {val, 'BackgroundColor', bgColor};
+        resultssummary{i+1,3} = ref;
     end
     
     % Add to slide
@@ -166,7 +218,8 @@ function AKmeansVDP_Report(Ventilation, Proton, MainInput)
     x0 = 8.5; w = 7.3; yStep = 2.1; y0 = 0.1;
     figXe  = makeTwoRowMontage(Ventilation.Image, '129Xe Ventilation');
     % ----------- Proton montage preparation with auto-detect color or grayscale
-    Pr = Proton.ProtonRegistered; %Proton.ProtonRegisteredColored;  % fallback
+    % Pr = Proton.ProtonRegistered; %Proton.ProtonRegisteredColored;  % fallback
+    Pr = Ventilation.Mask_Proton_boundaries;
     if ndims(Pr) == 4  && size(Pr,4) == 3% grayscale: [X Y Z 1]
         Pr = permute(Pr, [1 2 4 3]);  % 
         Pr = squeeze(Pr);  % remove singleton dimension

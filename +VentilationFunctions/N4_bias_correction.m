@@ -53,7 +53,16 @@ maskarray_dilated = imdilate(maskarray, SE);
 % Export Image and Mask temporarily for use in N4
 niftiwrite(abs(MR+0.001),[parentPath,'Image.nii']); % Image
 niftiwrite(abs(maskarray_dilated),[parentPath,'Mask.nii']); % Mask
-niftiwrite(abs(maskarray),[parentPath,'Weight.nii']); % Weight
+Weight = maskarray;
+% Weight = MR.*maskarray;
+% Weight = Weight./max(Weight(:));
+% nClusters = 4;
+% Weight = VentilationFunctions.computeKMeansWeight(MR, maskarray, nClusters);
+% Weight = double(Weight - 1).*maskarray;
+% incomplete = 0.5;
+% Weight = VentilationFunctions.medFilter(double(Weight<(mean(Weight(Weight>0))*incomplete)*(maskarray>0)));
+% Weight = abs(Weight - 1).*maskarray;
+niftiwrite(abs(Weight),[parentPath,'Weight.nii']); % Weight
 
 % Run Bias Correction
 % Default settings:
