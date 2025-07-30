@@ -163,7 +163,7 @@ elseif num_files == 1
     imag_vol = squeeze(dicomread(FileNames{1}));  
     info = dicominfo(FileNames{1});
 end
-
+imag_vol = double(imag_vol);
 % Save data if required
 if nargin >= 1
     save_check = strcmp(save_data, 'save_data');

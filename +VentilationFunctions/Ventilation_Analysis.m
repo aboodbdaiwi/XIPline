@@ -268,8 +268,10 @@ else
 end
 %% Proton image
 if MainInput.NoProtonImage == 1 
-    Proton.ProtonRegistered = zeros(size(MR));
-    Proton.ProtonRegisteredColored = zeros(size(MR));
+    Proton.Image = zeros(size(MR));
+    Proton.Image(end,end,end) = 1; % to avoid error for max 
+    Proton.ProtonRegistered = Proton.Image;
+    Proton.ProtonRegisteredColored = Proton.Image;
 end
 %% Skewness
 lung_voxels = Ventilation.Image(maskarray == 1);
