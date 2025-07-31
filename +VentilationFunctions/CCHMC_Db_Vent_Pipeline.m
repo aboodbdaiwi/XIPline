@@ -7,14 +7,9 @@ Age = MainInput.Age;
 Sex = MainInput.Sex;
 Disease = MainInput.Disease;
 ScanDate = MainInput.ScanDate;
-Scanner = MainInput.Scanner;
-ScannerSoftware = MainInput.ScannerSoftware;
-SequenceType = MainInput.SequenceType;
 ReconType = MainInput.ReconType;
-denoiseXe = MainInput.denoiseXe;
-Analyst = MainInput.Analyst;
 VoxelSize = MainInput.VoxelSize;
-SliceOrientation = MainInput.SliceOrientation;
+
 vent_file = MainInput.vent_file;
 anat_file = MainInput.anat_file;
 analysisFolder = MainInput.analysisFolder;
@@ -28,27 +23,38 @@ Diffusion = '';
 GasExchange = '';
 MainInput.AnalysisType = 'Ventilation';
 MainInput.Institute = 'CCHMC'; 
-MainInput.analysissesFolder = analysisFolder;
 MainInput.CCHMC_DbVentAnalysis = 'yes';
 
 Outputs = [];
-Outputs.PatientID = SubjectID;
+Outputs.SUBJECT_ID = SubjectID;
 Outputs.Age = Age;
 Outputs.Sex = Sex;
 Outputs.Disease = Disease;
 Outputs.ScanDate = ScanDate;
-Outputs.XeImagepath = vent_file;
-Outputs.HImagepath = anat_file;
-Outputs.analysispath = analysisFolder;
-Outputs.SequenceType = SequenceType;
+Outputs.SW_VER = MainInput.ScannerSoftware;
+Outputs.VENT_FILEPATH_NEW = vent_file(57:end);
+Outputs.ANATVENT_FILEPATH_NEW = anat_file(57:end);
+Outputs.analysispath = analysisFolder(57:end);
+Outputs.maindirectory = vent_file(1:56);
+oldanalysis = load(fullfile(mask_file_name,'Ventilation_Analysis_Outputs.mat'));
+try
+    Outputs.TRAVERSAL_GEO = oldanalysis.Outputs.SequenceType;
+catch
+    Outputs.TRAVERSAL_GEO = '';
+end
+MainInput.SequenceType = Outputs.TRAVERSAL_GEO;
 Outputs.ReconType = ReconType;
-Outputs.MaskPath = mask_file_name; 
+Outputs.MaskPath = analysisFolder(57:end); 
+Outputs.ImageQuality = MainInput.ImageQuality;
+Outputs.Note = MainInput.Note;
+Outputs.xe_sernum = MainInput.xe_sernum;
+Outputs.proton_sernum = MainInput.proton_sernum;
 
 Outputs.AnalysisCode_path = 'https://github.com/aboodbdaiwi/XIPline';
 Outputs.AnalysisDate = str2double(datestr(datetime('today'), 'yyyymmdd'));
 
 % Check if we have anatomical images or not
-if isempty(Hdatapath)
+if isempty(Hdatapath) || strcmp(Hdatapath, 'NULL')
     MainInput.NoProtonImage = 'yes';  % There is no proton images
 else
     MainInput.NoProtonImage = 'no';    % There is  proton images 
@@ -58,6 +64,7 @@ analysisSubfolder = fullfile(analysisFolder, 'Ventilation_Analysis');
 if ~exist(analysisSubfolder, 'dir')
     mkdir(analysisSubfolder);
 end
+MainInput.analysissesFolder = analysisSubfolder;
 
 %----------------------------- load data -----------------------------
 % Extract the file names
@@ -73,7 +80,7 @@ MainInput.XeDataext = xe_ext;
 cd(MainInput.XeDataLocation)
 
 % Outputs.XeFullPath = XeFullPath;
-Outputs.XeDataLocation = XeDataLocation;
+Outputs.XeDataLocation = XeDataLocation(57:end);
 Outputs.XeFileName = XeFileName;
 Outputs.XeDataext = xe_ext;
 
@@ -90,7 +97,7 @@ if strcmp(MainInput.NoProtonImage, 'no') == 1
     MainInput.HDataext = H_ext;
 
     % Outputs.HFullPath = HFullPath;
-    Outputs.HDataLocation = HDataLocation;
+    Outputs.HDataLocation = HDataLocation(57:end);
     Outputs.HFileName = HFileName;
     Outputs.XeDataext = H_ext;
 end
@@ -186,6 +193,8 @@ else
     Proton.ProtonRegistered = zeros(size(Ventilation.Image));
     Proton.ProtonRegisteredColored = zeros(size(Ventilation.Image));
 end
+Outputs.RegistrationType = MainInput.RegistrationType;
+Outputs.TransformType = MainInput.TransformType;
 
 % -----------------------------segmentation-----------------------------
 % Check if mask_file_name is empty
@@ -196,28 +205,31 @@ else
     SegmentMaskMode = 1; % 0 = new AI mask, 1 = load exisitng mask
     disp('The mask_file_name is not empty.');
 end
-
+SegmentMaskMode = 0;
 %SegmentMaskMode = 1; % 0 = new AI mask, 1 = load exisitng mask
 if SegmentMaskMode == 0
-    cd(MainInput.XeDataLocation)
-    
-    % diary Log.txt
-    MainInput.SegmentationMethod = 'Auto'; % 'Threshold' || 'Manual' || 'Auto'
-    MainInput.SegmentAnatomy = 'Parenchyma'; % 'Airway'; || 'Parenchyma'
-    MainInput.Imagestosegment = 'Xenon';  % 'Xe & Proton Registered' | 'Xenon' | 'Registered Proton'
-    
-    MainInput.thresholdlevel = 1; % 'threshold' 
-    MainInput.SE = 1;
-    
-    MainInput.SegmentManual = 'Freehand'; % 'AppSegmenter' || 'Freehand'
-    MainInput.SliceOrientation = SliceOrientation; % 'coronal' ||'transversal' || 'sagittal' ||'isotropic'
-    [Proton,Ventilation,~,~] = Segmentation.PerformSegmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
-
-    if exist('Ventilation.AirwayMask', 'var')
-        % skip
-    else
-        Ventilation.AirwayMask = zeros(size(Ventilation.LungMask));
-    end
+    % cd(MainInput.XeDataLocation)
+    % 
+    % % diary Log.txt
+    % MainInput.SegmentationMethod = 'Auto'; % 'Threshold' || 'Manual' || 'Auto'
+    % MainInput.SegmentAnatomy = 'Parenchyma'; % 'Airway'; || 'Parenchyma'
+    % MainInput.Imagestosegment = 'Xenon';  % 'Xe & Proton Registered' | 'Xenon' | 'Registered Proton'
+    % 
+    % MainInput.thresholdlevel = 1; % 'threshold' 
+    % MainInput.SE = 1;
+    % 
+    % MainInput.SegmentManual = 'Freehand'; % 'AppSegmenter' || 'Freehand'
+    % MainInput.SliceOrientation = SliceOrientation; % 'coronal' ||'transversal' || 'sagittal' ||'isotropic'
+    % [Proton,Ventilation,~,~] = Segmentation.PerformSegmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
+    % 
+    % if exist('Ventilation.AirwayMask', 'var')
+    %     % skip
+    % else
+    %     Ventilation.AirwayMask = zeros(size(Ventilation.LungMask));
+    % end
+    Ventilation.LungMask = oldanalysis.Outputs.N4Bias.LungMask;
+    Ventilation.AirwayMask = zeros(size(Ventilation.LungMask));
+    clear oldanalysis
 else
     % % List all files in the analysispath folder
     % files = dir(fullfile(analysispath, '*.gz')); %.nii
@@ -434,7 +446,7 @@ Ventilation.GLRLMDefectMap = 'Threshold';
 
 Proton.AnatImage_Reg = Proton.ProtonRegistered;
 Proton.AnatImage_RegColored = Proton.ProtonRegisteredColored;
-
+Ventilation.UncorrectedImage = Ventilation.Image;
 close all;
 Ventilation.N4Analysis = 1;
 switch Ventilation.LB_Normalization
@@ -448,16 +460,24 @@ switch Ventilation.LB_Normalization
         Ventilation.LBThresholds = [0.28893, 0.462393, 0.622368, 0.77374, 0.918873]; % percentile
         Ventilation.Hdist = [-1.186698, 0.738826, 0.198451]; 
 end   
-MainInput.MaskFullPath = mask_file_name;
+myCluster = parcluster('local');
+delete(myCluster.Jobs);
 
 [Ventilation] = VentilationFunctions.Ventilation_Analysis(Ventilation, Proton, MainInput);
 close all;
 Outputs.timestamp = str2double(Ventilation.timestamp);
 Outputs.SNR_slice = Ventilation.SNR_slice;
-Outputs.Overall_SNR = Ventilation.SNR_lung;
+Outputs.SNR = Ventilation.SNR_lung;
 Outputs.SNRvv_slice = Ventilation.SNRvv_slice;
 Outputs.SNR_vv = Ventilation.SNR_vv;
 
+Outputs.VENT_SERIES_NUMBER = MainInput.xe_sernum;
+Outputs.ANATVENT_SERIES_NUMBER = MainInput.proton_sernum;
+Outputs.IMAGE_ORIENT = MainInput.SliceOrientation;
+Outputs.PIXEL_SPACING_X = MainInput.PIXEL_SPACING_X;
+Outputs.PIXEL_SPACING_Y = MainInput.PIXEL_SPACING_Y;
+Outputs.SLICE_THICKNESS = MainInput.SLICE_THICKNESS;
+Outputs.SCAN_NUM = MainInput.SCAN_NUM;
 % N4 - 2024 settings (Abood)
 
 if strcmp(Ventilation.HeterogeneityIndex, 'yes')
@@ -528,10 +548,8 @@ end
 if strcmp(Ventilation.GLRLM_Analysis, 'yes') == 1
     Outputs.GLRLM.output = Ventilation.GLRLM;
 end
-Outputs.ImageQuality = '5-Excellent';
-Outputs.Note = '';
 
-OutputJSONFile = fullfile(analysisSubfolder, 'Ventilation_Analysis_01.json');
+OutputJSONFile = fullfile(analysisFolder, ['VentAnalysis_','ser-',num2str(MainInput.xe_sernum),'.json']);
 Global.exportStructToJSON(Outputs, OutputJSONFile);
 
 % Check if the directory specified by analysisSubfolder exists, create it if necessary

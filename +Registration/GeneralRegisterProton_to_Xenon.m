@@ -317,8 +317,12 @@ if strcmp(MainInput.AnalysisType,'GasExchange')
 end
 %% save images
 %Tiffs (movingRegisteredVolume)
-
-Global.write_imshowpair(ProtonRegistered,fixed(:,:,1:nSlice),DataLocation)
+if strcmp(MainInput.AnalysisType,'Ventilation')
+    OutputPath = fullfile(MainInput.OutputPath,'Ventilation_Analysis');
+elseif strcmp(MainInput.AnalysisType,'GasExchange')
+    OutputPath = fullfile(MainInput.OutputPath,'GasExchange_Analysis');
+end
+Global.write_imshowpair(ProtonRegistered,fixed(:,:,1:nSlice),OutputPath)
 % figure; orthosliceViewer(Proton.ProtonRegisteredColored)
 
 end

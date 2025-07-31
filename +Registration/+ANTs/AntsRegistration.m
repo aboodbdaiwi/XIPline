@@ -168,7 +168,12 @@ function [MainInput, Proton, Ventilation, GasExchange] = AntsRegistration(MainIn
         B = fixedVolume(:, :, slice);
         ProtonRegisteredColored(:, :, :, slice) = imfuse(A, B, 'falsecolor', 'ColorChannels', 'green-magenta');
     end
-    Global.write_imshowpair(ProtonRegistered,fixedVolume,MainInput.OutputPath)
+    if strcmp(MainInput.AnalysisType,'Ventilation')
+        OutputPath = fullfile(MainInput.OutputPath,'Ventilation_Analysis');
+    elseif strcmp(MainInput.AnalysisType,'GasExchange')
+        OutputPath = fullfile(MainInput.OutputPath,'GasExchange_Analysis');
+    end
+    Global.write_imshowpair(ProtonRegistered,fixedVolume,OutputPath)
     ProtonRegisteredColored = permute(ProtonRegisteredColored,[1 2 4 3]);
     Proton.ProtonRegistered = ProtonRegistered;
     Proton.ProtonRegisteredColored = ProtonRegisteredColored;

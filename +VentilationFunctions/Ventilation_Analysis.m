@@ -24,6 +24,7 @@ close all;
 % f = waitbar(0,'Processing ventilation analysis...');
 % pause(.1) 
 Ventilation.Image = double(Ventilation.UncorrectedImage);
+Ventilation.UncorrectedImage = Ventilation.Image;
 Ventilation.LungMask = double(Ventilation.LungMask);
 Ventilation.AirwayMask = double(Ventilation.AirwayMask);
 
@@ -128,8 +129,8 @@ Ventilation.HealthyRef.DDI3D = '≤3';
 Ventilation.HealthyRef.AgeCorrected = 'yes';
 
 Ventilation.writereport = 'yes';
-MainInput.ImageQuality = '';
-MainInput.Note = '';
+% MainInput.ImageQuality = '';
+% MainInput.Note = '';
 %% Calculate SNR:
 switch settings.calculate_SNR
     case "yes"
@@ -196,7 +197,7 @@ switch settings.N4_bias_analysis
         % Save images as Nifti.
         % NameN4 = Name + "N4";
 %         niftiwrite(abs(N4_2),[parentPath,char(NameN4)]);
-        niftiwrite(abs(N4_2),parentPath + "Ventilation_ImagesN4"); % Or do this until we have a naming convention        
+        % niftiwrite(abs(N4_2),parentPath + "Ventilation_ImagesN4"); % Or do this until we have a naming convention        
         MR = double(N4);
         Ventilation.Image_uncorrected = Ventilation.Image;
         Ventilation.Image = MR;
@@ -214,11 +215,20 @@ delete_if_exist = @(pattern) cellfun(@(f) delete(fullfile(parentPath, f)), ...
     {dir(fullfile(parentPath, pattern)).name}, 'UniformOutput', false);
 
 % ==== Delete any older matching files ====
+delete_if_exist('uncorrectedimage*.nii*');
 delete_if_exist('image*.nii*');
 delete_if_exist('combined_mask*.nii*');
 delete_if_exist('lungmask*.nii*');
 delete_if_exist('airwaymask*.nii*');
 delete_if_exist('vesselsmask*.nii*');
+
+% Image
+img_name = lower(['uncorrectedimage' timestamp '.nii']);
+niftiwrite(abs(fliplr(rot90(Ventilation.UncorrectedImage, -1))), fullfile(parentPath, img_name), 'Compressed', true);
+info = niftiinfo(fullfile(parentPath, [img_name '.gz']));
+info.Description = 'Package Version: Version1';
+niftiwrite(abs(fliplr(rot90(Ventilation.UncorrectedImage, -1))), fullfile(parentPath, img_name), info, 'Compressed', true);
+
 
 % Image
 img_name = lower(['image' timestamp '.nii']);
