@@ -36,12 +36,13 @@ Outputs.VENT_FILEPATH_NEW = vent_file(57:end);
 Outputs.ANATVENT_FILEPATH_NEW = anat_file(57:end);
 Outputs.analysispath = analysisFolder(57:end);
 Outputs.maindirectory = vent_file(1:56);
-oldanalysis = load(fullfile(mask_file_name,'Ventilation_Analysis_Outputs.mat'));
-try
-    Outputs.TRAVERSAL_GEO = oldanalysis.Outputs.SequenceType;
-catch
-    Outputs.TRAVERSAL_GEO = '';
-end
+% oldanalysis = load(fullfile(mask_file_name,'Ventilation_Analysis_Outputs.mat'));
+% try
+%     Outputs.TRAVERSAL_GEO = oldanalysis.Outputs.SequenceType;
+% catch
+%     Outputs.TRAVERSAL_GEO = 'RECTILINEAR';
+% end
+Outputs.TRAVERSAL_GEO = 'RECTILINEAR';
 MainInput.SequenceType = Outputs.TRAVERSAL_GEO;
 Outputs.ReconType = ReconType;
 Outputs.MaskPath = analysisFolder(57:end); 
@@ -54,7 +55,7 @@ Outputs.AnalysisCode_path = 'https://github.com/aboodbdaiwi/XIPline';
 Outputs.AnalysisDate = str2double(datestr(datetime('today'), 'yyyymmdd'));
 
 % Check if we have anatomical images or not
-if isempty(Hdatapath) || strcmp(Hdatapath, 'NULL')
+if isempty(Hdatapath) || strcmp(Hdatapath(end-3:end), 'NULL')
     MainInput.NoProtonImage = 'yes';  % There is no proton images
 else
     MainInput.NoProtonImage = 'no';    % There is  proton images 
@@ -155,6 +156,7 @@ end
 % figure; Global.imslice(Proton.Image,'Proton')
 % -----------------------------registration-----------------------------
 MainInput.SkipRegistration = 0;
+
 if strcmp(MainInput.NoProtonImage, 'no') 
     try
         MainInput.RegistrationType = 'ANTs'; 
@@ -190,6 +192,8 @@ if strcmp(MainInput.NoProtonImage, 'no')
          % S = orthosliceViewer(Proton.ProtonRegisteredColored);
     end
 else
+    MainInput.RegistrationType = 'NaN'; 
+    MainInput.TransformType = 'NaN'; % 'translation' | 'rigid' | 'similarity' | 'affine'
     Proton.ProtonRegistered = zeros(size(Ventilation.Image));
     Proton.ProtonRegisteredColored = zeros(size(Ventilation.Image));
 end
@@ -207,29 +211,50 @@ else
 end
 SegmentMaskMode = 0;
 %SegmentMaskMode = 1; % 0 = new AI mask, 1 = load exisitng mask
+
+orientation = upper(string(MainInput.SliceOrientation));  % ensure string + uppercase
+switch orientation
+    case "CORONAL"
+        orientation_out = "coronal";
+    case "AXIAL"
+        orientation_out = "transversal";
+    otherwise
+        error("Unsupported SliceOrientation: %s", MainInput.SliceOrientation);
+end
+MainInput.SliceOrientation = orientation_out;
+
 if SegmentMaskMode == 0
     % cd(MainInput.XeDataLocation)
     % 
     % % diary Log.txt
-    % MainInput.SegmentationMethod = 'Auto'; % 'Threshold' || 'Manual' || 'Auto'
-    % MainInput.SegmentAnatomy = 'Parenchyma'; % 'Airway'; || 'Parenchyma'
-    % MainInput.Imagestosegment = 'Xenon';  % 'Xe & Proton Registered' | 'Xenon' | 'Registered Proton'
-    % 
-    % MainInput.thresholdlevel = 1; % 'threshold' 
-    % MainInput.SE = 1;
-    % 
-    % MainInput.SegmentManual = 'Freehand'; % 'AppSegmenter' || 'Freehand'
+    MainInput.SegmentationMethod = 'Auto'; % 'Threshold' || 'Manual' || 'Auto'
+    MainInput.SegmentAnatomy = 'Parenchyma'; % 'Airway'; || 'Parenchyma'
+    MainInput.Imagestosegment = 'Xenon';  % 'Xe & Proton Registered' | 'Xenon' | 'Registered Proton'
+    MainInput.AIScript = 'Python';
+    MainInput.thresholdlevel = 1; % 'threshold' 
+    MainInput.SE = 1;
+
+    MainInput.SegmentManual = 'Freehand'; % 'AppSegmenter' || 'Freehand'
     % MainInput.SliceOrientation = SliceOrientation; % 'coronal' ||'transversal' || 'sagittal' ||'isotropic'
-    % [Proton,Ventilation,~,~] = Segmentation.PerformSegmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
+    [Proton,Ventilation,~,~] = Segmentation.PerformSegmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
+
+    if exist('Ventilation.AirwayMask', 'var')
+        % skip
+    else
+        Ventilation.AirwayMask = zeros(size(Ventilation.LungMask));
+    end
+
+    % Ventilation.LungMask = oldanalysis.Outputs.N4Bias.LungMask;
+    % Ventilation.AirwayMask = zeros(size(Ventilation.LungMask));
+    % clear oldanalysis
+
+    % oddSlices = 1:2:size(Ventilation.Image, 3);
+    % Ventilation.Image = Ventilation.Image(:, :, oddSlices);
     % 
-    % if exist('Ventilation.AirwayMask', 'var')
-    %     % skip
-    % else
-    %     Ventilation.AirwayMask = zeros(size(Ventilation.LungMask));
-    % end
-    Ventilation.LungMask = oldanalysis.Outputs.N4Bias.LungMask;
-    Ventilation.AirwayMask = zeros(size(Ventilation.LungMask));
-    clear oldanalysis
+    % % Step 2: Resize LungMask to match the image size
+    % targetSize = size(Ventilation.Image);
+    % Ventilation.LungMask = imresize3(Ventilation.LungMask, targetSize, 'nearest');
+    % Ventilation.LungMask = double(Ventilation.LungMask>0);
 else
     % % List all files in the analysispath folder
     % files = dir(fullfile(analysispath, '*.gz')); %.nii

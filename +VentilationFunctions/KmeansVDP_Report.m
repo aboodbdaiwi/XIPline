@@ -10,7 +10,11 @@ function KmeansVDP_Report(Ventilation, Proton, MainInput)
     todayStr       = datestr(now,'yyyymmdd');
     pptxFileName = ['KmeansVDP_Report_' todayStr];
     pptxName       = fullfile(pptDir, [pptxFileName,'.pptx']);
-    
+    % pptoutputPattern = fullfile(pptDir, 'KmeansVDP_Report_*.pptx');    
+    % pptFiles = dir(pptoutputPattern);    
+    % for k = 1:length(pptFiles)
+    %     delete(fullfile(pptDir, pptFiles(k).name));  % delete each matching file
+    % end       
     % Reference Values 
     refStr = { '-', '-', ...
         Ventilation.HealthyRef.CoV,...
@@ -219,6 +223,16 @@ function KmeansVDP_Report(Ventilation, Proton, MainInput)
     close all;
     x0 = 8.5; w = 7.3; yStep = 2.1; y0 = 0.1;
     figXe  = makeTwoRowMontage(Ventilation.Image, '129Xe Ventilation');
+     numslice = size(Ventilation.Image,3);
+    if numslice < 10
+        scaleFactore = 0.65;
+    elseif numslice < 12
+        scaleFactore = 0.75;
+    elseif numslice < 16
+        scaleFactore = 0.9;
+    else 
+        scaleFactore = 1;
+    end      
     % ----------- Proton montage preparation with auto-detect color or grayscale
     % Pr = Proton.ProtonRegistered; %Proton.ProtonRegisteredColored;  % fallback
     Pr = Ventilation.Mask_Proton_boundaries;
@@ -248,10 +262,10 @@ function KmeansVDP_Report(Ventilation, Proton, MainInput)
     % Global.exportToPPTX('addtext','Histogram', 'Position',[3.3 5.5 2 0.1], 'FontSize',14,'FontWeight','bold','Color',[1 0 0],'HorizontalAlignment','left');
     
     % 9. ADD IMAGES TO SLIDE
-    Global.exportToPPTX('addpicture', figXe,  'Position', [x0 y0         w w*XePos(4)/XePos(3)]);
-    Global.exportToPPTX('addpicture', figPr,  'Position', [x0 y0+yStep   w w*PrPos(4)/PrPos(3)]);
-    Global.exportToPPTX('addpicture', figMask_Vent, 'Position', [x0 y0+2*yStep w w*Mask_VentPos(4)/Mask_VentPos(3)]);
-    Global.exportToPPTX('addpicture', figVDP, 'Position', [x0 y0+3*yStep w w*DefPos(4)/DefPos(3)]);
+    Global.exportToPPTX('addpicture', figXe,  'Position', [x0 y0         scaleFactore*w scaleFactore*w*XePos(4)/XePos(3)]);
+    Global.exportToPPTX('addpicture', figPr,  'Position', [x0 y0+yStep   scaleFactore*w scaleFactore*w*PrPos(4)/PrPos(3)]);
+    Global.exportToPPTX('addpicture', figMask_Vent, 'Position', [x0 y0+2*yStep scaleFactore*w scaleFactore*w*Mask_VentPos(4)/Mask_VentPos(3)]);
+    Global.exportToPPTX('addpicture', figVDP, 'Position', [x0 y0+3*yStep scaleFactore*w scaleFactore*w*DefPos(4)/DefPos(3)]);
     
     
     Global.exportToPPTX('addtext','129Xe', 'Position',[x0 y0 2 0.1], 'FontSize',14,'FontWeight','bold','Color',[1 0 0],'HorizontalAlignment','left');
@@ -276,6 +290,7 @@ function KmeansVDP_Report(Ventilation, Proton, MainInput)
         delete(PDFoutputPath);  % remove existing PDF to avoid overwrite conflict
     end    
     presentation.SaveAs(PDFoutputPath, 32);
+    pause(2);  % <-- allow time for file to be written
     presentation.Close();
     ppt.Quit();
     delete(ppt);

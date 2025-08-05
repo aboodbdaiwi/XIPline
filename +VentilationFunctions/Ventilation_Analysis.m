@@ -287,6 +287,15 @@ end
 lung_voxels = Ventilation.Image(maskarray == 1);
 Ventilation.skewness = skewness(double(lung_voxels));
 Ventilation.kurtosis = kurtosis(double(lung_voxels)); 
+
+%% remove old ppt file 
+% pptPattern = fullfile(parentPath, 'Ventilation_Analysis*.pptx');
+% pptFiles = dir(pptPattern);
+% 
+% for k = 1:length(pptFiles)
+%     delete(fullfile(parentPath, pptFiles(k).name));
+% end
+
 %% 8) Calculate VDP:
 
 if strcmp(Ventilation.ThreshAnalysis,'yes')   % 'yes'; || 'no'

@@ -10,7 +10,12 @@ function ThresholdVDP_Report(Ventilation, Proton, MainInput)
     todayStr       = datestr(now,'yyyymmdd');
     pptxFileName = ['ThresholdVDP_Report_' todayStr];
     pptxName       = fullfile(pptDir, [pptxFileName,'.pptx']);
-    
+    % pptoutputPattern = fullfile(pptDir, 'ThresholdVDP_Report_*.pptx');
+    % pptFiles = dir(pptoutputPattern);   
+    % for k = 1:length(pptFiles)
+    %     delete(fullfile(pptDir, pptFiles(k).name));  % delete each matching file
+    % end
+
     % Reference Values 
     refStr = { '-', '-', ...
         Ventilation.HealthyRef.CoV,...
@@ -227,7 +232,7 @@ function ThresholdVDP_Report(Ventilation, Proton, MainInput)
         scaleFactore = 0.75;
     elseif numslice < 16
         scaleFactore = 0.9;
-    elseif numslice < 18
+    else 
         scaleFactore = 1;
     end
     % ----------- Proton montage preparation with auto-detect color or grayscale
@@ -287,6 +292,7 @@ function ThresholdVDP_Report(Ventilation, Proton, MainInput)
         delete(PDFoutputPath);  % remove existing PDF to avoid overwrite conflict
     end    
     presentation.SaveAs(PDFoutputPath, 32);
+    pause(2);  % <-- allow time for file to be written
     presentation.Close();
     ppt.Quit();
     delete(ppt);

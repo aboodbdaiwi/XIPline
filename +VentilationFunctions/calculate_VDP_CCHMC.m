@@ -378,7 +378,7 @@ set(gcf,'position',[1 1 2 2])% set the position of the figure to axes
 disp('Saving Vent Tiff...')
 
 % Normalize the intensity of the original image to fall between [0,1].
-HImage = Proton.Image;
+HImage = Proton.ProtonRegistered;
 MR2 = HImage / max(HImage,[], 'all');
 
 for slice=1:size(maskarray,3) %repeat for rest of slices

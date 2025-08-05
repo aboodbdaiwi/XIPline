@@ -168,11 +168,20 @@ function [MainInput, Proton, Ventilation, GasExchange] = AntsRegistration(MainIn
         B = fixedVolume(:, :, slice);
         ProtonRegisteredColored(:, :, :, slice) = imfuse(A, B, 'falsecolor', 'ColorChannels', 'green-magenta');
     end
-    if strcmp(MainInput.AnalysisType,'Ventilation')
-        OutputPath = fullfile(MainInput.OutputPath,'Ventilation_Analysis');
-    elseif strcmp(MainInput.AnalysisType,'GasExchange')
-        OutputPath = fullfile(MainInput.OutputPath,'GasExchange_Analysis');
+    
+    if strcmp(MainInput.AnalysisType, 'Ventilation')
+        OutputPath = fullfile(MainInput.OutputPath, 'Ventilation_Analysis');
+    elseif strcmp(MainInput.AnalysisType, 'GasExchange')
+        OutputPath = fullfile(MainInput.OutputPath, 'GasExchange_Analysis');
+    else
+        error('Unsupported AnalysisType: %s', MainInput.AnalysisType);
     end
+    
+    % Create the output directory if it does not exist
+    if ~exist(OutputPath, 'dir')
+        mkdir(OutputPath);
+    end
+
     Global.write_imshowpair(ProtonRegistered,fixedVolume,OutputPath)
     ProtonRegisteredColored = permute(ProtonRegisteredColored,[1 2 4 3]);
     Proton.ProtonRegistered = ProtonRegistered;
