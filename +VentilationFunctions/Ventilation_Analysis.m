@@ -129,8 +129,8 @@ Ventilation.HealthyRef.DDI3D = '≤3';
 Ventilation.HealthyRef.AgeCorrected = 'yes';
 
 Ventilation.writereport = 'yes';
-% MainInput.ImageQuality = '';
-% MainInput.Note = '';
+MainInput.ImageQuality = '';
+MainInput.Note = '';
 %% Calculate SNR:
 switch settings.calculate_SNR
     case "yes"
