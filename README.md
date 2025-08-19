@@ -50,6 +50,15 @@ When implementing new features, or debugging, we recommend using the debugging M
 
 These components are essential for image reconstruction, registration, and segmentation.
 
+##### Set up Python
+
+1. Install [Python](https://www.python.org/downloads/) 3.10.2.
+
+2. Add the Python path to the environment variables.
+   
+3. Navigate to `C:\XIPline\python_path.txt` and change the Python path to your local location.
+
+Note: If you're having problems with the auto-segmentation, please take a look at [`issue #3`](https://github.com/aboodbdaiwi/XIPline/issues/3) for potential solutions. 
 
 ##### For GE Data: Waveform Files
  Add waveform files in the `C:\XIPline\GE\waveforms` folder. Please refer to `User_Manual.pdf` document for more detailed steps. 
