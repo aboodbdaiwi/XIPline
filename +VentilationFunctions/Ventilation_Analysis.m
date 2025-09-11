@@ -86,6 +86,12 @@ Ventilation.HealthyRef.CoV = '0.13±0.02';
 Ventilation.HealthyRef.VHI = '7.7±1.8';
 
 Age = MainInput.Age;
+if (isstring(Age) && strlength(Age) == 0) || ...
+   (ischar(Age)   && isempty(Age))       || ...
+   (isnumeric(Age) && isempty(Age))
+    Age = 6;
+end
+
 % TH method
 Ventilation.HealthyRef.TH.VDPULN = ['≤',num2str(round((0.49633 + 0.060413* Age + 1.6449 * 1.9806),2))];
 Ventilation.HealthyRef.TH.LVV = '2.3±1.8';
@@ -129,8 +135,15 @@ Ventilation.HealthyRef.DDI3D = '≤3';
 Ventilation.HealthyRef.AgeCorrected = 'yes';
 
 Ventilation.writereport = 'yes';
-MainInput.ImageQuality = '';
-MainInput.Note = '';
+
+if ~isfield(MainInput, 'ImageQuality') || isempty(MainInput.ImageQuality)
+    MainInput.ImageQuality = '';
+end
+
+if ~isfield(MainInput, 'Note') || isempty(MainInput.Note)
+    MainInput.Note = '';
+end
+Age = MainInput.Age;
 %% Calculate SNR:
 switch settings.calculate_SNR
     case "yes"
@@ -215,6 +228,8 @@ delete_if_exist = @(pattern) cellfun(@(f) delete(fullfile(parentPath, f)), ...
     {dir(fullfile(parentPath, pattern)).name}, 'UniformOutput', false);
 
 % ==== Delete any older matching files ====
+delete_if_exist('proton*.nii*');
+delete_if_exist('protonregistered*.nii*');
 delete_if_exist('uncorrectedimage*.nii*');
 delete_if_exist('image*.nii*');
 delete_if_exist('combined_mask*.nii*');
@@ -222,7 +237,21 @@ delete_if_exist('lungmask*.nii*');
 delete_if_exist('airwaymask*.nii*');
 delete_if_exist('vesselsmask*.nii*');
 
+% uncorrectedimage
+img_name = lower(['proton' timestamp '.nii']);
+niftiwrite(abs(fliplr(rot90(Proton.Image, -1))), fullfile(parentPath, img_name), 'Compressed', true);
+info = niftiinfo(fullfile(parentPath, [img_name '.gz']));
+info.Description = 'Package Version: Version1';
+niftiwrite(abs(fliplr(rot90(Proton.Image, -1))), fullfile(parentPath, img_name), info, 'Compressed', true);
+
 % Image
+img_name = lower(['protonregistered' timestamp '.nii']);
+niftiwrite(abs(fliplr(rot90(Proton.ProtonRegistered, -1))), fullfile(parentPath, img_name), 'Compressed', true);
+info = niftiinfo(fullfile(parentPath, [img_name '.gz']));
+info.Description = 'Package Version: Version1';
+niftiwrite(abs(fliplr(rot90(Proton.ProtonRegistered, -1))), fullfile(parentPath, img_name), info, 'Compressed', true);
+
+% uncorrectedimage
 img_name = lower(['uncorrectedimage' timestamp '.nii']);
 niftiwrite(abs(fliplr(rot90(Ventilation.UncorrectedImage, -1))), fullfile(parentPath, img_name), 'Compressed', true);
 info = niftiinfo(fullfile(parentPath, [img_name '.gz']));

@@ -502,8 +502,8 @@ array4dMRrgb4 = uint8(255*array4dMRrgb3);
 
 % save Vent images
 % niftiwrite(abs(fliplr(rot90(scaledImage2,3))),[outputPath,'\ScaledVentilationImage.nii'],'Compressed',true);
-MR = double(Ventilation.Image);
-niftiwrite(abs(fliplr(rot90(MR,3))),[outputPath,'\VentilationImage.nii'],'Compressed',true);
+% MR = double(Ventilation.Image);
+% niftiwrite(abs(fliplr(rot90(MR,3))),[outputPath,'\VentilationImage.nii'],'Compressed',true);
 
 % save mask images
 % niftiwrite(abs(fliplr(rot90(maskarray,-1))),[outputPath,'\MaskImage.nii'],'Compressed',true);
@@ -541,12 +541,12 @@ tiff_info = imfinfo('VentDefectmap.tif'); % return tiff structure, one element p
 % tiff_stack = imread('BinnedVent.tif', 1) ; % read in first image
 VentDefectmap = uint8(zeros(tiff_info(1).Height ,tiff_info(1).Width ,3,length(tiff_info)));
 %concatenate each successive tiff to tiff_stack
-for ii = 2 : size(tiff_info, 1)
+for ii = 1 : size(tiff_info, 1)
     temp_tiff = imread('VentDefectmap.tif', ii);
     VentDefectmap(:,:,:,ii) = temp_tiff;
 end
 cd(DataPath)
-% S = orthosliceViewer((BinnedVentmap)); %colormap(SixBinMap);
+% S = orthosliceViewer(permute (VentDefectmap, [1,2,4,3])); %colormap(SixBinMap);
 %% Generate montages
 % check images size, 2D or 3D
 if size(Ventilation.Image,3) > 40

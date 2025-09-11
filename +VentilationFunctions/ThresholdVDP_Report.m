@@ -10,11 +10,17 @@ function ThresholdVDP_Report(Ventilation, Proton, MainInput)
     todayStr       = datestr(now,'yyyymmdd');
     pptxFileName = ['ThresholdVDP_Report_' todayStr];
     pptxName       = fullfile(pptDir, [pptxFileName,'.pptx']);
-    % pptoutputPattern = fullfile(pptDir, 'ThresholdVDP_Report_*.pptx');
-    % pptFiles = dir(pptoutputPattern);   
-    % for k = 1:length(pptFiles)
-    %     delete(fullfile(pptDir, pptFiles(k).name));  % delete each matching file
-    % end
+    pptoutputPattern = fullfile(pptDir, 'ThresholdVDP_Report_*.pptx');
+    pptFiles = dir(pptoutputPattern);   
+    for k = 1:length(pptFiles)
+        delete(fullfile(pptDir, pptFiles(k).name));  % delete each matching file
+    end
+
+    pptoutputPattern = fullfile(pptDir, 'ThresholdVDP_Report_*.pdf');
+    pptFiles = dir(pptoutputPattern);   
+    for k = 1:length(pptFiles)
+        delete(fullfile(pptDir, pptFiles(k).name));  % delete each matching file
+    end
 
     % Reference Values 
     refStr = { '-', '-', ...
@@ -213,13 +219,15 @@ function ThresholdVDP_Report(Ventilation, Proton, MainInput)
     % Add to slide
     Global.exportToPPTX('addtable', resultssummary, 'Position', [3.3 1.4 5 4], ...
         'Vert', 'middle', 'Horiz', 'center', 'FontSize', 15);
-    
+
     % Insert Histogram Image
     histImg = fullfile(Ventilation.outputpath,'histogram.png');
     if isfile(histImg)
         Global.exportToPPTX('addpicture',histImg,'Position',[2 6.7 6 2]);
     end
-    
+
+
+
     % 8. CREATE MONTAGES WITH 2 ROWS
     close all;
     x0 = 8.5; w = 7.3; yStep = 2.1; y0 = 0.1; 
@@ -277,6 +285,18 @@ function ThresholdVDP_Report(Ventilation, Proton, MainInput)
     
     Global.exportToPPTX('addtext',['Report location:',pptDir], 'Position',[0 8.6 16 0.3], 'FontSize',12,'FontWeight','bold','Color',[0 0 1],'HorizontalAlignment','left');
     
+    % Red box (as an empty text box with red fill/border)
+    Global.exportToPPTX('addtext',' ', ...
+        'Position',[5 5.65 0.3 0.2], ...     % [x y w h] – adjust as needed
+        'BackgroundColor',abnormalColor, ...
+        'LineColor',[1 1 1], 'LineWidth',1);
+    
+    % Label next to it
+    Global.exportToPPTX('addtext','Abnormal', ...
+        'Position',[5.25 5.57 1.5 0.3], ...
+        'FontSize',16, 'FontWeight','bold', ...
+        'Color',[0 0 0], 'HorizontalAlignment','left');
+
     % Save & close
     Global.exportToPPTX('save',pptxName);
     Global.exportToPPTX('close');

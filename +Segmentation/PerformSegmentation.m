@@ -189,6 +189,8 @@ switch MainInput.SegmentationMethod
                             SegmentType = 'vent_2D_2ch_cor'; %system('predict_mask_2DVent_w_H_coronal.exe')
                         elseif strcmp(MainInput.Imagestosegment, 'Xenon') == 1
                             SegmentType = 'vent_2D_1ch_cor'; 
+                        elseif strcmp(MainInput.Imagestosegment, 'Registered Proton')
+                            SegmentType = 'vent_anat_2D_1ch_cor';
                         else
                             SegmentType = 'vent_2D_1ch_cor'; %system('predict_mask_2DVent_wout_H_coronal.exe')           
                         end                       

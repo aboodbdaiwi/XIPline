@@ -172,7 +172,7 @@ function [Ventilation] = calculateDDI_2D(Ventilation,Proton,MainInput)
     close all;
     NumSliceView = 16;
     % check images size, 2D or 3D
-    if size(Ventilation.Image,3) > 30
+    if size(Ventilation.Image,3) > 50
         Image_3D = 1;
         nrow = ceil(sqrt(size(Ventilation.Image,3)));
         % Initialize an empty vector to store indices of slices with no zeros

@@ -177,12 +177,7 @@ elseif strcmp(MainInput.XeDataext,'.mat')
         GasExchange.PixelShift = SigDynamics;
     end    
 elseif strcmp(MainInput.XeDataext,'.nii') || strcmp(MainInput.XeDataext,'.gz') == 1 
-%         DataFiles = MainInput.XeDataLocation; 
-%         if length(DataFiles) == 1
-%             DataFiles = dir([MainInput.XeDataLocation,'\*.nii.gz']); 
-%         else 
-%            DataFiles = dir([MainInput.XeDataLocation,'\*.nii']); 
-%         end     
+ 
         file_name = MainInput.XeFileName;
         file_folder = MainInput.XeDataLocation;
         try
@@ -429,20 +424,12 @@ if (isnumeric(MainInput.NoProtonImage) && MainInput.NoProtonImage == 0) || ...
             Proton.folder = file_folder;
             
         elseif strcmp(MainInput.HDataext,'.nii') == 1 || strcmp(MainInput.HDataext,'.gz') == 1 
-            DataFiles = dir([MainInput.HDataLocation,'\*.nii.gz']); 
-            if length(DataFiles) == 1
-                DataFiles = dir([MainInput.HDataLocation,'\*.nii.gz']); 
-            else 
-               DataFiles = dir([MainInput.HDataLocation,'\*.nii']); 
-            end        
-            file_name = DataFiles.name;
-            file_folder = DataFiles.folder;
-
+            [file_folder, file_name] = fileparts(MainInput.HFullPath);
             try
-                A1 = LoadData.load_nii([file_folder ,'\',file_name]); % Original
+                A1 = LoadData.load_nii(MainInput.HFullPath); % Original
             catch
-                A1 = LoadData.load_nii([file_folder ,'\',file_name]); % Original
-            end
+                A1 = LoadData.load_nii(MainInput.HFullPath); % Original
+            end            
             A=A1.img;
             A = double(squeeze(A));
             I90=imrotate(A,90);

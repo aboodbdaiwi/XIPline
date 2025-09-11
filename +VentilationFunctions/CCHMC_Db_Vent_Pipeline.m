@@ -13,7 +13,7 @@ VoxelSize = MainInput.VoxelSize;
 vent_file = MainInput.vent_file;
 anat_file = MainInput.anat_file;
 analysisFolder = MainInput.analysisFolder;
-mask_file_name = MainInput.mask_file_name;
+% mask_file_name = MainInput.mask_file_name;
 MainInput.OutputPath = analysisFolder;
 
 xedatapath = vent_file;
@@ -36,14 +36,15 @@ Outputs.VENT_FILEPATH_NEW = vent_file(57:end);
 Outputs.ANATVENT_FILEPATH_NEW = anat_file(57:end);
 Outputs.analysispath = analysisFolder(57:end);
 Outputs.maindirectory = vent_file(1:56);
-% oldanalysis = load(fullfile(mask_file_name,'Ventilation_Analysis_Outputs.mat'));
+% [mskfolder,~] = fileparts(mask_file_name);
+% oldanalysis = load(fullfile(mskfolder,'Ventilation_Analysis','workspace.mat'));
 % try
 %     Outputs.TRAVERSAL_GEO = oldanalysis.Outputs.SequenceType;
 % catch
 %     Outputs.TRAVERSAL_GEO = 'RECTILINEAR';
 % end
-Outputs.TRAVERSAL_GEO = 'RECTILINEAR';
-MainInput.SequenceType = Outputs.TRAVERSAL_GEO;
+% Outputs.TRAVERSAL_GEO = oldanalysis.Outputs.TRAVERSAL_GEO;
+% MainInput.SequenceType = Outputs.TRAVERSAL_GEO;
 Outputs.ReconType = ReconType;
 Outputs.MaskPath = analysisFolder(57:end); 
 Outputs.ImageQuality = MainInput.ImageQuality;
@@ -53,9 +54,9 @@ Outputs.proton_sernum = MainInput.proton_sernum;
 
 Outputs.AnalysisCode_path = 'https://github.com/aboodbdaiwi/XIPline';
 Outputs.AnalysisDate = str2double(datestr(datetime('today'), 'yyyymmdd'));
-
+AnalysisDate = Outputs.AnalysisDate;
 % Check if we have anatomical images or not
-if isempty(Hdatapath) || strcmp(Hdatapath(end-3:end), 'NULL')
+if isempty(Hdatapath) || strcmp(char(Hdatapath(58:end)), 'NULL')
     MainInput.NoProtonImage = 'yes';  % There is no proton images
 else
     MainInput.NoProtonImage = 'no';    % There is  proton images 
@@ -66,6 +67,18 @@ if ~exist(analysisSubfolder, 'dir')
     mkdir(analysisSubfolder);
 end
 MainInput.analysissesFolder = analysisSubfolder;
+
+% Define file extensions to delete
+fileExtensions = {'*.pdf', '*.ppt', '*.pptx'};
+% Loop through each file type and delete
+for i = 1:numel(fileExtensions)
+    files = dir(fullfile(analysisSubfolder, fileExtensions{i}));
+    for k = 1:numel(files)
+        filePath = fullfile(analysisSubfolder, files(k).name);
+        delete(filePath);
+        fprintf('Deleted: %s\n', filePath);
+    end
+end
 
 %----------------------------- load data -----------------------------
 % Extract the file names
@@ -105,6 +118,7 @@ end
 MainInput.denoiseXe = 'no';
 [Ventilation, ~, ~, Proton, MainInput] = LoadData.LoadReadData(MainInput);
 Ventilation.Image = double(Ventilation.Image);
+
 Ventilation.outputpath = analysisSubfolder;
 Outputs.AnalysisCode_hash = MainInput.AnalysisCode_hash; 
 % Ventilation.Image = Ventilation.Image(:,:,1:2:end);
@@ -150,9 +164,16 @@ if strcmp(MainInput.NoProtonImage, 'no')
         Proton.Image = A;  
     end
 end
-% figure; Global.imslice(A,'Ventilation')
 
-  
+% B = Proton.Image;
+% B = flip(B,3);
+% % B = flip(B,2);
+% % B = flip(B,1);
+% figure; imslice(B)
+% Proton.Image = B;
+% A = flip(A,1);    
+% % figure; Global.imslice(A,'Ventilation')
+% Ventilation.Image = A;
 % figure; Global.imslice(Proton.Image,'Proton')
 % -----------------------------registration-----------------------------
 MainInput.SkipRegistration = 0;
@@ -202,6 +223,7 @@ Outputs.TransformType = MainInput.TransformType;
 
 % -----------------------------segmentation-----------------------------
 % Check if mask_file_name is empty
+% mask_file_name = '';
 if isempty(mask_file_name)
     SegmentMaskMode = 0; % 0 = new AI mask, 1 = load exisitng mask
     disp('The mask_file_name is empty.');
@@ -224,12 +246,16 @@ end
 MainInput.SliceOrientation = orientation_out;
 
 if SegmentMaskMode == 0
-    % cd(MainInput.XeDataLocation)
-    % 
-    % % diary Log.txt
+    cd(MainInput.XeDataLocation)
+
+    % % % diary Log.txt
     MainInput.SegmentationMethod = 'Auto'; % 'Threshold' || 'Manual' || 'Auto'
     MainInput.SegmentAnatomy = 'Parenchyma'; % 'Airway'; || 'Parenchyma'
     MainInput.Imagestosegment = 'Xenon';  % 'Xe & Proton Registered' | 'Xenon' | 'Registered Proton'
+
+    if strcmp(MainInput.ImageQuality, '1-Failed') && strcmp(MainInput.NoProtonImage, 'no') 
+        MainInput.Imagestosegment = 'Registered Proton';  % 'Xe & Proton Registered' | 'Xenon' | 'Registered Proton'    
+    end
     MainInput.AIScript = 'Python';
     MainInput.thresholdlevel = 1; % 'threshold' 
     MainInput.SE = 1;
@@ -243,18 +269,45 @@ if SegmentMaskMode == 0
     else
         Ventilation.AirwayMask = zeros(size(Ventilation.LungMask));
     end
-
-    % Ventilation.LungMask = oldanalysis.Outputs.N4Bias.LungMask;
+    % 
+    % 
+    % Ventilation.LungMask = oldanalysis.Ventilation.LungMask;
+    % Ventilation.AirwayMask = zeros(size(Ventilation.LungMask));
+    % figure; imslice( Ventilation.LungMask);
+    % % Ventilation.LungMask = flip(Ventilation.LungMask,1);
+    % % Ventilation.LungMask = flip(Ventilation.LungMask,2);  
+    % % if size(Ventilation.LungMask,3) == size(Ventilation.Image,3)/2
+    % %     B = Ventilation.LungMask;
+    % %     A = false(size(B,1), size(B,2), 2*size(B,3)); % Preallocate with gaps
+    % %     A(:,:,1:2:end) = B; % Fill odd slices (1,3,5,...) from B
+    % %     Ventilation.LungMask = double(A);    
+    % % end
     % Ventilation.AirwayMask = zeros(size(Ventilation.LungMask));
     % clear oldanalysis
-
-    % oddSlices = 1:2:size(Ventilation.Image, 3);
-    % Ventilation.Image = Ventilation.Image(:, :, oddSlices);
     % 
-    % % Step 2: Resize LungMask to match the image size
-    % targetSize = size(Ventilation.Image);
-    % Ventilation.LungMask = imresize3(Ventilation.LungMask, targetSize, 'nearest');
-    % Ventilation.LungMask = double(Ventilation.LungMask>0);
+    % 
+    % try
+    %     Mask = LoadData.load_nii(mask_file_name);
+    % catch
+    %     Mask = LoadData.load_untouch_nii(mask_file_name);
+    % end
+    % A = double(Mask.img);
+    % 
+    % B = Ventilation.LungMask;
+    % B = flip(B,3);
+    % % B = rot90(B);
+    % % B = flip(B,2);
+    % % B = flip(B,1);
+    % figure; imslice(B)
+    % Ventilation.LungMask = B;
+    % Ventilation.AirwayMask = zeros(size(Ventilation.LungMask));
+    % % oddSlices = 1:2:size(Ventilation.Image, 3);
+    % % Ventilation.Image = Ventilation.Image(:, :, oddSlices);
+    % % 
+    % % % Step 2: Resize LungMask to match the image size
+    % % targetSize = size(Ventilation.Image);
+    % % Ventilation.LungMask = imresize3(Ventilation.LungMask, targetSize, 'nearest');
+    % % Ventilation.LungMask = double(Ventilation.LungMask>0);
 else
     % % List all files in the analysispath folder
     % files = dir(fullfile(analysispath, '*.gz')); %.nii
@@ -388,6 +441,26 @@ else
     % figure; Global.imslice(Ventilation.LungMask,'mask')
 
 end
+% 
+% mask_file_name = dir(fullfile(analysisSubfolder, 'lungmask_*.nii.gz'));
+% mask_file_name = fullfile(mask_file_name.folder, mask_file_name.name);
+% [~,~,mask_ext] = fileparts(mask_file_name);
+% if strcmp(mask_ext, '.gz') || strcmp(mask_ext, '.nii')
+%     try
+%         Mask = LoadData.load_nii(mask_file_name);
+%     catch
+%         Mask = LoadData.load_untouch_nii(mask_file_name);
+%     end
+%     A = double(Mask.img);
+% elseif strcmp(mask_ext, '.dcm')
+%     A = double(squeeze(dicomread(mask_file_name)));
+% end
+% B = A;
+% B = flip(B,1);
+% B = rot90(B);
+% figure; imslice(B)
+% Ventilation.LungMask = B;
+
 % B = A;
 % B = flip(B,1);
 % % % % B = rot90(B);
@@ -497,6 +570,10 @@ Outputs.SNRvv_slice = Ventilation.SNRvv_slice;
 Outputs.SNR_vv = Ventilation.SNR_vv;
 
 Outputs.VENT_SERIES_NUMBER = MainInput.xe_sernum;
+try
+    Outputs.VENTONLINE_SERIES_NUMBER = MainInput.xe_sernum_online;
+catch
+end
 Outputs.ANATVENT_SERIES_NUMBER = MainInput.proton_sernum;
 Outputs.IMAGE_ORIENT = MainInput.SliceOrientation;
 Outputs.PIXEL_SPACING_X = MainInput.PIXEL_SPACING_X;
@@ -574,6 +651,13 @@ if strcmp(Ventilation.GLRLM_Analysis, 'yes') == 1
     Outputs.GLRLM.output = Ventilation.GLRLM;
 end
 
+Outputs.AnalysisDate = num2str(Outputs.AnalysisDate);
+Outputs.ScanDate = num2str(Outputs.ScanDate);
+Outputs.timestamp = Ventilation.timestamp;
+Outputs.AnalysisVersion = 'v100';
+Outputs.skewness = Ventilation.skewness;
+Outputs.kurtosis = Ventilation.kurtosis;
+
 OutputJSONFile = fullfile(analysisFolder, ['VentAnalysis_','ser-',num2str(MainInput.xe_sernum),'.json']);
 Global.exportStructToJSON(Outputs, OutputJSONFile);
 
@@ -585,6 +669,7 @@ end
 % Save Outputs to the MAT-file
 save(fullfile(analysisSubfolder, 'workspace.mat'));
 save(fullfile(analysisSubfolder, 'Ventilation_Analysis_Outputs.mat'), 'Outputs');
+
 clearvars
 % Global.tts('Ventilation Analysis completed');
 end

@@ -23,10 +23,18 @@ function exportStructToExcel(dataStruct, outputExcelFile)
             end
 
             fullVarName = [prefix, varName];
-            varValue = s.(varName);
+            try
+                varValue = s.(varName);
+            catch
+                % Could not access this field safely → skip it
+                continue;
+            end
+
 
             % Skip figures
-            if isa(varValue, 'matlab.ui.Figure')
+            if isa(varValue,'matlab.ui.Figure')
+                continue;
+            elseif isobject(varValue) && isgraphics(varValue)
                 continue;
             end
 

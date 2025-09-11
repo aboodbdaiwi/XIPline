@@ -90,8 +90,8 @@ elseif strcmp(Name,'RBC')
         sprintf('Median  : %.1fx10^-^3', Median*scaleFactor), ...
         sprintf('SD      : %.1fx10^-^3', SD*scaleFactor)
     };    
-elseif strcmp(Name,'RBC:Membrane')
-    x_text = 0;% x_text = Thresholds(3);
+elseif strcmp(Name,'RBC:M')
+    x_text = Thresholds(4);
     scaleFactor = 1;
     % Plot SNR, Mean, Median, SD below Name
     stats_text = {

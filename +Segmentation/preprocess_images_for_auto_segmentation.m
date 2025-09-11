@@ -28,15 +28,29 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
                 end
             else
                 Im_size = 256;
-                if size(Ventilation.Image,1) ~= Im_size || size(Ventilation.Image,2) ~= Im_size
-                    Xe_Img = zeros(Im_size,Im_size,size(Ventilation.Image,3));
-                    for i = 1:size(Ventilation.Image,3)
-                         resImg = imresize(Ventilation.Image(:,:,i),[Im_size,Im_size]);
-                         %resImg = (resImg - min(resImg(:)))./(max(resImg(:)) - min(resImg(:)));
-                         Xe_Img(:,:,i) = resImg;
-                    end
-                else
-                    Xe_Img = Ventilation.Image;               
+                switch MainInput.SegmentType 
+                    case {'vent_2D_1ch_cor','vent_2D_2ch_cor', 'vent_2D_1ch_axi'}
+                        if size(Ventilation.Image,1) ~= Im_size || size(Ventilation.Image,2) ~= Im_size
+                            Xe_Img = zeros(Im_size,Im_size,size(Ventilation.Image,3));
+                            for i = 1:size(Ventilation.Image,3)
+                                 resImg = imresize(Ventilation.Image(:,:,i),[Im_size,Im_size]);
+                                 %resImg = (resImg - min(resImg(:)))./(max(resImg(:)) - min(resImg(:)));
+                                 Xe_Img(:,:,i) = resImg;
+                            end
+                        else 
+                            Xe_Img = Ventilation.Image;               
+                        end
+                    case 'vent_anat_2D_1ch_cor'
+                        if size(Proton.ProtonRegistered,1) ~= Im_size || size(Proton.ProtonRegistered,2) ~= Im_size
+                            Xe_Img = zeros(Im_size,Im_size,size(Proton.ProtonRegistered,3));
+                            for i = 1:size(Proton.ProtonRegistered,3)
+                                 resImg = imresize(Proton.ProtonRegistered(:,:,i),[Im_size,Im_size]);
+                                 %resImg = (resImg - min(resImg(:)))./(max(resImg(:)) - min(resImg(:)));
+                                 Xe_Img(:,:,i) = resImg;
+                            end
+                        else
+                            Xe_Img = Proton.ProtonRegistered;               
+                        end
                 end
             end
 
