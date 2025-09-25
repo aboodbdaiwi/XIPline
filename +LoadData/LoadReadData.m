@@ -55,11 +55,11 @@ try
 catch
     MainInput.AnalysisCode_hash = 'TEST';%If not connected to git, can't determine hash so state test
 end
+
 % Assign default OutputPath if not provided
 if ~isfield(MainInput, 'OutputPath') || isempty(MainInput.OutputPath)
     MainInput.OutputPath = MainInput.XeDataLocation;
 end
-
 cd(MainInput.XeDataLocation)
 if strcmp(MainInput.AnalysisType,'Ventilation')                 
     mkdir([MainInput.OutputPath '\Ventilation_Analysis']);
@@ -214,7 +214,7 @@ elseif (strcmp(MainInput.XeDataext,'.h5') || strcmp(MainInput.XeDataext,'.mrd'))
     elseif strcmp(MainInput.AnalysisType,'GasExchange') && strcmp(MainInput.Institute,'XeCTC') && strcmp(MainInput.SequenceType, '3D Radial')
         [GasExchange] = LoadData.ismrmrd.radial_3D_XeCTC_gx_recon(MainInput,GasExchange);
     end
-elseif strcmp(MainInput.XeDataext,'.data')  && strcmp(MainInput.Scanner, 'Philips')  
+elseif strcmp(MainInput.XeDataext,'.data')  && contains(MainInput.Scanner, 'Philips', 'IgnoreCase', true)  
     MainInput.ReconImageMode = 'xenon';
     if strcmp(MainInput.AnalysisType,'Ventilation')  && strcmp(MainInput.SequenceType, '2D GRE')  ...
             && (strcmp(MainInput.ScannerSoftware, '5.3.1') || strcmp(MainInput.ScannerSoftware, '5.6.1') )
@@ -229,7 +229,7 @@ elseif strcmp(MainInput.XeDataext,'.data')  && strcmp(MainInput.Scanner, 'Philip
         Ventilation.filename = file_name;
         Ventilation.folder = file_folder;          
 
-    elseif strcmp(MainInput.AnalysisType,'Ventilation') && strcmp(MainInput.SequenceType, '2D Spiral') && strcmp(MainInput.ScannerSoftware, '5.9.0')                 
+    elseif strcmp(MainInput.AnalysisType,'Ventilation') && strcmp(MainInput.SequenceType, '2D Spiral')                 
         [Ventilation, MainInput] = LoadData.philips_XeVent_2DSpiral_recon(MainInput, Ventilation); 
 
     elseif strcmp(MainInput.AnalysisType,'Diffusion')  && strcmp(MainInput.SequenceType, '2D GRE')  ...
@@ -438,7 +438,7 @@ if (isnumeric(MainInput.NoProtonImage) && MainInput.NoProtonImage == 0) || ...
             Proton.Image = HImage;
             Proton.filename = file_name;
             Proton.folder = file_folder;
-        elseif strcmp(MainInput.XeDataext,'.data')  && strcmp(MainInput.Scanner, 'Philips')  
+        elseif strcmp(MainInput.XeDataext,'.data')  && contains(MainInput.Scanner, 'Philips', 'IgnoreCase', true)   
             MainInput.ReconImageMode = 'proton';
             if strcmp(MainInput.AnalysisType,'Ventilation') && strcmp(MainInput.SequenceType, '2D GRE') ...
                     && (strcmp(MainInput.ScannerSoftware, '5.3.1') || strcmp(MainInput.ScannerSoftware, '5.6.1'))
@@ -451,7 +451,7 @@ if (isnumeric(MainInput.NoProtonImage) && MainInput.NoProtonImage == 0) || ...
                 Proton.Image = Image;
                 Proton.filename = file_name;
                 Proton.folder = file_folder; 
-            elseif strcmp(MainInput.AnalysisType,'Ventilation') && strcmp(MainInput.SequenceType, '2D Spiral') && strcmp(MainInput.ScannerSoftware, '5.9.0')               
+            elseif strcmp(MainInput.AnalysisType,'Ventilation') && strcmp(MainInput.SequenceType, '2D Spiral')               
                 [Proton, MainInput] = LoadData.philips_Hanat_2DSpiral_recon(MainInput, Proton);
 
             elseif strcmp(MainInput.AnalysisType,'GasExchange') && strcmp(MainInput.SequenceType, '3D Radial')        

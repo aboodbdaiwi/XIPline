@@ -2,31 +2,31 @@ function CCHMC_Db_Vent_Pipeline_rerun(MainInput)
 
 analysisSubfolder = MainInput.analysisFolder;
 load(fullfile(MainInput.analysisFolder,'Ventilation_Analysis', 'workspace.mat'));
-% mask_file_name = dir(fullfile(analysisSubfolder, 'lungmask_*.nii.gz'));
-% mask_file_name = fullfile(mask_file_name.folder, mask_file_name.name);
-% [~,~,mask_ext] = fileparts(mask_file_name);
-% if strcmp(mask_ext, '.gz') || strcmp(mask_ext, '.nii')
-%     try
-%         Mask = LoadData.load_nii(mask_file_name);
-%     catch
-%         Mask = LoadData.load_untouch_nii(mask_file_name);
-%     end
-%     A = double(Mask.img);
-% elseif strcmp(mask_ext, '.dcm')
-%     A = double(squeeze(dicomread(mask_file_name)));
-% end
-% B = A;
-B = Ventilation.LungMask;
+
+mask_file_name = dir(fullfile(analysisSubfolder, 'lungmask_*.nii.gz'));
+mask_file_name = fullfile(mask_file_name.folder, mask_file_name.name);
+[~,~,mask_ext] = fileparts(mask_file_name);
+if strcmp(mask_ext, '.gz') || strcmp(mask_ext, '.nii')
+    try
+        Mask = LoadData.load_nii(mask_file_name);
+    catch
+        Mask = LoadData.load_untouch_nii(mask_file_name);
+    end
+    A = double(Mask.img);
+elseif strcmp(mask_ext, '.dcm')
+    A = double(squeeze(dicomread(mask_file_name)));
+end
+Ventilation.LungMask = A;
+[CorrectedMask, Ventilation] = VentilationFunctions.correct_mask_orientation(Ventilation);
+
 % B = rot90(B);
 % B = flip(B,1);
 % B = flip(B,2);
 % B = flip(B,1);
-% 
-B = flip(B,3);
 % % B = flip(B,2);
 % % figure; imslice(B)
-Ventilation.LungMask = B;
-figure; imslice(Ventilation.LungMask)
+% Ventilation.LungMask = B;
+%figure; Global.imslice(Ventilation.LungMask,'mask')
 
 Ventilation.Image = Ventilation.UncorrectedImage;
 % B = Ventilation.Image;

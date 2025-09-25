@@ -36,17 +36,9 @@ Outputs.VENT_FILEPATH_NEW = vent_file(57:end);
 Outputs.ANATVENT_FILEPATH_NEW = anat_file(57:end);
 Outputs.analysispath = analysisFolder(57:end);
 Outputs.maindirectory = vent_file(1:56);
-% [mskfolder,~] = fileparts(mask_file_name);
-% oldanalysis = load(fullfile(mskfolder,'Ventilation_Analysis','workspace.mat'));
-% try
-%     Outputs.TRAVERSAL_GEO = oldanalysis.Outputs.SequenceType;
-% catch
-%     Outputs.TRAVERSAL_GEO = 'RECTILINEAR';
-% end
-% Outputs.TRAVERSAL_GEO = oldanalysis.Outputs.TRAVERSAL_GEO;
-% MainInput.SequenceType = Outputs.TRAVERSAL_GEO;
 Outputs.ReconType = ReconType;
 Outputs.MaskPath = analysisFolder(57:end); 
+Outputs.Offset_Frequency = MainInput.freqoffset;
 Outputs.ImageQuality = MainInput.ImageQuality;
 Outputs.Note = MainInput.Note;
 Outputs.xe_sernum = MainInput.xe_sernum;
@@ -81,6 +73,12 @@ for i = 1:numel(fileExtensions)
 end
 
 %----------------------------- load data -----------------------------
+if strcmp(MainInput.SequenceType, 'CARTESIAN') || strcmp(MainInput.SequenceType, 'RECTILINEAR') 
+    MainInput.SequenceType = '2D GRE';
+elseif  strcmp(MainInput.SequenceType, 'SPIRAL')
+    MainInput.SequenceType = '2D Spiral';
+end
+
 % Extract the file names
 [path,filename] = fileparts(xedatapath);
 XeFullPath = xedatapath;
@@ -175,6 +173,48 @@ end
 % % figure; Global.imslice(A,'Ventilation')
 % Ventilation.Image = A;
 % figure; Global.imslice(Proton.Image,'Proton')
+%----------------------------- copy data over-----------------------------
+
+[srcDir, ~] = fileparts(vent_file); 
+destDir = fullfile(analysisSubfolder, 'vent_rawdata'); % destination location
+% Create destination if it doesn’t exist
+if ~exist(destDir, 'dir')
+    mkdir(destDir);
+end
+% Get all files (non-folders) from source
+files = dir(srcDir);
+files = files(~[files.isdir]); % remove '.' and '..'
+
+% Copy each file
+for k = 1:numel(files)
+    srcPath  = fullfile(files(k).folder, files(k).name);
+    destPath = fullfile(destDir, files(k).name);
+    copyfile(srcPath, destPath);
+    fprintf('Copied: %s\n', files(k).name);
+end
+disp('All files copied successfully!');
+
+if strcmp(MainInput.NoProtonImage, 'no') 
+    [srcDir, ~] = fileparts(anat_file); 
+    destDir = fullfile(analysisSubfolder, 'anat_rawdata'); % destination location
+    % Create destination if it doesn’t exist
+    if ~exist(destDir, 'dir')
+        mkdir(destDir);
+    end
+    % Get all files (non-folders) from source
+    files = dir(srcDir);
+    files = files(~[files.isdir]); % remove '.' and '..'
+    
+    % Copy each file
+    for k = 1:numel(files)
+        srcPath  = fullfile(files(k).folder, files(k).name);
+        destPath = fullfile(destDir, files(k).name);
+        copyfile(srcPath, destPath);
+        fprintf('Copied: %s\n', files(k).name);
+    end
+    disp('All files copied successfully!');
+end
+
 % -----------------------------registration-----------------------------
 MainInput.SkipRegistration = 0;
 
@@ -224,13 +264,13 @@ Outputs.TransformType = MainInput.TransformType;
 % -----------------------------segmentation-----------------------------
 % Check if mask_file_name is empty
 % mask_file_name = '';
-if isempty(mask_file_name)
-    SegmentMaskMode = 0; % 0 = new AI mask, 1 = load exisitng mask
-    disp('The mask_file_name is empty.');
-else
-    SegmentMaskMode = 1; % 0 = new AI mask, 1 = load exisitng mask
-    disp('The mask_file_name is not empty.');
-end
+% if isempty(mask_file_name)
+%     SegmentMaskMode = 0; % 0 = new AI mask, 1 = load exisitng mask
+%     disp('The mask_file_name is empty.');
+% else
+%     SegmentMaskMode = 1; % 0 = new AI mask, 1 = load exisitng mask
+%     disp('The mask_file_name is not empty.');
+% end
 SegmentMaskMode = 0;
 %SegmentMaskMode = 1; % 0 = new AI mask, 1 = load exisitng mask
 
@@ -269,8 +309,7 @@ if SegmentMaskMode == 0
     else
         Ventilation.AirwayMask = zeros(size(Ventilation.LungMask));
     end
-    % 
-    % 
+
     % Ventilation.LungMask = oldanalysis.Ventilation.LungMask;
     % Ventilation.AirwayMask = zeros(size(Ventilation.LungMask));
     % figure; imslice( Ventilation.LungMask);
@@ -284,8 +323,6 @@ if SegmentMaskMode == 0
     % % end
     % Ventilation.AirwayMask = zeros(size(Ventilation.LungMask));
     % clear oldanalysis
-    % 
-    % 
     % try
     %     Mask = LoadData.load_nii(mask_file_name);
     % catch

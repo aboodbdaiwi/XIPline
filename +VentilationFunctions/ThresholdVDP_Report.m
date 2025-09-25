@@ -8,15 +8,26 @@ function ThresholdVDP_Report(Ventilation, Proton, MainInput)
     % DEFINE INPUTS
     pptDir         = Ventilation.outputpath;
     todayStr       = datestr(now,'yyyymmdd');
-    pptxFileName = ['ThresholdVDP_Report_' todayStr];
-    pptxName       = fullfile(pptDir, [pptxFileName,'.pptx']);
-    pptoutputPattern = fullfile(pptDir, 'ThresholdVDP_Report_*.pptx');
+    if strcmp(MainInput.CCHMC_DbVentAnalysis, 'yes')
+        pptxFileName = 'ThresholdVDP_Report';
+        pptxName       = fullfile(pptDir, [pptxFileName,'.pptx']);
+        pptoutputPattern = fullfile(pptDir, 'ThresholdVDP_Report.pptx');
+    else
+        pptxFileName = ['ThresholdVDP_Report_' todayStr];
+        pptxName       = fullfile(pptDir, [pptxFileName,'.pptx']);
+        pptoutputPattern = fullfile(pptDir, 'ThresholdVDP_Report_*.pptx');
+    end
     pptFiles = dir(pptoutputPattern);   
     for k = 1:length(pptFiles)
         delete(fullfile(pptDir, pptFiles(k).name));  % delete each matching file
     end
 
-    pptoutputPattern = fullfile(pptDir, 'ThresholdVDP_Report_*.pdf');
+    if strcmp(MainInput.CCHMC_DbVentAnalysis, 'yes')
+        pptoutputPattern = fullfile(pptDir, 'ThresholdVDP_Report.pdf');
+    else
+        pptoutputPattern = fullfile(pptDir, 'ThresholdVDP_Report_*.pdf');
+    end
+
     pptFiles = dir(pptoutputPattern);   
     for k = 1:length(pptFiles)
         delete(fullfile(pptDir, pptFiles(k).name));  % delete each matching file
