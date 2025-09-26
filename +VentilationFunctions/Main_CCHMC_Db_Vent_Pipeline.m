@@ -38,8 +38,9 @@ nSubjects = size(SexCol,1);
 %% 
 
 clc;
-for i = 2:nSubjects % always start from 2
+for i = 27%:26%nSubjects % always start from 2
     fprintf('Processing subject %d of %d\n', i, nSubjects);
+
 
     if ismissing(AgeCol{i})
         AgeCol{i} = "";
@@ -54,7 +55,7 @@ for i = 2:nSubjects % always start from 2
         AnatFileCol{i} = "";
     end    
     if ismissing(ImageQCol{i})
-        ImageQCol{i} = '5-Excellent';%"";
+        ImageQCol{i} = "";
     end        
     if ismissing(NoteCol{i})
         NoteCol{i} = "";
@@ -78,17 +79,23 @@ for i = 2:nSubjects % always start from 2
     MainInput.SliceOrientation = SliceOrient{i};
 
     % Vent file
-    if contains(VentFileCol{i}, mainDir, 'IgnoreCase', true) || contains(VentFileCol{i}, WoodsDir, 'IgnoreCase', true)
-        MainInput.vent_file = VentFileCol{i};
+    if ismissing(VentFileCol{i})
+        MainInput.vent_file = '';
+        MainInput.anat_file = '';
+        ImageQCol{i} = '1-Failed';
     else
-        MainInput.vent_file = fullfile(mainDir, VentFileCol{i});
-    end
-    
-    % Anat file
-    if contains(AnatFileCol{i}, mainDir, 'IgnoreCase', true) || contains(AnatFileCol{i}, WoodsDir, 'IgnoreCase', true)
-        MainInput.anat_file = AnatFileCol{i};
-    else
-        MainInput.anat_file = fullfile(mainDir, AnatFileCol{i});
+        if contains(VentFileCol{i}, mainDir, 'IgnoreCase', true) || contains(VentFileCol{i}, WoodsDir, 'IgnoreCase', true)
+            MainInput.vent_file = VentFileCol{i};
+        else
+            MainInput.vent_file = fullfile(mainDir, VentFileCol{i});
+        end
+        
+        % Anat file
+        if contains(AnatFileCol{i}, mainDir, 'IgnoreCase', true) || contains(AnatFileCol{i}, WoodsDir, 'IgnoreCase', true)
+            MainInput.anat_file = AnatFileCol{i};
+        else
+            MainInput.anat_file = fullfile(mainDir, AnatFileCol{i});
+        end
     end
 
     MainInput.SCAN_NUM      = ScanNumCol{i};
@@ -100,6 +107,8 @@ for i = 2:nSubjects % always start from 2
         MainInput.ReconType = 'online';      
     elseif strcmp(ext,'.data') 
         MainInput.ReconType = 'offline';
+    else
+        MainInput.ReconType = '';
     end
     analysisversion = 'vent_v100';
 
@@ -121,15 +130,19 @@ for i = 2:nSubjects % always start from 2
     if ~exist(MainInput.analysisFolder, 'dir')
         mkdir(MainInput.analysisFolder);
     end
+    cd(MainInput.analysisFolder);
 
     % Run pipeline
-    if RuneCol{i} == 0
-        VentilationFunctions.CCHMC_Db_Vent_Pipeline(MainInput);
-    elseif RuneCol{i} == 1
-        VentilationFunctions.CCHMC_Db_Vent_Pipeline_rerun(MainInput);
+    if ismissing(VentFileCol{i})
+        VentilationFunctions.CCHMC_Db_Vent_Pipeline_NoData(MainInput)
+    else
+        if RuneCol{i} == 0
+            VentilationFunctions.CCHMC_Db_Vent_Pipeline(MainInput);
+        elseif RuneCol{i} == 1
+            VentilationFunctions.CCHMC_Db_Vent_Pipeline_rerun(MainInput);
+        end
+        % T{i,24} = MainInput.analysisFolder;
     end
-    % T{i,24} = MainInput.analysisFolder;
-
 end
 % % Define output file path
 % [folder, name, ~] = fileparts(excelFile);

@@ -56,7 +56,7 @@ elseif width <= 256
         sideColumns = 10; % 10 for axial slices works better 
     else
         removeSize = 6; % def 6
-        sideColumns = 15; % def 15 
+        sideColumns = 10; % def 15 
     end    
 else
     removeSize = 12;
