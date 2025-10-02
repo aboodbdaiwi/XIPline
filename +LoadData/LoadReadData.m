@@ -86,6 +86,9 @@ end
 if ~isfield(MainInput, 'CCHMC_DbVentAnalysis')
     MainInput.CCHMC_DbVentAnalysis = 'no';
 end
+if ~isfield(MainInput, 'CCHMC_DbGxAnalysis')
+    MainInput.CCHMC_DbGxAnalysis = 'no';
+end
 if strcmp(MainInput.XeDataext,'.dcm')         
     if strcmp(MainInput.CCHMC_DbVentAnalysis,'yes')
         [Image, file_folder, FileNames, DicomInfo] = LoadData.Single_DICOM_Load(MainInput.vent_file);  
@@ -248,7 +251,7 @@ elseif strcmp(MainInput.XeDataext,'.data')  && contains(MainInput.Scanner, 'Phil
     elseif strcmp(MainInput.XeDataext,'.data') && strcmp(MainInput.AnalysisType,'GasExchange')  && strcmp(MainInput.SequenceType, '3D Radial')  ...
             && (strcmp(MainInput.ScannerSoftware, '5.6.1')  || strcmp(MainInput.ScannerSoftware, '5.9.0')) &&...
             (strcmp(MainInput.Institute,'CCHMC')  || strcmp(MainInput.Institute,'XeCTC')   )
-           [GasExchange] = LoadData.LoadData_Gas_GasExchange_Philips_Sin(MainInput.XeDataLocation,MainInput.Institute,GasExchange);                      
+           [GasExchange] = LoadData.LoadData_Gas_GasExchange_Philips_Sin(MainInput, GasExchange);                      
     end
 
 elseif strcmp(MainInput.XeDataext,'.dat') && strcmp(MainInput.Scanner,'Siemens') 

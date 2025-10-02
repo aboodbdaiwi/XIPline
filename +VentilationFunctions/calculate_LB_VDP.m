@@ -98,6 +98,15 @@ switch Ventilation.LB_Normalization
         NormMR4(maskarray == 0) = [];
         Im99percentile = prctile(NormMR4,99.9); % 99.5th percentile
         ScaledVentImage2(ScaledVentImage2 >= Im99percentile) = Im99percentile;
+    case 'GLBmed'
+        NormMR3vv = NormMR3(NormMR3 > 0.5 * median(NormMR3(:)));
+        NFactor = median(NormMR3vv(:));
+        % NFactor = mean(NormMR3(:)); 
+        ScaledVentImage2 = NormMR2/NFactor;
+        NormMR4 = ScaledVentImage2;
+        NormMR4(maskarray == 0) = [];
+        Im99percentile = prctile(NormMR4,99.9); % 99.5th percentile
+        ScaledVentImage2(ScaledVentImage2 >= Im99percentile) = Im99percentile;
     case 'GLBpercentile'
         NormMR2 = (NormMR2 - min(NormMR2(:)))/(max(NormMR2(:)) - min(NormMR2(:)));
         NFactor = prctile((NormMR2(maskarray4(:))),99.5); % 99.5th percentile
