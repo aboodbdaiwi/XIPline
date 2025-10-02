@@ -31,8 +31,9 @@ def Segment3D(SegmentType):
     X_test = imgarray / np.max(imgarray)
     # % load model
     if SegmentType == 'vent_2D_1ch_cor':
-        model = load_model(modelFolder+'2DVent_Xe_coronal_1000e_20250509.hdf5',compile=False) 
+        #model = load_model(modelFolder+'2DVent_Xe_coronal_1000e_20250509.hdf5',compile=False) 
         #model = load_model(modelFolder+'2DVent_XeCTC_20250603_1000epochs.hdf5',compile=False) 
+        model = load_model(modelFolder+'2DVent_XeCTC_20251003_1000epochs.hdf5',compile=False)
     elif SegmentType == 'vent_2D_2ch_cor':
         model = load_model(modelFolder+'2DVent_Xe_H_coronal_1000e_20230528.hdf5',compile=False) 
     elif SegmentType == 'vent_2D_1ch_axi':
