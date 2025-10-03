@@ -29,7 +29,7 @@ nSubjects = size(SexCol,1);
 %% 
 
 clc;
-for i = 12%:nSubjects % always start from 2
+for i = 4%:nSubjects % always start from 2
     fprintf('Processing subject %d of %d\n', i, nSubjects);
 
     if ismissing(AgeCol{i})
@@ -61,24 +61,19 @@ for i = 12%:nSubjects % always start from 2
     MainInput.AnalysisMethod   = '1-Point Dixon';
     MainInput.AgeCor           = 'no';    
 
-    try
-        MainInput.gx_file = char(GxFileCol{i});
-        MainInput.anat_file = char(GxAnatFileCol{i});
-    catch
-        NoDataflag = 1;
-    end
 
     % Gx file
-    if ismissing(GxFileCol{i}) || NoDataflag == 1
-        % MainInput.gx_file = '';
-        % MainInput.anat_file = '';
-        MainInput.ImageQuality     = '1-Failed';
-        timeStr = '';   
-        MainInput.scandate     = ScanDateCol{i};
-        MainInput.timeStr     = timeStr;    
-        disp('yes here')
+    if ismissing(GxFileCol{i}) 
+        MainInput.gx_file           = '';
+        MainInput.anat_file         = '';
+        MainInput.ImageQuality      = '1-Failed';
+        timeStr                     = '';   
+        MainInput.scandate          = ScanDateCol{i};
+        MainInput.timeStr           = timeStr;    
+        NoDataflag                  = 1;
     else    
-        
+        MainInput.gx_file = GxFileCol{i};
+        MainInput.anat_file = GxAnatFileCol{i};
         MainInput.cal_file = char(CalFileCol{i});        
         if contains(GxFileCol{i}, mainDir, 'IgnoreCase', true) || contains(GxFileCol{i}, WoodsDir, 'IgnoreCase', true)
             MainInput.gx_file = GxFileCol{i};

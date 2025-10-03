@@ -29,6 +29,7 @@ function CCHMC_Db_GX_Pipeline_rerun(MainInput)
         {dir(fullfile(MainInput.gx_analysis_folder, pattern)).name}, 'UniformOutput', false);
     
     % ==== Delete any older matching files ====
+    cd(MainInput.gx_analysis_folder)
     delete_if_exist('GasExchange_Report*.pptx*');
     
     [GasExchange] = GasExchangeFunctions.GasExchange_Analysis(GasExchange,Proton,MainInput);
