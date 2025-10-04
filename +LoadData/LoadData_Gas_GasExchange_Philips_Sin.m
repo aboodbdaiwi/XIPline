@@ -50,7 +50,7 @@ FunctionDirectory = which('LoadData.LoadData_Gas_GasExchange_Philips_Sin');
 idcs = strfind(FunctionDirectory,filesep);%determine location of file separators
 FunctionDirectory = FunctionDirectory(1:idcs(end)-1);%remove file
 
-GasDataLocation = fileparts(MainInput.gx_file);
+GasDataLocation = MainInput.XeDataLocation;
 
 % Ensure the base path exists
 if ~isfolder(MainInput.OutputPath )
@@ -175,7 +175,9 @@ disp('Importing Acquisition Information Completed.')
 disp('Importing Data...')
 %Load in FIDs
 [XeData,XeInfo] = GasExchangeFunctions.loadLISTDATA([XeDataFile.folder,'\',XeDataFile.name]);
+XeData2 = XeData;
 XeData = squeeze(XeData);
+
 if strcmp(ScanVersion,'CCHMC') 
     %skip
 else
@@ -190,15 +192,16 @@ if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
     DissolvedKSpace = XeData(:,:,2);
     %Gas k-space
     GasKSpace = XeData(:,:,1);
+    XeData_size = size(XeData2);
 
-    if(extraOvs)
-        DissolvedKSpace = movmean(DissolvedKSpace,OvsFactor);
-        DissolvedKSpace = downsample(DissolvedKSpace,OvsFactor);
-        
-        GasKSpace = movmean(GasKSpace,OvsFactor);
-        GasKSpace = downsample(GasKSpace,OvsFactor);
+    if XeData_size(end) == 2
+        XeSpec_nsamp = size(DissolvedKSpace,1);
+        XeImg_nsamp = (XeSin.non_cart_max_encoding_nrs.vals(1)+1) ;
+        Xe_nprof = size(DissolvedKSpace,2);
+        Xe_interleaves = size(DissolvedKSpace,3);
 
-        dwell_s = dwell_s * OvsFactor;
+        DissolvedKSpace = DissolvedKSpace(1:XeImg_nsamp,:,:);
+        GasKSpace = GasKSpace(1:XeImg_nsamp,:,:);
     end
 
     %Get sizes of dimensions
@@ -274,15 +277,10 @@ GasExchange.OvsFactor = OvsFactor;
 disp('Calculating Trajectories...')
 if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
     del = 1.25;
-    if (extraOvs)
-        del = del * OvsFactor;
-    end
+
     XeTraj = GasExchangeFunctions.philipsradialcoords(del,2,[XeSinFile.folder,'\',XeSinFile.name]); %1.25us delay, Haltoned Spiral
     XeTraj = permute(XeTraj,[3 2 1 4]); %ro, proj, intlv, dims
-    if (extraOvs)
-        XeTraj = movmean(XeTraj,OvsFactor);
-        XeTraj =  downsample(XeTraj,OvsFactor);
-    end
+
     XeTraj = permute(XeTraj,[4 1 2 3]); %dims, ro, proj, intlv
     del = 1.25;
 

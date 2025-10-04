@@ -33,10 +33,10 @@ VentImage = GasExchange.VentImage;
 H_RecMatrix = Proton.H_RecMatrix;
 ProtonMax = max(abs(ProtonImage(:))); %Proton.ProtonMax;
 
-cd(MainInput.XeDataLocation)
-mkdir([MainInput.XeDataLocation '\GasExchange_Analysis']);
-outputpath = [MainInput.XeDataLocation '\GasExchange_Analysis'];
-cd(outputpath) 
+cd(MainInput.OutputPath)
+% mkdir([MainInput.XeDataLocation '\GasExchange_Analysis']);
+% outputpath = [MainInput.XeDataLocation '\GasExchange_Analysis'];
+% cd(outputpath) 
 
 NewMask=1;
 [LungMask,ProtonSignal,LungSignal,LungStd,NoiseMask] = Registration.GasExchange_MakeProtonMask(ProtonImage,NewMask);
@@ -46,7 +46,6 @@ NewMask=1;
 % disp('Lung Mask Completed.')
 % savefig('ProtonMaskMontage.fig')
 % close(gcf)
-
 
 NumPlotSlices = 7;%must be odd to work as expected
 %move to imregdemons?

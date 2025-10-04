@@ -51,12 +51,14 @@ for index=1:size(sinRead,1)
     testStr = char(sinRead{index});
     if contains(testStr,'non_cart_min_encoding_nrs')
         readline = sinRead{index};
-        min_encodes = readline(43:end);
+        min_encodes = readline(43:end);       
     end
+
     if contains(testStr,'non_cart_max_encoding_nrs')
         readline = sinRead{index};
         max_encodes = readline(43:end);
     end
+
     if contains(testStr,'nr_echoes')
         readline = sinRead{index};
         nr_echoes = readline(43:end);

@@ -96,6 +96,9 @@ switch MainInput.HealthyReferenceType
         RBCOscHealthyMean = GasExchange.RBCOscHealthyMean;
         RBCOscHealthyStd = GasExchange.RBCOscHealthyStd;
 end
+if ~isfield(MainInput, 'CCHMC_DbGxAnalysis') 
+    MainInput.CCHMC_DbGxAnalysis = 'no';
+end
 if strcmp(MainInput.CCHMC_DbGxAnalysis,'yes')
     outputpath = MainInput.gx_analysis_folder;
     GasExchange.outputpath = outputpath;
@@ -105,10 +108,13 @@ else
         cd(DataLocation)
         mkdir([DataLocation '\GasExchange_Analysis']);
         outputpath = [DataLocation '\GasExchange_Analysis'];
+    else
+        outputpath = MainInput.OutputPath;
     end
 
 end
 cd(outputpath)
+GasExchange.outputpath = outputpath;
 
 ProtonMaskMontage = figure('Name','Lung Mask');set(ProtonMaskMontage,'WindowState','minimized');
 montage(ProtonMaskRegistered,'DisplayRange',[0 1])%unregistered for these
@@ -1263,7 +1269,18 @@ MainInput.ImageQuality = quality;
 cd(GasExchange.outputpath)
 if strcmp(GasExchange.writereport,'yes')
     clc;
-    
+    if ~isfield(MainInput, 'N4Bias') 
+        MainInput.N4Bias = 'yes';
+    end
+    if ~isfield(MainInput, 'AnalysisMethod') 
+        MainInput.AnalysisMethod = '1-point Dixon';
+    end
+    if ~isfield(MainInput, 'AgeCor') 
+        MainInput.AgeCor = 'no';
+    end
+    if ~isfield(MainInput, 'Note') 
+        MainInput.Note = '';
+    end    
     % DEFINE INPUTS
     pptDir         = GasExchange.outputpath;
     todayStr       = datestr(now,'yyyymmdd');
