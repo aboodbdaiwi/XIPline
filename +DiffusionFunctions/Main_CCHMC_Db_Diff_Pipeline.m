@@ -53,7 +53,7 @@ for i = 2 % always start from 2
     MainInput.Scanner          = ScannerCol{i}; 
     MainInput.AnalysisVersion  = ScanVerCol{i};
     MainInput.ScannerSoftware  = '5.9.0';
-    MainInput.SequenceType     = '';
+    MainInput.SequenceType     = '2D GRE';
     MainInput.denoiseXe        = 'no';
     MainInput.Analyst          = 'Database';
     MainInput.N4Bias           = 'yes';
@@ -160,7 +160,12 @@ for i = 2 % always start from 2
     end
     cd(MainInput.analysisfolder);
 
-        % Run pipeline
+     
+    
+    
+    
+    % Run pipeline
+    DiffusionFunctions.CCHMC_Db_Diff_Pipeline(MainInput)
     % if ismissing(DiffFileCol{i})
     %     VentilationFunctions.CCHMC_Db_Vent_Pipeline_NoData(MainInput)
     % else

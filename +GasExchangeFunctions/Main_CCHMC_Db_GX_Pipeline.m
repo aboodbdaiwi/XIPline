@@ -29,7 +29,7 @@ nSubjects = size(SexCol,1);
 %% 
 
 clc;
-for i = 6:nSubjects%:nSubjects % always start from 2
+for i = 22:nSubjects%:nSubjects % always start from 2
     fprintf('Processing subject %d of %d\n', i, nSubjects);
 
     if ismissing(AgeCol{i})
@@ -63,8 +63,8 @@ for i = 6:nSubjects%:nSubjects % always start from 2
     MainInput.Analyst          = 'Database';
     MainInput.N4Bias           = 'yes';
     MainInput.AnalysisMethod   = '1-Point Dixon';
-    MainInput.AgeCor           = 'no';    
-
+    MainInput.AgeCor           = 'no';   
+   
 
     % Gx file
     if ismissing(GxFileCol{i}) 
