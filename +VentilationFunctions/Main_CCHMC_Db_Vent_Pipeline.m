@@ -1,6 +1,5 @@
 clc; clear;
 
-
 excelFile = 'D:\OneDrive - cchmc\Lab\Random Subject analysis\CPIR_VDP_Analysis_20250730\Database_VDP_Inputs.xlsx';
 mainDir = '\\rds6.chmccorp.cchmc.org\PulMed-54\CPIR_Images_Database';
 WoodsDir = '\\Rds6.cchmc.org\pulmed-35\Woods_CPIR_Images';

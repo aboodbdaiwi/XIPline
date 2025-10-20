@@ -210,9 +210,9 @@ switch MainInput.SegmentationMethod
             case 'Diffusion'
                switch MainInput.SliceOrientation
                     case 'coronal' 
-                        SegmentType = 'not_supported'; % not supported yet
+                        SegmentType = 'diff_2D_1ch'; % not supported yet
                     case 'transversal'
-                        SegmentType = 'diff_2D_1ch_axi'; % 2ch is not supported yet
+                        SegmentType = 'diff_2D_1ch'; % diff_2D_1ch_axi 2ch is not supported yet
                    case 'sagittal'
                         SegmentType = 'not_supported'; % not supported yet
                     case 'isotropic'
