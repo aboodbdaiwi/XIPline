@@ -1,7 +1,7 @@
 clc; clear;
 
 
-excelFile = 'D:\OneDrive - cchmc\Lab\Random Subject analysis\CPIR_GX_analysis\gx_main_input.xlsx';
+excelFile = 'C:\Users\MCM5BK\OneDrive - cchmc\Documents\54_gx database\gx_main_input.xlsx';
 mainDir = '\\rds6.chmccorp.cchmc.org\PulMed-54\CPIR_Images_Database';
 WoodsDir = '\\Rds6.cchmc.org\pulmed-35\Woods_CPIR_Images';
 
@@ -29,7 +29,7 @@ nSubjects = size(SexCol,1);
 %% 
 
 clc;
-for i = 4%:nSubjects % always start from 2
+for i = 6:nSubjects%:nSubjects % always start from 2
     fprintf('Processing subject %d of %d\n', i, nSubjects);
 
     if ismissing(AgeCol{i})
@@ -43,6 +43,10 @@ for i = 4%:nSubjects % always start from 2
     end                 
     if ismissing(NoteCol{i})
         NoteCol{i} = "";
+    end
+    if ismissing(CalFileCol{i})
+        disp("no calibration .data file detected")
+        CalFileCol{i} = "";
     end
 
     MainInput = struct();
