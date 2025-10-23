@@ -60,6 +60,7 @@ for i = 2 % always start from 2
     MainInput.AnalysisMethod   = '';
     MainInput.AgeCor           = 'no';   
     MainInput.Note             = NoteCol{i};
+    MainInput.SliceOrientation = 'transversal';
 
     % diff file
     if contains(DiffFileCol{i}, mainDir, 'IgnoreCase', true) || contains(DiffFileCol{i}, WoodsDir, 'IgnoreCase', true)

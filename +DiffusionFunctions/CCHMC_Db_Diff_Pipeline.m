@@ -129,6 +129,6 @@ cd(MainInput.XeDataLocation)
     if exist('Ventilation.AirwayMask', 'var')
         % skip
     else
-        Ventilation.AirwayMask = zeros(size(Ventilation.LungMask));
+        Diffusion.AirwayMask = zeros(size(Ventilation.LungMask));
     end
 
