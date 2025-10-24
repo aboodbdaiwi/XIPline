@@ -29,7 +29,7 @@ nSubjects = size(SexCol,1);
 %% 
 
 clc;
-for i = 6:nSubjects%:nSubjects % always start from 2
+for i = 18:nSubjects%:nSubjects % always start from 2
     fprintf('Processing subject %d of %d\n', i, nSubjects);
 
     if ismissing(AgeCol{i})
@@ -75,6 +75,7 @@ for i = 6:nSubjects%:nSubjects % always start from 2
         MainInput.scandate          = ScanDateCol{i};
         MainInput.timeStr           = timeStr;    
         NoDataflag                  = 1;
+        
     else    
         MainInput.gx_file = GxFileCol{i};
         MainInput.anat_file = GxAnatFileCol{i};
@@ -147,6 +148,11 @@ for i = 6:nSubjects%:nSubjects % always start from 2
     end
     cd(MainInput.analysisfolder);
 
+    % For JSON 
+    MainInput.analysispath = fullfile('\',StudyCol{i}, 'analysis', analysisversion, ...
+        ['sub-', subnum], ['ses-', num2str(MainInput.ScanDate)], ['ser-', timeStr]);
+    analysispath = MainInput.analysispath;
+
     % Run pipeline
     if NoDataflag == 1
         GasExchangeFunctions.CCHMC_Db_GX_Pipeline_NoData(MainInput)
@@ -154,7 +160,7 @@ for i = 6:nSubjects%:nSubjects % always start from 2
         if RuneCol{i} == 0
             GasExchangeFunctions.CCHMC_Db_GX_Pipeline(MainInput);
         elseif RuneCol{i} == 1
-            GasExchangeFunctions.CCHMC_Db_GX_Pipeline_rerun(MainInput);
+            GasExchangeFunctions.CCHMC_Db_GX_Pipeline_rerun(MainInput,analysispath);
         end
         % T{i,15} = MainInput.analysisfolder;
     end
