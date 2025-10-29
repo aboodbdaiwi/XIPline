@@ -1,4 +1,4 @@
-function CCHMC_Db_GX_Pipeline_rerun(MainInput)
+function CCHMC_Db_GX_Pipeline_rerun(MainInput, analysispath)
     clc;
     disp('loading workspace, please wait.....')
     load(fullfile(MainInput.gx_analysis_folder, 'workspace.mat'));
@@ -32,6 +32,10 @@ function CCHMC_Db_GX_Pipeline_rerun(MainInput)
     cd(MainInput.gx_analysis_folder)
     delete_if_exist('GasExchange_Report*.pptx*');
     
+    if ~isfield(MainInput, 'analysispath') 
+         MainInput.analysispath = analysispath;
+    end
+
     [GasExchange] = GasExchangeFunctions.GasExchange_Analysis(GasExchange,Proton,MainInput);
     
     clearvars

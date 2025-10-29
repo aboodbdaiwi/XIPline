@@ -1,6 +1,5 @@
 clc; clear;
 
-
 excelFile = 'C:\Users\MCM5BK\OneDrive - cchmc\Documents\42_VDP Database Updating Project\04_VDP_inputs_log\Database_VDP_Inputs - Copy.xlsx';
 mainDir = '\\rds6.chmccorp.cchmc.org\PulMed-54\CPIR_Images_Database';
 WoodsDir = '\\Rds6.cchmc.org\pulmed-35\Woods_CPIR_Images';
@@ -38,7 +37,7 @@ nSubjects = size(SexCol,1);
 %% 
 
 clc;
-for i = 33:nSubjects % always start from 2
+for i = 18 % always start from 2
     fprintf('Processing subject %d of %d\n', i, nSubjects);
 
     if ismissing(AgeCol{i})
@@ -139,6 +138,8 @@ for i = 33:nSubjects % always start from 2
             VentilationFunctions.CCHMC_Db_Vent_Pipeline(MainInput);
         elseif RuneCol{i} == 1
             VentilationFunctions.CCHMC_Db_Vent_Pipeline_rerun(MainInput);
+        elseif RuneCol{i} == 3
+            VentilationFunctions.CCHMC_Db_Vent_Pipeline_rerun_registration(MainInput);
         end
         % T{i,24} = MainInput.analysisFolder;
     end

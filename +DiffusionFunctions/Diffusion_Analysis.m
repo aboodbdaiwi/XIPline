@@ -101,8 +101,8 @@ Diffusion.noise_mask = noise_mask;
 Nbvalues = length(bvalues);
 DataLocation = MainInput.XeDataLocation;
 cd(DataLocation)
-mkdir([DataLocation '\Diffusion Analysis']);
-outputpath = [DataLocation '\Diffusion Analysis\'];
+mkdir([DataLocation '\Diffusion_Analysis']);
+outputpath = [DataLocation '\Diffusion_Analysis\'];
 cd(outputpath)
 %% Save iamges and maskes
 % diffusion images

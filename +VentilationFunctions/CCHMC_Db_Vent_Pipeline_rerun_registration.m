@@ -1,4 +1,4 @@
-function CCHMC_Db_Vent_Pipeline_rerun(MainInput)
+function CCHMC_Db_Vent_Pipeline_rerun_registration(MainInput)
 
 analysisSubfolder = MainInput.analysisFolder;
 load(fullfile(MainInput.analysisFolder,'Ventilation_Analysis', 'workspace.mat'));
@@ -19,7 +19,33 @@ end
 Ventilation.LungMask = A;
 [CorrectedMask, Ventilation] = VentilationFunctions.correct_mask_orientation(Ventilation);
 
+% Load protonregistered in case it needed manual correction
+protonreg_file = dir(fullfile(analysisSubfolder, 'protonregistered_*.nii.gz'));
+protonreg_file = fullfile(protonreg_file.folder, protonreg_file.name);
+[~,~,mask_ext] = fileparts(mask_file_name);
+if strcmp(mask_ext, '.gz') || strcmp(mask_ext, '.nii')
+    try
+        protonreg = LoadData.load_nii(protonreg_file);
+        protonreg.img = fliplr(rot90(protonreg.img,1));
+    catch
+        protonreg = LoadData.load_untouch_nii(protonreg_file);
+        protonreg.img = fliplr(rot90(protonreg.img,1));
+    end
+    A = double(protonreg.img);
+end
+Proton.ProtonRegistered = A;
 
+% visualization 
+fixed1 = Ventilation.Image;
+moving1 = Proton.ProtonRegistered;
+for slice = 1:size(fixed1, 3)
+    A = moving1(:, :, slice);
+    B = fixed1(:, :, slice);
+    ProtonRegisteredColored(:, :, :, slice) = imfuse(A, B, 'falsecolor', 'ColorChannels', 'green-magenta');
+end
+Proton.ProtonRegisteredColored = permute(ProtonRegisteredColored,[1 2 4 3]);
+Proton.AnatImage_Reg = Proton.ProtonRegistered;
+Proton.AnatImage_RegColored = Proton.ProtonRegisteredColored;
 
 
 % B = rot90(B);

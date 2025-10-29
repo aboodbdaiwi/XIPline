@@ -280,10 +280,7 @@ if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
 
     XeTraj = GasExchangeFunctions.philipsradialcoords(del,2,[XeSinFile.folder,'\',XeSinFile.name]); %1.25us delay, Haltoned Spiral
     XeTraj = permute(XeTraj,[3 2 1 4]); %ro, proj, intlv, dims
-
     XeTraj = permute(XeTraj,[4 1 2 3]); %dims, ro, proj, intlv
-    del = 1.25;
-
 else
     if (strcmp(Scanner,'3T-R'))%R5.3.1
         XeTraj = GasExchangeFunctions.philipsradialcoords(0.36,1,[FunctionDirectory,'\V3 Scan Info\20191008_162511_Dissolved_Xe_20191008 - 3T-R.sin']); %0.36us delay, GM, from non-spectroscopy version
