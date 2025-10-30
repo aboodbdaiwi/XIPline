@@ -1,5 +1,5 @@
 
-function [ADCmap,ADCcoloredmap,SNR_table,meanADC,stdADC,ADC_hist] = ADC_Analysis (diffimg, lung_mask, airway_mask, bvalues, ADCFittingType,ADCAnalysisType, WinBUGSPath, outputpath,PatientAge)
+function [ADCmap,ADCcoloredmap,SNR_table,meanADC,stdADC,ADC_hist] = ADC_Analysis(diffimg, lung_mask, airway_mask, bvalues, ADCFittingType,ADCAnalysisType, WinBUGSPath, outputpath,PatientAge)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 %%%%%%%%%%%%%%%%%%%%%%% ADC Analysis  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 

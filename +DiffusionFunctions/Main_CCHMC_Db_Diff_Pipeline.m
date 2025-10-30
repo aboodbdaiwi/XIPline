@@ -28,7 +28,7 @@ nSubjects = size(SexCol,1);
 
 clc;
 
-for i = 18:nSubjects % always start from 2
+for i = 2 % always start from 2
     fprintf('Processing subject %d of %d\n', i, nSubjects);
 
     if ismissing(AgeCol{i})

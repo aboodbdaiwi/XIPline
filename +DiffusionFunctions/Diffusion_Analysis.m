@@ -31,11 +31,16 @@ WinBUGSPath = [WinBUGSPath,'\WinBUGS14'];
 
 Diffusion.WinBUGSPath = WinBUGSPath;  
 Diffusion.MA_WinBUGSPath = WinBUGSPath;
+
 PatientAge = eval(MainInput.PatientAge);
+
 % ADC_Analysis = Diffusion.ADC_Analysis;
 ADC_Analysis = 'yes';
 ADCFittingType = Diffusion.ADCFittingType;
+
 bvalues = eval(Diffusion.bvalues);
+
+
 ADCLB_Analysis = Diffusion.ADCLB_Analysis;
 MorphometryAnalysis = Diffusion.MorphometryAnalysis;
 % ADCAnalysisType = Diffusion.ADCAnalysisType;  % human | animals
