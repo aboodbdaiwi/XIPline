@@ -280,6 +280,10 @@ if strcmp(ADCLB_Analysis, 'yes') == 1 && strcmp(ADC_Analysis, 'yes') == 1
 
 end
 %% Morphometry Analysis
+
+Diffusion.CMMorphometry = 'yes';
+Diffusion.SEMMorphometry = 'yes';
+
 if strcmp(MorphometryAnalysis, 'yes') == 1 && Nbvalues > 3
 % CM Morphometry analysis
 %     waitbar(.30,f,'Processing CM Morphometry Analysis ');
@@ -332,7 +336,11 @@ if strcmp(MorphometryAnalysis, 'yes') == 1 && Nbvalues > 3
 %         Diffusion.Lm_std = LungCMMorphometrySummary{2,9};
 %         Diffusion.SVR_std = LungCMMorphometrySummary{2,10};
 %         Diffusion.Na_std = LungCMMorphometrySummary{2,11};
-         
+
+Diffusion.MorphometryAnalysisType = 'human';
+Diffusion.Do = 0.14;
+Diffusion.Delta = 3.5;
+
 [R_map,h_map,r_map,Lm_map,SVR_map,Na_map,So_map,LungCMMorphometrySummary]=...
             DiffusionFunctions.CM_MorphometryFit(...
             diffimg,...
@@ -409,6 +417,22 @@ elseif strcmp(MorphometryAnalysis, 'yes') == 1 && Nbvalues < 3
     disp('Morphometry cannot be performed with only 2 b values')
 end
 close all;
+%% Save info to JSON file
+
+Outputs.DDC_map = Diffusion.DDC_map;
+Outputs.alpha_map = Diffusion.alpha_map; 
+Outputs.SEMSo_map = Diffusion.SEMSo_map; 
+Outputs.LmD_map = Diffusion.LmD_map; 
+Outputs.DDC_mean = Diffusion.DDC_mean; 
+Outputs.alpha_mean = Diffusion.alpha_mean; 
+Outputs.LmD_mean = Diffusion.LmD_mean; 
+Outputs.DDC_std = Diffusion.DDC_std; 
+Outputs.alpha_std = Diffusion.alpha_std; 
+Outputs.LmD_std = Diffusion.LmD_std; 
+
+OutputJSONFile = fullfile(analysisFolder, ['DiffAnalysis_','ser-',num2str(MainInput.sernum),'.json']);
+Global.exportStructToJSON(Outputs, OutputJSONFile);
+
 %% save maps in mat file
 save_data=[outputpath,'Diffusion_Analysis.mat'];
 save(save_data);   

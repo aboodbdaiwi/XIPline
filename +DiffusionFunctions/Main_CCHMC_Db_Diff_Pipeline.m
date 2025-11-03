@@ -87,7 +87,7 @@ for i = 2 % always start from 2
         subnum = num2str(subnum, '%04d');
     end
 
-    %% extract bvalues and file name from .list file
+    % extract bvalues and file name from .list file
     toks = regexp(MainInput.diff_file,'^(.*?)(\.list|\.data)?$','tokens');
     prefix = toks{1}{1};
     listname = sprintf('%s.list',prefix);
@@ -120,7 +120,7 @@ for i = 2 % always start from 2
     fclose(fid);
     
     
-    %%
+    %
     MainInput.sernum = dataset_name;
     MainInput.num_b_values = num_extra_attr1;
     
