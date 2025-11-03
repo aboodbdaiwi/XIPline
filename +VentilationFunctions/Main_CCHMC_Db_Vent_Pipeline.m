@@ -1,7 +1,7 @@
 clc; clear;
 
 
-excelFile = 'D:\OneDrive - cchmc\Lab\Random Subject analysis\CPIR_VDP_Analysis_20250730\Database_VDP_Inputs.xlsx';
+excelFile = '\\rds6.cchmc.org\PulMed-43\CPIR_Share\Carter\08_Master VDP Database Inputs Table\Database_VDP_Inputs.xlsx';
 mainDir = '\\rds6.chmccorp.cchmc.org\PulMed-54\CPIR_Images_Database';
 WoodsDir = '\\Rds6.cchmc.org\pulmed-35\Woods_CPIR_Images';
 
@@ -38,7 +38,7 @@ nSubjects = size(SexCol,1);
 %% 
 
 clc;
-for i = 2:nSubjects % always start from 2
+for i = 22 % always start from 2
     fprintf('Processing subject %d of %d\n', i, nSubjects);
 
     if ismissing(AgeCol{i})
@@ -70,7 +70,7 @@ for i = 2:nSubjects % always start from 2
     MainInput.ScannerSoftware  = SoftCol{i};
     MainInput.SequenceType     = SeqTypeCol{i};
     MainInput.denoiseXe        = 'no';
-    MainInput.Analyst          = 'Database';
+    MainInput.Analyst          = 'MRM';
     MainInput.VoxelSize        = sprintf('[%s,%s,%s]', num2str(VoxelX{i}), num2str(VoxelY{i}), num2str(VoxelZ{i}));
     MainInput.PIXEL_SPACING_X  = VoxelX{i};
     MainInput.PIXEL_SPACING_Y  = VoxelY{i};

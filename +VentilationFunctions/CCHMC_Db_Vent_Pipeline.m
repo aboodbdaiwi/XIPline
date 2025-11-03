@@ -176,7 +176,7 @@ end
 %----------------------------- copy data over-----------------------------
 
 [srcDir, ~] = fileparts(vent_file); 
-destDir = fullfile(analysisSubfolder, 'vent_rawdata'); % destination location
+destDir = fullfile(analysisSubfolder, 'vent_data'); % destination location
 % Create destination if it doesn’t exist
 if ~exist(destDir, 'dir')
     mkdir(destDir);
@@ -196,7 +196,7 @@ disp('All files copied successfully!');
 
 if strcmp(MainInput.NoProtonImage, 'no') 
     [srcDir, ~] = fileparts(anat_file); 
-    destDir = fullfile(analysisSubfolder, 'anat_rawdata'); % destination location
+    destDir = fullfile(analysisSubfolder, 'anat_data'); % destination location
     % Create destination if it doesn’t exist
     if ~exist(destDir, 'dir')
         mkdir(destDir);
