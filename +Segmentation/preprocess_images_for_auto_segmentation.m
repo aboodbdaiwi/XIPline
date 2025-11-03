@@ -56,15 +56,14 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
 
             % run N4
             [Xe_Img, ~] = Segmentation.N4_bias_correction(Xe_Img, MainInput.XeDataLocation);
-
+            
             % Normalize each slice independently
-            Xe_Img = Xe_Img/max(Xe_Img(:));
-            % for sl = 1:size(Xe_Img, 3)
-            %     max_val = max(Xe_Img(:, :, sl), [], 'all');
-            %     if max_val > 0
-            %         Xe_Img(:, :, sl) = Xe_Img(:, :, sl) ./ max_val;
-            %     end
-            % end
+            NXe_Img = zeros(size(Xe_Img));
+            for sl = 1:size(Xe_Img, 3)
+                Xe_Img_s = Xe_Img(:,:,sl);
+                NXe_Img(:,:,sl) = (Xe_Img_s - min(Xe_Img_s(:)))./(max(Xe_Img_s(:)) - min(Xe_Img_s(:)));
+            end
+            Xe_Img = NXe_Img;
 
             % resize proton images
             if (strcmp(MainInput.NoProtonImage, 'no') || MainInput.NoProtonImage == 0) && strcmp(MainInput.Imagestosegment, 'Proton & Xe Registered') 
@@ -113,7 +112,7 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
 
         case 'Diffusion'
             % resize xenon images
-            Im_size = 64;
+            Im_size = 256;
             if size(Diffusion.Image,1) ~= Im_size || size(Diffusion.Image,2) ~= Im_size
                 Xe_Img = zeros(Im_size,Im_size,size(Diffusion.Image,3));
                 for i = 1:size(Diffusion.Image,3)
@@ -123,10 +122,15 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
                 Xe_Img = Diffusion.Image(:,:,:,1);
             end
             % run N4
-            % [Xe_Img, ~] = Segmentation.N4_bias_correction(Xe_Img, MainInput.XeDataLocation);
+            [Xe_Img, ~] = Segmentation.N4_bias_correction(Xe_Img, MainInput.XeDataLocation);
             
-            % normalize
-            Xe_Img = Xe_Img./max(Xe_Img(:));
+            % Normalize each slice independently
+            NXe_Img = zeros(size(Xe_Img));
+            for sl = 1:size(Xe_Img, 3)
+                Xe_Img_s = Xe_Img(:,:,sl);
+                NXe_Img(:,:,sl) = (Xe_Img_s - min(Xe_Img_s(:)))./(max(Xe_Img_s(:)) - min(Xe_Img_s(:)));
+            end
+            Xe_Img = NXe_Img;
 
             % make stacks 
             Images = zeros(size(Diffusion.Image,3),Im_size,Im_size,3);

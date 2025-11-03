@@ -173,6 +173,7 @@ end
 % % figure; Global.imslice(A,'Ventilation')
 % Ventilation.Image = A;
 % figure; Global.imslice(Proton.Image,'Proton')
+
 %----------------------------- copy data over-----------------------------
 
 [srcDir, ~] = fileparts(vent_file); 

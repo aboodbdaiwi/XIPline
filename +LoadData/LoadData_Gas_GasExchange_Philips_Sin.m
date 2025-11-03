@@ -1,5 +1,5 @@
 
-function [GasExchange] = LoadData_Gas_GasExchange_Philips_Sin(GasDataLocation,Institute,GasExchange)
+function [GasExchange] = LoadData_Gas_GasExchange_Philips_Sin(MainInput,GasExchange)
 %Will process the resulting gas exchange mri data
 %   for V3 and XeCTC versions of the data
 %   Requires a folder with the Dissolved_Xe raw/lab/sin files,
@@ -50,31 +50,33 @@ FunctionDirectory = which('LoadData.LoadData_Gas_GasExchange_Philips_Sin');
 idcs = strfind(FunctionDirectory,filesep);%determine location of file separators
 FunctionDirectory = FunctionDirectory(1:idcs(end)-1);%remove file
 
-cd(GasDataLocation)
-mkdir([GasDataLocation '\GasExchange_Analysis']);
-outputpath = [GasDataLocation '\GasExchange_Analysis'];
+GasDataLocation = MainInput.XeDataLocation;
 
-ReconVersion = 'TEST';%If not connected to git, can't determine hash so state test
-NumPlotSlices = 7;%must be odd to work as expected
-
+% Ensure the base path exists
+if ~isfolder(MainInput.OutputPath )
+    error('Base folder does not exist: %s', MainInput.OutputPath);
+end
+outputpath = MainInput.OutputPath;
+% Move into the output directory
+cd(outputpath);
 
 %% Determine files to use
-XeSinFile = dir([GasDataLocation,'\*Dissolved_Xe_20191008.sin']);
-ScanVersion = Institute;
-if strcmp(ScanVersion,'CCHMC')%didn't find that sequence naming version; check for new sequence names
-    % XeSinFile = dir([GasDataLocation,'\*CPIR_Gas_Exchange.sin']);
-    ScanVersion = 'CCHMC';
-end
-if strcmp(ScanVersion,'XeCTC')%didn't find that sequence version
-    %XeSinFile = dir([GasDataLocation,'\*CTC_GasExchangeFunctions_Xe.sin']);
-    % XeSinFile = dir([GasDataLocation,'\*CTC_Gas_Exchange.sin']);
-    ScanVersion = 'XeCTC';
-end
-
-if strcmp(ScanVersion,'Duke') %didn't find that sequence naming version; check for duke version/Intermediate dixon
-    % XeSinFile = dir([GasDataLocation,'\*DukeIPF_Gas_Exchange.sin']);
-    ScanVersion = 'Duke';
-end
+% XeSinFile = dir([GasDataLocation,'\*Dissolved_Xe_20191008.sin']);
+ScanVersion = MainInput.Institute;
+% if strcmp(ScanVersion,'CCHMC')%didn't find that sequence naming version; check for new sequence names
+%     % XeSinFile = dir([GasDataLocation,'\*CPIR_Gas_Exchange.sin']);
+%     ScanVersion = 'CCHMC';
+% end
+% if strcmp(ScanVersion,'XeCTC')%didn't find that sequence version
+%     %XeSinFile = dir([GasDataLocation,'\*CTC_GasExchangeFunctions_Xe.sin']);
+%     % XeSinFile = dir([GasDataLocation,'\*CTC_Gas_Exchange.sin']);
+%     ScanVersion = 'XeCTC';
+% end
+% 
+% if strcmp(ScanVersion,'Duke') %didn't find that sequence naming version; check for duke version/Intermediate dixon
+%     % XeSinFile = dir([GasDataLocation,'\*DukeIPF_Gas_Exchange.sin']);
+%     ScanVersion = 'Duke';
+% end
 XeSinFile = dir([GasDataLocation,'\*.sin']);
 
 DataFiles = dir([GasDataLocation,'\*.data']);
@@ -173,7 +175,9 @@ disp('Importing Acquisition Information Completed.')
 disp('Importing Data...')
 %Load in FIDs
 [XeData,XeInfo] = GasExchangeFunctions.loadLISTDATA([XeDataFile.folder,'\',XeDataFile.name]);
+XeData2 = XeData;
 XeData = squeeze(XeData);
+
 if strcmp(ScanVersion,'CCHMC') 
     %skip
 else
@@ -188,15 +192,16 @@ if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
     DissolvedKSpace = XeData(:,:,2);
     %Gas k-space
     GasKSpace = XeData(:,:,1);
+    XeData_size = size(XeData2);
 
-    if(extraOvs)
-        DissolvedKSpace = movmean(DissolvedKSpace,OvsFactor);
-        DissolvedKSpace = downsample(DissolvedKSpace,OvsFactor);
-        
-        GasKSpace = movmean(GasKSpace,OvsFactor);
-        GasKSpace = downsample(GasKSpace,OvsFactor);
+    if XeData_size(end) == 2
+        XeSpec_nsamp = size(DissolvedKSpace,1);
+        XeImg_nsamp = (XeSin.non_cart_max_encoding_nrs.vals(1)+1) ;
+        Xe_nprof = size(DissolvedKSpace,2);
+        Xe_interleaves = size(DissolvedKSpace,3);
 
-        dwell_s = dwell_s * OvsFactor;
+        DissolvedKSpace = DissolvedKSpace(1:XeImg_nsamp,:,:);
+        GasKSpace = GasKSpace(1:XeImg_nsamp,:,:);
     end
 
     %Get sizes of dimensions
@@ -272,18 +277,10 @@ GasExchange.OvsFactor = OvsFactor;
 disp('Calculating Trajectories...')
 if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
     del = 1.25;
-    if (extraOvs)
-        del = del * OvsFactor;
-    end
+
     XeTraj = GasExchangeFunctions.philipsradialcoords(del,2,[XeSinFile.folder,'\',XeSinFile.name]); %1.25us delay, Haltoned Spiral
     XeTraj = permute(XeTraj,[3 2 1 4]); %ro, proj, intlv, dims
-    if (extraOvs)
-        XeTraj = movmean(XeTraj,OvsFactor);
-        XeTraj =  downsample(XeTraj,OvsFactor);
-    end
     XeTraj = permute(XeTraj,[4 1 2 3]); %dims, ro, proj, intlv
-    del = 1.25;
-
 else
     if (strcmp(Scanner,'3T-R'))%R5.3.1
         XeTraj = GasExchangeFunctions.philipsradialcoords(0.36,1,[FunctionDirectory,'\V3 Scan Info\20191008_162511_Dissolved_Xe_20191008 - 3T-R.sin']); %0.36us delay, GM, from non-spectroscopy version
@@ -598,8 +595,10 @@ RBCOsc_Normalization = GasExchangeFunctions.Dissolved_RBCOscImageRecon(Xe_RecMat
 disp('Reconstructing RBC keyhole Images Completed.')
 
 %% store avriables
-GasExchange.UncorrectedVentImage = UncorrectedVentImage;
+GasExchange.UncorrectedVentImage = UncorrectedVentImage;  
 GasExchange.VentImage = VentImage;
+GasExchange.GasKSpace_SS = GasKSpace_SS;
+GasExchange.CorrectedDissKSpace_SS = CorrectedDissKSpace_SS;
 GasExchange.GasImage = GasImage;
 GasExchange.DissolvedImage = DissolvedImage;
 GasExchange.CorrDissolvedImage = CorrDissolvedImage;
@@ -614,6 +613,8 @@ GasExchange.PixelShift = PixelShift;
 GasExchange.freq_jump = freq_jump;
 GasExchange.DissolvedNMR = DissolvedNMR;
 GasExchange.SigDynamics = SigDynamics;
+GasExchange.TE90 = TE90;
+GasExchange.XeSin = XeSin;
 
 
 close all;

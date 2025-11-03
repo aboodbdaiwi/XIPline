@@ -53,6 +53,8 @@ reconObj.PixelShift = PixelShift;
 reconObj.crop = cropOvergriddedImage;
 reconObj.deapodize = deapodizeImage;
 
-% Reconstruct image
+% % Reconstruct image
+% disp(['data_redim = ', num2str(size(data_redim))]);
+% disp(['traj_redim = ', num2str(size(traj_redim))]);
 Image_Out = reconObj.reconstruct(data_redim, traj_redim);
 Image_Out = rot90(flip(Image_Out));

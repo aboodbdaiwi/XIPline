@@ -99,6 +99,7 @@ If you use this software, please cite:
 
 | **Task**                                                                 | **Date**        |
 |--------------------------------------------------------------------------|-----------------|
+| Update AI segmentation model for Diffusion Analysis                      | Oct 20, 2025    |
 | Add new ventilation analysis report                                      | July 17, 2025   |
 | Add offline reconstruction for 2D spiral Philips ventilation images      | July 17, 2025   |
 | Add ANTs and manual registration for ventilation analysis                | July 17, 2025   |
