@@ -28,7 +28,7 @@ nSubjects = size(SexCol,1);
 
 clc;
 
-for i = 2 % always start from 2
+for i = 2:6 % always start from 2
     fprintf('Processing subject %d of %d\n', i, nSubjects);
 
     if ismissing(AgeCol{i})
@@ -119,39 +119,15 @@ for i = 2 % always start from 2
     
     fclose(fid);
     
-    
-    %
-    MainInput.sernum = dataset_name;
+    MainInput.sernum = dataset_name(5:end);
     MainInput.num_b_values = num_extra_attr1;
-    
-    if MainInput.num_b_values == 3
-        MainInput.b_values = [0, 7.5, 15];
-        MainInput.SmallDeltaTime = 3.5; % ms
-        MainInput.BigDeltaTime = 3.5; % ms
-        MainInput.GapTime = 0;
-    elseif MainInput.num_b_values == 4
-        MainInput.b_values = [0, 10, 20, 30];
-        MainInput.SmallDeltaTime = 5.0; % ms
-        MainInput.BigDeltaTime = 5.0; % ms
-        MainInput.GapTime = 0;
-    elseif MainInput.num_b_values == 5
-        MainInput.b_values = [0, 6.25, 12.5, 18.75, 25];
-        MainInput.SmallDeltaTime = 3.5; % ms
-        MainInput.BigDeltaTime = 3.5; % ms
-        MainInput.GapTime = 0;
-    else
-        MainInput.b_values = NaN;
-        MainInput.SmallDeltaTime = NaN; % ms
-        MainInput.BigDeltaTime = NaN; % ms
-        MainInput.GapTime = NaN;
-        disp('Number of bvalues is not either 3, 4, or 5....')
-    end
+ 
 
     MainInput.EncodingOrder = 'linear'; % confirm this
 
     % change to analysis folder and then run
     analysisfolder = fullfile(mainDir,StudyCol{i}, 'analysis', analysisversion, ...
-        ['sub-', subnum], ['ses-', num2str(MainInput.ScanDate)], ['ser-', dataset_name]);
+        ['sub-', subnum], ['ses-', num2str(MainInput.ScanDate)], ['ser-', MainInput.sernum]);
     MainInput.analysisfolder = analysisfolder;
 
     diff_analysis_folder = fullfile(analysisfolder,'Diffusion_Analysis');
