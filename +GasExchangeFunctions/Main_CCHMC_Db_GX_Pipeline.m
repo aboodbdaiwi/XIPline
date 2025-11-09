@@ -63,8 +63,8 @@ for i = 18:nSubjects%:nSubjects % always start from 2
     MainInput.Analyst          = 'Database';
     MainInput.N4Bias           = 'yes';
     MainInput.AnalysisMethod   = '1-Point Dixon';
-    MainInput.AgeCor           = 'no';    
-
+    MainInput.AgeCor           = 'no';   
+   
 
     % Gx file
     if ismissing(GxFileCol{i}) 
