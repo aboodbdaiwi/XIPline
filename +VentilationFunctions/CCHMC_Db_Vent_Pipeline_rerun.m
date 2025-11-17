@@ -1,7 +1,15 @@
 function CCHMC_Db_Vent_Pipeline_rerun(MainInput)
 
+UpdatedImageQuality = MainInput.UpdatedImageQuality;
+UpdatedNote = MainInput.UpdatedNote;
+
 analysisSubfolder = MainInput.analysisFolder;
 load(fullfile(MainInput.analysisFolder,'Ventilation_Analysis', 'workspace.mat'));
+
+MainInput.ImageQuality = UpdatedImageQuality;
+MainInput.Note = UpdatedNote;
+Outputs.ImageQuality = MainInput.ImageQuality;
+Outputs.Note = MainInput.Note;
 
 mask_file_name = dir(fullfile(analysisSubfolder, 'lungmask_*.nii.gz'));
 mask_file_name = fullfile(mask_file_name.folder, mask_file_name.name);

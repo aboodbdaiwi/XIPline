@@ -1697,7 +1697,7 @@ clc
 end
 
 %% write out summary as excel files
-GasExchangeExcelFile = fullfile(outputpath, 'GagExchange_workspace.xlsx');
+GasExchangeExcelFile = fullfile(outputpath, 'GasExchange_workspace.xlsx');
 Global.exportStructToExcel(GasExchange, GasExchangeExcelFile);
 MainInputExcelFile = fullfile(outputpath, 'MainInput_workspace.xlsx');
 Global.exportStructToExcel(MainInput, MainInputExcelFile);

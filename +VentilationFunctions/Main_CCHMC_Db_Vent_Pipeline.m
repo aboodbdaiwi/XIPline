@@ -37,7 +37,7 @@ nSubjects = size(SexCol,1);
 %% 
 
 clc;
-for i = 18 % always start from 2
+for i = 46 % always start from 2
     fprintf('Processing subject %d of %d\n', i, nSubjects);
 
     if ismissing(AgeCol{i})
@@ -137,6 +137,8 @@ for i = 18 % always start from 2
         if RuneCol{i} == 0
             VentilationFunctions.CCHMC_Db_Vent_Pipeline(MainInput);
         elseif RuneCol{i} == 1
+            MainInput.UpdatedImageQuality = MainInput.ImageQuality;
+            MainInput.UpdatedNote = MainInput.Note;
             VentilationFunctions.CCHMC_Db_Vent_Pipeline_rerun(MainInput);
         elseif RuneCol{i} == 3
             VentilationFunctions.CCHMC_Db_Vent_Pipeline_rerun_registration(MainInput);

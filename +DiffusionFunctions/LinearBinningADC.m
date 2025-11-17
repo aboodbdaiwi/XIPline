@@ -49,9 +49,17 @@ Images = (Images./max(Images(:))).*100;
 % HealthyADCmean=0.0002*age+0.029;
 % HealthyADCstd=5e-5*age+0.0121;
 age = age; 
-HealthyADCmean = eval(char(HealthyMean));
+try
+    HealthyADCmean = eval(char(HealthyMean));
+catch
+    HealthyADCmean = HealthyMean;
+end
 HealthyADCmean = HealthyADCmean(1);
-HealthyADCstd = eval(HealthySD);
+try
+    HealthyADCstd = eval(HealthySD);
+catch
+    HealthyADCstd = HealthySD;
+end
 HealthyADCstd = HealthyADCstd(1);
 ADCThresh = [HealthyADCmean-2*HealthyADCstd ,HealthyADCmean-1*HealthyADCstd ,HealthyADCmean, HealthyADCmean+ HealthyADCstd, HealthyADCmean+2*HealthyADCstd];
 
