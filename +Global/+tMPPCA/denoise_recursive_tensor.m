@@ -132,7 +132,7 @@ for i = 1:num_vox
     X = reshape(X,new_size);
 
     % denoise X
-    [X,sigma2,p] = denoise_array_recursive_tensor(X,'num_inds',min(length(size(X)),numel(indices)),varargin{:});
+    [X,sigma2,p] = Global.tMPPCA.denoise_array_recursive_tensor(X,'num_inds',min(length(size(X)),numel(indices)),varargin{:});
 
     X = reshape(X,array_size(permute_order));
     X = ipermute(reshape(X,array_size(permute_order)),permute_order);

@@ -113,8 +113,11 @@ for n = 1:size(MR,3)
         mean_noise(isnan(mean_noise))=0;
         std_noise(isnan(std_noise))=0;
 
-        SNR_slice(n) = round((signal_n_avg(n) - mean_noise(n)) / std_noise(n),2)*sqrt(2 - (pi/2)); %signal to noise ratio
-        SNRvv_slice(n) = round((signalvv_avg(n) - mean_noise(n)) / std_noise(n),2)*sqrt(2 - (pi/2)); %signal to noise ratio
+        SNR_slice(n) = round((signal_n_avg(n) ) / std_noise(n),2)*sqrt(2 - (pi/2)); %signal to noise ratio
+        SNRvv_slice(n) = round((signalvv_avg(n)) / std_noise(n),2)*sqrt(2 - (pi/2)); %signal to noise ratio
+        
+        % SNR_slice(n) = round((signal_n_avg(n) - mean_noise(n)) / std_noise(n),2)*sqrt(2 - (pi/2)); %signal to noise ratio
+        % SNRvv_slice(n) = round((signalvv_avg(n) - mean_noise(n)) / std_noise(n),2)*sqrt(2 - (pi/2)); %signal to noise ratio
 end
 SNR_slice(isnan(SNR_slice))=0;
 SNR_slice(isinf(SNR_slice)) = 0;
@@ -126,8 +129,15 @@ SNRvv_slice(isinf(SNRvv_slice)) = 0;
 SNRvv_slice(SNRvv_slice < 0) = 0;
 % SNRvv_slice = SNRvv_slice(SNRvv_slice ~= 0);
 
-overall_mean = mean(MR(maskarray == 1), "all", 'omitnan');
-overall_std = std(MR(backgroundmask == 1), 0,"all", 'omitnan');
+% Remove zeros and NaNs before mean/std calculation
+vals_signal = MR(maskarray == 1);
+vals_signal = vals_signal(vals_signal ~= 0 & ~isnan(vals_signal));
+
+vals_noise = MR(backgroundmask == 1);
+vals_noise = vals_noise(vals_noise ~= 0 & ~isnan(vals_noise));
+
+overall_mean = mean(vals_signal, "all");
+overall_std  = std(vals_noise, 0, "all");
 SNR_lung = round((overall_mean/overall_std), 2)*sqrt(2 - (pi/2));
 
 maskarray2 = maskarray.*~defectmask;

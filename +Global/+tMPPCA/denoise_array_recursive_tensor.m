@@ -202,7 +202,7 @@ M = size(U,1);
 N = size(V,1);
 P = size(S,1);
 vals2 = diag(S).^2;
-vals2 = opt_shrink_frob(vals2,max(M-P,1),max(N-P,1),sigma2);
+vals2 = Global.tMPPCA.opt_shrink_frob(vals2,max(M-P,1),max(N-P,1),sigma2);
 S = diag(real(sqrt(vals2)));
 
 
