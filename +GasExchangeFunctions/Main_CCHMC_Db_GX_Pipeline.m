@@ -1,7 +1,7 @@
 clc; clear;
 
 
-excelFile = 'C:\Users\MCM5BK\OneDrive - cchmc\Documents\54_gx database\gx_main_input.xlsx';
+excelFile = '\\rds6.cchmc.org\PulMed-43\CPIR_Share\Carter\09_gx_main_inputs\gx_main_input.xlsx';
 mainDir = '\\rds6.chmccorp.cchmc.org\PulMed-54\CPIR_Images_Database';
 WoodsDir = '\\Rds6.cchmc.org\pulmed-35\Woods_CPIR_Images';
 
@@ -29,7 +29,7 @@ nSubjects = size(SexCol,1);
 %% 
 
 clc;
-for i = 18:nSubjects%:nSubjects % always start from 2
+for i = 33%:nSubjects % always start from 2
     fprintf('Processing subject %d of %d\n', i, nSubjects);
 
     if ismissing(AgeCol{i})
@@ -160,6 +160,8 @@ for i = 18:nSubjects%:nSubjects % always start from 2
         if RuneCol{i} == 0
             GasExchangeFunctions.CCHMC_Db_GX_Pipeline(MainInput);
         elseif RuneCol{i} == 1
+            MainInput.UpdatedNote = T{i, 13};
+            MainInput.UpdatedImageQuality  = T{i, 15};
             GasExchangeFunctions.CCHMC_Db_GX_Pipeline_rerun(MainInput,analysispath);
         end
         % T{i,15} = MainInput.analysisfolder;
