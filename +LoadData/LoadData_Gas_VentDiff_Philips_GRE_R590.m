@@ -22,7 +22,11 @@ function [Image, parentPath, filename] = LoadData_Gas_VentDiff_Philips_GRE_R590(
     else
         parentPath = MainInput.XeDataLocation;
         cd(MainInput.XeDataLocation)
-        filename = MainInput.Xe_name;
+        try
+            filename = MainInput.Xe_name;
+        catch
+            filename = MainInput.XeFileName;
+        end
     end
 
     ch_range = [1 1]; % assume one channel for data import by default

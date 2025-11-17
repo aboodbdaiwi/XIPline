@@ -31,11 +31,24 @@ WinBUGSPath = [WinBUGSPath,'\WinBUGS14'];
 
 Diffusion.WinBUGSPath = WinBUGSPath;  
 Diffusion.MA_WinBUGSPath = WinBUGSPath;
-PatientAge = eval(MainInput.PatientAge);
+
+try
+    PatientAge = eval(MainInput.PatientAge);
+catch
+    PatientAge = MainInput.Age;
+end
+
 % ADC_Analysis = Diffusion.ADC_Analysis;
 ADC_Analysis = 'yes';
 ADCFittingType = Diffusion.ADCFittingType;
-bvalues = eval(Diffusion.bvalues);
+
+try
+    bvalues = eval(Diffusion.bvalues);
+catch
+    bvalues = Diffusion.b_values;
+end
+
+
 ADCLB_Analysis = Diffusion.ADCLB_Analysis;
 MorphometryAnalysis = Diffusion.MorphometryAnalysis;
 % ADCAnalysisType = Diffusion.ADCAnalysisType;  % human | animals
@@ -99,10 +112,19 @@ Diffusion.noise_mask = noise_mask;
 
 %% create path
 Nbvalues = length(bvalues);
-DataLocation = MainInput.XeDataLocation;
-cd(DataLocation)
-mkdir([DataLocation '\Diffusion_Analysis']);
-outputpath = [DataLocation '\Diffusion_Analysis\'];
+
+if ~isempty(MainInput.OutputPath)
+    DataLocation = MainInput.OutputPath;
+    cd(DataLocation)
+    mkdir([DataLocation '\Diffusion_Analysis']);
+    outputpath = [DataLocation '\Diffusion_Analysis\'];
+    cd(outputpath)
+else 
+    DataLocation = MainInput.XeDataLocation;
+    cd(DataLocation)
+    mkdir([DataLocation '\Diffusion_Analysis']);
+    outputpath = [DataLocation '\Diffusion_Analysis\'];
+end
 cd(outputpath)
 %% Save iamges and maskes
 % diffusion images

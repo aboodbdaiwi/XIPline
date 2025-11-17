@@ -243,8 +243,8 @@ function ThresholdVDP_Report(Ventilation, Proton, MainInput)
     close all;
     x0 = 8.5; w = 7.3; yStep = 2.1; y0 = 0.1; 
     
-    figXe  = makeTwoRowMontage(Ventilation.Image, '129Xe Ventilation');
-    numslice = size(Ventilation.Image,3);
+    figXe  = makeTwoRowMontage(Ventilation.UncorrectedImage, '129Xe Ventilation');
+    numslice = size(Ventilation.UncorrectedImage,3);
     if numslice < 10
         scaleFactore = 0.65;
     elseif numslice < 12
