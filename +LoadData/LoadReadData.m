@@ -398,11 +398,14 @@ if (isnumeric(MainInput.NoProtonImage) && MainInput.NoProtonImage == 0) || ...
    (ischar(MainInput.NoProtonImage) && strcmp(MainInput.NoProtonImage, 'no'))
     % try 
         cd(MainInput.HDataLocation)
-        if strcmp(MainInput.AnalysisType,'Ventilation')                 
-            mkdir([MainInput.HDataLocation '\Ventilation_Analysis']);  
-        elseif strcmp(MainInput.AnalysisType,'Diffusion')
-        elseif strcmp(MainInput.AnalysisType,'GasExchange')          
-            mkdir([MainInput.HDataLocation '\GasExchange_Analysis']);
+        if isfield(MainInput,"analysisversion")
+        else
+            if strcmp(MainInput.AnalysisType,'Ventilation')                 
+                mkdir([MainInput.HDataLocation '\Ventilation_Analysis']);  
+            elseif strcmp(MainInput.AnalysisType,'Diffusion')
+            elseif strcmp(MainInput.AnalysisType,'GasExchange')          
+                mkdir([MainInput.HDataLocation '\GasExchange_Analysis']);
+            end
         end
         if strcmp(MainInput.HDataext,'.dcm')      
             if strcmp(MainInput.CCHMC_DbVentAnalysis,'yes')

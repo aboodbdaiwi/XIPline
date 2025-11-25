@@ -1,10 +1,11 @@
 function CCHMC_Db_Vent_Pipeline_rerun(MainInput)
 
-UpdatedImageQuality = MainInput.UpdatedImageQuality;
-UpdatedNote = MainInput.UpdatedNote;
+UpdatedImageQuality = MainInput.ImageQuality;
+UpdatedNote = MainInput.Note;
 
 analysisSubfolder = MainInput.analysisFolder;
 load(fullfile(MainInput.analysisFolder,'Ventilation_Analysis', 'workspace.mat'));
+
 
 MainInput.ImageQuality = UpdatedImageQuality;
 MainInput.Note = UpdatedNote;
@@ -175,6 +176,7 @@ if ~exist(analysisSubfolder, 'dir')
 end
 
 % Save Outputs to the MAT-file
+clearvars UpdatedNote UpdatedImageQuality
 save(fullfile(analysisSubfolder, 'workspace.mat'));
 save(fullfile(analysisSubfolder, 'Ventilation_Analysis_Outputs.mat'), 'Outputs');
 disp('all Ventilation Analysis completed');
