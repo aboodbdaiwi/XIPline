@@ -109,6 +109,7 @@ for i = 68 % always start from 2
         MainInput.ReconType = '';
     end
     analysisversion = 'vent_v100';
+    MainInput.analysisversion = analysisversion;
 
     % Format subject number with leading zeros
     subnum = SubNumCol{i};
