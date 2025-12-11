@@ -1,4 +1,4 @@
-function [DDC_map,alpha_map,So_map,LmD_map,LungSEMMorphometrySummary]=SEM_MorphometryFit(Images,BNmask,noise_mask,bvalues,Do,Delta,Datapath,WinBUGSPath)
+function [Diffusion] = SEM_MorphometryFit(Diffusion,MainInput)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 %%%%%%% 129Xe stretched exponential model (SEM) Lung Morphometry  %%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -32,15 +32,23 @@ function [DDC_map,alpha_map,So_map,LmD_map,LungSEMMorphometrySummary]=SEM_Morpho
 %
 % This code is based on the stretched exponential model
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Images = Diffusion.Image;
+BNmask =  Diffusion.lung_mask;
+noise_mask = Diffusion.noise_mask;
+bvalues = Diffusion.b_values;
+Do = Diffusion.Do;
+Delta = Diffusion.Delta;
+Datapath = Diffusion.outputpath;
+WinBUGSPath = Diffusion.WinBUGSPath;
 tic
 Datapath = char(Datapath);
 % denoise images using bm3d
-Images = (Images - min(Images(:)))/(max(Images(:)) - min(Images(:)));
-for i = 1:size(Images,3)
-    for j = 1:size(Images,4)
-        Images(:,:,i,j) = Global.bm3d.BM3D(squeeze(Images(:,:,i,j)), 0.02);
-    end
-end
+% Images = (Images - min(Images(:)))/(max(Images(:)) - min(Images(:)));
+% for i = 1:size(Images,3)
+%     for j = 1:size(Images,4)
+%         Images(:,:,i,j) = Global.bm3d.BM3D(squeeze(Images(:,:,i,j)), 0.02);
+%     end
+% end
 %  figure; imslice(Images)
 %normalize images
 Images = (Images - min(Images(:)))/(max(Images(:)) - min(Images(:))).*100;
@@ -511,6 +519,18 @@ Global.exportToPPTX('close');
 fprintf('PowerPoint file has been saved\n');  
 
 close all;
+
+% store result
+Diffusion.DDC_map = DDC_map;
+Diffusion.alpha_map = alpha_map;
+Diffusion.SEMSo_map = So_map;
+Diffusion.LmD_map = LmD_map;
+Diffusion.DDC_mean = LungSEMMorphometrySummary{1,2};
+Diffusion.alpha_mean = LungSEMMorphometrySummary{1,3};
+Diffusion.LmD_mean = LungSEMMorphometrySummary{1,4};
+Diffusion.DDC_std = LungSEMMorphometrySummary{2,2};
+Diffusion.alpha_std = LungSEMMorphometrySummary{2,3};
+Diffusion.LmD_std = LungSEMMorphometrySummary{2,4}; 
 %% save maps in mat file
 save_data=[Datapath , 'SEM_Morphometry.mat'];
 save(save_data,'DDC_map','alpha_map','So_map','LmD_map');   

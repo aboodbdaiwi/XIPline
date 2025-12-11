@@ -570,7 +570,7 @@ ventmean = Thresholds(3);  % middle threshold is the mean
 ventstd = (Thresholds(5) - Thresholds(3)) / 2;  % SD can be calculated from the upper limit of threshold
 
 % Parameters
-fit_skew = Ventilation.Hdist(1);  % Shape parameter (alpha)
+fit_skew = Ventilation.Hdist(1);  % Shape parameter (alpha) 
 fit_loc = Ventilation.Hdist(2);    % Location parameter (xi)
 fit_scale = Ventilation.Hdist(3);  % Scale parameter (omega)
 

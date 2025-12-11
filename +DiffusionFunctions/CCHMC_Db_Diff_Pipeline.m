@@ -21,6 +21,7 @@ Ventilation = '';
 GasExchange = '';
 MainInput.AnalysisType = 'Diffusion';
 MainInput.Institute = 'CCHMC'; 
+MainInput.CCHMC_DbDiffAnalysis = 'yes';
 
 % get segmentation 
 MainInput.SE = 1;
@@ -82,7 +83,6 @@ Outputs.XeDataext = xe_ext;
 
 %% Load Data
 MainInput.NoProtonImage = 1;
-MainInput.denoiseXe = 'no';
 
 if strcmp(MainInput.denoiseXe,'yes')
     MainInput.denoisewindow = '[5 5]';
@@ -97,15 +97,13 @@ Outputs.DenoiseWindow = MainInput.denoisewindow;
 
 [Ventilation, Diffusion, GasExchange, Proton, MainInput] = LoadData.LoadReadData(MainInput);
 Diffusion.Image = double(Diffusion.Image);
-
+% figure; imslice(Diffusion.Image)
 Diffusion.outputpath = analysisSubfolder;
 Outputs.AnalysisCode_hash = MainInput.AnalysisCode_hash; 
 
-%% Reorient Diffusion Images if necessary
+Diffusion.writereport = 'yes';
 
-
-
-%%
+%% Segmentation 
 cd(MainInput.XeDataLocation)
 
 % % % diary Log.txt
@@ -113,9 +111,8 @@ MainInput.SegmentationMethod = 'Auto'; % 'Threshold' || 'Manual' || 'Auto'
 MainInput.SegmentAnatomy = 'Parenchyma'; % 'Airway'; || 'Parenchyma'
 MainInput.Imagestosegment = 'Xenon';  % 'Xe & Proton Registered' | 'Xenon' | 'Registered Proton'
 
-
 MainInput.AIScript = 'Python';
-MainInput.thresholdlevel = 1; % 'threshold' 
+MainInput.thresholdlevel = 0.6; % 'threshold' 
 MainInput.SE = 1;
 
 MainInput.SegmentManual = 'Freehand'; % 'AppSegmenter' || 'Freehand'
@@ -127,7 +124,7 @@ if exist('Diffusion.AirwayMask', 'var')
 else
     Diffusion.AirwayMask = zeros(size(Diffusion.LungMask));
 end
-
+% figure; imslice(Diffusion.LungMask)
 %%
 
 if MainInput.num_b_values == 3
@@ -163,10 +160,8 @@ Outputs.BigDeltaTime = Diffusion.BigDeltaTime;
 Outputs.GapTime = Diffusion.GapTime;
 Outputs.MorphometryAnalysis = Diffusion.MorphometryAnalysis;
     
-     
-
 %MainInput.PatientAge = MainInput.Age;
-Diffusion.ADCFittingType = 'Log Weighted Linear';
+Diffusion.ADCFittingType = 'Log Weighted Linear'; % Log Weighted Linear | Bayesian | Non-Linear | Log Linear
 Diffusion.ADCLB_Analysis = 'yes';
 Diffusion.ADCLB_RefMean = 0.0002*MainInput.Age+0.029; % mean equetion for healthy co. 
 Diffusion.ADCLB_RefSD = 5e-5*MainInput.Age+0.0121; 
@@ -176,7 +171,6 @@ Outputs.ADCLB_Analysis = Diffusion.ADCLB_Analysis;
 Outputs.ADCLB_RefMean = Diffusion.ADCLB_RefMean; % mean equetion for healthy co. 
 Outputs.ADCLB_RefSD = Diffusion.ADCLB_RefSD; 
 
-
 Diffusion.CMMorphometry = 'yes';
 Diffusion.SEMMorphometry = 'yes';
 Diffusion.MorphometryAnalysisType = 'human';
@@ -185,10 +179,9 @@ Diffusion.Delta = Diffusion.BigDeltaTime;
 
 Outputs.MorphometryAnalysisType = Diffusion.MorphometryAnalysisType;
 Outputs.Do = Diffusion.Do;
-
-%
+% run analysis
 [Diffusion] = DiffusionFunctions.Diffusion_Analysis(Diffusion,MainInput);
-%
+
 %% store results
 Outputs.SNR_table = Diffusion.SNR_table;
 Outputs.meanADC = Diffusion.meanADC;
@@ -227,10 +220,6 @@ Outputs.DDC_std = Diffusion.DDC_std;
 Outputs.alpha_std = Diffusion.alpha_std;
 Outputs.LmD_std = Diffusion.LmD_std;  
 
-
-
-%% Save info to JSON file
-
 Outputs.DDC_map = Diffusion.DDC_map;
 Outputs.alpha_map = Diffusion.alpha_map; 
 Outputs.SEMSo_map = Diffusion.SEMSo_map; 
@@ -241,10 +230,15 @@ Outputs.LmD_mean = Diffusion.LmD_mean;
 Outputs.DDC_std = Diffusion.DDC_std; 
 Outputs.alpha_std = Diffusion.alpha_std; 
 Outputs.LmD_std = Diffusion.LmD_std;
-
-
+%% Save info to JSON file
 OutputJSONFile = fullfile(analysisFolder, ['DiffAnalysis_','ser-',num2str(MainInput.sernum),'.json']);
 Global.exportStructToJSON(Outputs, OutputJSONFile);
+
+%% Save Outputs to the MAT-file
+save(fullfile(analysisSubfolder, 'workspace.mat'));
+save(fullfile(analysisSubfolder, 'Diffusion_Analysis_Outputs.mat'), 'Outputs');
+
+clearvars
 
 end
 

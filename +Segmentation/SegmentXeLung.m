@@ -18,7 +18,7 @@ function MASK = SegmentXeLung(V,MASK)
     SE = 1;
     Image = V(:,:,:,1);
     Image = Image./max(Image(:));
-    [counts,~] = imhist(Image,16);
+    [counts,~] = imhist(Image,256);
     T = otsuthresh(counts);
     mask = imbinarize(Image,T.*nzcof);
 

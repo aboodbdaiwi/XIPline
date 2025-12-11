@@ -89,7 +89,7 @@ Age = MainInput.Age;
 if (isstring(Age) && strlength(Age) == 0) || ...
    (ischar(Age)   && isempty(Age))       || ...
    (isnumeric(Age) && isempty(Age))
-    Age = 6;
+    Age = 0;
 end
 
 % TH method

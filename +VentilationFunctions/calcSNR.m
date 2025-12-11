@@ -1,7 +1,7 @@
-function SNR = calcSNR(vent_img)
+function [SNR, sig_mask, noise_mask] = calcSNR(vent_img)
     % read image
-    img = squeeze(single(dicomread(vent_img)));
- 
+    % img = squeeze(single(dicomread(vent_img)));
+    img = squeeze(single(vent_img));
     % initial segmentation to get noise
     [~, threshs] = imsegkmeans3(img(img~=0),2);
     [noise_thresh, idx] = min(threshs);

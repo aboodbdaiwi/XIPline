@@ -1,15 +1,6 @@
-function ...
-    [R_map,h_map,r_map,Lm_map,SVR_map,Na_map,So_map,LungCMMorphometrySummary]...
-    =CM_MorphometryFit(...
-    Images,...
-    final_mask,...
-    noise_mask,...
-    fitType,...
-    bvalues,...
-    Do,...
-    delta,...
-    Datapath,...
-    WinBUGSPath)
+
+function [Diffusion] = CM_MorphometryFit(Diffusion,MainInput)
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 %%%%%%%%%%%%%% 129Xe Cylinder Model (CM) Lung Morphometry  %%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -52,14 +43,24 @@ function ...
 % This code is based on the cylinder model by A. L. Sukstanskii1 and D. A. Yablonskiy
 % (https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3184317/)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Images = Diffusion.Image;
+final_mask =  Diffusion.lung_mask;
+noise_mask = Diffusion.noise_mask;
+fitType = Diffusion.MorphometryAnalysisType;
+bvalues = Diffusion.b_values;
+Do = Diffusion.Do;
+delta = Diffusion.Delta;
+Datapath = Diffusion.outputpath;
+WinBUGSPath = Diffusion.WinBUGSPath;
+
 tic
 % denoise images using bm3d
-Images = (Images - min(Images(:)))/(max(Images(:)) - min(Images(:)));
-for i = 1:size(Images,3)
-    for j = 1:size(Images,4)
-        Images(:,:,i,j) = Global.bm3d.BM3D(squeeze(Images(:,:,i,j)), 0.02);
-    end
-end
+% Images = (Images - min(Images(:)))/(max(Images(:)) - min(Images(:)));
+% for i = 1:size(Images,3)
+%     for j = 1:size(Images,4)
+%         Images(:,:,i,j) = Global.bm3d.BM3D(squeeze(Images(:,:,i,j)), 0.02);
+%     end
+% end
 %  figure; imslice(Images)
 %normalize images
 Images = (Images - min(Images(:)))/(max(Images(:)) - min(Images(:))).*100;
@@ -154,7 +155,7 @@ for i=1:size(Images,3)
     weights=1; 
     parfor j= 1:num_ones 
         if strcmp(fitType,'human') == 1
-            lb=[0.0280 0.0090 0.5*M(j,1)]; ub=[0.0600 0.0500 1.5*M(j,1)];
+            lb=[0.0200 0.0090 0.5*M(j,1)]; ub=[0.0650 0.0500 1.5*M(j,1)];
             initialvalues = [0.0300 0.0140 M(j,1)];
             [eestm,fval(j)] = DiffusionFunctions.MLfitRr2(M(j,:),bvalues,sigma^2,initialvalues,"cylRandr",weights,lb,ub,Do,delta);       % This is the only code line needed + function MLfitconloc1 
         elseif strcmp(fitType,'animals') == 1
@@ -590,6 +591,29 @@ fprintf('PowerPoint file has been saved\n');
 % test = [Datapath, ReportTitle];
 
 close all;
+
+% store result
+Diffusion.R_map = R_map;
+Diffusion.h_map = h_map;
+Diffusion.r_map = r_map;
+Diffusion.Lm_map = Lm_map;
+Diffusion.SVR_map = SVR_map;
+Diffusion.Na_map = Na_map;
+Diffusion.So_map = So_map;
+
+Diffusion.R_mean = LungCMMorphometrySummary{1,2};
+Diffusion.h_mean = LungCMMorphometrySummary{1,3};
+Diffusion.r_mean = LungCMMorphometrySummary{1,4};
+Diffusion.Lm_mean = LungCMMorphometrySummary{1,5};
+Diffusion.SVR_mean = LungCMMorphometrySummary{1,6};
+Diffusion.Na_mean = LungCMMorphometrySummary{1,7};
+
+Diffusion.R_std = LungCMMorphometrySummary{2,2};
+Diffusion.h_std = LungCMMorphometrySummary{2,3};
+Diffusion.r_std = LungCMMorphometrySummary{2,4};
+Diffusion.Lm_std = LungCMMorphometrySummary{2,5};
+Diffusion.SVR_std = LungCMMorphometrySummary{2,6};
+Diffusion.Na_std = LungCMMorphometrySummary{2,7};
 %% save maps in mat file
 save_data=[Datapath , 'CM_Morphometry.mat'];
 save(save_data,'R_map','h_map','r_map','Lm_map','SVR_map','Na_map','So_map');   

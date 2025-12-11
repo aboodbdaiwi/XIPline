@@ -68,7 +68,7 @@ if strcmp(MainInput.AnalysisType,'Ventilation')
 elseif strcmp(MainInput.AnalysisType,'Diffusion')
     mkdir([MainInput.OutputPath '\Diffusion_Analysis']);
     outputpath = [MainInput.OutputPath '\Diffusion_Analysis'];
-    Diffusion.outputpath = outputpath;
+    Diffusion.outputpath = outputpath;    
 elseif strcmp(MainInput.AnalysisType,'GasExchange')
     mkdir([MainInput.OutputPath '\GasExchange_Analysis']);
     mkdir([MainInput.XeDataLocation '\GasExchange_Analysis']);
@@ -85,6 +85,9 @@ if ~isfield(MainInput, 'Recon')
 end
 if ~isfield(MainInput, 'CCHMC_DbVentAnalysis')
     MainInput.CCHMC_DbVentAnalysis = 'no';
+end
+if ~isfield(MainInput, 'CCHMC_DbDiffAnalysis')
+    MainInput.CCHMC_DbDiffAnalysis = 'no';
 end
 if ~isfield(MainInput, 'CCHMC_DbGxAnalysis')
     MainInput.CCHMC_DbGxAnalysis = 'no';
@@ -362,15 +365,28 @@ if strcmp(MainInput.denoiseXe,'yes')
         %     end
         % end
         % Diffusion.Image = Image;
+        Image = Diffusion.Image;
+        Zeromask = double(Image > 0);
         Diffusion.tMPPCA.window = str2num(MainInput.denoisewindow);
-        mask = true(size(Diffusion.Image,1),size(Diffusion.Image,2),size(Diffusion.Image,3));  % Or your lung mask
-        [denoised, Sigma2, P, SNR_gain] = Global.tMPPCA.denoise_recursive_tensor( ...
-            Diffusion.Image, ...
-            Diffusion.tMPPCA.window, ...
-            'mask', mask, ...
-            'indices', {[1 2 3], 4}, ...
-            'opt_shrink', true ...
-        );      
+        try
+            mask = true(size(Image,1),size(Image,2));  % Or your lung mask
+            [denoised, Sigma2, P, SNR_gain] = Global.tMPPCA.denoise_recursive_tensor( ...
+                Image, ...
+                Diffusion.tMPPCA.window, ...
+                'mask', mask, ...
+                'indices', {[1 2 3], 4}, ...
+                'opt_shrink', true ...
+            );      
+        catch
+            mask = true(size(Image,1),size(Image,2),size(Image,3));  % Or your lung mask
+            [denoised, Sigma2, P, SNR_gain] = Global.tMPPCA.denoise_recursive_tensor( ...
+                Image, ...
+                Diffusion.tMPPCA.window, ...
+                'mask', mask, ...
+                'indices', {[1 2 3], 4}, ...
+                'opt_shrink', true ...
+            );
+        end
         Diffusion.tMPPCA.denoised= denoised;
         Diffusion.tMPPCA.SNR_gain= SNR_gain;
         Diffusion.tMPPCA.P= P;
@@ -388,9 +404,14 @@ end
 
 % normalize images:
 if strcmp(MainInput.AnalysisType,'Ventilation')
+    mask = double(Ventilation.Image > 0);
     Ventilation.Image = (Ventilation.Image - min(Ventilation.Image(:)))./(max(Ventilation.Image(:)) - min(Ventilation.Image(:)));
+    Ventilation.Image = Ventilation.Image.*mask;
 elseif strcmp(MainInput.AnalysisType,'Diffusion')
+    mask = double(Diffusion.Image > 0);
     Diffusion.Image = (Diffusion.Image - min(Diffusion.Image(:)))./(max(Diffusion.Image(:)) - min(Diffusion.Image(:)));
+    Diffusion.Image = Diffusion.Image.*mask;
+    Diffusion.UncorrectedImage = Diffusion.Image;
 end
 %% Load/Read Proton data 
 %% 

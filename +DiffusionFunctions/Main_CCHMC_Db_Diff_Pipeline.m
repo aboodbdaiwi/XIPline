@@ -1,7 +1,7 @@
 clc; clear;
 
 
-excelFile = 'C:\Users\MCM5BK\OneDrive - cchmc\Documents\56_diffusion pipeline\diff_main_input.xlsx';
+excelFile = 'D:\OneDrive - cchmc\Lab\Random Subject analysis\CPIR_Diff_Analysis\diff_main_input.xlsx';
 mainDir = '\\rds6.chmccorp.cchmc.org\PulMed-54\CPIR_Images_Database';
 WoodsDir = '\\Rds6.cchmc.org\pulmed-35\Woods_CPIR_Images';
 
@@ -17,18 +17,18 @@ DiseaseCol   = T(:,5);
 AgeCol       = T(:,6);
 SexCol       = T(:,7);
 ScannerCol   = T(:,8);
-ScanVerCol   = T(:,9);
-DiffFileCol   = T(:,10);
-NoteCol      = T(:,11);
-RuneCol      = T(:,12);
+ScannerSW    = T(:,9);
+SerNum       = T(:,10);
+DiffFileCol  = T(:,11);
+NoteCol      = T(:,12);
+RuneCol      = T(:,13);
 
 nSubjects = size(SexCol,1);
 
-%% 
 
 clc;
 
-for i = 2:6 % always start from 2
+for i = 2%:nSubjects % always start from 2
     fprintf('Processing subject %d of %d\n', i, nSubjects);
 
     if ismissing(AgeCol{i})
@@ -51,13 +51,12 @@ for i = 2:6 % always start from 2
     MainInput.Disease          = DiseaseCol{i}; 
     MainInput.ScanDate         = ScanDateCol{i};
     MainInput.Scanner          = ScannerCol{i}; 
-    MainInput.AnalysisVersion  = ScanVerCol{i};
-    MainInput.ScannerSoftware  = '5.9.0';
+    MainInput.ScannerSoftware  = ScannerSW{i};
     MainInput.SequenceType     = '2D GRE';
-    MainInput.denoiseXe        = 'no';
+    MainInput.denoiseXe        = 'yes';
     MainInput.Analyst          = 'Database';
     MainInput.N4Bias           = 'yes';
-    MainInput.AnalysisMethod   = '';
+    MainInput.AnalysisMethod   = 'linear';
     MainInput.AgeCor           = 'no';   
     MainInput.Note             = NoteCol{i};
     MainInput.SliceOrientation = 'transversal';
@@ -137,19 +136,15 @@ for i = 2:6 % always start from 2
     end
     cd(MainInput.analysisfolder);
 
-     
-    
-    
-    
     % Run pipeline
     DiffusionFunctions.CCHMC_Db_Diff_Pipeline(MainInput)
     % if ismissing(DiffFileCol{i})
-    %     VentilationFunctions.CCHMC_Db_Vent_Pipeline_NoData(MainInput)
+    %     VentilationFunctions.CCHMC_Db_Diff_Pipeline_NoData(MainInput)
     % else
     %     if RuneCol{i} == 0
-    %         VentilationFunctions.CCHMC_Db_Vent_Pipeline(MainInput);
+    %         VentilationFunctions.CCHMC_Db_Diff_Pipeline(MainInput);
     %     elseif RuneCol{i} == 1
-    %         VentilationFunctions.CCHMC_Db_Vent_Pipeline_rerun(MainInput);
+    %         VentilationFunctions.CCHMC_Db_Diff_Pipeline_rerun(MainInput);
     %     end
     %  
     % end

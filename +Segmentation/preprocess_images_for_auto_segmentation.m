@@ -128,10 +128,19 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
             NXe_Img = zeros(size(Xe_Img));
             for sl = 1:size(Xe_Img, 3)
                 Xe_Img_s = Xe_Img(:,:,sl);
+                NXe_Img_s = (Xe_Img_s - min(Xe_Img_s(:)))./(max(Xe_Img_s(:)) - min(Xe_Img_s(:)));
+                Sli_Msk = Segmentation.SegmentLungthresh(NXe_Img_s,1,1);
+                % Xe_Img_s99p = prctile(Xe_Img_s.*Sli_Msk,99.0);
+                Xe_Img_masked = Xe_Img_s.*Sli_Msk;
+                valid_vals = Xe_Img_masked(Xe_Img_masked > 0 & ~isnan(Xe_Img_masked));
+                Img_mean = mean(valid_vals);
+                if Img_mean <= 0.4
+                    Xe_Img_s(Xe_Img_s >= 0.4) = Img_mean*2;
+                end
                 NXe_Img(:,:,sl) = (Xe_Img_s - min(Xe_Img_s(:)))./(max(Xe_Img_s(:)) - min(Xe_Img_s(:)));
             end
             Xe_Img = NXe_Img;
-
+            % figure; imslice(NXe_Img)
             % make stacks 
             Images = zeros(size(Diffusion.Image,3),Im_size,Im_size,3);
             for j = 1:size(Diffusion.Image,3)

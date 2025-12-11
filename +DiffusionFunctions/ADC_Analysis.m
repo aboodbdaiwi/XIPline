@@ -1,5 +1,5 @@
 
-function [ADCmap,ADCcoloredmap,SNR_table,meanADC,stdADC,ADC_hist] = ADC_Analysis(diffimg, lung_mask, airway_mask, bvalues, ADCFittingType,ADCAnalysisType, WinBUGSPath, outputpath,PatientAge)
+function [Diffusion] = ADC_Analysis(Diffusion,MainInput)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 %%%%%%%%%%%%%%%%%%%%%%% ADC Analysis  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 
@@ -23,16 +23,30 @@ function [ADCmap,ADCcoloredmap,SNR_table,meanADC,stdADC,ADC_hist] = ADC_Analysis
 %
 %   Please add updates at the end. Ex: 3/10/24 - ASB: updated flip angle caluclation for spiral diffusion
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+diffimg = Diffusion.diffimg;
+lung_mask = Diffusion.lung_mask;
+airway_mask = Diffusion.airway_mask;
+bvalues = Diffusion.bvalues;
+ADCFittingType = Diffusion.ADCFittingType;
+ADCAnalysisType = Diffusion.ADCAnalysisType;
+WinBUGSPath = Diffusion.WinBUGSPath;
+outputpath = Diffusion.outputpath;
+PatientAge = Diffusion.PatientAge;
 tic
 
 %% create a final mask
 final_mask =lung_mask;
 final_mask(airway_mask==1)=0;
 
-% flip the binary mask to create the noise mask(1 to 0, 0 to 1)
-noise_mask = ((~lung_mask)+(~airway_mask))-1;
-noise_mask=noise_mask>0;
+% create the noise mask
+SE = strel('square', 10);
+maskarray_dilated = imdilate(final_mask, SE);
+airwaymask = Segmentation.SegmentLungthresh(diffimg(:,:,:,1),1,0.3);
+zerofillings = double(diffimg(:,:,:,1) == 0);
+noise_mask = double(imcomplement(maskarray_dilated).*~airwaymask.*~zerofillings);
+% figure; imslice(noise_mask)
+% noise_mask = ((~lung_mask)+(~airway_mask))-1;
+% noise_mask=noise_mask>0;
 
 %% get rid of any slice that has no signal (un-segmented)
 slices = size(diffimg,3);
@@ -73,6 +87,9 @@ Data_vec = Data_vec(any(Data_vec,2),:);
 pixel_location=find(final_mask); %to find pixel location to convert the array back to 3D image
 num_ones=sum(final_mask(:)); % for loopping 
 
+% nan_rows = any(isnan(Data_vec), 2);
+% Data_vec(nan_rows, :) = [];
+
 %% Calcualting the SNR and the Weighting Vector
 close all; 
 SNR_vec = zeros(1, length(bvalues));
@@ -86,8 +103,12 @@ for n = 1:length(bvalues)
         signal_n_avg(n) = mean(signal_vec);
         
         %Calculating the noise vector
-        noise_vec=(Ndiffimg(:,:,:,n));      
-        noise_vec(noise_mask==0)=[];       
+        noise_vec=(Ndiffimg(:,:,:,n));  
+        airwaymask = Segmentation.SegmentLungthresh(Ndiffimg(:,:,:,n),1,0.3); % this is to remove artifact from phase enconding 
+        Nmask = noise_mask.*~airwaymask;
+        noise_vec(Nmask==0)=[];    
+        Noise99percentile = prctile(noise_vec,99.0);
+        noise_vec(noise_vec >= Noise99percentile) = [];
         mean_noise(n) = mean(noise_vec);            %the mean of the noise               
         std_noise_n(n) = std(noise_vec);            %the standard deviation of the noise
         SNR_vec(n) = round(signal_n_avg(n) / std_noise_n(n),2)*sqrt(2 - (pi/2)); %signal to noise ratio
@@ -110,6 +131,71 @@ t = uitable(SNRFig,'Data',SNR_table{:,:},'ColumnName',...
 % print('SNR Table','-dpng','-r300');
 saveas(gca,'SNR_Table.png')
 close all; 
+
+%% Output mask boundaries  with xenon image overlays:
+
+cd(outputpath);
+cus_colormap = zeros(100,3);
+cus_colormap(:,1) = 1; % Red channel
+cus_colormap(:,2) = 0; % Green channel
+cus_colormap(:,3) = 1; % Blue channel
+
+tiff = figure('MenuBar','none','ToolBar','none','DockControls','off','Resize','off','WindowState','minimized');%figure for tiffs
+ax1 = axes('Parent',tiff);ax2 = axes('Parent',tiff);%make axis for both images
+set(ax1,'Visible','off');set(ax2,'Visible','off');%turn off axis
+set(ax1,'units','inches');set(ax2,'units','inches');%make axis units inches
+set(ax1,'position',[0 0 2 2]);set(ax2,'position',[0 0 2 2]);%make axis same as image
+set(gcf,'units','inches'); % set the figure units to pixels
+set(gcf,'position',[1 1 2 2])% set the position of the figure to axes
+disp('Saving Vent Tiff...')
+
+% Normalize the intensity of the original image to fall between [0,1].
+MR = Ndiffimg(:,:,:,1);
+MR2 = MR / max(MR,[], 'all');
+
+for slice=1:size(final_mask,3) %repeat for rest of slices
+    maskboundaries = bwboundaries(final_mask(:,:,slice));
+    % Check if bwboundaries returned an empty 0x1 cell
+    if isempty(maskboundaries) && isequal(size(maskboundaries), [0, 1])
+        maskboundaries = zeros(size(MR2(:,:,slice)));
+    else
+        % Convert boundary points to a binary mask
+        maskImg = false(size(final_mask(:,:,slice)));
+        for k = 1:length(maskboundaries)
+            boundary = maskboundaries{k};
+            maskImg(sub2ind(size(maskImg), boundary(:,1), boundary(:,2))) = true;
+        end
+        % Thicken boundary using morphological dilation
+        se = strel('disk', 1);  % Use radius=1 or larger for thicker lines
+        thickMask = imdilate(maskImg, se);
+        maskboundaries = double(thickMask);
+        % maskboundaries = double(maskImg);
+    end
+
+    [~,~] = Global.imoverlay(squeeze(abs(MR2(:,:,slice))),squeeze(maskboundaries),[1,100],[0,max(MR2(:))*0.9],cus_colormap,1,gca);
+    colormap(gca,cus_colormap)     
+    Xdata = getframe(gcf);
+    X = Xdata.cdata;     
+    if (slice == 1)
+        imwrite(X,[outputpath,'\maskboundaries.tif'],'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
+    else
+        imwrite(X,[outputpath,'\maskboundaries.tif'],'WriteMode','append','Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%append tiff
+    end
+end
+disp('maskboundariesTiff Completed.')
+close all;
+% read tiff
+cd(outputpath)
+tiff_info = imfinfo('maskboundaries.tif'); % return tiff structure, one element per image
+% tiff_stack = imread('BinnedVent.tif', 1) ; % read in first image
+Mask_Diff_boundaries = uint8(zeros(tiff_info(1).Height ,tiff_info(1).Width ,3,length(tiff_info)));
+%concatenate each successive tiff to tiff_stack
+for ii = 1 : size(tiff_info, 1)
+    temp_tiff = imread('maskboundaries.tif', ii);
+    Mask_Diff_boundaries(:,:,:,ii) = temp_tiff;
+end
+Mask_Diff_boundaries = permute(Mask_Diff_boundaries,[1 2 4 3]);
+Diffusion.Mask_Diff_boundaries = Mask_Diff_boundaries;
 %% Calculating ADC 
 %% 
 ADCvec = zeros(1,num_ones);
@@ -119,18 +205,7 @@ ADCmap = zeros(final_mask_size);
 Rmap = zeros(final_mask_size);
 Somap = zeros(final_mask_size);
 
-% Specify the folder name
 XIPlinefolder = 'C:\XIPline';
-
-% Check if the folder exists
-if ~exist(XIPlinefolder, 'dir')
-    % If the folder does not exist, create it
-    mkdir(XIPlinefolder);
-    disp(['Folder "', XIPlinefolder, '" created.']);
-else
-    disp(['Folder "', XIPlinefolder, '" already exists.']);
-end
-
 switch ADCFittingType
     case 'Log Linear'
         fprintf( 'performing Linear Fitting...\n' );
@@ -251,9 +326,10 @@ switch ADCFittingType
                                 'thin', 1, 'DICstatus', 0, 'refreshrate',100,  ...
                                 'monitorParams', {'nu0','alpha'}, ...
                                 'Bugdir', WinBUGSPath);
-        Bayes_nu0(slice_n,1:num_ones) =stats.mean.nu0;
-        Bayes_alpha(slice_n,1:num_ones) =stats.mean.alpha;
+            Bayes_nu0(slice_n,1:num_ones) =stats.mean.nu0;
+            Bayes_alpha(slice_n,1:num_ones) =stats.mean.alpha;
         end
+
         cd(outputpath);
         pixel_location=find(final_mask); % find pixel location to convert the array back to 3D image
         num_ones=sum(final_mask(:)); % for loopping 
@@ -269,7 +345,7 @@ switch ADCFittingType
             Somap(choosen_pixel) = Bayes_nu0_2(bayes_loop);
             ADCmap(choosen_pixel) = Bayes_alpha_2(bayes_loop);
         end 
-
+        Rmap=(Rmap.*final_mask).^2;
 end
 
 % limit ADC to physically allowable values
@@ -278,47 +354,89 @@ ADCmap(ADCmap>0.14)=0; %Xe  % default to xenon
 meanADC = mean(ADCmap(ADCmap>0));       %ADC 
 stdADC = std(ADCmap(ADCmap>0));         %standard deviation
 CVADC = stdADC/meanADC;                 %Coefficient of Variation 
-%create histogram and print it out 
+meanRmap = mean(Rmap(ADCmap>0));       %ADC 
+
+%% create histogram and print it out 
 str_meanADC=sprintf('Mean = %.4f cm^2/s', meanADC);
 str_stdADC=sprintf(', STD = %.3f', stdADC);
 str_CVADC=sprintf(', CV = %.3f', CVADC);
 str_legend=[str_meanADC,str_stdADC,str_CVADC];
-figure('position',[350 350 1000 500]);
 
+figure('position',[350 350 1000 500]);
 h=histogram(ADCmap(ADCmap>0),100); 
 histtitle_str1=['ADC Histogram-',ADCFittingType];
 title(histtitle_str1);
 xlabel('ADC cm^2/sec','FontSize',12,'Color','k');
 ylabel('Pixel Count.','FontSize',12,'Color','k');
 xlim([0 0.14]);
-set(gca,'FontSize',12)
+set(gca,'FontSize',15, 'FontWeight','bold')
 % legend(str_legend);
 % print(histtitle_str1,'-dpng','-r300');
-
-% plot healthy dist.
 hold on
-ADCLB_RefMean = 0.0002*PatientAge+0.029; % 
-ADCLB_RefSD = 5e-5*PatientAge+0.0121; 
-Mean_Edges = linspace(0,0.14,100);
+% % plot healthy dist.
+% --- Reference mean and SD as functions of age ---
+ADCLB_RefMean = 0.0002*PatientAge + 0.029; 
+ADCLB_RefSD   = 5e-5*PatientAge   + 0.0121; 
+
+% --- Histogram edges ---
+Mean_Edges = linspace(0, 0.14, 100);
+
+% --- Vectorize ADC within mask ---
 ADC_vec = ADCmap;
-ADC_vec(final_mask==0)=[];
-[bin_count,~] = histcounts(ADC_vec,Mean_Edges);
+ADC_vec(final_mask == 0) = [];
+ADC_vec = ADC_vec(~isnan(ADC_vec));  % optional: remove NaNs
 
-y = 0:0.001:1;
-f = exp(-(y-ADCLB_RefMean).^2./(2*ADCLB_RefSD^2))./(ADCLB_RefSD*sqrt(2*pi));
-f = f./max(f(:));
-f = f.*(max(bin_count(:)));
-plot(y,f,'k-.','LineWidth',2);
-str_MeanADC_Ref = sprintf('Ref: Mean = %.3f', ADCLB_RefMean);
-str_STDADC_Ref = sprintf(' ± %.3f', ADCLB_RefSD);
-str_legend2=[str_MeanADC_Ref,str_STDADC_Ref];
-legend(str_legend,str_legend2);
-saveas(gca,'ADC_Histogram.png')
-close all; 
+% --- Patient statistics ---
+ADC_mean = mean(ADC_vec);
+ADC_std  = std(ADC_vec);
+ADC_cv   = 100 * ADC_std / ADC_mean;    % coefficient of variation in %
+Diffusion.ADC_skewness = skewness(ADC_vec);
+Diffusion.ADC_kurtosis = kurtosis(ADC_vec); 
+% --- Reference CV ---
+ADCLB_RefCV = 100 * ADCLB_RefSD / ADCLB_RefMean;
 
-cmap = colormap (jet);
-cmap(1,:)=0;
+% Get bin counts for scaling
+bin_count = h.BinCounts;
+max_count = max(bin_count);
+% 
+% % --- Reference Gaussian over same x-axis range as histogram ---
+% x_ref = linspace(Mean_Edges(1), Mean_Edges(end), 1000);
+% ref_pdf = exp(-(x_ref - ADCLB_RefMean).^2 ./ (2 * ADCLB_RefSD.^2)) ./ ...
+%           (ADCLB_RefSD * sqrt(2*pi));
+
+% ref_pdf = DiffusionFunctions.ADC_RefGamma(PatientAge);
+% % Scale reference curve so its peak equals max count in histogram
+% ref_pdf = ref_pdf ./ max(ref_pdf);   % normalize to peak = 1
+% ref_pdf = ref_pdf .* max_count;      % scale to peak = max bin count
+% plot(x_ref, ref_pdf, 'k-.', 'LineWidth', 1.5);
+
+
+f = DiffusionFunctions.ADC_RefGamma(PatientAge);
+f = f ./ max(f);   % normalize to peak = 1
+f = f .* max_count;      % scale to peak = max bin count
+x = linspace(0,0.14,400);
+plot(x, f, 'k-.', 'LineWidth', 1.5);
+
+% --- Strings for legend ---
+str_patient = sprintf('Patient: \\mu=%.3f, \\sigma=%.3f, CV=%.1f%%', ...
+                      ADC_mean, ADC_std, ADC_cv);
+str_ref     = sprintf('Ref: \\mu=%.3f, \\sigma=%.3f, CV=%.1f%%', ...
+                      ADCLB_RefMean, ADCLB_RefSD, ADCLB_RefCV);
+
+lgd = legend(str_patient, str_ref, 'Location', 'best');
+lgd.FontSize = 16;   % <-- bigger legend
+% --- Optional: also print in the title ---
+% title(sprintf('ADC Histogram | Patient: \\mu=%.3f, \\sigma=%.3f, CV=%.1f%%%% | Ref: \\mu=%.3f, \\sigma=%.3f, CV=%.1f%%%%', ...
+%     ADC_mean, ADC_std, ADC_cv, ADCLB_RefMean, ADCLB_RefSD, ADCLB_RefCV));
+
+saveas(gca, 'ADC_Histogram.png');
+
+% If you still need the colormap modification
+cmap = colormap(jet);
+cmap(1,:) = 0;
+colormap(cmap);
 close all
+
 %% %% write tiff and read back Binneddiff maps
 tiff = figure('MenuBar','none','ToolBar','none','DockControls','off','Resize','off','WindowState','minimized');%figure for tiffs
 ax1 = axes('Parent',tiff);ax2 = axes('Parent',tiff);%make axis for both images
@@ -350,7 +468,7 @@ tiff_info = imfinfo('ADCmap.tif'); % return tiff structure, one element per imag
 % tiff_stack = imread('BinnedVent.tif', 1) ; % read in first image
 ADCcoloredmap = uint8(zeros(tiff_info(1).Height ,tiff_info(1).Width ,3,length(tiff_info)));
 %concatenate each successive tiff to tiff_stack
-for ii = 2 : size(tiff_info, 1)
+for ii = 1 : size(tiff_info, 1)
     temp_tiff = imread('ADCmap.tif', ii);
     ADCcoloredmap(:,:,:,ii) = temp_tiff;
 end
@@ -470,6 +588,16 @@ Global.exportToPPTX('save',fullfile(outputpath, ReportTitle));
 Global.exportToPPTX('close');
 fprintf('PowerPoint file has been saved'); 
 close all;
+
+% store result    
+Diffusion.ADCmap = ADCmap;
+Diffusion.ADCcoloredmap = ADCcoloredmap;
+Diffusion.SNR_table = SNR_table;
+Diffusion.Rmap = Rmap;
+Diffusion.meanRmap = meanRmap;
+Diffusion.meanADC = meanADC;
+Diffusion.stdADC = stdADC;
+Diffusion.ADC_hist = ADC_hist;
 %% save maps in mat file
 save_data=[outputpath,'ADC_Analysis','.mat'];
 save(save_data);   

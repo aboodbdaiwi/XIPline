@@ -1,20 +1,13 @@
-function [BinnedADCmap,DiffMean,DiffStd,LBADC_hist,BinTable] = LinearBinningADC(Images,ADCmap,maskarray,age,DataLocation,HealthyMean,HealthySD)
+function [Diffusion] = LinearBinningADC(Diffusion, MainInput)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 %%%%%%%%%%%%%%%%%%%%%%% Linear Binning ADC  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 
 %   Inputs:
-%       Data = 4D images (x,y,slices,bvalue)
-%       maskarray = 3D lung mask, (x,y,slices)
-%       ADC_map = 3D ADc map (x,y,slices)
-%       Subject = string: 'Subject ID' (i.g. 'IRC186H-100'
-%       age = subject's age (years)
-%       ScanDate = string: dd/mm/yyyy
-%       DataLocation = string containing the path of the folder
 %
 %   Outputs:
 %       success - 1 if ran successfully, 0 if not
 
-%   Package: https://github.com/aboodbdaiwi/HP129Xe_Analysis_App
+%   Package: https://github.com/aboodbdaiwi/XIPline
 %
 %   Author: Abdullah S. Bdaiwi
 %   Work email: abdullah.bdaiwi@cchmc.org
@@ -27,6 +20,13 @@ function [BinnedADCmap,DiffMean,DiffStd,LBADC_hist,BinTable] = LinearBinningADC(
 % (https://pubmed.ncbi.nlm.nih.gov/30024058/)
 % PMID: 30024058 PMCID: PMC6318005 DOI: 10.1002/mrm.27377
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Images = Diffusion.diffimg;
+ADCmap = Diffusion.ADCmap;
+maskarray = Diffusion.lung_mask;
+age = Diffusion.PatientAge;
+DataLocation = Diffusion.outputpath;
+HealthyMean = Diffusion.ADCLB_RefMean;
+HealthySD = Diffusion.ADCLB_RefSD;
 
 success = 1;
 disp('Linear Binning ADC Processing Beginning...')
@@ -48,7 +48,7 @@ Images = (Images./max(Images(:))).*100;
 %% Determine healthy distribution based on the subject's age 
 % HealthyADCmean=0.0002*age+0.029;
 % HealthyADCstd=5e-5*age+0.0121;
-age = age; 
+
 try
     HealthyADCmean = eval(char(HealthyMean));
 catch
@@ -202,8 +202,8 @@ Bin3 = All_Bins(3);
 Bin4 = All_Bins(4);
 Bin5 = All_Bins(5);
 
-pos = [1 1 10 6];
-HistogramFig_Health = figure('Name','Siemens 2101 Histogram');
+pos = [1 1 15 6];
+HistogramFig_Health = figure('Name','LB Histogram');
 set(HistogramFig_Health,'color','white','Units','inches','Position',pos)
 histogram(ADC_vec,Mean_Edges,'FaceColor','w','FaceAlpha',1);
 hold on
@@ -229,11 +229,16 @@ elseif max(bin_count)< max(Healthy_Mean_Dist)
 end
 
 % plot healthy dist.
-y = 0:0.001:1;
-f = exp(-(y-HealthyADCmean).^2./(2*HealthyADCstd^2))./(HealthyADCstd*sqrt(2*pi));
-f = f./max(f(:));
-f = f.*max(bin_count(:));
-plot(y,f,'k-.','LineWidth',2);
+% y = 0:0.001:1;
+% f = exp(-(y-HealthyADCmean).^2./(2*HealthyADCstd^2))./(HealthyADCstd*sqrt(2*pi));
+% f = f./max(f(:));
+% f = f.*max(bin_count(:));
+
+f = DiffusionFunctions.ADC_RefGamma(age);
+f = f ./ max(f(:));   % normalize to peak = 1
+f = f .* max(bin_count(:));      % scale to peak = max bin count
+x = linspace(0,0.14,400);
+plot(x, f, 'k-.', 'LineWidth', 1.5);
 
 xlim([0 0.14])
 set(gca,'linewidth',1.5)
@@ -283,12 +288,14 @@ xlim([0 0.14])
 legend1 = sprintf('LDP:%0.1f%%  ' ,DiffLowPercent);
 legend2 = sprintf('NDP:%0.1f%%  ' ,DiffNormalPercent);
 legend3 = sprintf('HDP:%0.1f%%  ' ,DiffHighPercent);
-legend4 = sprintf('Mean: %f±%f ',DiffMean,DiffStd);
+legend4 = sprintf('Mean: %f±%f ',round(DiffMean,4),round(DiffStd,4));
 
 Mean_Healthy_predicted=sprintf('Healthy: %f±%f ',HealthyADCmean,HealthyADCstd);
-legend([legend1  legend2  legend3  legend4],Mean_Healthy_predicted);
+lgd = legend([legend1  legend2  legend3  legend4],Mean_Healthy_predicted);
+lgd.FontSize = 16;   % <-- bigger legend
 title('Linear Binning ADC Histogram','Fontweight','bold','FontSize',15)
-xlabel('ADC (cm^2/s)','Fontweight','bold','FontSize',12)
+xlabel('ADC (cm^2/s)')
+set(gca,'FontSize',20, 'FontWeight','bold')
 hold off
 saveas(gca,'LB_ADC_Histogram.png');
 close all;
@@ -497,6 +504,34 @@ Global.exportToPPTX('close');
 fprintf('PowerPoint file has been saved\n'); 
 % close all;
 BinnedADCmap =  permute(BinnedADCmap,[1 2 4 3]); 
+
+% store result    
+Diffusion.LB_colorDiffmap = BinnedADCmap;
+Diffusion.LBADCMean = DiffMean;
+Diffusion.LBADCStd = DiffStd;
+Diffusion.LBADC_hist = LBADC_hist;
+Diffusion.LB_BinTable = BinTable;
+Diffusion.DiffLow1Percent = BinTable{3,2};
+Diffusion.DiffLow2Percent = BinTable{3,3};
+Diffusion.DiffNormal1Percent = BinTable{3,4};
+Diffusion.DiffNormal2Percent = BinTable{3,5};
+Diffusion.DiffHigh1Percent = BinTable{3,6};
+Diffusion.DiffHigh2Percent = BinTable{3,7};
+
+% Convert to numeric
+DL1 = str2double(Diffusion.DiffLow1Percent);
+DL2 = str2double(Diffusion.DiffLow2Percent);
+
+DN1 = str2double(Diffusion.DiffNormal1Percent);
+DN2 = str2double(Diffusion.DiffNormal2Percent);
+
+DH1 = str2double(Diffusion.DiffHigh1Percent);
+DH2 = str2double(Diffusion.DiffHigh2Percent);
+
+% Compute diffusion ranges
+Diffusion.LDR = DL1 + DL2;       % Low range diffusion
+Diffusion.NDR = DN1 + DN2;       % Normal diffusion
+Diffusion.HDR = DH1 + DH2;       % High diffusion
 
 %% save .m file
 save_data=[DataLocation,'\','ADC_LinearBinningAnalysis','.mat'];

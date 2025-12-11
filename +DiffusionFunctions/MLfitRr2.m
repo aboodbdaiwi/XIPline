@@ -74,14 +74,12 @@ end
 % Nested functions that compute the objective function for minimization
 
 function logml = expnfun(A)                   % monoexponential decay, fits S0 and ADC
-    
     fun2fit=A(1)*exp(-(b.*A(2))); % s0*exp(-b*adc) 
     logbessel1=log(besseli(0,fun2fit.*datacol/s2));
     logml=-(sum(ws.*(logbessel1-(fun2fit.^2)/(2*s2))));
 end
 
 function logml = strexpfun(A)                 % Stretched exponential funtion, fits S0, DDC and alpha parameters
-
     fun2fit=A(1)*exp(-(b.*A(2)).^A(3)); % s0*exp(-b*ddc)^alpha
     logbessel1=log(besseli(0,fun2fit.*datacol/s2));
     logbessel2=(fun2fit.*datacol/s2)-0.5*log(fun2fit.*datacol/s2);         %  Alternative calculation to use when besseli function returns infinite numbers
