@@ -99,6 +99,7 @@ If you use this software, please cite:
 
 | **Task**                                                                 | **Date**        |
 |--------------------------------------------------------------------------|-----------------|
+| Update Diffusion Analysis (SNR, healthy ref, report)                     | Dec 11, 2025    |
 | Update AI segmentation model for Diffusion Analysis                      | Oct 20, 2025    |
 | Add new ventilation analysis report                                      | July 17, 2025   |
 | Add offline reconstruction for 2D spiral Philips ventilation images      | July 17, 2025   |
@@ -106,5 +107,10 @@ If you use this software, please cite:
 | Remove Python requirement for AI segmentation models                     | July 17, 2025   |
 | Update AI segmentation models                                            | May 20, 2025    |
 
+## Analysis Report Examples:
+![Vent_report](https://github.com/aboodbdaiwi/XIPline/blob/main/XIPline_resources/Vent_report_example.png?raw=true)
 
+![Diff_report](https://github.com/aboodbdaiwi/XIPline/blob/main/XIPline_resources/Diff_report_example.png?raw=true)
+
+![Gx_report](https://github.com/aboodbdaiwi/XIPline/blob/main/XIPline_resources/Gx_report_example.png?raw=true)
 
