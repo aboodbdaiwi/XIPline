@@ -108,7 +108,7 @@ switch Ventilation.LB_Normalization
         NormMR4(maskarray == 0) = [];
         Im99percentile = prctile(NormMR4,99.9); % 99.5th percentile
         ScaledVentImage2(ScaledVentImage2 >= Im99percentile) = Im99percentile;
-    case 'HybridGLBm'
+    case 'HybridLBm'
         [~, VDPmap] = VentilationFunctions.VDPAKms(NVentImage, maskarray, MainInput.SliceOrientation, Ventilation.ImageResolution);
         NormMR3 = NVentImage;
         VVMask = ~VDPmap.*maskarray;

@@ -58,7 +58,7 @@ def Segment3D(SegmentType):
             test_img_input=np.expand_dims(test_img, 0)
             prediction = model.predict(test_img_input)
             gen_masks[:,:,i] = prediction[0,:,:,0]
-        gen_masks = gen_masks > 0.9
+        gen_masks = gen_masks > 0.95
     elif  SegmentType == 'gx_3D_1ch_iso' or SegmentType == 'gx_3D_2ch_iso':
         IMG_SIZE = 112
         if len(X_test.shape) == 4:
