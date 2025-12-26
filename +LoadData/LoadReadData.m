@@ -65,15 +65,18 @@ if strcmp(MainInput.AnalysisType,'Ventilation')
     mkdir([MainInput.OutputPath '\Ventilation_Analysis']);
     outputpath = [MainInput.OutputPath '\Ventilation_Analysis'];
     Ventilation.outputpath = outputpath;    
+    MainInput.OutputPath = outputpath;
 elseif strcmp(MainInput.AnalysisType,'Diffusion')
     mkdir([MainInput.OutputPath '\Diffusion_Analysis']);
     outputpath = [MainInput.OutputPath '\Diffusion_Analysis'];
-    Diffusion.outputpath = outputpath;    
+    Diffusion.outputpath = outputpath;   
+    MainInput.OutputPath = outputpath;
 elseif strcmp(MainInput.AnalysisType,'GasExchange')
     mkdir([MainInput.OutputPath '\GasExchange_Analysis']);
     mkdir([MainInput.XeDataLocation '\GasExchange_Analysis']);
     outputpath = [MainInput.OutputPath '\GasExchange_Analysis'];
     GasExchange.outputpath = outputpath;
+    MainInput.OutputPath = outputpath;
 end
 
 if ~isfield(MainInput, 'Recon')
@@ -93,8 +96,14 @@ if ~isfield(MainInput, 'CCHMC_DbGxAnalysis')
     MainInput.CCHMC_DbGxAnalysis = 'no';
 end
 if strcmp(MainInput.XeDataext,'.dcm')         
-    if strcmp(MainInput.CCHMC_DbVentAnalysis,'yes')
-        [Image, file_folder, FileNames, DicomInfo] = LoadData.Single_DICOM_Load(MainInput.vent_file);  
+    if strcmp(MainInput.CCHMC_DbVentAnalysis,'yes') || strcmp(MainInput.CCHMC_DbDiffAnalysis,'yes')
+        if strcmp(MainInput.AnalysisType,'Ventilation')                 
+           [Image, file_folder, FileNames, DicomInfo] = LoadData.Single_DICOM_Load(MainInput.vent_file);  
+        elseif strcmp(MainInput.AnalysisType,'Diffusion')
+            [Image, file_folder, FileNames, DicomInfo] = LoadData.Single_DICOM_Load(MainInput.diff_file);  
+        elseif strcmp(MainInput.AnalysisType,'GasExchange')
+        
+        end
     else
         [Image, file_folder, FileNames, DicomInfo] = LoadData.DICOM_Load(MainInput.XeDataLocation);     
         % try
@@ -332,8 +341,16 @@ end
 
 % apply denoising 
 if strcmp(MainInput.denoiseXe,'yes')
+    if ~isfield(MainInput,'DenoiseMethod') || isempty(MainInput.DenoiseMethod)
+        MainInput.DenoiseMethod = 'tMPPCA';   % tMPPCA | GLHOSVD (if you want to support both)
+    end    
     if strcmp(MainInput.AnalysisType,'Ventilation')
-        Ventilation.Image = (Ventilation.Image - min(Ventilation.Image(:)))./(max(Ventilation.Image(:)) - min(Ventilation.Image(:)));
+        Image = Ventilation.Image;    
+        mask = Segmentation.SegmentLungthresh(Image,1,0.3);
+        zerofillings = double(Image == 0);
+
+        Ventilation.Image = (Image - min(Image(:)))./(max(Image(:)) - min(Image(:)));
+    
         % sd = (squeeze(Ventilation.Image(end,:,:)));
         % sd = sd(sd ~= 0);
         % sd = std(sd);
@@ -341,24 +358,58 @@ if strcmp(MainInput.denoiseXe,'yes')
         %         Ventilation.Image(:,:,i) = Global.bm3d.BM3D(squeeze(Ventilation.Image(:,:,i)), sd); %MainInput.denoiseSD
         % end
         % imslice(Ventilation.Image)
-        Ventilation.tMPPCA.window = str2num(MainInput.denoisewindow);
-        mask = true(size(Ventilation.Image,1), size(Ventilation.Image,2));
-        [denoised, Sigma2, P, SNR_gain] = Global.tMPPCA.denoise_recursive_tensor( ...
-            Ventilation.Image, ...
-            Ventilation.tMPPCA.window, ...
-            'mask', mask, ...
-            'indices', {[1 2], 3}, ... 
-            'opt_shrink', true ...
-        );         
-        Ventilation.tMPPCA.denoised= denoised;
-        Ventilation.tMPPCA.SNR_gain= SNR_gain;
-        Ventilation.tMPPCA.P= P;
-        Ventilation.tMPPCA.Sigma2= Sigma2;
-        Ventilation.Image = denoised;
+    
+        Image = Ventilation.Image;
+        Ventilation.UnDenoisedImage = Ventilation.Image;
+    
+        switch MainInput.DenoiseMethod
+            case 'tMPPCA'
+                Ventilation.tMPPCA.window = str2double(MainInput.denoisewindow);
+                try
+                    mask = true(size(Image,1), size(Image,2));  % Or your lung mask
+                    [denoised, Sigma2, P, SNR_gain] = Global.tMPPCA.denoise_recursive_tensor( ...
+                        Image, ...
+                        Ventilation.tMPPCA.window, ...
+                        'mask', mask, ...
+                        'indices', {[1 2], 3}, ...
+                        'opt_shrink', true ...
+                    );
+                catch
+                    mask = true(size(Image,1), size(Image,2), size(Image,3));  % Or your lung mask
+                    [denoised, Sigma2, P, SNR_gain] = Global.tMPPCA.denoise_recursive_tensor( ...
+                        Image, ...
+                        Ventilation.tMPPCA.window, ...
+                        'mask', mask, ...
+                        'indices', {[1 2], 3}, ...
+                        'opt_shrink', true ...
+                    );
+                end
+    
+                Ventilation.tMPPCA.denoised = denoised;
+                Ventilation.tMPPCA.SNR_gain = SNR_gain;
+                Ventilation.tMPPCA.P = P;
+                Ventilation.tMPPCA.Sigma2 = Sigma2;
+    
+                Ventilation.Image = denoised;
+    
+            case 'GLHOSVD'
+                % If you want GLHOSVD for Ventilation, you need a noise_mask.
+                % Here we mimic the diffusion call structure; define mask/zerofillings as needed.
+                noise_mask = double(~mask .* ~zerofillings);
+    
+                kglobal = 0.4; klocal = 0.6; patchsize = 2; sw = 10; step = 2;
+                denoised = Global.Xe_GLHOSVD_4D(Image, noise_mask, kglobal, klocal, patchsize, sw, step);
+                Ventilation.Image = denoised;
+        end
+    
     elseif strcmp(MainInput.AnalysisType,'Diffusion')
         Image = Diffusion.Image;
+        b0Image = squeeze(Image(:,:,:,1));
+        mask = Segmentation.SegmentLungthresh(b0Image,1,0.3);
+        zerofillings = double(b0Image == 0);
+    
         Diffusion.Image = (Image - min(Image(:)))./(max(Image(:)) - min(Image(:)));
-        % 
+        MainInput.DenoiseMethod = 'GLHOSVD'; % tMPPCA | GLHOSVD
         % for i = 1:size(Image,3)
         %     for j = 1:size(Image,4)
         %         Image(:,:,i,j) = Global.bm3d.BM3D(squeeze(Image(:,:,i,j)), 0.01); % 0.01
@@ -366,32 +417,41 @@ if strcmp(MainInput.denoiseXe,'yes')
         % end
         % Diffusion.Image = Image;
         Image = Diffusion.Image;
-        Zeromask = double(Image > 0);
-        Diffusion.tMPPCA.window = str2num(MainInput.denoisewindow);
-        try
-            mask = true(size(Image,1),size(Image,2));  % Or your lung mask
-            [denoised, Sigma2, P, SNR_gain] = Global.tMPPCA.denoise_recursive_tensor( ...
-                Image, ...
-                Diffusion.tMPPCA.window, ...
-                'mask', mask, ...
-                'indices', {[1 2 3], 4}, ...
-                'opt_shrink', true ...
-            );      
-        catch
-            mask = true(size(Image,1),size(Image,2),size(Image,3));  % Or your lung mask
-            [denoised, Sigma2, P, SNR_gain] = Global.tMPPCA.denoise_recursive_tensor( ...
-                Image, ...
-                Diffusion.tMPPCA.window, ...
-                'mask', mask, ...
-                'indices', {[1 2 3], 4}, ...
-                'opt_shrink', true ...
-            );
+        Diffusion.UnDenoisedImage = Diffusion.Image;
+        switch MainInput.DenoiseMethod
+            case 'tMPPCA'
+                Zeromask = double(Image > 0);
+                Diffusion.tMPPCA.window = str2double(MainInput.denoisewindow);
+                try
+                    mask = true(size(Image,1),size(Image,2));  % Or your lung mask
+                    [denoised, Sigma2, P, SNR_gain] = Global.tMPPCA.denoise_recursive_tensor( ...
+                        Image, ...
+                        Diffusion.tMPPCA.window, ...
+                        'mask', mask, ...
+                        'indices', {[1 2 3], 4}, ...
+                        'opt_shrink', true ...
+                    );
+                catch
+                    mask = true(size(Image,1),size(Image,2),size(Image,3));  % Or your lung mask
+                    [denoised, Sigma2, P, SNR_gain] = Global.tMPPCA.denoise_recursive_tensor( ...
+                        Image, ...
+                        Diffusion.tMPPCA.window, ...
+                        'mask', mask, ...
+                        'indices', {[1 2 3], 4}, ...
+                        'opt_shrink', true ...
+                    );
+                end
+                Diffusion.tMPPCA.denoised= denoised;
+                Diffusion.tMPPCA.SNR_gain= SNR_gain;
+                Diffusion.tMPPCA.P= P;
+                Diffusion.tMPPCA.Sigma2= Sigma2;
+                Diffusion.Image = denoised;
+            case 'GLHOSVD'
+                noise_mask = double(~mask.*~zerofillings);
+                kglobal = 0.4; klocal = 0.6; patchsize = 2; sw = 10; step = 2;
+                denoised = Global.Xe_GLHOSVD_4D(Image, noise_mask, kglobal, klocal, patchsize, sw, step);
+                Diffusion.Image = denoised;
         end
-        Diffusion.tMPPCA.denoised= denoised;
-        Diffusion.tMPPCA.SNR_gain= SNR_gain;
-        Diffusion.tMPPCA.P= P;
-        Diffusion.tMPPCA.Sigma2= Sigma2;
-        Diffusion.Image = denoised;
 
     elseif strcmp(MainInput.AnalysisType,'GasExchange')
     % we can't apply denoising on complex data         

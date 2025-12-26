@@ -63,9 +63,13 @@ elseif strcmp(Institute,'CCHMC') == 1
 end
 
 cd(ProtonDataLocation)
-mkdir([ProtonDataLocation '\Gas Exchange Analysis']);
-outputpath = [ProtonDataLocation '\Gas Exchange Analysis'];
-cd(outputpath)
+if ~isfield(GasExchange, 'outputpath') || isempty(GasExchange.outputpath)
+    mkdir([GasDataLocation '\GasExchange_Analysis']);
+    outputpath = [GasDataLocation '\GasExchange_Analysis'];
+    GasExchange.outputpath = outputpath;
+else
+    outputpath = GasExchange.outputpath;
+end
 Proton.outputfolder = outputpath;
 %% Import Acquisition Information
 
@@ -217,7 +221,7 @@ ProtonImageLR = imgaussfilt3(ProtonImageLR, 0.5);%reduce noise
 
 % Determine Levels
 ProtonMax = prctile(abs(ProtonImageLR(:)),99.99);
-
+figure; imslice(ProtonImage)
 
 disp('Proton Bias Corrected.')  
 cd(outputpath)
@@ -230,7 +234,7 @@ close(gcf)
 Proton.Image = double(ProtonImageHR);
 Proton.ProtonImageLR = double(ProtonImageLR);
 Proton.ProtonImageHR = double(ProtonImageHR);
-Proton.filename = file_name;
+Proton.filename = MainInput.HFileName;
 Proton.folder = ProtonDataLocation;
 Proton.H_RecMatrix = H_RecMatrix;
 Proton.ProtonMax = ProtonMax;

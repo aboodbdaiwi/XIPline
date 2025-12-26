@@ -48,7 +48,12 @@ function [Image, parentPath, filename] = LoadData_Gas_VentDiff_Philips_GRE_R590(
                 filter = 1;
         end
         kx_size = kx/kx_oversample_factor;
-        Image = zeros(128,128,slices,nbs);
+        if ky <= 75
+            imsize = 80;
+            Image = zeros(imsize,imsize,slices,nbs);
+        else
+            Image = zeros(ky,ky,slices,nbs);
+        end
         for sl =1:slices
             for b = 1:nbs
                 data_slice = diffK(:,:,sl,b).*filter;
@@ -59,31 +64,27 @@ function [Image, parentPath, filename] = LoadData_Gas_VentDiff_Philips_GRE_R590(
                 diffimg(:,:,sl,b) = abs(diffimgcmplx(:,:,sl,b)); % make magnitude data
                 diffimg = rot90(rot90(diffimg));
 
-                [origY, origX] = size(diffimg(:,:,sl,b));
-                
-                % Compute uniform scaling factor
-                scale = 128 / max(origY, origX);
-                newY = round(origY * scale);
-                newX = round(origX * scale);
-                
-                % Resize using uniform scale
-                resized_img = imresize(diffimg(:,:,sl,b), [newY, newX], 'nearest'); % bicubic  | nearest
-                
-                % ---- FORCE BORDER PIXELS TO ZERO ----
-                resized_img(1,:)   = 0;
-                resized_img(end,:) = 0;
-                resized_img(:,1)   = 0;
-                resized_img(:,end) = 0;
-                
-                % Pad to 128x128
-                padded_img = zeros(128, 128);
-                startY = floor((128 - newY)/2) + 1;
-                startX = floor((128 - newX)/2) + 1;
-                
-                padded_img(startY:startY+newY-1, startX:startX+newX-1) = resized_img;
-                
+                % Compute uniform scaling factor                
+                [origY, origX] = size(diffimg(:,:,sl,b));                
+                if origY <= 75
+                    imsize = 80;
+                    scale = imsize / max(origY, origX);
+                    newY = round(origY * scale);
+                    newX = round(origX * scale);
+                    
+                    % Resize using uniform scale
+                    resized_img = imresize(diffimg(:,:,sl,b), [newY, newX]); % nearest bicubic
+                    
+                    % Pad to 128x128
+                    padded_img = zeros(imsize, imsize);
+                    startY = floor((imsize - newY)/2) + 1;
+                    startX = floor((imsize - newX)/2) + 1;
+                    
+                    padded_img(startY:startY+newY-1, startX:startX+newX-1) = resized_img;
+                else
+                    padded_img = diffimg(:,:,sl,b);
+                end
                 Image(:,:,sl,b) = padded_img;
-
             end
         end
         % figure; imslice(Image);
@@ -122,7 +123,7 @@ function [Image, parentPath, filename] = LoadData_Gas_VentDiff_Philips_GRE_R590(
                 newX  = round(origX * scale);
                 
                 % Resize using uniform scale
-                resized_img = imresize(diffimg(:,:,sl), [newY, newX], 'nearest');
+                resized_img = imresize(diffimg(:,:,sl), [newY, newX]);
                 
                 % ---- FORCE BORDER PIXELS TO ZERO ----
                 resized_img(1, :)   = 0;

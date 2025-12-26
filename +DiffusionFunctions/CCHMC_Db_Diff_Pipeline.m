@@ -22,6 +22,7 @@ GasExchange = '';
 MainInput.AnalysisType = 'Diffusion';
 MainInput.Institute = 'CCHMC'; 
 MainInput.CCHMC_DbDiffAnalysis = 'yes';
+MainInput.Scanner = 'Philips'; 
 
 % get segmentation 
 MainInput.SE = 1;
@@ -94,7 +95,6 @@ Outputs.NoProtonImage = MainInput.NoProtonImage;
 Outputs.denoising = MainInput.denoiseXe;
 Outputs.DenoiseWindow = MainInput.denoisewindow;
 
-
 [Ventilation, Diffusion, GasExchange, Proton, MainInput] = LoadData.LoadReadData(MainInput);
 Diffusion.Image = double(Diffusion.Image);
 % figure; imslice(Diffusion.Image)
@@ -118,13 +118,14 @@ MainInput.SE = 1;
 MainInput.SegmentManual = 'Freehand'; % 'AppSegmenter' || 'Freehand'
 % MainInput.SliceOrientation = SliceOrientation; % 'coronal' ||'transversal' || 'sagittal' ||'isotropic'
 [Proton,Ventilation,Diffusion,GasExchange] = Segmentation.PerformSegmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
+oldanalsis = load('\\rds6.chmccorp.cchmc.org\pulmed-54\CPIR_Images_Database\IRC186H\analysis\diff_v100\sub-1039\ses-20250404\ser-124920\Diffusion_Analysis\Diffusion_Analysis\ADC_Analysis.mat');
+Diffusion.LungMask = oldanalsis.lung_mask;
 
-if exist('Diffusion.AirwayMask', 'var')
-    % skip
-else
+if ~isfield(Diffusion, 'AirwayMask')
     Diffusion.AirwayMask = zeros(size(Diffusion.LungMask));
 end
-% figure; imslice(Diffusion.LungMask)
+
+% figure; imslice(oldanalsis.lung_mask)
 %%
 
 if MainInput.num_b_values == 3

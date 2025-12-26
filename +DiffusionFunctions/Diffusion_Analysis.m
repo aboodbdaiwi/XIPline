@@ -58,23 +58,6 @@ MorphometryAnalysis = Diffusion.MorphometryAnalysis;
 % ADCAnalysisType = Diffusion.ADCAnalysisType;  % human | animals
 ADCAnalysisType = 'human';
 
-if ~isfield(MainInput, 'N4Bias') || isempty(MainInput.N4Bias)
-    MainInput.N4Bias = 'yes';
-end
-val = MainInput.N4Bias;
-
-if (isnumeric(val) && val == 1) || strcmpi(val, 'yes')
-    % apply N4 for fun
-    MainInput.N4Bias = 'yes';
-    Diffusion.Image = Diffusion.UncorrectedImage;
-    [~, BiasMap] = Segmentation.N4_bias_correction(Diffusion.Image(:,:,:,1), MainInput.XeDataLocation);
-    for i=1:size(Diffusion.Image, 4)
-        Diffusion.Image(:,:,:,i) = Diffusion.Image(:,:,:,i).*(1./BiasMap);
-    end
-else
-    MainInput.N4Bias = 'no';
-end
-
 diffimg = Diffusion.Image;
 lung_mask = Diffusion.LungMask;
 try
@@ -82,6 +65,9 @@ try
 catch
     airway_mask = zeros(size(lung_mask));
 end
+lung_mask = (lung_mask - airway_mask).*lung_mask;
+% Diffusion.LungMask = lung_mask;
+% figure; imslice(airway_mask)
 
 % create a final mask
 final_mask = lung_mask;

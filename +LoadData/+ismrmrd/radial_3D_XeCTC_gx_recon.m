@@ -48,6 +48,9 @@ D = dset.readAcquisition();
 %% Encoding and reconstruction information
 % Matrix size
 enc_Nx = hdr.encoding.encodedSpace.matrixSize.x;
+if enc_Nx >= 65
+    enc_Nx = enc_Nx / 2;
+end
 % enc_Ny = hdr.encoding.encodedSpace.matrixSize.y;
 size_proj = size(D.data{1}); 
 Ny = 0;
@@ -80,9 +83,14 @@ rec_FOVz = hdr.encoding.reconSpace.fieldOfView_mm.z;
 NewImages = 1; %1 forces new images to be made
 
 cd(GasDataLocation)
-mkdir([GasDataLocation '\Gas Exchange Analysis']);
-outputpath = [GasDataLocation '\Gas Exchange Analysis'];
-GasExchange.outputpath = outputpath;
+if ~isfield(GasExchange, 'outputpath') || isempty(GasExchange.outputpath)
+    mkdir([GasDataLocation '\GasExchange_Analysis']);
+    outputpath = [GasDataLocation '\GasExchange_Analysis'];
+    GasExchange.outputpath = outputpath;
+else
+    outputpath = GasExchange.outputpath;
+end
+
 ReconVersion = 'TEST';%If not connected to git, can't determine hash so state test
 NumPlotSlices = 7;%must be odd to work as expected
 ScanVersion = 'XeCTC';
@@ -545,6 +553,8 @@ GasExchange.VentImage = VentImage;
 GasExchange.GasImage = GasImage;
 GasExchange.DissolvedImage = DissolvedImage;
 GasExchange.CorrDissolvedImage = CorrDissolvedImage;
+GasExchange.GasKSpace_SS = GasKSpace_SS;
+GasExchange.CorrectedDissKSpace_SS = CorrectedDissKSpace_SS;
 GasExchange.AppendedDissolvedNMRFit = AppendedDissolvedNMRFit;
 GasExchange.RBC2Bar_struct = RBC2Bar_struct;
 GasExchange.RBCOsc_High_Image = RBCOsc_High_Image;

@@ -131,6 +131,27 @@ t = uitable(SNRFig,'Data',SNR_table{:,:},'ColumnName',...
 % print('SNR Table','-dpng','-r300');
 saveas(gca,'SNR_Table.png')
 close all; 
+%% N4 Bias 
+
+if ~isfield(MainInput, 'N4Bias') || isempty(MainInput.N4Bias)
+    MainInput.N4Bias = 'yes';
+end
+val = MainInput.N4Bias;
+
+if (isnumeric(val) && val == 1) || strcmpi(val, 'yes')
+    % apply N4 for fun
+    MainInput.N4Bias = 'yes';
+    Diffusion.Image = Diffusion.UncorrectedImage;
+    [~, BiasMap] = Segmentation.N4_bias_correction(Diffusion.Image(:,:,:,1), MainInput.XeDataLocation);
+    for i=1:size(Diffusion.Image, 4)
+        Diffusion.Image(:,:,:,i) = Diffusion.Image(:,:,:,i).*(1./BiasMap);
+    end
+else
+    MainInput.N4Bias = 'no';
+end
+
+Ndiffimg = Diffusion.Image;
+Ndiffimg = (Ndiffimg - min(Ndiffimg(:)))/(max(Ndiffimg(:)) - min(Ndiffimg(:)));
 
 %% Output mask boundaries  with xenon image overlays:
 
