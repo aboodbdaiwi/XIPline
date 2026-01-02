@@ -4,7 +4,7 @@
 
 XIPline application is developed at the [CPIR](https://www.cincinnatichildrens.org/research/divisions/c/cpir). 
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16053654.svg)](https://doi.org/10.5281/zenodo.18124693)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18124693.svg)](https://doi.org/10.5281/zenodo.18124693)
 
 ## Table of contents:
 
@@ -93,7 +93,7 @@ If you use this software, please cite:
 > 
  
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16053654.svg)](https://doi.org/10.5281/zenodo.18124693)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18124693.svg)](https://doi.org/10.5281/zenodo.18124693)
 
 ## Updates:
 
