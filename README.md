@@ -4,7 +4,7 @@
 
 XIPline application is developed at the [CPIR](https://www.cincinnatichildrens.org/research/divisions/c/cpir). 
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16053654.svg)](https://doi.org/10.5281/zenodo.16053654)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16053654.svg)](https://doi.org/10.5281/zenodo.18124693)
 
 ## Table of contents:
 
@@ -93,12 +93,13 @@ If you use this software, please cite:
 > 
  
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16053654.svg)](https://doi.org/10.5281/zenodo.16053654)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16053654.svg)](https://doi.org/10.5281/zenodo.18124693)
 
 ## Updates:
 
 | **Task**                                                                 | **Date**        |
 |--------------------------------------------------------------------------|-----------------|
+| Update Vent AI segmentation model                                        | Jan 01, 2026    |
 | Update Diffusion Analysis (SNR, healthy ref, report)                     | Dec 11, 2025    |
 | Update AI segmentation model for Diffusion Analysis                      | Oct 20, 2025    |
 | Add new ventilation analysis report                                      | July 17, 2025   |
