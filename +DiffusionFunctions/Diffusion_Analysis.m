@@ -126,11 +126,7 @@ Diffusion.noise_mask = noise_mask;
 Nbvalues = length(bvalues);
 
 if ~isempty(MainInput.OutputPath)
-    DataLocation = MainInput.OutputPath;
-    cd(DataLocation)
-    mkdir([DataLocation '\Diffusion_Analysis']);
-    outputpath = [DataLocation '\Diffusion_Analysis\'];
-    cd(outputpath)
+    outputpath = MainInput.OutputPath;
 else 
     DataLocation = MainInput.XeDataLocation;
     cd(DataLocation)
@@ -300,7 +296,7 @@ if strcmp(Diffusion.writereport,'yes')
     DiffusionFunctions.DiffusionAnalysis_Report(Diffusion, MainInput);
 end
 %% save maps in mat file
-save_data=[outputpath,'workspace.mat'];
+save_data=[outputpath,'\workspace.mat'];
 save(save_data);   
 
 DiffusionExcelFile = fullfile(outputpath, 'Diffusion_workspace.xlsx');

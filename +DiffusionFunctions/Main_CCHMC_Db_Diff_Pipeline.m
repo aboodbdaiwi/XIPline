@@ -59,7 +59,7 @@ nSubjects = size(SexCol,1);
 
 clc;
 
-for i = 459%:nSubjects % always start from 2
+for i = 3%:nSubjects % always start from 2
     fprintf('Processing subject %d of %d\n', i, nSubjects);
 
     if ismissing(AgeCol{i})
@@ -83,7 +83,7 @@ for i = 459%:nSubjects % always start from 2
     MainInput.ScanDate         = ScanDateCol{i};
     MainInput.ScannerSoftware  = ScannerSW{i};
     MainInput.SequenceType     = '2D GRE';
-    MainInput.denoiseXe        = 'yes';
+    MainInput.denoiseXe        = 'no';
     MainInput.Analyst          = 'Database';
     MainInput.N4Bias           = 'yes';
     MainInput.AnalysisMethod   = 'W.Linear';
@@ -100,12 +100,17 @@ for i = 459%:nSubjects % always start from 2
 
     MainInput.diff_file = char(MainInput.diff_file);
 
+    MainInput.ScannerSoftware = ScannerSW{i};
     if contains(MainInput.ScannerSoftware, "5.9")
         MainInput.ScannerSoftware = '5.9.0';
     elseif contains(MainInput.ScannerSoftware, "5.6")
         MainInput.ScannerSoftware = '5.6.1';
-    elseif contains(MainInput.ScannerSoftware, "5.3")
+    elseif contains(MainInput.ScannerSoftware, "5.3") 
         MainInput.ScannerSoftware = '5.3.1';
+    elseif contains(MainInput.ScannerSoftware, "5.1") 
+        MainInput.ScannerSoftware = '5.1.7';            
+    elseif contains(MainInput.ScannerSoftware, "3.2")
+        MainInput.ScannerSoftware = '3.2.3';            
     end
     [~, ~, ext] = fileparts(MainInput.diff_file);      
     if strcmpi(ext,'.dcm')

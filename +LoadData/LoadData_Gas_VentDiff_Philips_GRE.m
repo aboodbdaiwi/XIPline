@@ -29,9 +29,14 @@ function [Image, parentPath, filename] = LoadData_Gas_VentDiff_Philips_GRE(MainI
     ch_range = [1 1]; % assume one channel for data import by default
     filterim = 'Fermi';
 
-    [ImgK,NoiK,kx_oversample_factor] = LoadData.load_philips_extr1_2D(filename,ch_range);
-    diffK = ImgK(:,:,:,:);
-    
+    try
+        [ImgK,NoiK,kx_oversample_factor] = LoadData.load_philips_extr1_2D(filename,ch_range);
+    catch
+        [ImgK,NoiK,kx_oversample_factor] = LoadData.load_philips_extr1_2D_R32(filename,ch_range);
+    end
+    diffK = squeeze(ImgK); 
+    % figure; imslice(abs(diffK)); 
+
     if  length(size(diffK)) == 4
         data_size = size(diffK);
         ky = data_size(1);
@@ -63,30 +68,27 @@ function [Image, parentPath, filename] = LoadData_Gas_VentDiff_Philips_GRE(MainI
                 [origY, origX] = size(diffimg(:,:,sl,b));
                 
                 % Compute uniform scaling factor
-                if origY <= 75
+                if max(origY, origX) <= 75
                     imsize = 80;
+                
                     scale = imsize / max(origY, origX);
-                    newY = round(origY * scale);
-                    newX = round(origX * scale);
-                    
-                    % Resize using uniform scale
-                    resized_img = imresize(diffimg(:,:,sl,b), [newY, newX]); % nearest bicubic
-                    
-                    % % ---- FORCE BORDER PIXELS TO ZERO ----
-                    % resized_img(1,:)   = 0;
-                    % resized_img(end,:) = 0;
-                    % resized_img(:,1)   = 0;
-                    % resized_img(:,end) = 0;
-                    
-                    % Pad to 128x128
+                    newY  = round(origY * scale);
+                    newX  = round(origX * scale);
+                
+                    % Resize with uniform scale
+                    resized_img = imresize(diffimg(:,:,sl,b), [newY, newX], 'bicubic');
+                
+                    % Pad to imsize x imsize
                     padded_img = zeros(imsize, imsize);
-                    startY = floor((128 - newY)/2) + 1;
-                    startX = floor((128 - newX)/2) + 1;
-                    
+                
+                    startY = floor((imsize - newY)/2) + 1;
+                    startX = floor((imsize - newX)/2) + 1;
+                
                     padded_img(startY:startY+newY-1, startX:startX+newX-1) = resized_img;
                 else
                     padded_img = diffimg(:,:,sl,b);
                 end
+
                 Image(:,:,sl,b) = padded_img;
 
             end

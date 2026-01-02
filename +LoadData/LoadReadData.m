@@ -246,6 +246,13 @@ elseif strcmp(MainInput.XeDataext,'.data')  && contains(MainInput.Scanner, 'Phil
 
     elseif strcmp(MainInput.AnalysisType,'Ventilation') && strcmp(MainInput.SequenceType, '2D Spiral')                 
         [Ventilation, MainInput] = LoadData.philips_XeVent_2DSpiral_recon(MainInput, Ventilation); 
+    
+    elseif strcmp(MainInput.AnalysisType,'Diffusion')  && strcmp(MainInput.SequenceType, '2D GRE')  ...
+            && (strcmp(MainInput.ScannerSoftware, '3.2.3') || strcmp(MainInput.ScannerSoftware, '5.1.7'))
+        [Image, file_folder, file_name] = LoadData.LoadData_Gas_VentDiff_Philips_GRE_R323(MainInput);
+        Diffusion.Image = Image;
+        Diffusion.filename = file_name;
+        Diffusion.folder = file_folder;
 
     elseif strcmp(MainInput.AnalysisType,'Diffusion')  && strcmp(MainInput.SequenceType, '2D GRE')  ...
             && (strcmp(MainInput.ScannerSoftware, '5.3.1')  || strcmp(MainInput.ScannerSoftware, '5.6.1') )

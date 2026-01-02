@@ -377,9 +377,9 @@ for slice=1:size(DiffBinMap2,3) %repeat for rest of slices
      Xdata = getframe(gcf);
      X = Xdata.cdata;     
     if (slice == 1)
-        imwrite(X,[DataLocation,'BinnedADCmap.tif'],'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
+        imwrite(X,[DataLocation,'\BinnedADCmap.tif'],'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
     else
-        imwrite(X,[DataLocation,'BinnedADCmap.tif'],'WriteMode','append','Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%append tiff
+        imwrite(X,[DataLocation,'\BinnedADCmap.tif'],'WriteMode','append','Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%append tiff
     end
 end
 disp('Saving BinnedADCmap Tiff Completed.')

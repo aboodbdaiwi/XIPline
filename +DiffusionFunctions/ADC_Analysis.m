@@ -476,9 +476,9 @@ for slice=1:size(ADCmap,3) %repeat for rest of slices
      Xdata = getframe(gcf);
      X = Xdata.cdata;    
     if (slice == 1)
-        imwrite(X,[outputpath,'ADCmap.tif'],'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
+        imwrite(X,[outputpath,'\ADCmap.tif'],'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
     else
-        imwrite(X,[outputpath,'ADCmap.tif'],'WriteMode','append','Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%append tiff
+        imwrite(X,[outputpath,'\ADCmap.tif'],'WriteMode','append','Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%append tiff
     end
 end
 disp('Saving ADCmap Tiff Completed.')
@@ -620,7 +620,7 @@ Diffusion.meanADC = meanADC;
 Diffusion.stdADC = stdADC;
 Diffusion.ADC_hist = ADC_hist;
 %% save maps in mat file
-save_data=[outputpath,'ADC_Analysis','.mat'];
+save_data=[outputpath,'\ADC_Analysis','.mat'];
 save(save_data);   
 
 %% 

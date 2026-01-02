@@ -1,5 +1,5 @@
 
-function [Image, parentPath, filename] = LoadData_Gas_VentDiff_Philips_GRE_R590(MainInput)
+function [Image, parentPath, filename] = LoadData_Gas_VentDiff_Philips_GRE_R323(MainInput)
 %   Inputs:
 %      
 %   Outputs:
@@ -32,14 +32,10 @@ function [Image, parentPath, filename] = LoadData_Gas_VentDiff_Philips_GRE_R590(
     ch_range = [1 1]; % assume one channel for data import by default
     filterim = 'Fermi'; % 'Fermi' or 'no'
 
-    try
-        [ImgK,NoiK,kx_oversample_factor] = LoadData.load_philips_extr1_2D(filename,ch_range);
-    catch
-        [ImgK,NoiK,kx_oversample_factor] = LoadData.load_philips_extr1_2D_R32(filename,ch_range);
-    end
-    diffK = squeeze(ImgK);   
-    % figure; imslice(abs(diffK))
-    
+    [ImgK,NoiK,kx_oversample_factor] = LoadData.load_philips_extr1_2D_R32(filename,ch_range);
+    diffK = squeeze(ImgK);    
+    % figure; imslice(abs(squeeze(diffK)))
+
     if  length(size(diffK)) == 4
         data_size = size(diffK);
         ky = data_size(1);

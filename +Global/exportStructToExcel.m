@@ -67,7 +67,7 @@ function exportStructToExcel(dataStruct, outputExcelFile)
                     outputData{row,2} = varValue;
                     row = row + 1;
 
-                elseif isvector(varValue) && numelVal <= 100
+                elseif isvector(varValue) && numelVal <= 50
                     outputData{row,1} = fullVarName;
                     outputData(row, 2:(1+numelVal)) = num2cell(varValue);
                     row = row + 1;

@@ -118,14 +118,12 @@ MainInput.SE = 1;
 MainInput.SegmentManual = 'Freehand'; % 'AppSegmenter' || 'Freehand'
 % MainInput.SliceOrientation = SliceOrientation; % 'coronal' ||'transversal' || 'sagittal' ||'isotropic'
 [Proton,Ventilation,Diffusion,GasExchange] = Segmentation.PerformSegmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
-oldanalsis = load('\\rds6.chmccorp.cchmc.org\pulmed-54\CPIR_Images_Database\IRC186H\analysis\diff_v100\sub-1039\ses-20250404\ser-124920\Diffusion_Analysis\Diffusion_Analysis\ADC_Analysis.mat');
-Diffusion.LungMask = oldanalsis.lung_mask;
 
 if ~isfield(Diffusion, 'AirwayMask')
     Diffusion.AirwayMask = zeros(size(Diffusion.LungMask));
 end
 
-% figure; imslice(oldanalsis.lung_mask)
+% figure; imslice(Diffusion.LungMask)
 %%
 
 if MainInput.num_b_values == 3
@@ -153,6 +151,7 @@ else
     Diffusion.GapTime = NaN;
     disp('Number of bvalues is not either 3, 4, or 5....')
 end
+Diffusion.MorphometryAnalysis = 'no';
 
 Outputs.num_b_values = MainInput.num_b_values;
 Outputs.b_values = Diffusion.b_values; 
@@ -163,7 +162,7 @@ Outputs.MorphometryAnalysis = Diffusion.MorphometryAnalysis;
     
 %MainInput.PatientAge = MainInput.Age;
 Diffusion.ADCFittingType = 'Log Weighted Linear'; % Log Weighted Linear | Bayesian | Non-Linear | Log Linear
-Diffusion.ADCLB_Analysis = 'yes';
+Diffusion.ADCLB_Analysis = 'no';
 Diffusion.ADCLB_RefMean = 0.0002*MainInput.Age+0.029; % mean equetion for healthy co. 
 Diffusion.ADCLB_RefSD = 5e-5*MainInput.Age+0.0121; 
 
@@ -172,11 +171,12 @@ Outputs.ADCLB_Analysis = Diffusion.ADCLB_Analysis;
 Outputs.ADCLB_RefMean = Diffusion.ADCLB_RefMean; % mean equetion for healthy co. 
 Outputs.ADCLB_RefSD = Diffusion.ADCLB_RefSD; 
 
-Diffusion.CMMorphometry = 'yes';
-Diffusion.SEMMorphometry = 'yes';
+Diffusion.CMMorphometry = 'no';
+Diffusion.SEMMorphometry = 'no';
 Diffusion.MorphometryAnalysisType = 'human';
 Diffusion.Do = 0.14; % 100% Xenon
 Diffusion.Delta = Diffusion.BigDeltaTime;  
+Diffusion.writereport = 'no';
 
 Outputs.MorphometryAnalysisType = Diffusion.MorphometryAnalysisType;
 Outputs.Do = Diffusion.Do;
@@ -189,48 +189,63 @@ Outputs.meanADC = Diffusion.meanADC;
 Outputs.stdADC = Diffusion.stdADC;
 Outputs.ADC_hist = Diffusion.ADC_hist;
 
-Outputs.LBADCMean = Diffusion.LBADCMean;
-Outputs.LBADCStd = Diffusion.LBADCStd;
-Outputs.LBADC_hist = Diffusion.LBADC_hist;
-Outputs.LB_BinTable = Diffusion.LB_BinTable;
-Outputs.DiffLow1Percent = Diffusion.DiffLow1Percent;
-Outputs.DiffLow2Percent = Diffusion.DiffLow2Percent;
-Outputs.DiffNormal1Percent = Diffusion.DiffNormal1Percent;
-Outputs.DiffNormal2Percent = Diffusion.DiffNormal2Percent;
-Outputs.DiffHigh1Percent = Diffusion.DiffHigh1Percent;
-Outputs.DiffHigh2Percent = Diffusion.DiffHigh2Percent;
+if strcmp(Diffusion.ADCLB_Analysis, 'yes')
+    Outputs.LBADCMean = Diffusion.LBADCMean;
+    Outputs.LBADCStd = Diffusion.LBADCStd;
+    Outputs.LBADC_hist = Diffusion.LBADC_hist;
+    Outputs.LB_BinTable = Diffusion.LB_BinTable;
+    Outputs.DiffLow1Percent = Diffusion.DiffLow1Percent;
+    Outputs.DiffLow2Percent = Diffusion.DiffLow2Percent;
+    Outputs.DiffNormal1Percent = Diffusion.DiffNormal1Percent;
+    Outputs.DiffNormal2Percent = Diffusion.DiffNormal2Percent;
+    Outputs.DiffHigh1Percent = Diffusion.DiffHigh1Percent;
+    Outputs.DiffHigh2Percent = Diffusion.DiffHigh2Percent;
+end
+if strcmp(Diffusion.MorphometryAnalysis, 'yes') && strcmp(Diffusion.CMMorphometry, 'yes')
+    Outputs.R_mean = Diffusion.R_mean;
+    Outputs.h_mean = Diffusion.h_mean;
+    Outputs.r_mean = Diffusion.r_mean;
+    Outputs.Lm_mean = Diffusion.Lm_mean;
+    Outputs.SVR_mean = Diffusion.SVR_mean;
+    Outputs.Na_mean = Diffusion.Na_mean;
+    
+    Outputs.R_std = Diffusion.R_std;
+    Outputs.h_std = Diffusion.h_std;
+    Outputs.r_std = Diffusion.r_std;
+    Outputs.Lm_std = Diffusion.Lm_std;
+    Outputs.SVR_std = Diffusion.SVR_std;
+    Outputs.Na_std = Diffusion.Na_std;
 
-Outputs.R_mean = Diffusion.R_mean;
-Outputs.h_mean = Diffusion.h_mean;
-Outputs.r_mean = Diffusion.r_mean;
-Outputs.Lm_mean = Diffusion.Lm_mean;
-Outputs.SVR_mean = Diffusion.SVR_mean;
-Outputs.Na_mean = Diffusion.Na_mean;
+    % store result
+    Outputs.R_map = Diffusion.R_map;
+    Outputs.h_map = Diffusion.h_map;
+    Outputs.r_map = Diffusion.r_map;
+    Outputs.Lm_map = Diffusion.Lm_map;
+    Outputs.SVR_map = Diffusion.SVR_map;
+    Outputs.Na_map = Diffusion.Na_map;
+    Outputs.So_map = Diffusion.So_map;
+end
+if strcmp(Diffusion.MorphometryAnalysis, 'yes') && strcmp(Diffusion.SEMMorphometry, 'yes') 
+    Outputs.DDC_mean = Diffusion.DDC_mean;
+    Outputs.alpha_mean = Diffusion.alpha_mean;
+    Outputs.LmD_mean = Diffusion.LmD_mean;
+    Outputs.DDC_std = Diffusion.DDC_std;
+    Outputs.alpha_std = Diffusion.alpha_std;
+    Outputs.LmD_std = Diffusion.LmD_std;  
 
-Outputs.R_std = Diffusion.R_std;
-Outputs.h_std = Diffusion.h_std;
-Outputs.r_std = Diffusion.r_std;
-Outputs.Lm_std = Diffusion.Lm_std;
-Outputs.SVR_std = Diffusion.SVR_std;
-Outputs.Na_std = Diffusion.Na_std;
+    Outputs.DDC_map = Diffusion.DDC_map;
+    Outputs.alpha_map = Diffusion.alpha_map; 
+    Outputs.SEMSo_map = Diffusion.SEMSo_map; 
+    Outputs.LmD_map = Diffusion.LmD_map; 
+    Outputs.DDC_mean = Diffusion.DDC_mean; 
+    Outputs.alpha_mean = Diffusion.alpha_mean; 
+    Outputs.LmD_mean = Diffusion.LmD_mean; 
+    Outputs.DDC_std = Diffusion.DDC_std; 
+    Outputs.alpha_std = Diffusion.alpha_std; 
+    Outputs.LmD_std = Diffusion.LmD_std;
+end
 
-Outputs.DDC_mean = Diffusion.DDC_mean;
-Outputs.alpha_mean = Diffusion.alpha_mean;
-Outputs.LmD_mean = Diffusion.LmD_mean;
-Outputs.DDC_std = Diffusion.DDC_std;
-Outputs.alpha_std = Diffusion.alpha_std;
-Outputs.LmD_std = Diffusion.LmD_std;  
 
-Outputs.DDC_map = Diffusion.DDC_map;
-Outputs.alpha_map = Diffusion.alpha_map; 
-Outputs.SEMSo_map = Diffusion.SEMSo_map; 
-Outputs.LmD_map = Diffusion.LmD_map; 
-Outputs.DDC_mean = Diffusion.DDC_mean; 
-Outputs.alpha_mean = Diffusion.alpha_mean; 
-Outputs.LmD_mean = Diffusion.LmD_mean; 
-Outputs.DDC_std = Diffusion.DDC_std; 
-Outputs.alpha_std = Diffusion.alpha_std; 
-Outputs.LmD_std = Diffusion.LmD_std;
 %% Save info to JSON file
 OutputJSONFile = fullfile(analysisFolder, ['DiffAnalysis_','ser-',num2str(MainInput.sernum),'.json']);
 Global.exportStructToJSON(Outputs, OutputJSONFile);
