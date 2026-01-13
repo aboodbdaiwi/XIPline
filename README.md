@@ -99,6 +99,8 @@ If you use this software, please cite:
 
 | **Task**                                                                 | **Date**        |
 |--------------------------------------------------------------------------|-----------------|
+| Add denosing mehtods option                                              | Jan 13, 2026    |
+| Add FV VDP method                                                        | Jan 13, 2026    |
 | Update Vent AI segmentation model                                        | Jan 01, 2026    |
 | Update Diffusion Analysis (SNR, healthy ref, report)                     | Dec 11, 2025    |
 | Update AI segmentation model for Diffusion Analysis                      | Oct 20, 2025    |
