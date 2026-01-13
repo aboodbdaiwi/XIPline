@@ -42,20 +42,31 @@ function [MainInput, Proton, Ventilation, GasExchange] = AntsRegistration(MainIn
     if ~isequal(size(moving1), size(fixed1))
         moving1 = imresize3(moving1, size(fixed1));
     end
-
+    
+    % Determine required subfolder name
     if strcmp(MainInput.AnalysisType,'GasExchange')
         H_RecMatrix = Proton.H_RecMatrix;
-        DataLocation = fullfile(MainInput.OutputPath,'GasExchange_Analysis');
+        subFolder = 'GasExchange_Analysis';
     else
-        DataLocation = fullfile(MainInput.OutputPath,'Ventilation_Analysis');
-    end
-    try
-       cd(DataLocation);
-    catch 
-        DataLocation = fullfile(MainInput.OutputPath,'Ventilation Analysis');
-        cd(DataLocation);
+        subFolder = 'Ventilation_Analysis';
     end
     
+    % Check if OutputPath already ends with the subfolder
+    [~, lastFolder] = fileparts(MainInput.OutputPath);
+    
+    if ~strcmp(lastFolder, subFolder)
+        DataLocation = fullfile(MainInput.OutputPath, subFolder);
+    else
+        DataLocation = MainInput.OutputPath;
+    end
+    
+    % % Create directory if it does not exist
+    % if ~exist(DataLocation, 'dir')
+    %     mkdir(DataLocation);
+    % end
+    
+    % Change to output directory
+    cd(DataLocation);
 
     % create a lung mask
     LungMask = double(Segmentation.SegmentLungthresh(fixed1,1,1));
@@ -168,14 +179,29 @@ function [MainInput, Proton, Ventilation, GasExchange] = AntsRegistration(MainIn
         B = fixedVolume(:, :, slice);
         ProtonRegisteredColored(:, :, :, slice) = imfuse(A, B, 'falsecolor', 'ColorChannels', 'green-magenta');
     end
-    
+        
+    % Determine required subfolder
     if strcmp(MainInput.AnalysisType, 'Ventilation')
-        OutputPath = fullfile(MainInput.OutputPath, 'Ventilation_Analysis');
+        subFolder = 'Ventilation_Analysis';
     elseif strcmp(MainInput.AnalysisType, 'GasExchange')
-        OutputPath = fullfile(MainInput.OutputPath, 'GasExchange_Analysis');
+        subFolder = 'GasExchange_Analysis';
     else
         error('Unsupported AnalysisType: %s', MainInput.AnalysisType);
     end
+    
+    % Check if OutputPath already ends with the subfolder
+    [~, lastFolder] = fileparts(MainInput.OutputPath);
+    
+    if ~strcmp(lastFolder, subFolder)
+        OutputPath = fullfile(MainInput.OutputPath, subFolder);
+    else
+        OutputPath = MainInput.OutputPath;
+    end
+    
+    % % Ensure directory exists
+    % if ~exist(OutputPath, 'dir')
+    %     mkdir(OutputPath);
+    % end
     
     % Create the output directory if it does not exist
     if ~exist(OutputPath, 'dir')

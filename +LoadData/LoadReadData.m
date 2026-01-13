@@ -95,6 +95,7 @@ end
 if ~isfield(MainInput, 'CCHMC_DbGxAnalysis')
     MainInput.CCHMC_DbGxAnalysis = 'no';
 end
+
 if strcmp(MainInput.XeDataext,'.dcm')         
     if strcmp(MainInput.CCHMC_DbVentAnalysis,'yes') || strcmp(MainInput.CCHMC_DbDiffAnalysis,'yes')
         if strcmp(MainInput.AnalysisType,'Ventilation')                 
@@ -480,21 +481,46 @@ elseif strcmp(MainInput.AnalysisType,'Diffusion')
     Diffusion.Image = Diffusion.Image.*mask;
     Diffusion.UncorrectedImage = Diffusion.Image;
 end
+
 %% Load/Read Proton data 
-%% 
+
 if (isnumeric(MainInput.NoProtonImage) && MainInput.NoProtonImage == 0) || ...
    (ischar(MainInput.NoProtonImage) && strcmp(MainInput.NoProtonImage, 'no'))
     % try 
         cd(MainInput.HDataLocation)
-        if isfield(MainInput,"analysisversion")
-        else
-            if strcmp(MainInput.AnalysisType,'Ventilation')                 
-                mkdir([MainInput.HDataLocation '\Ventilation_Analysis']);  
+        % Only create analysis folder if analysisversion is not specified
+        if ~isfield(MainInput, "analysisversion")
+        
+            % Determine required subfolder
+            if strcmp(MainInput.AnalysisType,'Ventilation')
+                subFolder = 'Ventilation_Analysis';
+            elseif strcmp(MainInput.AnalysisType,'GasExchange')
+                subFolder = 'GasExchange_Analysis';
             elseif strcmp(MainInput.AnalysisType,'Diffusion')
-            elseif strcmp(MainInput.AnalysisType,'GasExchange')          
-                mkdir([MainInput.HDataLocation '\GasExchange_Analysis']);
+                subFolder = '';   % No folder creation defined
+            else
+                error('Unsupported AnalysisType: %s', MainInput.AnalysisType);
+            end
+        
+            % Proceed only if a subfolder is defined
+            if ~isempty(subFolder)
+        
+                % Check if HDataLocation already ends with the subfolder
+                [~, lastFolder] = fileparts(MainInput.HDataLocation);
+        
+                if ~strcmp(lastFolder, subFolder)
+                    targetDir = fullfile(MainInput.HDataLocation, subFolder);
+                else
+                    targetDir = MainInput.HDataLocation;
+                end
+        
+                % Create directory if it does not exist
+                if ~exist(targetDir, 'dir')
+                    mkdir(targetDir);
+                end
             end
         end
+
         if strcmp(MainInput.HDataext,'.dcm')      
             if strcmp(MainInput.CCHMC_DbVentAnalysis,'yes')
                 [HImage, file_folder, file_name, DicomInfo] = LoadData.Single_DICOM_Load(MainInput.anat_file);  

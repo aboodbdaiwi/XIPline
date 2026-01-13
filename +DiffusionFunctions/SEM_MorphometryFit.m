@@ -532,7 +532,7 @@ Diffusion.DDC_std = LungSEMMorphometrySummary{2,2};
 Diffusion.alpha_std = LungSEMMorphometrySummary{2,3};
 Diffusion.LmD_std = LungSEMMorphometrySummary{2,4}; 
 %% save maps in mat file
-save_data=[Datapath , 'SEM_Morphometry.mat'];
+save_data=[Datapath , '\SEM_Morphometry.mat'];
 save(save_data,'DDC_map','alpha_map','So_map','LmD_map');   
 %% 
 fprintf('SEM Lung Morphometry fit compeleted\n'); 

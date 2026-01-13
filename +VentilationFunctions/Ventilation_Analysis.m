@@ -42,8 +42,21 @@ Ventilation.MedianFilter = 'yes';
 % savedata, calculateSNR, N4, incomplete, complete, hyper)
 
 MR = Ventilation.Image;
-mkdir([MainInput.OutputPath '\Ventilation_Analysis']);
-parentPath = [MainInput.OutputPath '\Ventilation_Analysis\'];
+
+subFolder = 'Ventilation_Analysis';
+[~, lastFolder] = fileparts(MainInput.OutputPath);
+
+if ~strcmp(lastFolder, subFolder)
+    parentPath = fullfile(MainInput.OutputPath, subFolder);
+else
+    parentPath = MainInput.OutputPath;
+end
+
+% Create directory if it does not exist
+if ~exist(parentPath, 'dir')
+    mkdir(parentPath);
+end
+
 Ventilation.parentPath = parentPath;
 %parentPath = [MainInput.XeDataLocation,'\'];
 FileNames = Ventilation.filename;
@@ -108,6 +121,10 @@ if isfield(Ventilation, 'LB_Normalization')
             Ventilation.HealthyRef.LB.VDPULN = ['≤', num2str(round((0.11008 + 0.051214 * Age + 1.6449 * 1.5833),2))];
             Ventilation.HealthyRef.LB.LVV = '10.6±3';
             Ventilation.HealthyRef.LB.HVV = '10±3.5';  
+        case 'HybridLBm'
+            Ventilation.HealthyRef.LB.VDPULN = ['≤', num2str(round((0.11008 + 0.051214 * Age + 1.6449 * 1.5833),2))];
+            Ventilation.HealthyRef.LB.LVV = '10.6±3';
+            Ventilation.HealthyRef.LB.HVV = '10±3.5';             
         case 'GLBpercentile'
             Ventilation.HealthyRef.LB.VDPULN = ['≤', num2str(round((-0.65729 + 0.06534 * Age + 1.6449 * 1.874),2))];
             Ventilation.HealthyRef.LB.LVV = '11±8';

@@ -151,7 +151,7 @@ else
     Diffusion.GapTime = NaN;
     disp('Number of bvalues is not either 3, 4, or 5....')
 end
-Diffusion.MorphometryAnalysis = 'no';
+% Diffusion.MorphometryAnalysis = 'no';
 
 Outputs.num_b_values = MainInput.num_b_values;
 Outputs.b_values = Diffusion.b_values; 
@@ -171,8 +171,8 @@ Outputs.ADCLB_Analysis = Diffusion.ADCLB_Analysis;
 Outputs.ADCLB_RefMean = Diffusion.ADCLB_RefMean; % mean equetion for healthy co. 
 Outputs.ADCLB_RefSD = Diffusion.ADCLB_RefSD; 
 
-Diffusion.CMMorphometry = 'no';
-Diffusion.SEMMorphometry = 'no';
+Diffusion.CMMorphometry = 'yes';
+Diffusion.SEMMorphometry = 'yes';
 Diffusion.MorphometryAnalysisType = 'human';
 Diffusion.Do = 0.14; % 100% Xenon
 Diffusion.Delta = Diffusion.BigDeltaTime;  

@@ -49,12 +49,28 @@ parentPath = Ventilation.parentPath;
 Overall_SNR = Ventilation.SNR_lung;
 Thresholds = Ventilation.LBThresholds;
 
+try
+    InhaledGasMask = Ventilation.InhaledGasMask;
+    niftiwrite((fliplr(rot90(InhaledGasMask,-1))),[parentPath,'\InhaledGasMask.nii'],'Compressed',true);    
+catch
+    VV_mask = VentilationFunctions.SegVentVolume(MR);
+    InhaledGasMask = double((maskarray + VV_mask) > 0);
+    niftiwrite((fliplr(rot90(InhaledGasMask,-1))),[parentPath,'\InhaledGasMask.nii'],'Compressed',true);
+end
+
 cd(parentPath)
-foldername = "VDP_Analysis\";
-mkdir(foldername)
-LB_outputpath = char(foldername);
-LB_outputpath = [parentPath, LB_outputpath];
-cd(LB_outputpath)
+foldername = 'VDP_Analysis';
+[~, lastFolder] = fileparts(parentPath);
+if ~strcmp(lastFolder, foldername)
+    LB_outputpath = fullfile(parentPath, foldername);
+else
+    LB_outputpath = parentPath;
+end
+if ~exist(LB_outputpath, 'dir')
+    mkdir(LB_outputpath);
+end
+cd(LB_outputpath);
+
 %% 2) Perform N4 bias correction OR RF correction:
 % moved outside the function
 % if N4_bias_analysis == "no"
@@ -108,6 +124,17 @@ switch Ventilation.LB_Normalization
         NormMR4(maskarray == 0) = [];
         Im99percentile = prctile(NormMR4,99.9); % 99.5th percentile
         ScaledVentImage2(ScaledVentImage2 >= Im99percentile) = Im99percentile;
+    case 'GLBFV'
+        voxelSize_mm = Ventilation.ImageResolution; %[3 3 15];   
+        bag_volume = Ventilation.XeDose;
+        % VV_mask = VentilationFunctions.SegVentVolume(MR);
+        % InhaledGasMask = double((maskarray + VV_mask) > 0);
+        frac_vent = VentilationFunctions.computeFracVent(MR, InhaledGasMask, bag_volume, voxelSize_mm);
+        frac_vent2 = frac_vent;
+        frac_vent2(maskarray == 0) = [];
+        Im99percentile = prctile(frac_vent2,99.5); % 99.5th percentile
+        frac_vent(frac_vent >= Im99percentile) = Im99percentile;
+        ScaledVentImage2 = frac_vent;
     case 'HybridLBm'
         [~, VDPmap] = VentilationFunctions.VDPAKms(NVentImage, maskarray, MainInput.SliceOrientation, Ventilation.ImageResolution);
         NormMR3 = NVentImage;
@@ -345,9 +372,9 @@ for slice=1:size(maskarray,3) %repeat for rest of slices
      Xdata = getframe(gcf);
      X = Xdata.cdata;     
     if (slice == 1)
-        imwrite(X,[LB_outputpath,'MaskRegistered.tif'],'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
+        imwrite(X,fullfile(LB_outputpath,'MaskRegistered.tif'),'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
     else
-        imwrite(X,[LB_outputpath,'MaskRegistered.tif'],'WriteMode','append','Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%append tiff
+        imwrite(X,fullfile(LB_outputpath,'MaskRegistered.tif'),'WriteMode','append','Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%append tiff
     end
 end
 disp('MaskRegistered Tiff Completed.')
@@ -414,9 +441,9 @@ for slice=1:size(maskarray,3) %repeat for rest of slices
     Xdata = getframe(gcf);
     X = Xdata.cdata;     
     if (slice == 1)
-        imwrite(X,[outputPath,'\maskboundaries.tif'],'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
+        imwrite(X,fullfile(outputPath,'maskboundaries.tif'),'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
     else
-        imwrite(X,[outputPath,'\maskboundaries.tif'],'WriteMode','append','Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%append tiff
+        imwrite(X,fullfile(outputPath,'maskboundaries.tif'),'WriteMode','append','Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%append tiff
     end
 end
 disp('maskboundariesTiff Completed.')
@@ -481,9 +508,9 @@ for slice=1:size(maskarray,3) %repeat for rest of slices
     Xdata = getframe(gcf);
     X = Xdata.cdata;     
     if (slice == 1)
-        imwrite(X,[outputPath,'\protonmaskboundaries.tif'],'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
+        imwrite(X,fullfile(outputPath,'protonmaskboundaries.tif'),'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
     else
-        imwrite(X,[outputPath,'\protonmaskboundaries.tif'],'WriteMode','append','Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%append tiff
+        imwrite(X,fullfile(outputPath,'protonmaskboundaries.tif'),'WriteMode','append','Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%append tiff
     end
 end
 disp('protonmaskboundaries Tiff Completed.')
@@ -664,6 +691,7 @@ lung_voxels = ScaledVentImagenan2(maskarray == 1);
 Ventilation.LB_skewness = skewness(double(lung_voxels));
 %% %% write tiff and read back BinnedVent maps
 %Tiffs (Binned Images)
+cd(LB_outputpath)
 tiff = figure('MenuBar','none','ToolBar','none','DockControls','off','Resize','off','WindowState','minimized');%figure for tiffs
 ax1 = axes('Parent',tiff);ax2 = axes('Parent',tiff);%make axis for both images
 set(ax1,'Visible','off');set(ax2,'Visible','off');%turn off axis
@@ -682,9 +710,9 @@ for slice=1:size(VentBinMap2,3) %repeat for rest of slices
      Xdata = getframe(gcf);
      X = Xdata.cdata;     
     if (slice == 1)
-        imwrite(X,[LB_outputpath,'BinnedVent.tif'],'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
+        imwrite(X,fullfile(LB_outputpath,'BinnedVent.tif'),'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
     else
-        imwrite(X,[LB_outputpath,'BinnedVent.tif'],'WriteMode','append','Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%append tiff
+        imwrite(X,fullfile(LB_outputpath,'BinnedVent.tif'),'WriteMode','append','Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%append tiff
     end
 end
 disp('Saving Vent Tiff Completed.')
@@ -823,7 +851,7 @@ Global.exportToPPTX('addpicture',MaskMontage,'Position',...
     [0 2.8 NumSliceView NumSliceView*(MaskMontagePosition(4)/MaskMontagePosition(3))]);
 Global.exportToPPTX('addpicture',DefectArrayMontage,'Position',...
     [0 4 NumSliceView NumSliceView*(DefectArrayMontagePosition(4)/DefectArrayMontagePosition(3))]);
-LB_Venthist = imread([parentPath , char(foldername) ,'LB_Ventilation_Histogram.png']);    
+LB_Venthist = imread(fullfile(parentPath , char(foldername) ,'LB_Ventilation_Histogram.png'));    
 Global.exportToPPTX('addpicture',LB_Venthist,'Position',[0 5 6.8 6.8*(size(LB_Venthist,1)/size(LB_Venthist,2))]);
 
 Global.exportToPPTX('addtext',['Vent Images (SNR=',num2str(Overall_SNR),')'],'Position',[0 0 5 0.5],'Color','r','FontSize',20,'BackgroundColor','k');
@@ -886,6 +914,6 @@ Ventilation.BinsPercent = [Ventilation.VentLow1Percent,Ventilation.VentLow2Perce
     Ventilation.VentNormal1Percent,Ventilation.VentNormal2Percent,...
     Ventilation.VentHigh1Percent,Ventilation.VentHigh2Percent];
 
-save_title = [LB_outputpath, 'LinearBinningAnalysis.mat'];
+save_title = fullfile(LB_outputpath ,'LinearBinningAnalysis.mat');
 save(save_title);
 end % end of function

@@ -23,7 +23,13 @@ function [Image, parentPath, filename] = LoadData_Gas_VentDiff_Philips_GRE(MainI
     else
         parentPath = MainInput.XeDataLocation;
         cd(MainInput.XeDataLocation)
-        filename = MainInput.Xe_name;
+        try
+            filename = MainInput.Xe_name;
+        catch
+          [~,  Xe_name] = fileparts(MainInput.XeFullPath);
+          filename = Xe_name;
+          MainInput.Xe_name = Xe_name;
+        end
     end
   
     ch_range = [1 1]; % assume one channel for data import by default

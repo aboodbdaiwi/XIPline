@@ -44,7 +44,7 @@ function frac_vent = computeFracVent(image, mask_including_trachea, bag_volume, 
     % voxel_side_cm = 0.3125;                 % cm
     % voxel_vol_ml  = voxel_side_cm^3;        % cm^3 == mL
 
-    voxelSize_mm = [3 3 15];          
+    % voxelSize_mm = [3 3 15];          
     voxel_vol_ml = prod(voxelSize_mm) / 1000;  % mm3 → mL
     % voxel_vol_ml = prod(voxelSize_mm);  % mm3 → mL
 

@@ -150,6 +150,8 @@ switch MainInput.SegmentationMethod
                 system('pip install tensorflow==2.10.1'); % Specific version of TensorFlow
                 system('pip install nibabel')
                 system('pip install scipy') 
+                %system('python -m pip uninstall -y protobuf')
+                %system('python -m pip install "protobuf>=3.20.0,<3.21.0"') 
                 terminate(pyenv)
         
                 % Create an empty 'python_requirement_satisfied.txt' file

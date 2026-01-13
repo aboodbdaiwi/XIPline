@@ -251,7 +251,7 @@ LungCMMorphometrySummary = table({'Mean';'SD'},[R_mean;R_std],[h_mean;h_std],[r_
 headers=({'summary','R(um)', 'h(um)', 'r(um)', 'Lm(um)',...
     'SVR(cm^-1)', 'Na(mm^-3)'});
 LungCMMorphometrySummary.Properties.VariableNames = headers;
-writetable(LungCMMorphometrySummary,[Datapath,'CM_MorphometrySummary.xlsx'],'Sheet',1)
+writetable(LungCMMorphometrySummary,[Datapath,'\CM_MorphometrySummary.xlsx'],'Sheet',1)
 %% write tiff maps
 cmap = jet;
 cmap(1,:) = 0;
@@ -615,7 +615,7 @@ Diffusion.Lm_std = LungCMMorphometrySummary{2,5};
 Diffusion.SVR_std = LungCMMorphometrySummary{2,6};
 Diffusion.Na_std = LungCMMorphometrySummary{2,7};
 %% save maps in mat file
-save_data=[Datapath , 'CM_Morphometry.mat'];
+save_data=[Datapath , '\CM_Morphometry.mat'];
 save(save_data,'R_map','h_map','r_map','Lm_map','SVR_map','Na_map','So_map');   
 %% 
 fprintf('Lung Morphometry fit compeleted\n'); 

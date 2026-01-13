@@ -25,6 +25,12 @@ incomplete = Ventilation.IncompleteThresh;
 hyper = Ventilation.HyperventilatedThresh;
 medfilter = Ventilation.MedianFilter;
 DataPath = Ventilation.parentPath;
+
+% Ensure trailing file separator
+if ~endsWith(DataPath, filesep)
+    DataPath = [DataPath filesep];
+end
+
 Overall_SNR = Ventilation.SNR_lung;
 Ventilation.Threshold.Thresholds = [complete,incomplete,hyper];
 
@@ -39,7 +45,20 @@ warning('off','all') % Suppress all the tiff warnings
 % else
 %     disp('User must declare whether or they are analyzing N4 corrected images. Check settings/input_params(), and make sure N4_bias_analysis = yes or no.')
 % end
-foldername = "VDP_Analysis\";
+cd(DataPath)
+foldername = 'VDP_Analysis';
+[~, lastFolder] = fileparts(DataPath);
+if ~strcmp(lastFolder, foldername)
+    parentPath = fullfile(DataPath, foldername);
+else
+    parentPath = DataPath;
+end
+if ~exist(parentPath, 'dir')
+    mkdir(parentPath);
+end
+outputPath = parentPath;
+cd(outputPath);
+
 % Ensure only useful signal is operated on:
 maskarray = double(maskarray);
 MR = double(MR);
@@ -150,13 +169,12 @@ title({titlemain},'Fontweight','bold','FontSize',12);
 set(gca,'FontSize',14)
 
 set(gcf,'PaperPosition',[0 0 7.5 3.5]);
-mkdir(foldername)
-cd(foldername)
+
 % print([foldername + 'Ventilation_Histogram'],'-dpng','-r300');
 saveas(gca,'TH_Histogram.png');
 %% Output mask images with proton overlays:
 % Create a folder for the ventilation images:
-outputPath = char([DataPath + foldername]);
+
 cd(outputPath);
 cus_colormap = zeros(100,3);
 % colorgradient = 0:0.01:0.99;
@@ -206,7 +224,6 @@ MaskRegistered = permute(MaskRegistered,[1 2 4 3]);
 %% Output mask images with ventilation overlays:
 % Create a folder for the ventilation images:
 
-outputPath = char([DataPath + foldername]);
 cd(outputPath);
 cus_colormap = zeros(100,3);
 % colorgradient = 0:0.01:0.99;
@@ -293,7 +310,6 @@ Ventilation.Mask_Vent_Reg = Mask_Vent_Reg;
 %% Output mask boundaries  with ventilation overlays:
 % Create a folder for the ventilation images:
 
-outputPath = char([DataPath + foldername]);
 cd(outputPath);
 cus_colormap = zeros(100,3);
 
@@ -360,7 +376,6 @@ Ventilation.Mask_Vent_boundaries = Mask_Vent_boundaries;
 %% Output mask boundaries  with proton overlays:
 % Create a folder for the ventilation images:
 
-outputPath = char([DataPath + foldername]);
 cd(outputPath);
 cus_colormap = zeros(100,3);
 
@@ -842,7 +857,7 @@ Global.exportToPPTX('addpicture',DefectArrayMontage,'Position',...
 % Global.exportToPPTX('addpicture',ProtonImages,'Position',...
 %     [0 5.2 NumSliceView NumSliceView*(VentMontagePosition(4)/VentMontagePosition(3))]);
 
-VDP_hist = imread([outputPath ,'TH_Histogram.png']);    
+VDP_hist = imread(fullfile(outputPath ,'TH_Histogram.png'));    
 %   Global.exportToPPTX('addpicture',VDP_hist,'Position',[0 5 8.5 8.5*(size(VDP_hist,1)/size(VDP_hist,2))]);
 Global.exportToPPTX('addtext',['129Xe-Vent Images (SNR=',num2str(Overall_SNR),')'],'Position',[0 0.4 4.2 0.4],'Color','r','FontSize',20,'BackgroundColor','k');
 Global.exportToPPTX('addtext','Anatomical Proton','Position',[0 1.6 3 0.4],'Color','r','FontSize',20,'BackgroundColor','k');
@@ -894,7 +909,7 @@ Ventilation.Threshold.legend2 = legend2;
 Ventilation.Threshold.legend3 = legend3;
 Ventilation.Threshold.legend4 = legend4;
 
-save_title = [foldername + "VDPThresholdAnalysis.mat"];
+save_title = fullfile(outputPath ,'VDPThresholdAnalysis.mat');
 save(save_title);
 
 end
