@@ -155,7 +155,17 @@ for i=1:size(Images,3)
     weights=1; 
     parfor j= 1:num_ones 
         if strcmp(fitType,'human') == 1
-            lb=[0.0200 0.0090 0.5*M(j,1)]; ub=[0.0650 0.0500 1.5*M(j,1)];
+            lb=[0.0250 0.0075 0.5*M(j,1)]; ub=[0.0450 0.0350 1.5*M(j,1)];
+            % for "r", lower limit around 75, for the upper limit is not 
+            % straightforward, because r could increase as alveolar walls 
+            % are destroyed in lung disease and approach R. 
+            % That's theoretical, in reality with disease progression
+            % the whole ducts/sacs change structure and are no longer 
+            % cylindrical.  I would put the upper limit for r around
+            % ~0.7*R-0.8*R. Above r/R=0.8, most parameters in the cylinder model 
+            % are insensitive to r/R, so the model is not really useful. 
+            % This is an example from the original CM paper
+            
             initialvalues = [0.0300 0.0140 M(j,1)];
             [eestm,fval(j)] = DiffusionFunctions.MLfitRr2(M(j,:),bvalues,sigma^2,initialvalues,"cylRandr",weights,lb,ub,Do,delta);       % This is the only code line needed + function MLfitconloc1 
         elseif strcmp(fitType,'animals') == 1

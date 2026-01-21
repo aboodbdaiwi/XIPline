@@ -24,30 +24,34 @@ MainInput.Institute = 'CCHMC';
 MainInput.CCHMC_DbDiffAnalysis = 'yes';
 MainInput.Scanner = 'Philips'; 
 
+Outputs.Institute = MainInput.Institute;
+Outputs.Scanner = MainInput.Scanner;
+
 % get segmentation 
 MainInput.SE = 1;
 MainInput.thresholdlevel = 0.6;
 
 %%
 
-Outputs = [];
 Outputs.SUBJECT_ID = SubjectID;
 Outputs.Age = Age;
 Outputs.Sex = Sex;
 Outputs.Disease = Disease;
-Outputs.ScanDate = ScanDate;
+Outputs.ScanDate = string(ScanDate);
 Outputs.SW_VER = MainInput.ScannerSoftware;
 Outputs.DIFF_FILEPATH_NEW = diff_file(57:end);
 Outputs.analysispath = analysisFolder(57:end);
 Outputs.maindirectory = diff_file(1:56);
 Outputs.ReconType = ReconType;
 Outputs.MaskPath = analysisFolder(57:end); 
-Outputs.Note = MainInput.Note;
-Outputs.sernum = MainInput.sernum;
+Outputs.Note = MainInput.Note; 
+Outputs.ImageQuality = MainInput.ImageQuality;
+Outputs.diff_sernum = MainInput.sernum;
+Outputs.AnalysisVersion = 'v100'; %MainInput.analysisversion;
 
 Outputs.AnalysisCode_path = 'https://github.com/aboodbdaiwi/XIPline';
-Outputs.AnalysisDate = str2double(datestr(datetime('today'), 'yyyymmdd'));
-AnalysisDate = Outputs.AnalysisDate;
+Outputs.AnalysisDate = string(str2double(datestr(datetime('today'), 'yyyymmdd')));
+Outputs.timestamp = Outputs.AnalysisDate; 
 
 %%
 analysisSubfolder = MainInput.diff_analysis_folder;
@@ -97,11 +101,10 @@ Outputs.DenoiseWindow = MainInput.denoisewindow;
 
 [Ventilation, Diffusion, GasExchange, Proton, MainInput] = LoadData.LoadReadData(MainInput);
 Diffusion.Image = double(Diffusion.Image);
+Outputs.UncorrectedImage = Diffusion.UncorrectedImage;
 % figure; imslice(Diffusion.Image)
 Diffusion.outputpath = analysisSubfolder;
 Outputs.AnalysisCode_hash = MainInput.AnalysisCode_hash; 
-
-Diffusion.writereport = 'yes';
 
 %% Segmentation 
 cd(MainInput.XeDataLocation)
@@ -177,6 +180,7 @@ Diffusion.MorphometryAnalysisType = 'human';
 Diffusion.Do = 0.14; % 100% Xenon
 Diffusion.Delta = Diffusion.BigDeltaTime;  
 Diffusion.writereport = 'no';
+Outputs.Scanner = '3T-Philips';
 
 Outputs.MorphometryAnalysisType = Diffusion.MorphometryAnalysisType;
 Outputs.Do = Diffusion.Do;
@@ -184,10 +188,21 @@ Outputs.Do = Diffusion.Do;
 [Diffusion] = DiffusionFunctions.Diffusion_Analysis(Diffusion,MainInput);
 
 %% store results
-Outputs.SNR_table = Diffusion.SNR_table;
+Outputs.Image = Diffusion.Image; 
+Outputs.Ndiffimg = Diffusion.Ndiffimg; 
+Outputs.final_mask = Diffusion.final_mask; 
+Outputs.noise_mask = Diffusion.noise_mask; 
+Outputs.ADCmap = Diffusion.ADCmap;
+Outputs.ADCcoloredmap = Diffusion.ADCcoloredmap; 
+
+Outputs.SNR_table = Diffusion.SNR_table; 
+Outputs.SNR_vec = Diffusion.SNR_vec; 
 Outputs.meanADC = Diffusion.meanADC;
 Outputs.stdADC = Diffusion.stdADC;
 Outputs.ADC_hist = Diffusion.ADC_hist;
+Outputs.ADC_cv = Diffusion.ADC_cv;
+Outputs.ADC_skewness = Diffusion.ADC_skewness;
+Outputs.ADC_kurtosis = Diffusion.ADC_kurtosis;
 
 if strcmp(Diffusion.ADCLB_Analysis, 'yes')
     Outputs.LBADCMean = Diffusion.LBADCMean;
@@ -200,6 +215,17 @@ if strcmp(Diffusion.ADCLB_Analysis, 'yes')
     Outputs.DiffNormal2Percent = Diffusion.DiffNormal2Percent;
     Outputs.DiffHigh1Percent = Diffusion.DiffHigh1Percent;
     Outputs.DiffHigh2Percent = Diffusion.DiffHigh2Percent;
+else
+    Outputs.LBADCMean = [];
+    Outputs.LBADCStd = [];
+    Outputs.LBADC_hist = [];
+    Outputs.LB_BinTable = [];
+    Outputs.DiffLow1Percent = [];
+    Outputs.DiffLow2Percent = [];
+    Outputs.DiffNormal1Percent = [];
+    Outputs.DiffNormal2Percent = [];
+    Outputs.DiffHigh1Percent = [];
+    Outputs.DiffHigh2Percent = [];
 end
 if strcmp(Diffusion.MorphometryAnalysis, 'yes') && strcmp(Diffusion.CMMorphometry, 'yes')
     Outputs.R_mean = Diffusion.R_mean;

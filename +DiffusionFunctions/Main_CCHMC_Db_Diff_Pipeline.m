@@ -29,7 +29,8 @@ if contains(excelName, "rawDiff")
     AgeCol       = T(:,11);
     DiseaseCol   = T(:,12);
     NoteCol      = T(:,14);
-    RuneCol      = T(:,15);
+    ImageQCol      = T(:,15);
+    RuneCol      = T(:,16);
 
 elseif contains(excelName, "dcmDiff")
     % Extract relevant columns into simple cell arrays
@@ -74,7 +75,10 @@ for i = 411%:nSubjects % always start from 2
     if ismissing(NoteCol{i})
         NoteCol{i} = "";
     end
-
+    if ismissing(ImageQCol{i})
+        ImageQCol{i} = "";
+    end
+    
     MainInput = struct();
     MainInput.SubjectID        = SubjectCol{i};
     MainInput.Age              = AgeCol{i};
@@ -87,8 +91,9 @@ for i = 411%:nSubjects % always start from 2
     MainInput.Analyst          = 'Database';
     MainInput.N4Bias           = 'yes';
     MainInput.AnalysisMethod   = 'W.Linear';
-    MainInput.AgeCor           = 'no';   
+    MainInput.AgeCor           = 'no';    
     MainInput.Note             = NoteCol{i};
+    MainInput.ImageQuality     = ImageQCol{i};
     MainInput.SliceOrientation = 'transversal';
     MainInput.DiffAcqOrder = 'b-value interleave';
     % diff file
@@ -200,7 +205,7 @@ for i = 411%:nSubjects % always start from 2
             end
             MainInput.sernum = SeriesTime(1:6);       
         else
-            MainInput.sernum = dataset_name; %(5:end);
+            MainInput.sernum = '000000'; dataset_name; %(5:end);
         end
 
     else
@@ -208,7 +213,7 @@ for i = 411%:nSubjects % always start from 2
     end
 
     analysisversion = 'diff_v100';
-
+    MainInput.analysisversion  = analysisversion;
        % Format subject number with leading zeros
     subnum = SubNumCol{i};
     if isnumeric(subnum)

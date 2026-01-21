@@ -183,7 +183,7 @@ for i = 1:numel(fieldsToInit)
     Diffusion.(f) = NaN;
 end
 
-%% Save iamges and maskes
+%% Save images and maskes
 % ==== File Deletion Helper Function ====
 delete_if_exist = @(pattern) cellfun(@(f) delete(fullfile(outputpath, f)), ...
     {dir(fullfile(outputpath, pattern)).name}, 'UniformOutput', false);

@@ -43,7 +43,17 @@ SE = strel('square', 10);
 maskarray_dilated = imdilate(final_mask, SE);
 airwaymask = Segmentation.SegmentLungthresh(diffimg(:,:,:,1),1,0.3);
 zerofillings = double(diffimg(:,:,:,1) == 0);
-noise_mask = double(imcomplement(maskarray_dilated).*~airwaymask.*~zerofillings);
+
+artifact_mask = zeros(size(diffimg));
+for i = 1:length(bvalues)
+    artifact_mask(:,:,:,i) = Segmentation.SegmentLungthresh(diffimg(:,:,:,i),1,0.5); 
+end
+artifact_mask = sum(artifact_mask,4);
+artifact_mask = double(artifact_mask > 0);
+
+noise_mask = double(imcomplement(maskarray_dilated).*~airwaymask.*~zerofillings.*~artifact_mask);
+
+% figure; imslice(noise_mask)
 % figure; imslice(noise_mask)
 % noise_mask = ((~lung_mask)+(~airway_mask))-1;
 % noise_mask=noise_mask>0;
@@ -77,6 +87,9 @@ final_mask=Nfinal_mask;
 noise_mask=Nnoise_mask;
 slices=length(find_slice_checker);
 
+Diffusion.Ndiffimg = Ndiffimg;
+Diffusion.final_mask = final_mask;
+Diffusion.noise_mask = noise_mask;
 %% Normalize the intensity of the original image to fall between [0,100].
 Ndiffimg=Ndiffimg*100;
 
@@ -104,9 +117,7 @@ for n = 1:length(bvalues)
         
         %Calculating the noise vector
         noise_vec=(Ndiffimg(:,:,:,n));  
-        airwaymask = Segmentation.SegmentLungthresh(Ndiffimg(:,:,:,n),1,0.3); % this is to remove artifact from phase enconding 
-        Nmask = noise_mask.*~airwaymask;
-        noise_vec(Nmask==0)=[];    
+        noise_vec(noise_mask==0)=[];    
         Noise99percentile = prctile(noise_vec,99.0);
         noise_vec(noise_vec >= Noise99percentile) = [];
         mean_noise(n) = mean(noise_vec);            %the mean of the noise               
@@ -118,7 +129,8 @@ weight_vec = zeros(1, length(SNR_vec));
 for n = 1:length(SNR_vec)
     weight_vec(n) = SNR_vec(n) / SNR_vec(1); %the weighting vector
 end
- weight_vec =  weight_vec';
+weight_vec =  weight_vec';
+Diffusion.weight_vec = weight_vec;
 cd(outputpath);
 SNR_table=table( bvalues',SNR_vec,weight_vec);
 SNRFig = figure('Name','SNR','units','normalized','position',[350 350 300 250]);
@@ -131,27 +143,6 @@ t = uitable(SNRFig,'Data',SNR_table{:,:},'ColumnName',...
 % print('SNR Table','-dpng','-r300');
 saveas(gca,'SNR_Table.png')
 close all; 
-%% N4 Bias 
-
-if ~isfield(MainInput, 'N4Bias') || isempty(MainInput.N4Bias)
-    MainInput.N4Bias = 'yes';
-end
-val = MainInput.N4Bias;
-
-if (isnumeric(val) && val == 1) || strcmpi(val, 'yes')
-    % apply N4 for fun
-    MainInput.N4Bias = 'yes';
-    Diffusion.Image = Diffusion.UncorrectedImage;
-    [~, BiasMap] = Segmentation.N4_bias_correction(Diffusion.Image(:,:,:,1), MainInput.XeDataLocation);
-    for i=1:size(Diffusion.Image, 4)
-        Diffusion.Image(:,:,:,i) = Diffusion.Image(:,:,:,i).*(1./BiasMap);
-    end
-else
-    MainInput.N4Bias = 'no';
-end
-
-Ndiffimg = Diffusion.Image;
-Ndiffimg = (Ndiffimg - min(Ndiffimg(:)))/(max(Ndiffimg(:)) - min(Ndiffimg(:)));
 
 %% Output mask boundaries  with xenon image overlays:
 
@@ -411,6 +402,7 @@ ADC_vec = ADC_vec(~isnan(ADC_vec));  % optional: remove NaNs
 ADC_mean = mean(ADC_vec);
 ADC_std  = std(ADC_vec);
 ADC_cv   = 100 * ADC_std / ADC_mean;    % coefficient of variation in %
+Diffusion.ADC_cv = ADC_cv;
 Diffusion.ADC_skewness = skewness(ADC_vec);
 Diffusion.ADC_kurtosis = kurtosis(ADC_vec); 
 % --- Reference CV ---
@@ -457,6 +449,27 @@ cmap = colormap(jet);
 cmap(1,:) = 0;
 colormap(cmap);
 close all
+%% N4 Bias 
+
+if ~isfield(MainInput, 'N4Bias') || isempty(MainInput.N4Bias)
+    MainInput.N4Bias = 'yes';
+end
+val = MainInput.N4Bias;
+
+if (isnumeric(val) && val == 1) || strcmpi(val, 'yes')
+    % apply N4 for fun
+    MainInput.N4Bias = 'yes';
+    Diffusion.Image = Diffusion.UncorrectedImage;
+    [~, BiasMap] = Segmentation.N4_bias_correction(Diffusion.Image(:,:,:,1), MainInput.XeDataLocation);
+    for i=1:size(Diffusion.Image, 4)
+        Diffusion.Image(:,:,:,i) = Diffusion.Image(:,:,:,i).*(1./BiasMap);
+    end
+else
+    MainInput.N4Bias = 'no';
+end
+
+Ndiffimg = Diffusion.Image;
+Ndiffimg = (Ndiffimg - min(Ndiffimg(:)))/(max(Ndiffimg(:)) - min(Ndiffimg(:)));
 
 %% %% write tiff and read back Binneddiff maps
 tiff = figure('MenuBar','none','ToolBar','none','DockControls','off','Resize','off','WindowState','minimized');%figure for tiffs
@@ -493,6 +506,7 @@ for ii = 1 : size(tiff_info, 1)
     temp_tiff = imread('ADCmap.tif', ii);
     ADCcoloredmap(:,:,:,ii) = temp_tiff;
 end
+Diffusion.ADCcoloredmap = ADCcoloredmap;
 % S = orthosliceViewer((BinnedVentmap)); %colormap(SixBinMap);
 
 
@@ -610,17 +624,19 @@ Global.exportToPPTX('close');
 fprintf('PowerPoint file has been saved'); 
 close all;
 
-% store result    
+% store result    final_mask
+Diffusion.final_mask = final_mask;
 Diffusion.ADCmap = ADCmap;
 Diffusion.ADCcoloredmap = ADCcoloredmap;
 Diffusion.SNR_table = SNR_table;
+Diffusion.SNR_vec = SNR_vec;
 Diffusion.Rmap = Rmap;
 Diffusion.meanRmap = meanRmap;
 Diffusion.meanADC = meanADC;
 Diffusion.stdADC = stdADC;
 Diffusion.ADC_hist = ADC_hist;
 %% save maps in mat file
-save_data=[outputpath,'\ADC_Analysis','.mat'];
+save_data= fullfile(outputpath,'ADC_Analysis.mat');
 save(save_data);   
 
 %% 
