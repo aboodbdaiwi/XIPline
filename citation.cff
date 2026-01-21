@@ -1,0 +1,36 @@
+cff-version: 1.0.0
+message: "If you use this software, please cite both the software and the associated publication below."
+
+type: article
+title: "129Xe Image Processing Pipeline: An open-source, graphical user interface application for the analysis of hyperpolarized 129Xe MRI"
+authors:
+  - family-names: Bdaiwi
+    given-names: Abdullah S.
+  - family-names: Willmering
+    given-names: Matthew M.
+  - family-names: Plummer
+    given-names: Joseph W.
+  - family-names: Hussain
+    given-names: Riaz
+  - family-names: Roach
+    given-names: David J.
+  - family-names: Parra-Robles
+    given-names: Juan
+  - family-names: Niedbalski
+    given-names: Peter J.
+  - family-names: Woods
+    given-names: Jason C.
+  - family-names: Walkup
+    given-names: Laura L.
+  - family-names: Cleveland
+    given-names: Zackary I.
+journal: "Magnetic Resonance in Medicine"
+year: 2025
+volume: 93
+issue: 3
+pages: "1220–1237"
+doi: "10.1002/mrm.30347"
+
+version: "1.0.0"
+date-released: 2024-10-30
+repository-code: "https://github.com/aboodbdaiwi/XIPline"
