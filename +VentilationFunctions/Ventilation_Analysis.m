@@ -254,27 +254,28 @@ delete_if_exist('lungmask*.nii*');
 delete_if_exist('airwaymask*.nii*');
 delete_if_exist('vesselsmask*.nii*');
 
-% uncorrectedimage
-img_name = lower(['proton' timestamp '.nii']);
-niftiwrite(abs(fliplr(rot90(Proton.Image, -1))), fullfile(parentPath, img_name), 'Compressed', true);
-info = niftiinfo(fullfile(parentPath, [img_name '.gz']));
-info.Description = 'Package Version: Version1';
-niftiwrite(abs(fliplr(rot90(Proton.Image, -1))), fullfile(parentPath, img_name), info, 'Compressed', true);
+if MainInput.NoProtonImage == 0 
+    img_name = lower(['proton' timestamp '.nii']);
+    niftiwrite(abs(fliplr(rot90(Proton.Image, -1))), fullfile(parentPath, img_name), 'Compressed', true);
+    info = niftiinfo(fullfile(parentPath, [img_name '.gz']));
+    info.Description = 'Package Version: Version1';
+    niftiwrite(abs(fliplr(rot90(Proton.Image, -1))), fullfile(parentPath, img_name), info, 'Compressed', true);
 
-% Image
-img_name = lower(['protonregistered' timestamp '.nii']);
-niftiwrite(abs(fliplr(rot90(Proton.ProtonRegistered, -1))), fullfile(parentPath, img_name), 'Compressed', true);
-info = niftiinfo(fullfile(parentPath, [img_name '.gz']));
-info.Description = 'Package Version: Version1';
-niftiwrite(abs(fliplr(rot90(Proton.ProtonRegistered, -1))), fullfile(parentPath, img_name), info, 'Compressed', true);
-
+    img_name = lower(['protonregistered' timestamp '.nii']);
+    niftiwrite(abs(fliplr(rot90(Proton.ProtonRegistered, -1))), fullfile(parentPath, img_name), 'Compressed', true);
+    info = niftiinfo(fullfile(parentPath, [img_name '.gz']));
+    info.Description = 'Package Version: Version1';
+    niftiwrite(abs(fliplr(rot90(Proton.ProtonRegistered, -1))), fullfile(parentPath, img_name), info, 'Compressed', true);
+else
+    Proton.Image = zeros(size(Ventilation.Image));
+    Proton.ProtonRegistered = zeros(size(Ventilation.Image));
+end 
 % uncorrectedimage
 img_name = lower(['uncorrectedimage' timestamp '.nii']);
 niftiwrite(abs(fliplr(rot90(Ventilation.UncorrectedImage, -1))), fullfile(parentPath, img_name), 'Compressed', true);
 info = niftiinfo(fullfile(parentPath, [img_name '.gz']));
 info.Description = 'Package Version: Version1';
 niftiwrite(abs(fliplr(rot90(Ventilation.UncorrectedImage, -1))), fullfile(parentPath, img_name), info, 'Compressed', true);
-
 
 % Image
 img_name = lower(['image' timestamp '.nii']);

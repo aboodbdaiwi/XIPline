@@ -201,6 +201,14 @@ for ii = 1:size(ScaledVentImage2,3)
         end
     end
 end
+% Default to 'no' if field does not exist or is empty
+if ~isfield(Ventilation, 'MedianFilter') || isempty(Ventilation.MedianFilter)
+    Ventilation.MedianFilter = 'no';
+end
+if strcmp(Ventilation.MedianFilter,'yes') 
+    VentBinMap2 = VentilationFunctions.medFilter(VentBinMap2).*maskarray;
+end
+%figure; imslice(VentBinMap2, 'MedDefectMap')
 
 % Apply the lung & trachea masks to the binned data:
 VentBinMask2 = logical((VentBinMap2-1).*maskarray4);
@@ -212,6 +220,8 @@ Sum_all_pixels=sum(maskarray(:)==1);
 Low1VentBinMap=zeros(size(VentBinMap2));
 Low1VentBinMap(VentBinMap2==1)=1;
 VentLow1Percent=(sum(Low1VentBinMap(:))/Sum_all_pixels)*100;
+
+Ventilation.MedianFilter
 
 Low2VentBinMap=zeros(size(VentBinMap2));
 Low2VentBinMap(VentBinMap2==2)=1;

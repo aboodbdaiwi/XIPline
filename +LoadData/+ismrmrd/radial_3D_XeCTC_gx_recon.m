@@ -45,6 +45,10 @@ clc
 % Reading can be done one acquisition (or chunk) at a time, 
 % but this is much faster for data sets that fit into RAM.
 D = dset.readAcquisition();
+D.data = D.data(4:end-3);
+D.traj = D.traj(4:end-3);
+
+
 %% Encoding and reconstruction information
 % Matrix size
 enc_Nx = hdr.encoding.encodedSpace.matrixSize.x;
@@ -180,7 +184,7 @@ disp('Importing Data Completed.')
 %% Calculate Trajectories
 disp('Calculating Trajectories...')
 if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
-    del = 2.25;
+    del = 1.25; % 2.25
     if (extraOvs)
         del = del * OvsFactor;
     end

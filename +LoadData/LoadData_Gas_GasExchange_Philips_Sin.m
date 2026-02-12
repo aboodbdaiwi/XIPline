@@ -78,6 +78,7 @@ ScanVersion = MainInput.Institute;
 %     ScanVersion = 'Duke';
 % end
 XeSinFile = dir([GasDataLocation,'\*.sin']);
+XeSinFile = XeSinFile(2);
 
 DataFiles = dir([GasDataLocation,'\*.data']);
 XeDataFile = DataFiles(1);
@@ -188,10 +189,11 @@ else
 end
 
 if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
+    %Gas k-space
+    GasKSpace = XeData(:,:,1);    
     %Dissolved k-space
     DissolvedKSpace = XeData(:,:,2);
-    %Gas k-space
-    GasKSpace = XeData(:,:,1);
+
     XeData_size = size(XeData2);
 
     if XeData_size(end) == 2
@@ -211,23 +213,38 @@ if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
 else
     %Split Xe data into components; formatted as [read, proj, interleave, dyn, mix]
     %Dissolved Spectra
-    PreDissolvedFID = XeData(:,1,1,1,2);
-    PostDissolvedFID = XeData(:,2,1,1,2);
+    if length(size(XeData)) == 4
+        PreDissolvedFID = XeData(:,1,2,2);
+        PostDissolvedFID = XeData(:,2,2,2);
+        %plot(abs(PostDissolvedFID))
+        PreGasFID = XeData(:,1,1,2);
+        % PostGasFID = XeData(:,2,1,2);
+        PostGasFID = XeData(:,1,1,2); % for this CTC Polarean protocol we only do 1 post spectra on the gas
+    
+        %Dissolved k-space
+        DissolvedKSpaceInit = XeData(:,:,2,1);
+        %Gas k-space
+        GasKSpaceInit = XeData(:,:,1,1);        
+    else
+        PreDissolvedFID = XeData(:,1,1,1,2);
+        PostDissolvedFID = XeData(:,2,1,1,2);
 
-    %%Gas Spectra - Not Needed
-    %%PreGasFID = XeData(:,1,1,2,2);
-    PostGasFID = XeData(:,2,1,2,2);
+        %%Gas Spectra - Not Needed
+        PreGasFID = XeData(:,1,1,2,2);
+        PostGasFID = XeData(:,2,1,2,2);
+    
+        %%Off-Res Spectra - Not needed
+        %%PreOffResFID = XeData(:,1,1,3,2);
+        %%PostOffResFID = XeData(:,2,1,3,2);
+    
+        %Dissolved k-space
+        DissolvedKSpaceInit = XeData(:,:,:,1,1);
+        %Gas k-space
+        GasKSpaceInit = XeData(:,:,:,2,1);
+        %%Off-Res k-space - Not needed
+        %%OffResKSpace = XeData(:,:,:,3,1);        
+    end
 
-    %%Off-Res Spectra - Not needed
-    %%PreOffResFID = XeData(:,1,1,3,2);
-    %%PostOffResFID = XeData(:,2,1,3,2);
-
-    %Dissolved k-space
-    DissolvedKSpaceInit = XeData(:,:,:,1,1);
-    %Gas k-space
-    GasKSpaceInit = XeData(:,:,:,2,1);
-    %%Off-Res k-space - Not needed
-    %%OffResKSpace = XeData(:,:,:,3,1);
 
     if(extraOvs)
         PreDissolvedFID = movmean(PreDissolvedFID,OvsFactor);
@@ -235,6 +252,9 @@ else
 
         PostDissolvedFID = movmean(PostDissolvedFID,OvsFactor);
         PostDissolvedFID =  downsample(PostDissolvedFID,OvsFactor);
+
+        PreGasFID = movmean(PreGasFID,OvsFactor);
+        PreGasFID =  downsample(PreGasFID,OvsFactor);
 
         PostGasFID = movmean(PostGasFID,OvsFactor);
         PostGasFID =  downsample(PostGasFID,OvsFactor);
@@ -246,14 +266,53 @@ else
         GasKSpaceInit = downsample(GasKSpaceInit,OvsFactor);
 
         dwell_s = dwell_s * OvsFactor;
+        
+        % % Plot
+        % N = length(PreDissolvedFID);
+        % x = linspace(-N/2, N/2, N);   % generic frequency axis
+        % figure;
+        % tiledlayout(2,2);
+        % 
+        % nexttile;
+        % plot(x, abs(PreDissolvedFID), 'k', 'LineWidth',1.5);
+        % title('Pre Dissolved');
+        % xlabel('Frequency (a.u.)');
+        % ylabel('|S|');
+        % grid on;
+        % 
+        % nexttile;
+        % plot(x, abs(PostDissolvedFID), 'r', 'LineWidth',1.5);
+        % title('Post Dissolved');
+        % xlabel('Frequency (a.u.)');
+        % ylabel('|S|');
+        % grid on;
+        % 
+        % nexttile;
+        % plot(x, abs(PreGasFID), 'b', 'LineWidth',1.5);
+        % title('Pre Gas');
+        % xlabel('Frequency (a.u.)');
+        % ylabel('|S|');
+        % grid on;
+        % 
+        % nexttile;
+        % plot(x, abs(PostGasFID), 'm', 'LineWidth',1.5);
+        % title('Post Gas');
+        % xlabel('Frequency (a.u.)');
+        % ylabel('|S|');
+        % grid on;
+        % 
+        % sgtitle('Pre/Post Gas and Dissolved Spectra');
     end
 
     %Correct Atten. 
     %Since R59, different levels of attn are used for the two mixes, scale here using last gas kspace and first post gas spec)
     scaleFac = abs(PostGasFID(1,1))/abs(GasKSpaceInit(1,end,end)); %These should be almost identical at k0
+    scaleFac1dis = abs(PostDissolvedFID(1,1))/abs(DissolvedKSpaceInit(1,end,end)); %These should be almost identical at k0
+    
     DissolvedKSpaceInit = DissolvedKSpaceInit * scaleFac;
     GasKSpaceInit = GasKSpaceInit * scaleFac;
-
+    scaleFac2dis = abs(PostDissolvedFID(1,1))/abs(DissolvedKSpaceInit(1,end,end)); %These should be almost identical at k0
+    
     %Get sizes of dimensions
     XeSpec_nsamp = size(DissolvedKSpaceInit,1);
     XeImg_nsamp = (XeSin.max_encoding_numbers.vals(1)+1) / OvsFactor;
@@ -551,7 +610,7 @@ elseif (VentMask == ones(size(VentMask)))%Vent mask already exists since not
     %make success = 0 since indicates no signal
     success = 0;%mark as unsuccessful
 end
-
+    
 %View
 VentMontage = figure('Name','Vent Image');set(VentMontage,'WindowState','minimized');
 montage(abs(UncorrectedVentImage),'DisplayRange',[0 max(abs(UncorrectedVentImage(:)))])

@@ -76,13 +76,29 @@ else
     XeVoxelInfo = MainInput.XeVoxelInfo;
 end
 TransformType = MainInput.TransformType;
+% if strcmp(MainInput.AnalysisType,'GasExchange')
+%     H_RecMatrix = Proton.H_RecMatrix;
+%     DataLocation = fullfile(MainInput.XeDataLocation,'GasExchange_Analysis');
+% else
+%     DataLocation = fullfile(MainInput.XeDataLocation,'Ventilation_Analysis');
+% end
+%     figure; Global.imslice(moving1);
+    % Determine required subfolder name
 if strcmp(MainInput.AnalysisType,'GasExchange')
     H_RecMatrix = Proton.H_RecMatrix;
-    DataLocation = fullfile(MainInput.XeDataLocation,'GasExchange_Analysis');
+    subFolder = 'GasExchange_Analysis';
 else
-    DataLocation = fullfile(MainInput.XeDataLocation,'Ventilation_Analysis');
+    subFolder = 'Ventilation_Analysis';
 end
-%     figure; Global.imslice(moving1);
+
+% Check if OutputPath already ends with the subfolder
+[~, lastFolder] = fileparts(MainInput.OutputPath);
+
+if ~strcmp(lastFolder, subFolder)
+    DataLocation = fullfile(MainInput.OutputPath, subFolder);
+else
+    DataLocation = MainInput.OutputPath;
+end
 
 cd(DataLocation)
 % if strcmp(MainInput.AnalysisType,'Ventilation') == 1 
@@ -317,11 +333,12 @@ if strcmp(MainInput.AnalysisType,'GasExchange')
 end
 %% save images
 %Tiffs (movingRegisteredVolume)
-if strcmp(MainInput.AnalysisType,'Ventilation')
-    OutputPath = fullfile(MainInput.OutputPath,'Ventilation_Analysis');
-elseif strcmp(MainInput.AnalysisType,'GasExchange')
-    OutputPath = fullfile(MainInput.OutputPath,'GasExchange_Analysis');
-end
+% if strcmp(MainInput.AnalysisType,'Ventilation')
+%     OutputPath = fullfile(MainInput.OutputPath,'Ventilation_Analysis');
+% elseif strcmp(MainInput.AnalysisType,'GasExchange')
+%     OutputPath = fullfile(MainInput.OutputPath,'GasExchange_Analysis');
+% end
+OutputPath = DataLocation;
 Global.write_imshowpair(ProtonRegistered,fixed(:,:,1:nSlice),OutputPath)
 % figure; orthosliceViewer(Proton.ProtonRegisteredColored)
 

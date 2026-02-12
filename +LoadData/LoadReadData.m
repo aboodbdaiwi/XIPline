@@ -347,6 +347,26 @@ elseif strcmp(MainInput.XeDataext,'.7') && strcmp(MainInput.Scanner,'GE')
 
 end 
 
+% change dims :
+if strcmp(MainInput.AnalysisType,'Ventilation')
+    Image = Ventilation.Image;    
+    % Ensure Ventilation.Image exists and is 3-D
+    assert(ndims(Image) == 3, 'Ventilation.Image must be a 3-D array.');
+    sz = size(Image);                 % [d1 d2 d3]        
+    [~, idxMin] = min(sz(1:3));   % idxMin ∈ {1,2,3}
+    order = 1:3;                  % [1 2 3]
+    order(order == idxMin) = [];  % remove the smallest dim => two dims left in original order
+    order = [order, idxMin];      % append the smallest as the last dim
+    Image = permute(Image, order);
+    Ventilation.Image = Image;
+    % (Optional) show what changed
+    fprintf('Original size: [%s]  ->  New size: [%s], permute order: [%s]\n', ...
+        num2str(sz), num2str(size(Image)), num2str(order));
+    
+elseif strcmp(MainInput.AnalysisType,'Diffusion')
+
+end
+
 % apply denoising 
 if strcmp(MainInput.denoiseXe,'yes')
     if ~isfield(MainInput,'DenoiseMethod') || isempty(MainInput.DenoiseMethod)
@@ -354,6 +374,7 @@ if strcmp(MainInput.denoiseXe,'yes')
     end    
     if strcmp(MainInput.AnalysisType,'Ventilation')
         Image = Ventilation.Image;    
+
         mask = Segmentation.SegmentLungthresh(Image,1,0.3);
         zerofillings = double(Image == 0);
 
@@ -372,7 +393,7 @@ if strcmp(MainInput.denoiseXe,'yes')
     
         switch MainInput.DenoiseMethod
             case 'tMPPCA'
-                Ventilation.tMPPCA.window = str2double(MainInput.denoisewindow);
+                Ventilation.tMPPCA.window = MainInput.denoisewindow;
                 try
                     mask = true(size(Image,1), size(Image,2));  % Or your lung mask
                     [denoised, Sigma2, P, SNR_gain] = Global.tMPPCA.denoise_recursive_tensor( ...
@@ -429,7 +450,7 @@ if strcmp(MainInput.denoiseXe,'yes')
         switch MainInput.DenoiseMethod
             case 'tMPPCA'
                 Zeromask = double(Image > 0);
-                Diffusion.tMPPCA.window = str2double(MainInput.denoisewindow);
+                Diffusion.tMPPCA.window = (MainInput.denoisewindow);
                 try
                     mask = true(size(Image,1),size(Image,2));  % Or your lung mask
                     [denoised, Sigma2, P, SNR_gain] = Global.tMPPCA.denoise_recursive_tensor( ...

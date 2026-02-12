@@ -25,7 +25,7 @@ for i =1:size(maskarray,3)
 end
 
 temp_handles.he = Ventilation.Image; %xe.img;
-temp_handles.lungsmask = dilated_mask; % maskarray
+temp_handles.lungsmask = maskarray; % maskarray dilated_mask
 temp_handles.vessel_mask = Ventilation.VesselMask;
 temp_handles.lobemask = maskarray;
 temp_handles.ventmaskbinary = maskarray;
