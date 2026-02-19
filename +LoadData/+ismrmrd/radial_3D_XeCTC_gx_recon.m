@@ -40,20 +40,60 @@ GasDataLocation = MainInput.XeDataLocation;
 % We need to check if optional fields exists before trying to read them
 
 hdr = LoadData.ismrmrd.xml.deserialize(dset.readxml);
+Ncontrast = hdr.encoding.encodingLimits.contrast.maximum;
+
 %% Read all the data
 clc
 % Reading can be done one acquisition (or chunk) at a time, 
 % but this is much faster for data sets that fit into RAM.
 D = dset.readAcquisition();
-D.data = D.data(4:end-3);
-D.traj = D.traj(4:end-3);
+% D.data = 
+% D.traj = 
+
+% 1) Get data vector (handle cell)
+x = D.traj;
+if iscell(x), x = x{1}; end           % now x is complex vector/array
+
+% Make it a row: [nChan x Nsamp]
+x = squeeze(x);
+if isvector(x)
+    x = x(:).';                       % 1 x Nsamp
+end
+
+Nsamp_full = size(x, 2);
+
+% 2) Find last non-zero sample across channels
+tol = 0; % or a small threshold like 1e-8 if needed
+lastNonZero = find(any(abs(x) > tol, 1), 1, 'last');
+
+% If nothing found, fall back
+if isempty(lastNonZero)
+    lastNonZero = Nsamp_full;
+end
+
+% 3) Trim trajectory to the effective (non-zero) length
+traj = D.traj;                        % should be 3 x Nsamp_full
+for c = 1:numel(traj)
+    this_traj = traj{c};    % 3 x Nsamp_full
+    % Trim trajectory
+    traj{c} = this_traj(:, 1:lastNonZero);
+end
+D.traj = traj; 
+% 4) Oversampling factor = full declared samples / traj points
+OvsFactor = Nsamp_full / lastNonZero;
+
+fprintf('Nsamp_full = %d, OvsFactor = %.6g\n',  Nsamp_full,  OvsFactor);
 
 
 %% Encoding and reconstruction information
 % Matrix size
 enc_Nx = hdr.encoding.encodedSpace.matrixSize.x;
-if enc_Nx >= 65
-    enc_Nx = enc_Nx / 2;
+if OvsFactor >= 2
+    enc_Nx = enc_Nx/OvsFactor;
+else
+    if enc_Nx >= 65
+        enc_Nx = enc_Nx / 2;
+    end
 end
 % enc_Ny = hdr.encoding.encodedSpace.matrixSize.y;
 size_proj = size(D.data{1}); 
@@ -63,7 +103,7 @@ for i = 1:length(D.data)
         Ny = Ny + 1;
     end
 end
-enc_Ny = Ny/2;
+enc_Ny = Ny/Ncontrast;
 % if strcmp(MainInput.Scanner,'Siemens')
 %     enc_Ny = 5000/2;
 % elseif strcmp(MainInput.Scanner,'GE')
@@ -99,8 +139,12 @@ ReconVersion = 'TEST';%If not connected to git, can't determine hash so state te
 NumPlotSlices = 7;%must be odd to work as expected
 ScanVersion = 'XeCTC';
 
-extraOvs = false;
-OvsFactor = 1.0;
+if OvsFactor >= 2
+    extraOvs = true;
+else
+    extraOvs = false;
+end
+% OvsFactor = 1.0;
 % dwell_ms = 0.64/68; %in ms - for 64 points with 0.64ms readout   
 dwell_ms = D.head.sample_time_us(1) / 1000;
 % if (exist('XeSin','var') && XeSin.non_cart_max_encoding_nrs.vals(1) ~= 63) %R59 oversampling
@@ -143,19 +187,24 @@ TE90 = hdr.sequenceParameters.TE(1);
 ActTE90 = TE90; %TE90 from center of pulse
 Scanner = [hdr.acquisitionSystemInformation.systemVendor,'-',num2str(hdr.acquisitionSystemInformation.systemFieldStrength_T),'T'];
 Xe_AcqMatrix = enc_Nx;
-Xe_RecMatrix = 2*Xe_AcqMatrix;
+if strcmp(ScanVersion,'XeCTC')
+    Xe_RecMatrix = 112;
+else
+    Xe_RecMatrix = 2*Xe_AcqMatrix;
+end
 disp('Importing Acquisition Information Completed.')
 
 %% Import Data
-
 cellSize = cell2mat(D.data(1,1));
-XeData = zeros(size(cellSize,1),enc_Ny,2);
-for i = 1:enc_Ny*2
-    if mod(i, 2) == 0
-        XeData(:,ceil(i/2),2) = cell2mat(D.data(1,i));
-    else
-        XeData(:,ceil(i/2),1) = cell2mat(D.data(1,i));
-    end 
+Nx = size(D.data{1,1}, 1);
+
+XeData = zeros(Nx, enc_Ny, Ncontrast, 'like', D.data{1,1});
+
+for i = 1:(enc_Ny * Ncontrast)
+    ky = ceil(i / Ncontrast);        % 1..enc_Ny
+    c  = mod(i-1, Ncontrast) + 1;    % 1..3 (gas,diss,postdiss)
+    
+    XeData(:, ky, c) = D.data{1, i};
 end
 
 if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
@@ -178,6 +227,8 @@ if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
     Xe_nprof = size(DissolvedKSpace,2);
     Xe_interleaves = 1;
 end
+GasKSpace = double(GasKSpace);
+DissolvedKSpace = double(DissolvedKSpace);
 disp('Importing Data Completed.')
 
 
@@ -189,21 +240,22 @@ if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
         del = del * OvsFactor;
     end
 
-    cellSize = cell2mat(D.traj(1,1));
-    XeTraj = zeros(size(cellSize,1),size(cellSize,2),enc_Ny,2);
-    for i = 1:enc_Ny*2
-        if mod(i, 2) == 0
-            XeTraj(:,:,ceil(i/2),2) = cell2mat(D.traj(1,i));
-        else
-            XeTraj(:,:,ceil(i/2),1) = cell2mat(D.traj(1,i));
-        end 
+    cellSize  = D.traj{1,1};       % 3 x Nsamp (single)
+    nCoord = size(cellSize, 1);    % should be 3
+    nSamp  = size(cellSize, 2);    % e.g., 58
+    XeTraj = zeros(nCoord, nSamp, enc_Ny, Ncontrast, 'like', cellSize);
+    for i = 1:(enc_Ny * Ncontrast)
+        ky = ceil(i / Ncontrast);          % 1..enc_Ny
+        c  = mod(i-1, Ncontrast) + 1;      % 1..3 (gas,diss,postdiss)
+        XeTraj(:,:,ky,c) = D.traj{1,i};    % use {} for cell content
     end
-    XeTraj = squeeze(XeTraj(:,:,:,1)); % same Trajectories so use gas only 
 
-    if (extraOvs)
-        XeTraj = movmean(XeTraj,OvsFactor);
-        XeTraj =  downsample(XeTraj,OvsFactor);
-    end
+    XeTraj = double(squeeze(XeTraj(:,:,:,1))); % same Trajectories so use gas only 
+
+    % if (extraOvs)
+    %     XeTraj = movmean(XeTraj,OvsFactor);
+    %     XeTraj =  downsample(XeTraj,OvsFactor);
+    % end
 end
 disp('Calculating Trajectories Completed.')
 
@@ -212,7 +264,7 @@ disp('Calculating Trajectories Completed.')
 % Transform Data into Images and Spectra                                  %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Determine FOV Shift
-
+clc
 %not using planned shifts as techs don't seem to do it consistently
 disp('Determining Image offset...')
 PixelShiftinit = [0; 0; 0]; %start with no offset
@@ -337,13 +389,17 @@ savefig('DissolvedNMR.fig')
 close(gcf)
 %% Remove approch to steady state for Dissolved Phase
 %copy to new variable before modifying
+SS = true;
 DissolvedKSpace_SS = DissolvedKSpace;
 GasKSpace_SS = GasKSpace;
 XeTraj_SS = XeTraj;
-SS_ind = 60;%remove 1st 60 points
-DissolvedKSpace_SS(:,1:SS_ind) = [];
-GasKSpace_SS(:,1:SS_ind) = [];
-XeTraj_SS(:,:,1:SS_ind) = [];
+SS_ind = 0;
+if SS
+    SS_ind = 60;%remove 1st 60 points
+    DissolvedKSpace_SS(:,1:SS_ind) = [];
+    GasKSpace_SS(:,1:SS_ind) = [];
+    XeTraj_SS(:,:,1:SS_ind) = [];
+end
 
 
 %% Gas Phase Contamination Removal
@@ -389,7 +445,7 @@ hold off
 % sgtitle('Signal Dynamics','FontSize',22)
 cd(outputpath)
 savefig('SigDynamics.fig')
-% close(gcf)
+close(gcf)
 % %H - Motion
 % subplot(1,2,2);
 % hold on
