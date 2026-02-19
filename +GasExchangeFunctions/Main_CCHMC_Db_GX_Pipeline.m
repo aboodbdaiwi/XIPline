@@ -1,7 +1,7 @@
 clc; clear;
 
 
-excelFile = '\\rds6.cchmc.org\PulMed-43\CPIR_Share\Carter\09_gx_main_inputs\gx_main_input.xlsx';
+excelFile = '\\rds6.cchmc.org\PulMed-43\CPIR_Share\Carter\09_gx_main_inputs\gx_main_input_CBM.xlsx';
 mainDir = '\\rds6.chmccorp.cchmc.org\PulMed-54\CPIR_Images_Database';
 WoodsDir = '\\Rds6.cchmc.org\pulmed-35\Woods_CPIR_Images';
 
@@ -29,7 +29,7 @@ nSubjects = size(SexCol,1);
 %% 
 
 clc;
-for i = 33%:nSubjects % always start from 2
+for i = 2:length(SubjectCol)%:nSubjects % always start from 2
     fprintf('Processing subject %d of %d\n', i, nSubjects);
 
     if ismissing(AgeCol{i})

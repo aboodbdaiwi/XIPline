@@ -1217,17 +1217,25 @@ opts.Weights = normpdf(linspace(0,length(k0),length(k0)),0,length(k0)/4); %weigh
 [~, k0_gof] = fit((1:length(k0))',abs(k0)',ft, opts);
 k0_fit = k0_gof.adjrsquare;
 % determine quality
-if (spectralSNR > 25.0 && k0_fit > 0.99)
-    quality = '5-Excellent'; qualityscore = 5;
-elseif (spectralSNR > 15.0 && k0_fit > 0.985)
-    quality = '4-Good'; qualityscore = 4;
-elseif (spectralSNR > 15.0 && k0_fit > 0.98)
-    quality = '3-Fair'; qualityscore = 3;
-elseif (spectralSNR > 10.0)
-    quality = '2-Poor'; qualityscore = 2;
+        
+if isfield(MainInput, 'UpdatedImageQuality')
+    quality = MainInput.UpdatedImageQuality; 
+    qualityscore = str2double(MainInput.UpdatedImageQuality(1));
 else
-    quality = '1-Failed'; qualityscore = 1;
+    if (spectralSNR > 25.0 && k0_fit > 0.99)
+        quality = '5-Excellent'; qualityscore = 5;
+    elseif (spectralSNR > 15.0 && k0_fit > 0.985)
+        quality = '4-Good'; qualityscore = 4;
+    elseif (spectralSNR > 15.0 && k0_fit > 0.98)
+        quality = '3-Fair'; qualityscore = 3;
+    elseif (spectralSNR > 10.0)
+        quality = '2-Poor'; qualityscore = 2;
+    else
+        quality = '1-Failed'; qualityscore = 1;
+    end
 end
+
+
 
 %% Save varaibles to GasExchange class
 
