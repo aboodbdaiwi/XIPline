@@ -113,7 +113,11 @@ if strcmp(MainInput.NoProtonImage, 'no') == 1
     Outputs.HFileName = HFileName;
     Outputs.XeDataext = H_ext;
 end
+
 MainInput.denoiseXe = 'no';
+MainInput.DenoiseMethod = 'tMPPCA'; % tMPPCA or GLHOSVD
+MainInput.denoisewindow = [5 5];
+
 [Ventilation, ~, ~, Proton, MainInput] = LoadData.LoadReadData(MainInput);
 Ventilation.Image = double(Ventilation.Image);
 
