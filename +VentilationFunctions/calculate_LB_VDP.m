@@ -203,7 +203,7 @@ for ii = 1:size(ScaledVentImage2,3)
 end
 % figure; imslice(VentBinMap2)
 % Default to 'no' if field does not exist or is empty
-Ventilation.MedianFilter = 'yes';
+% Ventilation.MedianFilter = 'yes';
 if ~isfield(Ventilation, 'MedianFilter') || isempty(Ventilation.MedianFilter)
     Ventilation.MedianFilter = 'no';
 end
