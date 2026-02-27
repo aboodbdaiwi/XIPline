@@ -55,7 +55,7 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
             end
 
             % run N4
-            [Xe_Img, ~] = Segmentation.N4_bias_correction(Xe_Img, MainInput.XeDataLocation);
+            % [Xe_Img, ~] = Segmentation.N4_bias_correction(Xe_Img, MainInput.XeDataLocation);
             
             % Normalize each slice independently
             NXe_Img = zeros(size(Xe_Img));
