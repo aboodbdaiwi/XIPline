@@ -1,22 +1,39 @@
 clc; clear;
 
 excelFile = '\\rds6.cchmc.org\PulMed-43\CPIR_Share\Carter\08_Master VDP Database Inputs Table\Database_VDP_Inputs_CBM.xlsx';
+excelFile_new = '\\rds6.cchmc.org\PulMed-43\CPIR_Share\Carter\08_Master VDP Database Inputs Table\newConfig\VDP_Inputs (1).xlsx';
+T_old = readcell(excelFile);
+T_new = readcell(excelFile_new);
 mainDir = '\\rds6.chmccorp.cchmc.org\PulMed-54\CPIR_Images_Database';
 WoodsDir = '\\Rds6.cchmc.org\pulmed-35\Woods_CPIR_Images';
 
-% === Load Excel Table ===
-T = readcell(excelFile);
+% config detection
+fmt = VentilationFunctions.detectSpreadsheetFormat(excelFile);
 
+%%
+% === Load Excel Table ===
+switch fmt
+    case "old"
+        T = VentilationFunctions.parseOldFormat(excelFile);
+    case "new"
+        T = VentilationFunctions.parseNewFormat(excelFile);
+    otherwise
+        error("Unknown spreadsheet format %s", fmt);
+end
+
+T = VentilationFunctions.enforceCanonicalColumns(T);
+T = VentilationFunctions.validateStandardTable(T);
+%===========LoadVDPInputs.m======================%
 % Extract relevant columns into simple cell arrays
-SexCol       = T(:,1);
-AgeCol       = T(:,2);
-SubjectCol   = T(:,3);
-DiseaseCol   = T(:,4);
-ScanDateCol  = T(:,5);
-SoftCol      = T(:,6);
-VoxelX       = T(:,7);
-VoxelY       = T(:,8);
-VoxelZ       = T(:,9);
+SexCol       = cellstr(T.Sex);
+AgeCol       = num2cell(T.AGE);
+SubjectCol   = cellstr(T.SubjectID);
+DiseaseCol   = cellstr(T.DiseaseType);
+ScanDateCol  = cellstr(T.ScanDate);
+SoftCol      = cellstr(T.ScannerSoftware);
+VoxelX       = num2cell(T.PIXEL_SPACING_X);
+VoxelY       = num2cell(T.PIXEL_SPACING_Y);
+VoxelZ       = num2cell(T.SLICE_THICKNESS);
 StudyCol      = T(:,10);
 SubNumCol    = T(:,11);
 SesNumCol    = T(:,12);
@@ -29,15 +46,15 @@ HSerNumCol    = T(:,18);
 AnatFileCol  = T(:,19);
 FrqOffsetCol    = T(:,20);
 ImageQCol    = T(:,21);
-NoteCol      = T(:,22);
-RuneCol      = T(:,23);
+NoteCol      = cellstr(T.Notes);
+RuneCol      = cellstr(T.RunMode);
 
 nSubjects = size(SexCol,1);
 
 %% 
 
 clc;
-for i = 11 % always start from 2
+for i = length(RuneCol)-3:length(AgeCol) % always start from 2
     fprintf('Processing subject %d of %d\n', i, nSubjects);
 
     if ismissing(AgeCol{i})
@@ -69,7 +86,7 @@ for i = 11 % always start from 2
     MainInput.ScannerSoftware  = SoftCol{i};
     MainInput.SequenceType     = SeqTypeCol{i};
     MainInput.denoiseXe        = 'no';
-    MainInput.Analyst          = 'MRM';
+    MainInput.Analyst          = 'CBM';
     MainInput.VoxelSize        = sprintf('[%s,%s,%s]', num2str(VoxelX{i}), num2str(VoxelY{i}), num2str(VoxelZ{i}));
     MainInput.PIXEL_SPACING_X  = VoxelX{i};
     MainInput.PIXEL_SPACING_Y  = VoxelY{i};
