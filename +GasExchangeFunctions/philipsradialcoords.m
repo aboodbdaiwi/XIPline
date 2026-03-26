@@ -171,11 +171,12 @@ elseif trajtype == 1
     
     z = z_a1(:,New_Indices);
     phi = phi_a1(:,New_Indices);
-%Haltoned Spiral
-elseif trajtype == 2
+
+elseif trajtype == 2 %Haltoned Spiral 1 interleaves
     %calc spiral order
     M_PI = 3.14159265358979323846;
     PrevAngle = 0;
+    
     for proj = 0:nprof-1
         currZ = -1.0 + 2.0 * proj/nprof;
         arch_z(proj+1) = currZ;
@@ -201,6 +202,53 @@ elseif trajtype == 2
     [~,sort_index] = sort(halt_polar);
     z = arch_z(:,sort_index);
     phi = arch_azi(:,sort_index);    
+
+elseif trajtype == 3   % Haltoned Spiral, multiple interleaves
+    M_PI = pi;
+    totproj = nprof * interleaves;
+
+    arch_z = zeros(1, totproj);
+    arch_azi = zeros(1, totproj);
+    halt_polar = zeros(1, totproj);
+
+    % global spiral list
+    PrevAngle = 0;
+    for proj = 0:totproj-1
+        currZ = -1.0 + 2.0 * proj / totproj;
+        arch_z(proj+1) = currZ;
+
+        if proj == 0
+            arch_azi(proj+1) = 0;
+        else
+            arch_azi(proj+1) = mod(PrevAngle + 3.6 / sqrt(totproj * (1 - currZ^2)), 2*pi);
+        end
+        PrevAngle = arch_azi(proj+1);
+    end
+
+    % halton polar
+    p1 = 2;
+    for proj = 0:totproj-1
+        z_h = 2*haltonnumber(proj+1,p1) - 1;
+        z_h = max(-1,min(1,z_h));
+        halt_polar(proj+1) = acos(z_h);
+    end
+
+    % sort spiral by halton polar
+    [~, sort_index] = sort(halt_polar);
+    arch_z = arch_z(sort_index);
+    arch_azi = arch_azi(sort_index);
+
+    % reshape back to [interleaves x nprof]
+    z = zeros(interleaves, nprof);
+    phi = zeros(interleaves, nprof);
+
+    for j = 1:nprof
+        for i = 1:interleaves
+            idx = (j-1)*interleaves + i;
+            z(i,j) = arch_z(idx);
+            phi(i,j) = arch_azi(idx);
+        end
+    end
 else
     error('trajtype must be either 0, 1, or 2');
 end
@@ -224,13 +272,13 @@ traj = coords;
 end
 
 function result = haltonnumber(index, base)
-result = 0;
-f = 1.0;
-i = index;
-while i>0
-    f = f/base;
-    result = result + f*mod(i,base);
-    i = fix(i/base);
+    result = 0;
+    f = 1.0;
+    i = index;
+    while i>0
+        f = f/base;
+        result = result + f*mod(i,base);
+        i = fix(i/base);
+    end
 end
 
-end

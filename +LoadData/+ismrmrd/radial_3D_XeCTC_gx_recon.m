@@ -49,6 +49,9 @@ clc
 D = dset.readAcquisition();
 % D.data = 
 % D.traj = 
+% Remove first 3 and last 3 cells
+D.data = D.data(4:end-3);
+D.traj = D.traj(4:end-3);
 
 % 1) Get data vector (handle cell)
 x = D.traj;
@@ -110,6 +113,7 @@ enc_Ny = Ny/Ncontrast;
 %     enc_Ny = length(D.data)/2;
 % end
 enc_Nz = hdr.encoding.encodedSpace.matrixSize.z;
+enc_Ny = hdr.encoding.encodedSpace.matrixSize.y;
 rec_Nx = hdr.encoding.reconSpace.matrixSize.x;
 rec_Ny = hdr.encoding.reconSpace.matrixSize.y;
 rec_Nz = hdr.encoding.reconSpace.matrixSize.z;
@@ -198,20 +202,19 @@ disp('Importing Acquisition Information Completed.')
 cellSize = cell2mat(D.data(1,1));
 Nx = size(D.data{1,1}, 1);
 
-XeData = zeros(Nx, enc_Ny, Ncontrast, 'like', D.data{1,1});
-
-for i = 1:(enc_Ny * Ncontrast)
-    ky = ceil(i / Ncontrast);        % 1..enc_Ny
-    c  = mod(i-1, Ncontrast) + 1;    % 1..3 (gas,diss,postdiss)
-    
-    XeData(:, ky, c) = D.data{1, i};
+XeData = zeros(Nx, enc_Ny*enc_Nz, Ncontrast, 'like', D.data{1,1});
+for ky = 1:(enc_Ny*enc_Nz)
+    for c = 1:Ncontrast
+        i = (ky-1)*Ncontrast + c;   % enforce correct ordering
+        XeData(:, ky, c) = D.data{1, i};
+    end
 end
 
 if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
     %Dissolved k-space
-    DissolvedKSpace = XeData(:,:,2);
+    DissolvedKSpace = XeData(:,:,1);
     %Gas k-space
-    GasKSpace = XeData(:,:,1);
+    GasKSpace = XeData(:,:,2);
 
     if(extraOvs)
         DissolvedKSpace = movmean(DissolvedKSpace,OvsFactor);
@@ -235,23 +238,20 @@ disp('Importing Data Completed.')
 %% Calculate Trajectories
 disp('Calculating Trajectories...')
 if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
-    del = 1.25; % 2.25
-    if (extraOvs)
-        del = del * OvsFactor;
-    end
-
     cellSize  = D.traj{1,1};       % 3 x Nsamp (single)
     nCoord = size(cellSize, 1);    % should be 3
     nSamp  = size(cellSize, 2);    % e.g., 58
-    XeTraj = zeros(nCoord, nSamp, enc_Ny, Ncontrast, 'like', cellSize);
-    for i = 1:(enc_Ny * Ncontrast)
-        ky = ceil(i / Ncontrast);          % 1..enc_Ny
-        c  = mod(i-1, Ncontrast) + 1;      % 1..3 (gas,diss,postdiss)
-        XeTraj(:,:,ky,c) = D.traj{1,i};    % use {} for cell content
+    XeTraj = zeros(nCoord, nSamp, enc_Ny*enc_Nz, Ncontrast, 'like', cellSize);
+    for ky = 1:(enc_Ny*enc_Nz)
+        for c = 1:Ncontrast
+            i = (ky-1)*Ncontrast + c;   % enforce correct ordering
+            XeTraj(:,:,ky,c) = D.traj{1,i};
+        end
     end
-
-    XeTraj = double(squeeze(XeTraj(:,:,:,1))); % same Trajectories so use gas only 
-
+    XeTraj_all = XeTraj;
+    XeTraj = double(squeeze(XeTraj_all(:,:,:,1))); % same Trajectories so use gas only 
+    XeTraj(:,1,:) = 0;
+    XeTraj_norm = XeTraj ./ (2 * max(abs(XeTraj(:))));
     % if (extraOvs)
     %     XeTraj = movmean(XeTraj,OvsFactor);
     %     XeTraj =  downsample(XeTraj,OvsFactor);
@@ -472,6 +472,7 @@ if(NewImages == 1)
     %Vent Image
     disp('Reconstructing Ventilation Image...')
     UncorrectedVentImage = GasExchangeFunctions.Dissolved_HighResImageRecon(Xe_RecMatrix,GasKSpace_SS,XeTraj_SS/2,PixelShift); %2x Resolution
+    figure; Global.imslice(abs(UncorrectedVentImage))
     if strcmp(MainInput.Scanner,'Siemens') 
         for i = 1:size(UncorrectedVentImage,1)
             img = UncorrectedVentImage(:,:,i);
