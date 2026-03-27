@@ -362,8 +362,8 @@ else
     
     %Get sizes of dimensions
     XeSpec_nsamp = size(DissolvedKSpaceInit,1);
-    % XeImg_nsamp = (XeSin.max_encoding_numbers.vals(1)+1) / OvsFactor; % CCHMC
-    XeImg_nsamp = (XeSin.non_cart_max_encoding_nrs.vals(1)+1) / OvsFactor; %  XeCTC
+    XeImg_nsamp = (XeSin.max_encoding_numbers.vals(1)+1) / OvsFactor; % CCHMC
+    % XeImg_nsamp = (XeSin.non_cart_max_encoding_nrs.vals(1)+1) / OvsFactor; %  XeCTC
     Xe_nprof = size(DissolvedKSpaceInit,2);
     Xe_interleaves = size(DissolvedKSpaceInit,3);
 
