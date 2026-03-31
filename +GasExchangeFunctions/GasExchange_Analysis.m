@@ -867,12 +867,12 @@ Global.exportToPPTX('new','Dimensions',[16 9], ...
     'Author','CPIR @ CCHMC');
 Subject='Subject';
 %Add slides
-DissolvedNMR = openfig('DissolvedNMR.fig');
+DissolvedNMR = GasExchangeFunctions.openfig_safe('DissolvedNMR.fig');
 Global.exportToPPTX('addslide'); %Spectrum
 Global.exportToPPTX('addpicture',DissolvedNMR,'Scale','maxfixed');
 Global.exportToPPTX('addtext',sprintf('129Xe Dissolved-Phase Spectrum'),'Position',[0 0 5 3]);
 
-SigDynamics = openfig('SigDynamics.fig');
+SigDynamics = GasExchangeFunctions.openfig_safe('SigDynamics.fig');
 Global.exportToPPTX('addslide'); %Signal Dynamics
 Global.exportToPPTX('addpicture',SigDynamics);
 Global.exportToPPTX('addtext',sprintf('Signal Dynamics'),'Position',[0 0 5 3]);
@@ -907,12 +907,12 @@ Global.exportToPPTX('addslide'); %Proton Mask
 Global.exportToPPTX('addpicture',ProtonMaskMontage);
 Global.exportToPPTX('addtext',sprintf('Proton Mask'),'Position',[0 0 5 3]);
 
-VentMontage = openfig('VentMontage.fig');
+VentMontage = GasExchangeFunctions.openfig_safe('VentMontage.fig');
 Global.exportToPPTX('addslide'); %Uncorrected Vent Image
 Global.exportToPPTX('addpicture',VentMontage);
 Global.exportToPPTX('addtext',sprintf(['Uncorrected Ventilation Image-\nSNR: ', num2str(VentSNR)]),'Position',[0 0 5 3]);
 
-CorrVentMontage = openfig('CorrVentMontage.fig');
+CorrVentMontage = GasExchangeFunctions.openfig_safe('CorrVentMontage.fig');
 Global.exportToPPTX('addslide'); %Vent Image
 Global.exportToPPTX('addpicture',CorrVentMontage);
 Global.exportToPPTX('addtext',sprintf(['Corrected Ventilation Image-\nUncorrected SNR: ', num2str(VentSNR)]),'Position',[0 0 5 3]);
@@ -947,22 +947,22 @@ catch
     end
     savefig('Registerationfig.fig')
 end
-Registration = openfig('Registerationfig.fig');
+Registration = GasExchangeFunctions.openfig_safe('Registerationfig.fig');
 Global.exportToPPTX('addslide'); %Registration
 Global.exportToPPTX('addpicture',Registration);
 Global.exportToPPTX('addtext',sprintf('Registration'),'Position',[0 0 5 3]);
 
-GasMontage = openfig('GasMontage.fig');
+GasMontage = GasExchangeFunctions.openfig_safe('GasMontage.fig');
 Global.exportToPPTX('addslide'); %Gas Image
 Global.exportToPPTX('addpicture',GasMontage);
 Global.exportToPPTX('addtext',sprintf(['Gas Image-\nSNR: ', num2str(GasSNR)]),'Position',[0 0 5 3]);
 
-DissolvedMontage = openfig('DissolvedMontage.fig');
+DissolvedMontage = GasExchangeFunctions.openfig_safe('DissolvedMontage.fig');
 Global.exportToPPTX('addslide'); %Dissolved Image
 Global.exportToPPTX('addpicture',DissolvedMontage);
 Global.exportToPPTX('addtext',sprintf(['Dissolved Image-\nSNR: ', num2str(DissolvedSNR)]),'Position',[0 0 5 3]);
 
-CorrDissolvedMontage = openfig('CorrDissolvedMontage.fig');
+CorrDissolvedMontage = GasExchangeFunctions.openfig_safe('CorrDissolvedMontage.fig');
 Global.exportToPPTX('addslide'); %Corrected Dissolved Image
 Global.exportToPPTX('addpicture',CorrDissolvedMontage);
 Global.exportToPPTX('addtext',sprintf(['Corrected Dissolved Image-\nSNR: ', num2str(CorrDissolvedSNR)]),'Position',[0 0 5 3]);
@@ -1191,7 +1191,7 @@ Global.exportToPPTX('addtable',BinTable,'Position',[8 5 7.75 2],'Vert','middle',
 Global.exportToPPTX('addtext',sprintf('RBC Oscillation Summary'),'Position',[0 0 5 3]);
 
 Global.exportToPPTX('addslide'); %RBC Osc Workflow
-OscWorkFlow_Fig = imread('OscWorkFlow_Fig.png');
+OscWorkFlow_Fig = GasExchangeFunctions.imread_safe('OscWorkFlow_Fig.png');
 Global.exportToPPTX('addpicture',OscWorkFlow_Fig);
 Global.exportToPPTX('addtext',sprintf('RBC Oscillation Workflow'),'Position',[0 0 5 3]);
 
@@ -1351,7 +1351,7 @@ if strcmp(GasExchange.writereport,'yes')
     Global.exportToPPTX('addtext','Gas Exchange Analysis Report', 'Position',[0 -0.1 5 0.5], 'FontSize',20,'FontWeight','bold','Color',[1 0 0],'BackgroundColor',[1 1 1],'HorizontalAlignment','center');
     
     %Signal Dynamics
-    SigDynamics = openfig('SigDynamics.fig');
+    SigDynamics = GasExchangeFunctions.openfig_safe('SigDynamics.fig');
     Global.exportToPPTX('addpicture',SigDynamics,'Position',[-0.3 6.35 6 2.9]);
     
     % Settings Table

@@ -1,6 +1,6 @@
 function Tstd = parseOldFormat(xlsxFile)
 %PARSEOLDVDPFORMAT Read old spreadsheet and map to canonical schema.
-import VentilationFunctions.*
+import VDPInputs.*
     T = readtable(xlsxFile, "TextType", "char");
 
     % Rename old/raw names to canonical names
