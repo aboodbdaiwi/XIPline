@@ -61,22 +61,59 @@ if ~isfield(MainInput, 'OutputPath') || isempty(MainInput.OutputPath)
     MainInput.OutputPath = MainInput.XeDataLocation;
 end
 cd(MainInput.XeDataLocation)
-if strcmp(MainInput.AnalysisType,'Ventilation')                 
-    mkdir([MainInput.OutputPath '\Ventilation_Analysis']);
-    outputpath = [MainInput.OutputPath '\Ventilation_Analysis'];
+if strcmp(MainInput.AnalysisType,'Ventilation')
+    folderName = 'Ventilation_Analysis';
+    
+    if ~endsWith(MainInput.OutputPath, folderName)
+        outputpath = fullfile(MainInput.OutputPath, folderName);
+        if ~exist(outputpath, 'dir')
+            mkdir(outputpath);
+        end
+    else
+        outputpath = MainInput.OutputPath;
+    end
+    
     Ventilation.outputpath = outputpath;    
     MainInput.OutputPath = outputpath;
+
 elseif strcmp(MainInput.AnalysisType,'Diffusion')
-    mkdir([MainInput.OutputPath '\Diffusion_Analysis']);
-    outputpath = [MainInput.OutputPath '\Diffusion_Analysis'];
+    folderName = 'Diffusion_Analysis';
+    
+    if ~endsWith(MainInput.OutputPath, folderName)
+        outputpath = fullfile(MainInput.OutputPath, folderName);
+        if ~exist(outputpath, 'dir')
+            mkdir(outputpath);
+        end
+    else
+        outputpath = MainInput.OutputPath;
+    end
+    
     Diffusion.outputpath = outputpath;   
     MainInput.OutputPath = outputpath;
+
 elseif strcmp(MainInput.AnalysisType,'GasExchange')
-    mkdir([MainInput.OutputPath '\GasExchange_Analysis']);
-    mkdir([MainInput.XeDataLocation '\GasExchange_Analysis']);
-    outputpath = [MainInput.OutputPath '\GasExchange_Analysis'];
-    GasExchange.outputpath = outputpath;
-    MainInput.OutputPath = outputpath;
+    folderName = 'GasExchange_Analysis';
+    
+    % OutputPath check
+    if ~endsWith(MainInput.OutputPath, folderName)
+        outputpath1 = fullfile(MainInput.OutputPath, folderName);
+        if ~exist(outputpath1, 'dir')
+            mkdir(outputpath1);
+        end
+    else
+        outputpath1 = MainInput.OutputPath;
+    end
+    
+    % XeDataLocation check
+    if ~endsWith(MainInput.XeDataLocation, folderName)
+        outputpath2 = fullfile(MainInput.XeDataLocation, folderName);
+        if ~exist(outputpath2, 'dir')
+            mkdir(outputpath2);
+        end
+    end
+    
+    GasExchange.outputpath = outputpath1;
+    MainInput.OutputPath = outputpath1;
 end
 
 if ~isfield(MainInput, 'Recon')

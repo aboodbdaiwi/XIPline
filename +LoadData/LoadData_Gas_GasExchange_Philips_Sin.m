@@ -78,7 +78,7 @@ ScanVersion = MainInput.Institute;
 %     ScanVersion = 'Duke';
 % end
 XeSinFile = dir([GasDataLocation,'\*.sin']);
-XeSinFile = XeSinFile(1);
+XeSinFile = XeSinFile(2);
 
 DataFiles = dir([GasDataLocation,'\*.data']);
 XeDataFile = DataFiles(1);
@@ -114,7 +114,7 @@ elseif strcmp(ScanVersion,'XeCTC')
     if (exist('XeSin','var') && XeSin.non_cart_max_encoding_nrs.vals(1) ~= 63) %R59 oversampling
         extraOvs = true;
         OvsFactor = (XeSin.non_cart_max_encoding_nrs.vals(1)+1)/64;
-        OvsFactor = (XeSin.non_cart_max_encoding_nrs.vals(1)+1)/138;
+        % OvsFactor = (XeSin.non_cart_max_encoding_nrs.vals(1)+1)/138;
     end
     pw = 0.65; %pulse width in ms
     DisFlipAngle = 20; %Dissolved flip angle
@@ -181,6 +181,16 @@ XeData2 = XeData;
 XeData = squeeze(XeData);
 disp(['xe data size = ', mat2str(size(XeData))]);
 
+mix_values = {XeInfo.mix};
+mix_values = cell2mat(mix_values(2:end));
+max_mix = max(mix_values);
+if max_mix > 1
+    bonus_spec = true;
+    OvsFactor = 1;
+else
+    bonus_spec = false;
+end
+
 if strcmp(ScanVersion,'CCHMC') 
     %skip
 else
@@ -191,27 +201,154 @@ else
 end
 
 if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
-    %Gas k-space
-    GasKSpace = XeData(:,:,1);    
-    %Dissolved k-space
-    DissolvedKSpace = XeData(:,:,2);
+    if bonus_spec == 1
+        if length(size(XeData)) == 5
+            PreDissolvedFID = XeData(:,1,1,1,2);
+            PostDissolvedFID = XeData(:,2,1,1,2);
+    
+            PreGasFID = XeData(:,1,1,1,2);
+            PostGasFID = XeData(:,2,1,2,2); % for this CTC Polarean protocol we only do 1 post spectra on the gas
+        
+            % figure;
+            % subplot(2,2,1)
+            % plot(abs(PreDissolvedFID),'LineWidth',1.5)
+            % title('Pre Dissolved')
+            % xlabel('Frequency')
+            % ylabel('Magnitude')
+            % grid on
+            % 
+            % subplot(2,2,2)
+            % plot(abs(PostDissolvedFID),'LineWidth',1.5)
+            % title('Post Dissolved')
+            % xlabel('Frequency')
+            % ylabel('Magnitude')
+            % grid on
+            % 
+            % subplot(2,2,3)
+            % plot(abs(PreGasFID),'LineWidth',1.5)
+            % title('Pre Gas')
+            % xlabel('Frequency')
+            % ylabel('Magnitude')
+            % grid on
+            % 
+            % subplot(2,2,4)
+            % plot(abs(PostGasFID),'LineWidth',1.5)
+            % title('Post Gas')
+            % xlabel('Frequency')
+            % ylabel('Magnitude')
+            % grid on
+    
+            %Dissolved k-space
+            DissolvedKSpaceInit = XeData(:,:,:,1,1);
+            %Gas k-space
+            GasKSpaceInit = XeData(:,:,:,2,1);   
 
-    XeData_size = size(XeData2);
+            if(extraOvs)
+                PreDissolvedFID = movmean(PreDissolvedFID,OvsFactor);
+                PreDissolvedFID =  downsample(PreDissolvedFID,OvsFactor);
+        
+                PostDissolvedFID = movmean(PostDissolvedFID,OvsFactor);
+                PostDissolvedFID =  downsample(PostDissolvedFID,OvsFactor);
+        
+                PreGasFID = movmean(PreGasFID,OvsFactor);
+                PreGasFID =  downsample(PreGasFID,OvsFactor);
+        
+                PostGasFID = movmean(PostGasFID,OvsFactor);
+                PostGasFID =  downsample(PostGasFID,OvsFactor);
+        
+                DissolvedKSpaceInit = movmean(DissolvedKSpaceInit,OvsFactor);
+                DissolvedKSpaceInit = downsample(DissolvedKSpaceInit,OvsFactor);
+                
+                GasKSpaceInit = movmean(GasKSpaceInit,OvsFactor);
+                GasKSpaceInit = downsample(GasKSpaceInit,OvsFactor);
+        
+                dwell_s = dwell_s * OvsFactor;
+                
+                % % Plot
+                % N = length(PreDissolvedFID);
+                % x = linspace(-N/2, N/2, N);   % generic frequency axis
+                % figure;
+                % tiledlayout(2,2);
+                % 
+                % nexttile;
+                % plot(x, abs(PreDissolvedFID), 'k', 'LineWidth',1.5);
+                % title('Pre Dissolved');
+                % xlabel('Frequency (a.u.)');
+                % ylabel('|S|');
+                % grid on;
+                % 
+                % nexttile;
+                % plot(x, abs(PostDissolvedFID), 'r', 'LineWidth',1.5);
+                % title('Post Dissolved');
+                % xlabel('Frequency (a.u.)');
+                % ylabel('|S|');
+                % grid on;
+                % 
+                % nexttile;
+                % plot(x, abs(PreGasFID), 'b', 'LineWidth',1.5);
+                % title('Pre Gas');
+                % xlabel('Frequency (a.u.)');
+                % ylabel('|S|');
+                % grid on;
+                % 
+                % nexttile;
+                % plot(x, abs(PostGasFID), 'm', 'LineWidth',1.5);
+                % title('Post Gas');
+                % xlabel('Frequency (a.u.)');
+                % ylabel('|S|');
+                % grid on;
+                % 
+                % sgtitle('Pre/Post Gas and Dissolved Spectra');
+            end
+        
+            %Correct Atten. 
+            %Since R59, different levels of attn are used for the two mixes, scale here using last gas kspace and first post gas spec)
+            scaleFac = abs(PostGasFID(1,1))/abs(GasKSpaceInit(1,end,end)); %These should be almost identical at k0
+            scaleFac1dis = abs(PostDissolvedFID(1,1))/abs(DissolvedKSpaceInit(1,end,end)); %These should be almost identical at k0
+            
+            DissolvedKSpaceInit = DissolvedKSpaceInit * scaleFac;
+            GasKSpaceInit = GasKSpaceInit * scaleFac;
+            scaleFac2dis = abs(PostDissolvedFID(1,1))/abs(DissolvedKSpaceInit(1,end,end)); %These should be almost identical at k0
+            
+            %Get sizes of dimensions
+            XeSpec_nsamp = size(DissolvedKSpaceInit,1);
+            %XeImg_nsamp = (XeSin.max_encoding_numbers.vals(1)+1) / OvsFactor; % CCHMC
+            XeImg_nsamp = (XeSin.non_cart_max_encoding_nrs.vals(1)+1) / OvsFactor; %  XeCTC
+            Xe_nprof = size(DissolvedKSpaceInit,2);
+            Xe_interleaves = size(DissolvedKSpaceInit,3);
+        
+            %Trim Kspaces to correct number of readout points
+            DissolvedKSpaceInit = DissolvedKSpaceInit(1:XeImg_nsamp,:,:);
+            GasKSpaceInit = GasKSpaceInit(1:XeImg_nsamp,:,:);
+        
+            % Put KSpaces in order and logical format
+            XeOrder = GasExchangeFunctions.GetProjectionOrder(XeInfo);
+            DissolvedKSpace = GasExchangeFunctions.SortUTEData_AcqOrder(GasExchangeFunctions.reshapeUTEData(DissolvedKSpaceInit),[XeImg_nsamp, Xe_nprof, Xe_interleaves], XeOrder);
+            GasKSpace = GasExchangeFunctions.SortUTEData_AcqOrder(GasExchangeFunctions.reshapeUTEData(GasKSpaceInit),[XeImg_nsamp, Xe_nprof, Xe_interleaves], XeOrder);
+        end
 
-    if XeData_size(end) == 2
-        XeSpec_nsamp = size(DissolvedKSpace,1);
-        XeImg_nsamp = (XeSin.non_cart_max_encoding_nrs.vals(1)+1) ;
+    else
+        if length(size(XeData)) > 3
+            XeData = squeeze(XeData(:,:,:,1)); % take first echo only
+        end
+        %Gas k-space
+        GasKSpace = XeData(:,:,1);    
+        %Dissolved k-space
+        DissolvedKSpace = XeData(:,:,2);
+        XeData_size = size(XeData2);
+        if XeData_size(end) == 2
+            XeSpec_nsamp = size(DissolvedKSpace,1);
+            XeImg_nsamp = (XeSin.non_cart_max_encoding_nrs.vals(1)+1) ;
+            Xe_nprof = size(DissolvedKSpace,2);
+            Xe_interleaves = size(DissolvedKSpace,3);
+    
+            DissolvedKSpace = DissolvedKSpace(1:XeImg_nsamp,:,:);
+            GasKSpace = GasKSpace(1:XeImg_nsamp,:,:);
+        end
+        %Get sizes of dimensions
         Xe_nprof = size(DissolvedKSpace,2);
-        Xe_interleaves = size(DissolvedKSpace,3);
-
-        DissolvedKSpace = DissolvedKSpace(1:XeImg_nsamp,:,:);
-        GasKSpace = GasKSpace(1:XeImg_nsamp,:,:);
+        Xe_interleaves = 1;
     end
-
-    %Get sizes of dimensions
-    Xe_nprof = size(DissolvedKSpace,2);
-    Xe_interleaves = 1;
-
 else
     %Split Xe data into components; formatted as [read, proj, interleave, dyn, mix]
     %Dissolved Spectra
@@ -227,50 +364,6 @@ else
         DissolvedKSpaceInit = XeData(:,:,2,1);
         %Gas k-space
         GasKSpaceInit = XeData(:,:,1,1);     
-
-    elseif length(size(XeData)) == 5
-        PreDissolvedFID = XeData(:,1,1,1,2);
-        PostDissolvedFID = XeData(:,2,1,1,2);
-
-        PreGasFID = XeData(:,1,1,1,2);
-        PostGasFID = XeData(:,2,1,2,2); % for this CTC Polarean protocol we only do 1 post spectra on the gas
-    
-        % figure; plot(abs(XeData(:,:,1,2,2)),'LineWidth',1.5)
-
-        figure;
-        subplot(2,2,1)
-        plot(abs(PreDissolvedFID),'LineWidth',1.5)
-        title('Pre Dissolved')
-        xlabel('Frequency')
-        ylabel('Magnitude')
-        grid on
-        
-        subplot(2,2,2)
-        plot(abs(PostDissolvedFID),'LineWidth',1.5)
-        title('Post Dissolved')
-        xlabel('Frequency')
-        ylabel('Magnitude')
-        grid on
-        
-        subplot(2,2,3)
-        plot(abs(PreGasFID),'LineWidth',1.5)
-        title('Pre Gas')
-        xlabel('Frequency')
-        ylabel('Magnitude')
-        grid on
-        
-        subplot(2,2,4)
-        plot(abs(PostGasFID),'LineWidth',1.5)
-        title('Post Gas')
-        xlabel('Frequency')
-        ylabel('Magnitude')
-        grid on
-
-
-        %Dissolved k-space
-        DissolvedKSpaceInit = XeData(:,:,:,1,1);
-        %Gas k-space
-        GasKSpaceInit = XeData(:,:,:,2,1);   
 
     else
         PreDissolvedFID = XeData(:,1,1,1,2);
@@ -376,17 +469,16 @@ else
     DissolvedKSpace = GasExchangeFunctions.SortUTEData_AcqOrder(GasExchangeFunctions.reshapeUTEData(DissolvedKSpaceInit),[XeImg_nsamp, Xe_nprof, Xe_interleaves], XeOrder);
     GasKSpace = GasExchangeFunctions.SortUTEData_AcqOrder(GasExchangeFunctions.reshapeUTEData(GasKSpaceInit),[XeImg_nsamp, Xe_nprof, Xe_interleaves], XeOrder);
 
-
-    figure;
-    tiledlayout(1,2);
-    nexttile;
-    plot(abs(GasKSpaceInit(1,:,1)), 'k', 'LineWidth',1.5);
-    title('GasKSpaceInit');
-    grid on;
-    nexttile;
-    plot( abs(GasKSpace(1,:)), 'r', 'LineWidth',1.5);
-    title('GasKSpace');
-    grid on;
+    % figure;
+    % tiledlayout(1,2);
+    % nexttile;
+    % plot(abs(GasKSpaceInit(1,:,1)), 'k', 'LineWidth',1.5);
+    % title('GasKSpaceInit');
+    % grid on;
+    % nexttile;
+    % plot( abs(GasKSpace(1,:)), 'r', 'LineWidth',1.5);
+    % title('GasKSpace');
+    % grid on;
 
 end
 disp('Importing Data Completed.')
@@ -396,10 +488,15 @@ GasExchange.OvsFactor = OvsFactor;
 disp('Calculating Trajectories...')
 if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
     del = 1.25;
-
-    XeTraj = GasExchangeFunctions.philipsradialcoords(del,3,[XeSinFile.folder,'\',XeSinFile.name]); %1.25us delay, Haltoned Spiral
-    XeTraj = permute(XeTraj,[3 2 1 4]); %ro, proj, intlv, dims
-    XeTraj = permute(XeTraj,[4 1 2 3]); %dims, ro, proj, intlv
+    if bonus_spec == 1
+        XeTraj = GasExchangeFunctions.philipsradialcoords(del,3,[XeSinFile.folder,'\',XeSinFile.name]);
+        XeTraj = permute(XeTraj,[4 3 1 2]);   % [3 ro intlv profCounter]
+        XeTraj = reshape(XeTraj,3,XeImg_nsamp,[]);
+    else
+        XeTraj = GasExchangeFunctions.philipsradialcoords(del,3,[XeSinFile.folder,'\',XeSinFile.name]); %1.25us delay, Haltoned Spiral
+        XeTraj = permute(XeTraj,[3 2 1 4]); %ro, proj, intlv, dims
+        XeTraj = permute(XeTraj,[4 1 2 3]); %dims, ro, proj, intlv
+    end
 else
     if (strcmp(Scanner,'3T-R'))%R5.3.1
         XeTraj = GasExchangeFunctions.philipsradialcoords(0.36,1,[FunctionDirectory,'\V3 Scan Info\20191008_162511_Dissolved_Xe_20191008 - 3T-R.sin']); %0.36us delay, GM, from non-spectroscopy version
@@ -419,29 +516,30 @@ else
     XeTraj = GasExchangeFunctions.SortUTETraj_AcqOrder(GasExchangeFunctions.reshapeUTETraj(XeTraj), [XeImg_nsamp, Xe_nprof, Xe_interleaves], XeOrder);%reshape and order
 end
 disp('Calculating Trajectories Completed.')
+% 
+% % --- Plot a 3D subset of trajectories (after XeTraj is computed) ---
+% % XeTraj expected: [3 x Nsamp x Nproj x Nintlv]
+% Nsamp  = size(XeTraj,2);
+% Nproj  = size(XeTraj,3);
+% plotNproj = 500;
+% % Choose a subset (edit these as you like)
+% projIdx  = round(linspace(1, Nproj, plotNproj));     % 8 projections
+% sampIdx  = 1:Nsamp;                           % full readout; or try 1:200
+% figure; hold on; grid on; axis equal
+% xlabel('k_x'); ylabel('k_y'); zlabel('k_z');
+% title('3D Trajectory Subset');
+% % Plot lines for selected (proj, interleave)
+% for jj = 1:numel(projIdx)
+%     pr = projIdx(jj);
+% 
+%     kx = squeeze(XeTraj(1, sampIdx, pr));
+%     ky = squeeze(XeTraj(2, sampIdx, pr));
+%     kz = squeeze(XeTraj(3, sampIdx, pr));
+% 
+%     plot3(kx, ky, kz, 'LineWidth', 1.0);
+% end
+% view(3);
 
-% --- Plot a 3D subset of trajectories (after XeTraj is computed) ---
-% XeTraj expected: [3 x Nsamp x Nproj x Nintlv]
-Nsamp  = size(XeTraj,2);
-Nproj  = size(XeTraj,3);
-plotNproj = 500;
-% Choose a subset (edit these as you like)
-projIdx  = round(linspace(1, Nproj, plotNproj));     % 8 projections
-sampIdx  = 1:Nsamp;                           % full readout; or try 1:200
-figure; hold on; grid on; axis equal
-xlabel('k_x'); ylabel('k_y'); zlabel('k_z');
-title('3D Trajectory Subset');
-% Plot lines for selected (proj, interleave)
-for jj = 1:numel(projIdx)
-    pr = projIdx(jj);
-
-    kx = squeeze(XeTraj(1, sampIdx, pr));
-    ky = squeeze(XeTraj(2, sampIdx, pr));
-    kz = squeeze(XeTraj(3, sampIdx, pr));
-
-    plot3(kx, ky, kz, 'LineWidth', 1.0);
-end
-view(3);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Transform Data into Images and Spectra                                  %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -488,7 +586,7 @@ disp('Determining Image Offset Completed.')
 
 %% Spectra
 disp('Fitting Spectrum...')
-if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
+if (strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')) && bonus_spec == 0
     try
         calFile = dir(fullfile(GasDataLocation,'cal','*.data'));
         [GasExResults, ~] = GasExchangeFunctions.XeCTC_Calibration(fullfile(calFile.folder,calFile.name));
@@ -499,7 +597,8 @@ if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
     time = GasExResults.DisFit.t;
     AppendedDissolvedNMRFit = GasExResults.DisFit;
     AppendedDissolvedFit = (time(2)-time(1))*fftshift(fft(AppendedDissolvedNMRFit.calcComponentTimeDomainSignal(time),[],1),1);
-else
+
+elseif strcmp(ScanVersion,'CCHMC') || bonus_spec == 1
     %Set parameters
     time = dwell_s*(0:XeSpec_nsamp-1);
 
@@ -587,8 +686,12 @@ XeTraj_SS(:,:,1:SS_ind) = [];
 if(NewImages == 1)
     disp('Removing Gas Phase Contamination...')
     if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
-       %correction not possible
-       CorrectedDissKSpace_SS = DissolvedKSpace_SS;
+        if bonus_spec == 1
+            CorrectedDissKSpace_SS = GasExchangeFunctions.GasPhaseContaminationRemoval(DissolvedKSpace_SS,GasKSpace_SS,dwell_s,-freq_jump,AppendedDissolvedNMRFit.phase(3),AppendedDissolvedNMRFit.area(3),GasFlipAngle);
+        else
+           %correction not possible
+           CorrectedDissKSpace_SS = DissolvedKSpace_SS;
+        end
     else
        CorrectedDissKSpace_SS = GasExchangeFunctions.GasPhaseContaminationRemoval(DissolvedKSpace_SS,GasKSpace_SS,dwell_s,-freq_jump,AppendedDissolvedNMRFit.phase(3),AppendedDissolvedNMRFit.area(3),GasFlipAngle);
     end
@@ -652,7 +755,7 @@ if(NewImages == 1)
     %Vent Image
     disp('Reconstructing Ventilation Image...')
     UncorrectedVentImage = GasExchangeFunctions.Dissolved_HighResImageRecon(Xe_RecMatrix,GasKSpace_SS,XeTraj_SS/2,PixelShift); %2x Resolution
-    imslice(abs(UncorrectedVentImage))
+    % imslice(abs(UncorrectedVentImage))
     disp('Reconstructing Ventilation Image Completed.')
     disp('Correcting Ventilation Bias...')
     VentMask = (abs(UncorrectedVentImage))>(prctile(abs(UncorrectedVentImage(:)),95)/3);
