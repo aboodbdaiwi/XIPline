@@ -214,15 +214,25 @@ montage(abs(RBCImage),'DisplayRange',[])
 disp('Correcting Image Intensities for Comparison...')
 %T2* scaling
 %M0 = Mt/(e^(-t/T2*))
-GasImageScaled = GasImage/(exp(-ActTE90/GasT2Star));
-RBCfraction = AppendedDissolvedNMRFit.area(1)/(AppendedDissolvedNMRFit.area(2)+AppendedDissolvedNMRFit.area(1));
-DissolvedT2Star = BarrierT2Star*(1-RBCfraction) + RBCT2Star*RBCfraction;
-DissolvedImageCorrected = CorrDissolvedImage/(exp(-ActTE90/DissolvedT2Star));
-BarrierImageCorrected = BarrierImage/(exp(-ActTE90/BarrierT2Star));
-RBCImageCorrected = RBCImage/(exp(-ActTE90/RBCT2Star));
+T2Star_corr = true;
+
+if T2Star_corr == 1
+    GasImageScaled = GasImage/(exp(-ActTE90/GasT2Star));
+    RBCfraction = AppendedDissolvedNMRFit.area(1)/(AppendedDissolvedNMRFit.area(2)+AppendedDissolvedNMRFit.area(1));
+    DissolvedT2Star = BarrierT2Star*(1-RBCfraction) + RBCT2Star*RBCfraction;
+    DissolvedImageCorrected = CorrDissolvedImage/(exp(-ActTE90/DissolvedT2Star));
+    BarrierImageCorrected = BarrierImage/(exp(-ActTE90/BarrierT2Star));
+    RBCImageCorrected = RBCImage/(exp(-ActTE90/RBCT2Star));
+else
+    GasImageScaled = GasImage;
+    DissolvedImageCorrected = CorrDissolvedImage;
+    BarrierImageCorrected = BarrierImage;
+    RBCImageCorrected = RBCImage;
+end
 
 %Flip Angle Correction
 GasImageScaled = GasImageScaled*sind(DisFlipAngle)/sind(GasFlipAngle); %10.1002/mp.12264
+
 disp('Correcting Image Intensities for Comparison Completed.')
 
 

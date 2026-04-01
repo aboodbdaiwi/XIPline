@@ -839,10 +839,22 @@ RBCOsc_Normalization = GasExchangeFunctions.Dissolved_RBCOscImageRecon(Xe_RecMat
 disp('Reconstructing RBC keyhole Images Completed.')
 
 %% store avriables
+GasExchange.XeTraj = XeTraj;
+GasExchange.GasKSpace = GasKSpace;
+GasExchange.DissolvedKSpace = DissolvedKSpace;
+
+GasExchange.XeTraj_SS = XeTraj_SS;
+GasExchange.GasKSpace_SS = GasKSpace_SS;
+GasExchange.DissolvedKSpace_SS = DissolvedKSpace_SS;
+GasExchange.CorrectedDissKSpace_SS = CorrectedDissKSpace_SS;
+
+GasExchange.XeImg_nsamp = XeImg_nsamp;
+GasExchange.Xe_nprof = Xe_nprof;
+GasExchange.Xe_interleaves = Xe_interleaves;
+GasExchange.XeOrder = XeOrder;
+
 GasExchange.UncorrectedVentImage = UncorrectedVentImage;  
 GasExchange.VentImage = VentImage;
-GasExchange.GasKSpace_SS = GasKSpace_SS;
-GasExchange.CorrectedDissKSpace_SS = CorrectedDissKSpace_SS;
 GasExchange.GasImage = GasImage;
 GasExchange.DissolvedImage = DissolvedImage;
 GasExchange.CorrDissolvedImage = CorrDissolvedImage;
