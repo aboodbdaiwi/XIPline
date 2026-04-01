@@ -623,6 +623,98 @@ set(SumRBCOscFig,'WindowState','minimized');
 pause(0.001)
 
 
+% Preallocate
+Img = VentImage;
+VentCoronalStack = zeros(size(Img,1), size(Img,2), NumPlotSlices);
+VentAxialStack   = zeros(size(Img,2), size(Img,3), NumPlotSlices);
+% Coronal slices
+for slice = 1:NumPlotSlices
+    VentCoronalStack(:,:,slice) = squeeze(Img(:,:,Slices_Co(slice)));
+end
+% Axial slices (match orientation from original code)
+for slice = 1:NumPlotSlices
+    VentAxialStack(:,:,slice) = fliplr(rot90(squeeze(Img(Slices_Ax(slice),:,:)),-1));
+end
+% Combine into one stack (2 rows)
+VentDisplayStack = cat(4, VentCoronalStack, VentAxialStack);
+VentDisplayStack = reshape(VentDisplayStack, [size(Img,1), size(Img,2), 2*NumPlotSlices]);
+% Plot
+VentFig_simple = figure('Name','Ventilation','Color','w');
+montage(VentDisplayStack, 'Size', [2 NumPlotSlices], 'DisplayRange',[]);
+title('Ventilation','FontSize',16);
+
+
+% Preallocate
+Img = BarrierImageCorrected;
+VentCoronalStack = zeros(size(Img,1), size(Img,2), NumPlotSlices);
+VentAxialStack   = zeros(size(Img,2), size(Img,3), NumPlotSlices);
+% Coronal slices
+for slice = 1:NumPlotSlices
+    VentCoronalStack(:,:,slice) = squeeze(Img(:,:,Slices_Co(slice)));
+end
+% Axial slices (match orientation from original code)
+for slice = 1:NumPlotSlices
+    VentAxialStack(:,:,slice) = fliplr(rot90(squeeze(Img(Slices_Ax(slice),:,:)),-1));
+end
+% Combine into one stack (2 rows)
+VentDisplayStack = cat(4, VentCoronalStack, VentAxialStack);
+VentDisplayStack = reshape(VentDisplayStack, [size(Img,1), size(Img,2), 2*NumPlotSlices]);
+% Plot
+MembraneFig_simple = figure('Name','Membrane','Color','w');
+montage(VentDisplayStack, 'Size', [2 NumPlotSlices], 'DisplayRange',[]);
+title('Membrane','FontSize',16);
+
+
+% Preallocate
+Img = RBCImageCorrected;
+VentCoronalStack = zeros(size(Img,1), size(Img,2), NumPlotSlices);
+VentAxialStack   = zeros(size(Img,2), size(Img,3), NumPlotSlices);
+% Coronal slices
+for slice = 1:NumPlotSlices
+    VentCoronalStack(:,:,slice) = squeeze(Img(:,:,Slices_Co(slice)));
+end
+% Axial slices (match orientation from original code)
+for slice = 1:NumPlotSlices
+    VentAxialStack(:,:,slice) = fliplr(rot90(squeeze(Img(Slices_Ax(slice),:,:)),-1));
+end
+% Combine into one stack (2 rows)
+VentDisplayStack = cat(4, VentCoronalStack, VentAxialStack);
+VentDisplayStack = reshape(VentDisplayStack, [size(Img,1), size(Img,2), 2*NumPlotSlices]);
+% Plot
+RBCFig_simple = figure('Name','RBC','Color','w');
+montage(VentDisplayStack, 'Size', [2 NumPlotSlices], 'DisplayRange',[]);
+title('RBC','FontSize',16);
+
+
+% Preallocate
+Img = RBCBarrRatio.*ProtonMaskRegistered;
+VentCoronalStack = zeros(size(Img,1), size(Img,2), NumPlotSlices);
+VentAxialStack   = zeros(size(Img,2), size(Img,3), NumPlotSlices);
+% Coronal slices
+for slice = 1:NumPlotSlices
+    VentCoronalStack(:,:,slice) = squeeze(Img(:,:,Slices_Co(slice)));
+end
+% Axial slices (match orientation from original code)
+for slice = 1:NumPlotSlices
+    VentAxialStack(:,:,slice) = fliplr(rot90(squeeze(Img(Slices_Ax(slice),:,:)),-1));
+end
+% Combine into one stack (2 rows)
+VentDisplayStack = cat(4, VentCoronalStack, VentAxialStack);
+VentDisplayStack = reshape(VentDisplayStack, [size(Img,1), size(Img,2), 2*NumPlotSlices]);
+% Plot
+RBCMemRatioFig_simple = figure('Name','RBCMemRatio','Color','w');
+montage(VentDisplayStack, 'Size', [2 NumPlotSlices], 'DisplayRange',[0 0.6]);
+colormap("parula"); 
+ax = gca;
+cb = colorbar('southoutside');
+% Tighten spacing
+ax.Position(2) = ax.Position(2) + 0.03;   % move image down slightly
+ax.Position(4) = ax.Position(4) - 0.05;   % reduce height
+cb.Position(2) = ax.Position(2) - 0.04;   % move colorbar up (closer)
+cb.Position(4) = 0.03;                    % make colorbar thinner
+cb.FontSize = 16;
+title('RBCMemRatio','FontSize',16);
+
 %% Save Images
 % waitbar(.70,f,'Saving Images....');
 % pause(1)
@@ -1281,11 +1373,13 @@ GasExchange.image_qualityscore = qualityscore;
 % ------------------------------------------------------------------------
 %  Gas Exchange Analysis Report 
 % -------------------------------------------------------------------------
+
 GasExchange.writereport = 'yes'; 
 % GasExchange.outputpath
 MainInput.ImageQuality = quality;
 cd(GasExchange.outputpath)
 if strcmp(GasExchange.writereport,'yes')
+
     clc;
     if ~isfield(MainInput, 'N4Bias') 
         MainInput.N4Bias = 'yes';
@@ -1354,6 +1448,225 @@ if strcmp(GasExchange.writereport,'yes')
         Global.exportToPPTX('new','Dimensions',[16 9],'Title','Gas Exchange Analysis','Author','CPIR @ CCHMC');
     end
     
+    % Add Slide
+    Global.exportToPPTX('addslide');
+    
+    % Add Title Bar
+    Global.exportToPPTX('addtext','Gas Exchange Analysis Report', 'Position',[0 -0.1 5 0.5], 'FontSize',20,'FontWeight','bold','Color',[1 0 0],'BackgroundColor',[1 1 1],'HorizontalAlignment','center');
+
+    % Settings Table
+    settinglabels = {'Subject ID','Age(y)','Sex','Disease','Scan Date','Scanner','Scan Software','Sequence','Recon','XIPline Cmt','Denoise','N4Bias','Method','Age Cor.','Image Quality','Note','ProcessDate', 'Analyst Initials'};
+    settings = {MainInput.SubjectID,MainInput.Age,MainInput.Sex,MainInput.Disease, MainInput.ScanDate, MainInput.Scanner,MainInput.ScannerSoftware,MainInput.SequenceType,MainInput.Recon,MainInput.AnalysisCode_hash,MainInput.denoiseXe,MainInput.N4Bias,MainInput.AnalysisMethod,MainInput.AgeCor,MainInput.ImageQuality,MainInput.Note,todayStr,MainInput.Analyst};
+    settingsssummary = cell(18, 2);
+    settingsssummary(1,:) = {
+        {'Setting','BackgroundColor',rowColors(1,:),'FontWeight','bold'},
+        {'Value','BackgroundColor',rowColors(1,:),'FontWeight','bold'}
+    };
+    for i = 1:numel(settinglabels)
+        settingsssummary{i+1,1} = {settinglabels{i}, 'BackgroundColor', rowColors(2,:), 'FontWeight', 'bold'};
+        settingsssummary{i+1,2} = settings{i};
+    end
+    Global.exportToPPTX('addtable', settingsssummary, 'Position', [0.05 0.35 2.5 3], ...
+        'Vert', 'middle', 'Horiz', 'center', 'FontSize', 10);
+    
+    % images
+    Global.exportToPPTX('addpicture',VentFig_simple,'Position',[4.8 0.18 8.5 2.5]);
+    Global.exportToPPTX('addpicture',MembraneFig_simple,'Position',[4.8 2.29 8.5 2.5]);
+    Global.exportToPPTX('addpicture',RBCFig_simple,'Position',[4.8 4.39 8.5 2.5]);
+    Global.exportToPPTX('addpicture',RBCMemRatioFig_simple,'Position',[4.56 6.58 9 2.56]);
+ 
+    %Signal Dynamics
+    DissolvedNMR = openfig('DissolvedNMR.fig');
+    Global.exportToPPTX('addpicture',DissolvedNMR,'Position',[0.13 6.23 4.9 2.75]);
+
+    % ---------- helper: build a value cell with conditional background ----------
+    baseWhite = [1 1 1];
+    lightRed  = [1 0.8 0.8];
+    makeValCell = @(val, mu, sd) { val, 'BackgroundColor', ...
+        (val < (mu - 1.96*sd) || val > (mu + 1.96*sd)) * lightRed + ...
+        ~(val < (mu - 1.96*sd) || val > (mu + 1.96*sd)) * baseWhite };
+
+    makeValCell2 = @(val, mu, sd) { val, 'BackgroundColor', ...
+        ( val > (mu + 1.645*sd)) * lightRed + ...
+        ~( val > (mu + 1.645*sd)) * baseWhite };
+    
+
+    safeHypot = @(a,b) sqrt(a.^2 + b.^2);
+    safeHypot2 = @(a, b, c, d) sqrt(a.^2 + b.^2 + c.^2 + d.^2);  
+
+    
+    % vent
+    % Histogram
+    VentHist2Fig = GasExchangeFunctions.CalculateDissolvedHistogram2(...
+        ScaledVentImage(ProtonMaskRegistered(:)),...
+        VentEdges,VentThresh,SixBinMap,HealthyData.VentEdges,...
+        HealthyData.HealthyVentFit,round(VentSNR,2),round(VentMean,2),round(VentMedian,2),round(VentStd,3),VentBinPercents,'Ventilation');
+    Global.exportToPPTX('addpicture',VentHist2Fig,'Position',[12.8 0.2 3.2 2]);
+            
+    % --- Patient values --- VentMean
+    valVec = [ round(VentMean,2), ...
+               round(VentBinPercents(1),2), ...
+               round(VentBinPercents(2),2), ...
+               round(VentBinPercents(5)+VentBinPercents(6),2) ];
+    
+    % --- Reference means ---
+    muVec  = [ round(HealthyData.HealthyMeans.MeanVent,2), ...
+               round(HealthyData.BinPercentMeans.Vent(1),2), ...
+               round(HealthyData.BinPercentMeans.Vent(2),2), ...
+               round(HealthyData.BinPercentMeans.Vent(5)+HealthyData.BinPercentMeans.Vent(6),2) ];
+    
+    % --- Reference SDs (adjust field names if needed) ---
+    sdVec  = [ HealthyData.HealthyMeans.StdVent, ...
+               HealthyData.BinPercentStds.Vent(1), ...
+               HealthyData.BinPercentStds.Vent(2), ...
+               safeHypot(HealthyData.BinPercentStds.Vent(5), HealthyData.BinPercentStds.Vent(6)) ];
+    
+    labels = {'Mean','Defect%','Low%','High%'};
+    
+    resultssummary = cell(4,3);
+    resultssummary(1,:) = {
+       {'Metric','BackgroundColor',rowColors(1,:),'FontWeight','bold'}, ...
+       {'Value','BackgroundColor',rowColors(1,:),'FontWeight','bold'}, ...
+       {'Ref.','BackgroundColor',rowColors(1,:),'FontWeight','bold'}};
+    
+    for i = 1:numel(labels)
+        % Metric label cell (keep your row shading here if you want)
+        resultssummary{i+1,1} = {labels{i}, 'BackgroundColor', rowColors(i+1,:), 'FontWeight', 'bold'};
+    
+        % Value cell with conditional background: white if within LLN–ULN, light red otherwise
+        resultssummary{i+1,2} = makeValCell2(valVec(i), muVec(i), sdVec(i));
+    
+        % Reference column (mean); optionally show LLN–ULN instead:
+        % lln = muVec(i)-1.96*sdVec(i); uln = muVec(i)+1.96*sdVec(i);
+        % resultssummary{i+1,3} = sprintf('%.2f (%.2f–%.2f)', muVec(i), lln, uln);
+        resultssummary{i+1,3} = muVec(i);
+    end
+    Global.exportToPPTX('addtable', resultssummary, 'Position', [2.6 0.35 2.7 1.5], ...
+        'Vert','middle','Horiz','center','FontSize',14);
+    
+    % Membrane
+    % Histogram
+    MemHist2Fig = GasExchangeFunctions.CalculateDissolvedHistogram2(...
+        BarrGasRatio(VentBinMask(:)),BarEdges,BarrierThresh,...
+        EightBinMap,HealthyData.BarsEdges,...
+        HealthyData.HealthyBarsFit,round(BarrierSNR,2),round(BarrierUptakeMean,4),...
+        round(BarrierUptakeMedian,4),round(BarrierUptakeStd,4),BarrierUptakeBinPercents,'Membrane');
+    Global.exportToPPTX('addpicture',MemHist2Fig,'Position',[12.8 2.3 3.2 2.1]);
+        
+    valVec = [ round(BarrierUptakeMean,4), ...
+               round(BarrierUptakeBinPercents(1),2), ...
+               round(BarrierUptakeBinPercents(2),2), ...
+               round(BarrierUptakeBinPercents(5)+BarrierUptakeBinPercents(6),2),...
+               round(BarrierUptakeBinPercents(7)+BarrierUptakeBinPercents(8),2) ];
+    
+    muVec  = [ round(HealthyData.HealthyMeans.MeanBarrier,4), ...
+               round(HealthyData.BinPercentMeans.Barrier(1),2), ...
+               round(HealthyData.BinPercentMeans.Barrier(2),2), ...
+               round(HealthyData.BinPercentMeans.Barrier(5)+HealthyData.BinPercentMeans.Barrier(6),2),...
+               round(HealthyData.BinPercentMeans.Barrier(7)+HealthyData.BinPercentMeans.Barrier(8),2) ];
+    
+    sdVec  = [ HealthyData.HealthyMeans.StdBarrier, ...
+               HealthyData.BinPercentStds.Barrier(1), ...
+               HealthyData.BinPercentStds.Barrier(2), ...
+               safeHypot(HealthyData.BinPercentStds.Barrier(5), HealthyData.BinPercentStds.Barrier(6)) , ...
+               safeHypot(HealthyData.BinPercentStds.Barrier(7), HealthyData.BinPercentStds.Barrier(8)) ];
+    
+    labels = {'Mean','Defect%','Low%','Elvted%','High%'};
+    
+    resultssummary = cell(4,3);
+    resultssummary(1,:) = {
+       {'Metric','BackgroundColor',rowColors2(1,:),'FontWeight','bold'}, ...
+       {'Value','BackgroundColor',rowColors2(1,:),'FontWeight','bold'}, ...
+       {'Ref.','BackgroundColor',rowColors2(1,:),'FontWeight','bold'}};
+    
+    for i = 1:numel(labels)
+        resultssummary{i+1,1} = {labels{i}, 'BackgroundColor', rowColors2(i+1,:), 'FontWeight', 'bold'};
+        resultssummary{i+1,2} = makeValCell(valVec(i), muVec(i), sdVec(i));
+        resultssummary{i+1,3} = muVec(i);
+    end
+    
+    Global.exportToPPTX('addtable', resultssummary, 'Position', [2.6 2.45 2.7 1.5], ...
+        'Vert','middle','Horiz','center','FontSize',14);
+  
+    % RBC
+    % Histogram
+    RBCHist2Fig = GasExchangeFunctions.CalculateDissolvedHistogram2(...
+        RBCGasRatio(VentBinMask(:)),RBCEdges,RBCThresh,...
+        SixBinMap,HealthyData.RBCEdges,HealthyData.HealthyRBCsFit,...
+        round(RBCSNR,2),round(RBCTransferMean,4), round(RBCTransferMedian,4),round(RBCTransferStd,4),...
+        RBCTransferBinPercents,'RBC');
+    Global.exportToPPTX('addpicture',RBCHist2Fig,'Position',[12.8 4.5 3.2 2.2]);
+        
+    valVec = [ round(RBCTransferMean,4), ...
+               round(RBCTransferBinPercents(1),2), ...
+               round(RBCTransferBinPercents(2),2), ...
+               round(RBCTransferBinPercents(5)+RBCTransferBinPercents(6),2) ];
+    
+    muVec  = [ round(HealthyData.HealthyMeans.MeanRBC,4), ...
+               round(HealthyData.BinPercentMeans.RBC(1),2), ...
+               round(HealthyData.BinPercentMeans.RBC(2),2), ...
+               round(HealthyData.BinPercentMeans.RBC(5)+HealthyData.BinPercentMeans.RBC(6),2) ];
+    
+    sdVec  = [ HealthyData.HealthyMeans.StdRBC, ...
+               HealthyData.BinPercentStds.RBC(1), ...
+               HealthyData.BinPercentStds.RBC(2), ...
+               safeHypot(HealthyData.BinPercentStds.RBC(5), HealthyData.BinPercentStds.RBC(6)) ];
+    
+    labels = {'Mean','Defect%','Low%','High%'};
+    
+    resultssummary = cell(4,3);
+    resultssummary(1,:) = {
+       {'Metric','BackgroundColor',rowColors(1,:),'FontWeight','bold'}, ...
+       {'Value','BackgroundColor',rowColors(1,:),'FontWeight','bold'}, ...
+       {'Ref.','BackgroundColor',rowColors(1,:),'FontWeight','bold'}};
+    
+    for i = 1:numel(labels)
+        resultssummary{i+1,1} = {labels{i}, 'BackgroundColor', rowColors(i+1,:), 'FontWeight', 'bold'};
+        resultssummary{i+1,2} = makeValCell(valVec(i), muVec(i), sdVec(i));
+        resultssummary{i+1,3} = muVec(i);
+    end
+    
+    Global.exportToPPTX('addtable', resultssummary, 'Position', [2.6 4.55 2.7 1.5], ...
+        'Vert','middle','Horiz','center','FontSize',14);
+    
+    % RBC:M
+    % Histogram
+    RBCBarHist2Fig = GasExchangeFunctions.CalculateDissolvedHistogram2(...
+        RBCBarrRatio(VentBinMask(:)),RBCBarEdges,RBCBarrThresh,SixBinRBCBarMap,...
+        HealthyData.RBCBarEdges,HealthyData.HealthyRBCBarFit,...
+        '',round(RBCBarrierMean,2), round(RBCBarrierMedian,2),round(RBCBarrierStd,2),...
+        RBCBarrierBinPercents,'RBC:M');
+    Global.exportToPPTX('addpicture',RBCBarHist2Fig,'Position',[12.8 6.7 3.2 2.2]);
+
+
+    % Red box (as an empty text box with red fill/border)
+    Global.exportToPPTX('addtext',' ', ...
+        'Position',[3.52 2.08 0.3 0.2], ...     % [x y w h] – adjust as needed
+        'BackgroundColor',lightRed, ...
+        'LineColor',[1 1 1], 'LineWidth',1);
+    
+    % Label next to it
+    Global.exportToPPTX('addtext','Abnormal', ...
+        'Position',[3.77 2 1.5 0.3], ...
+        'FontSize',14, 'FontWeight','bold', ...
+        'Color',[0 0 0], 'HorizontalAlignment','left');
+
+    % add SNR
+    Global.exportToPPTX('addtext',['Vent SNR = ',num2str(round(VentSNR,1))], ...
+        'Position',[5.3 0.3 3 0.5], ...
+        'FontSize',14, 'FontWeight','bold', ...
+        'Color',[1 0 0], 'HorizontalAlignment','left');
+    Global.exportToPPTX('addtext',['Membrane SNR = ',num2str(round(BarrierSNR,1))], ...
+        'Position',[5.3 2.43 3 0.5], ...
+        'FontSize',14, 'FontWeight','bold', ...
+        'Color',[1 0 0], 'HorizontalAlignment','left');
+    Global.exportToPPTX('addtext',['RBC SNR = ',num2str(round(RBCSNR,1))], ...
+        'Position',[5.3 4.52 3 0.5], ...
+        'FontSize',14, 'FontWeight','bold', ...
+        'Color',[1 0 0], 'HorizontalAlignment','left');
+    %---------second slide ---------------------------------------------------------------------------------------------
+
+
     % Add Slide
     Global.exportToPPTX('addslide');
     
@@ -1604,6 +1917,7 @@ if strcmp(GasExchange.writereport,'yes')
         'FontSize',10, 'FontWeight','bold', ...
         'Color',[0 0 1], 'HorizontalAlignment','left'); 
 
+    %------------------------------------------------------------------------------------------------------
     % Save & close
     Global.exportToPPTX('save',pptxName);
     Global.exportToPPTX('close');
