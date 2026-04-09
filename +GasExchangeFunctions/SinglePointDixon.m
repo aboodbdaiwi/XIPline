@@ -1,6 +1,7 @@
 function [BarrierImage, RBCImage, Delta_angle_deg, B0PhaseMap] = SinglePointDixon(DissolvedImage,SpecRBCBarrierRatio,GasImage,LungMask)
 %% B0 Inhomogeneities Corrections
 % Iterate until mean phase is zero
+B0_corr = true;
 iterCount = 0;
 meanphase = inf;
 LungMask = LungMask > 0;
@@ -18,7 +19,11 @@ while((abs(meanphase) > 1E-7) && iterCount < 101)
 end
 % imslice(diffphase)
 diffphase = angle(GasImage);
-B0CorrectedDissolvedImage = DissolvedImage.*exp(1i*-diffphase);
+if B0_corr == 1
+    B0CorrectedDissolvedImage = DissolvedImage.*exp(1i*-diffphase);
+else
+    B0CorrectedDissolvedImage = DissolvedImage;
+end
 
 B0PhaseMap=diffphase;
 

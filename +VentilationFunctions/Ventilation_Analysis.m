@@ -254,7 +254,7 @@ delete_if_exist('lungmask*.nii*');
 delete_if_exist('airwaymask*.nii*');
 delete_if_exist('vesselsmask*.nii*');
 
-if strcmp(MainInput.NoProtonImage, 'no') 
+if strcmp(MainInput.NoProtonImage, 'no') || MainInput.NoProtonImage == 0
     img_name = lower(['proton' timestamp '.nii']);
     niftiwrite(abs(fliplr(rot90(Proton.Image, -1))), fullfile(parentPath, img_name), 'Compressed', true);
     info = niftiinfo(fullfile(parentPath, [img_name '.gz']));

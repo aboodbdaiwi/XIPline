@@ -240,4 +240,6 @@ Proton.folder = ProtonDataLocation;
 Proton.H_RecMatrix = H_RecMatrix;
 Proton.ProtonMax = ProtonMax;
 
+save(fullfile(outputpath, 'proton_recon_workspace.mat'));
+
 end

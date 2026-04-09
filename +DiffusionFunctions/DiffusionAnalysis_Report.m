@@ -115,10 +115,14 @@ function DiffusionAnalysis_Report(Diffusion, MainInput)
     
     settinglabels = {'Scanner','Scan Software','Sequence','Recon','XIPline Commit','Denoise','N4Bias',...
         'ADC Fit', 'SEM-Analysis','CM-Analysis', 'RefAgeCor.','Image Quality','Note','ProcessDate', 'Analyst Initials'};
-    if MainInput.N4Bias == 0
+    try
+        if MainInput.N4Bias == 0
+            N4bias = 'no';
+        else
+            N4bias = 'yes';
+        end
+    catch
         N4bias = 'no';
-    else
-        N4bias = 'yes';
     end
     settings = {MainInput.Scanner,MainInput.ScannerSoftware,MainInput.SequenceType,MainInput.Recon,MainInput.AnalysisCode_hash,MainInput.denoiseXe,N4bias,...
         Diffusion.ADCFittingType,Diffusion.SEMMorphometry, Diffusion.CMMorphometry, Diffusion.HealthyRef.AgeCorrected,MainInput.ImageQuality, MainInput.Note, todayStr, MainInput.Analyst};

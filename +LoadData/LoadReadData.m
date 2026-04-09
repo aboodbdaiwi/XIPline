@@ -61,22 +61,59 @@ if ~isfield(MainInput, 'OutputPath') || isempty(MainInput.OutputPath)
     MainInput.OutputPath = MainInput.XeDataLocation;
 end
 cd(MainInput.XeDataLocation)
-if strcmp(MainInput.AnalysisType,'Ventilation')                 
-    mkdir([MainInput.OutputPath '\Ventilation_Analysis']);
-    outputpath = [MainInput.OutputPath '\Ventilation_Analysis'];
+if strcmp(MainInput.AnalysisType,'Ventilation')
+    folderName = 'Ventilation_Analysis';
+    
+    if ~endsWith(MainInput.OutputPath, folderName)
+        outputpath = fullfile(MainInput.OutputPath, folderName);
+        if ~exist(outputpath, 'dir')
+            mkdir(outputpath);
+        end
+    else
+        outputpath = MainInput.OutputPath;
+    end
+    
     Ventilation.outputpath = outputpath;    
     MainInput.OutputPath = outputpath;
+
 elseif strcmp(MainInput.AnalysisType,'Diffusion')
-    mkdir([MainInput.OutputPath '\Diffusion_Analysis']);
-    outputpath = [MainInput.OutputPath '\Diffusion_Analysis'];
+    folderName = 'Diffusion_Analysis';
+    
+    if ~endsWith(MainInput.OutputPath, folderName)
+        outputpath = fullfile(MainInput.OutputPath, folderName);
+        if ~exist(outputpath, 'dir')
+            mkdir(outputpath);
+        end
+    else
+        outputpath = MainInput.OutputPath;
+    end
+    
     Diffusion.outputpath = outputpath;   
     MainInput.OutputPath = outputpath;
+
 elseif strcmp(MainInput.AnalysisType,'GasExchange')
-    mkdir([MainInput.OutputPath '\GasExchange_Analysis']);
-    mkdir([MainInput.XeDataLocation '\GasExchange_Analysis']);
-    outputpath = [MainInput.OutputPath '\GasExchange_Analysis'];
-    GasExchange.outputpath = outputpath;
-    MainInput.OutputPath = outputpath;
+    folderName = 'GasExchange_Analysis';
+    
+    % OutputPath check
+    if ~endsWith(MainInput.OutputPath, folderName)
+        outputpath1 = fullfile(MainInput.OutputPath, folderName);
+        if ~exist(outputpath1, 'dir')
+            mkdir(outputpath1);
+        end
+    else
+        outputpath1 = MainInput.OutputPath;
+    end
+    
+    % XeDataLocation check
+    if ~endsWith(MainInput.XeDataLocation, folderName)
+        outputpath2 = fullfile(MainInput.XeDataLocation, folderName);
+        if ~exist(outputpath2, 'dir')
+            mkdir(outputpath2);
+        end
+    end
+    
+    GasExchange.outputpath = outputpath1;
+    MainInput.OutputPath = outputpath1;
 end
 
 if ~isfield(MainInput, 'Recon')
@@ -227,7 +264,7 @@ elseif (strcmp(MainInput.XeDataext,'.h5') || strcmp(MainInput.XeDataext,'.mrd'))
         MainInput.ReconImageMode = 'xenon';
         [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
         Diffusion.Image = Image;
-    elseif strcmp(MainInput.AnalysisType,'GasExchange') && strcmp(MainInput.Institute,'XeCTC') && strcmp(MainInput.SequenceType, '3D Radial')
+    elseif strcmp(MainInput.AnalysisType,'GasExchange')  && strcmp(MainInput.SequenceType, '3D Radial')
         [GasExchange] = LoadData.ismrmrd.radial_3D_XeCTC_gx_recon(MainInput,GasExchange);
     end
 elseif strcmp(MainInput.XeDataext,'.data')  && contains(MainInput.Scanner, 'Philips', 'IgnoreCase', true)  
@@ -611,7 +648,7 @@ if (isnumeric(MainInput.NoProtonImage) && MainInput.NoProtonImage == 0) || ...
                 Proton.Image = Image;  
             elseif strcmp(MainInput.AnalysisType,'Diffusion') 
                 %
-            elseif strcmp(MainInput.AnalysisType,'GasExchange') && strcmp(MainInput.Institute,'XeCTC') && strcmp(MainInput.SequenceType, '3D Radial')
+            elseif strcmp(MainInput.AnalysisType,'GasExchange') && strcmp(MainInput.SequenceType, '3D Radial')
                 [Proton] = LoadData.ismrmrd.radial_3D_XeCTC_H_recon(MainInput, GasExchange, Proton);
             end
         elseif strcmp(MainInput.HDataext,'.dat') && strcmp(MainInput.Scanner,'Siemens') 
