@@ -78,7 +78,7 @@ ScanVersion = MainInput.Institute;
 %     ScanVersion = 'Duke';
 % end
 XeSinFile = dir([GasDataLocation,'\*.sin']);
-XeSinFile = XeSinFile(2);
+XeSinFile = XeSinFile(1);
 
 DataFiles = dir([GasDataLocation,'\*.data']);
 XeDataFile = DataFiles(1);
@@ -186,7 +186,9 @@ mix_values = cell2mat(mix_values(2:end));
 max_mix = max(mix_values);
 if max_mix > 1
     bonus_spec = true;
-    OvsFactor = 1;
+    if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
+        OvsFactor = 1;
+    end
 else
     bonus_spec = false;
 end
@@ -484,6 +486,11 @@ end
 disp('Importing Data Completed.')
 
 GasExchange.OvsFactor = OvsFactor;
+try
+    GasExchange.scaleFac = scaleFac;
+catch
+    GasExchange.scaleFac = 1;
+end
 %% Calculate Trajectories
 disp('Calculating Trajectories...')
 if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
@@ -693,6 +700,7 @@ if(NewImages == 1)
            CorrectedDissKSpace_SS = DissolvedKSpace_SS;
         end
     else
+        % CorrectedDissKSpace_SS = DissolvedKSpace_SS;
        CorrectedDissKSpace_SS = GasExchangeFunctions.GasPhaseContaminationRemoval(DissolvedKSpace_SS,GasKSpace_SS,dwell_s,-freq_jump,AppendedDissolvedNMRFit.phase(3),AppendedDissolvedNMRFit.area(3),GasFlipAngle);
     end
     disp('Removing Gas Phase Contamination Completed.')
@@ -872,6 +880,6 @@ GasExchange.SigDynamics = SigDynamics;
 GasExchange.TE90 = TE90;
 GasExchange.XeSin = XeSin;
 
-
+save(fullfile(outputpath, 'xe_recon_workspace.mat'));
 close all;
 end

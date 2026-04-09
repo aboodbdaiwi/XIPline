@@ -35,23 +35,25 @@ PatientAge = Diffusion.PatientAge;
 tic
 
 %% create a final mask
-final_mask =lung_mask;
+final_mask = lung_mask;
 final_mask(airway_mask==1)=0;
 
 % create the noise mask
 SE = strel('square', 10);
 maskarray_dilated = imdilate(final_mask, SE);
-airwaymask = Segmentation.SegmentLungthresh(diffimg(:,:,:,1),1,0.3);
+% airwaymask = Segmentation.SegmentLungthresh(diffimg(:,:,:,1),1,0.3);
 zerofillings = double(diffimg(:,:,:,1) == 0);
 
 artifact_mask = zeros(size(diffimg));
-for i = 1:length(bvalues)
-    artifact_mask(:,:,:,i) = Segmentation.SegmentLungthresh(diffimg(:,:,:,i),1,0.5); 
+
+for i = 1:2%length(bvalues)
+    % artifact_mask(:,:,:,i) = Segmentation.SegmentLungthresh(diffimg(:,:,:,i),1,3.5); 
+    artifact_mask(:,:,:,i) = Segmentation.SegmentXeLung(diffimg(:,:,:,i)); 
 end
 artifact_mask = sum(artifact_mask,4);
 artifact_mask = double(artifact_mask > 0);
 
-noise_mask = double(imcomplement(maskarray_dilated).*~airwaymask.*~zerofillings.*~artifact_mask);
+noise_mask = double(imcomplement(maskarray_dilated).*~zerofillings.*~artifact_mask);
 
 % figure; imslice(noise_mask)
 % figure; imslice(noise_mask)
@@ -105,25 +107,94 @@ num_ones=sum(final_mask(:)); % for loopping
 
 %% Calcualting the SNR and the Weighting Vector
 close all; 
-SNR_vec = zeros(1, length(bvalues));
-signal_n_avg = zeros(1, length(bvalues));
-std_noise_n = zeros(1, length(bvalues));
-mean_noise= zeros(1, length(bvalues));
+% ============================================================
+% SNR / SVNR / Contrast calculations using ONE overall noise SD
+% across all b-value images
+% ============================================================
+
+SNR_vec        = zeros(1, length(bvalues));
+signal_n_avg   = zeros(1, length(bvalues));
+CNR_vec   = zeros(1, length(bvalues));
+
+% Repeat 3D masks to match 4D diffusion images
+final_mask_4D = repmat(final_mask, [1 1 1 size(Ndiffimg,4)]);
+noise_mask_4D = repmat(noise_mask, [1 1 1 size(Ndiffimg,4)]);
+
+% Calculate ONE overall noise vector using all b-values together
+noise_vec_all = Ndiffimg(noise_mask_4D > 0);
+
+% Optional: remove extreme bright outliers from the noise region
+Noise99percentile_all = prctile(noise_vec_all, 99.0);
+noise_vec_all(noise_vec_all >= Noise99percentile_all) = [];
+
+mean_noise_all = mean(noise_vec_all);
+std_noise_all  = std(noise_vec_all);
+
+% Calculate mean SNR for each b-value image
+% and voxelwise SVNR / contrast maps
 for n = 1:length(bvalues)
-        %Calculating the siganl vector
-        signal_vec = Ndiffimg(:,:,:,n);
-        signal_vec(final_mask==0)=[];
-        signal_n_avg(n) = mean(signal_vec);
-        
-        %Calculating the noise vector
-        noise_vec=(Ndiffimg(:,:,:,n));  
-        noise_vec(noise_mask==0)=[];    
-        Noise99percentile = prctile(noise_vec,99.0);
-        noise_vec(noise_vec >= Noise99percentile) = [];
-        mean_noise(n) = mean(noise_vec);            %the mean of the noise               
-        std_noise_n(n) = std(noise_vec);            %the standard deviation of the noise
-        SNR_vec(n) = round(signal_n_avg(n) / std_noise_n(n),2)*sqrt(2 - (pi/2)); %signal to noise ratio
+    curr_img = Ndiffimg(:,:,:,n);
+
+    % Mean signal inside lung mask
+    signal_vec = curr_img(final_mask > 0);
+    signal_n_avg(n) = mean(signal_vec);
+
+    % Mean SNR per b-value Using one global noise SD
+    SNR_vec(n) = round((signal_n_avg(n) / std_noise_all) * sqrt(2 - (pi/2)), 2);
 end
+% ============================================================
+% ADC reliability masking based on when signal hits noise floor
+Nb = length(bvalues);
+% SVNR_maps = Ndiffimg ./ std_noise_all;
+SVNR_maps  = (Ndiffimg - mean_noise_all) ./ std_noise_all; 
+CNR_maps  = Ndiffimg(:,:,:,1) ./ Ndiffimg(:,:,:,end); 
+
+% Calculate ONE overall noise SVNR floor across all images
+svnr_noise_vec_all   = SVNR_maps(noise_mask_4D > 0);
+SVNR_noise_floor_all = mean(svnr_noise_vec_all);
+SVNR_noise_std_all   = std(svnr_noise_vec_all);
+
+% Thresholds
+SVNR_thresh_strict = 5; % for first b-value
+
+% 1) Primary mask from first b-value
+PrimaryMask = (SVNR_maps(:,:,:,1) >= SVNR_thresh_strict) & (final_mask > 0);
+
+% 4) Find first b-value index where voxel drops below threshold
+%    If never below threshold, assign Nb+1
+FirstCrossingIdx = ones(size(final_mask)) * (Nb + 1).*final_mask;
+for n = 1:Nb
+    currBelow = (SVNR_maps(:,:,:,n) < SVNR_thresh_strict) & (FirstCrossingIdx == Nb + 1);
+    FirstCrossingIdx(currBelow) = n;
+end
+
+% 5) Example early-failure mask
+%    Exclude voxels that hit noise by second b-value
+EarlyFailureMask = double(FirstCrossingIdx <= 2);
+
+% 6) Final ADC reliability mask
+ADC_reliable_mask = PrimaryMask & ~EarlyFailureMask;
+
+% Optional: apply only inside original final mask
+ADC_reliable_mask = ADC_reliable_mask & (final_mask > 0);
+
+final_mask = ADC_reliable_mask;
+
+% Calculate mean signal / SNR for each b-value using the thresholded mask
+for n = 1:length(bvalues)
+    curr_img = Ndiffimg(:,:,:,n);
+    signal_vec = curr_img(ADC_reliable_mask > 0);
+
+    if isempty(signal_vec)
+        signal_n_avg(n) = NaN;
+        SNR_vec(n)      = NaN;
+        CNR_vec(n)      = NaN;
+    else
+        signal_n_avg(n) = mean(signal_vec);
+        SNR_vec(n)      = round((signal_n_avg(n) / std_noise_all) * sqrt(2 - (pi/2)), 2);
+    end
+end
+
 SNR_vec=SNR_vec';
 weight_vec = zeros(1, length(SNR_vec));
 for n = 1:length(SNR_vec)
@@ -363,6 +434,17 @@ end
 % limit ADC to physically allowable values
 ADCmap(ADCmap<0)=0;
 ADCmap(ADCmap>0.14)=0; %Xe  % default to xenon
+try
+    Rmap2 = Rmap;
+    Rmap2(isnan(Rmap2) | Rmap2 <= 0) = 0;
+    R2_cutoff_mask = double(Rmap2 > 0.5).*final_mask;
+catch
+    R2_cutoff_mask = final_mask;
+end
+apply_R2_cutoff = true;
+if apply_R2_cutoff == 1
+    ADCmap = ADCmap.*R2_cutoff_mask;
+end
 meanADC = mean(ADCmap(ADCmap>0));       %ADC 
 stdADC = std(ADCmap(ADCmap>0));         %standard deviation
 CVADC = stdADC/meanADC;                 %Coefficient of Variation 
@@ -459,7 +541,7 @@ val = MainInput.N4Bias;
 if (isnumeric(val) && val == 1) || strcmpi(val, 'yes')
     % apply N4 for fun
     MainInput.N4Bias = 'yes';
-    Diffusion.Image = Diffusion.UncorrectedImage;
+    Diffusion.Image = diffimg;  %Diffusion.UncorrectedImage;
     [~, BiasMap] = Segmentation.N4_bias_correction(Diffusion.Image(:,:,:,1), MainInput.XeDataLocation);
     for i=1:size(Diffusion.Image, 4)
         Diffusion.Image(:,:,:,i) = Diffusion.Image(:,:,:,i).*(1./BiasMap);

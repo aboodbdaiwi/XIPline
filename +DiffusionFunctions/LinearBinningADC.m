@@ -22,7 +22,11 @@ function [Diffusion] = LinearBinningADC(Diffusion, MainInput)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Images = Diffusion.diffimg;
 ADCmap = Diffusion.ADCmap;
-maskarray = Diffusion.lung_mask;
+try
+    maskarray = Diffusion.final_mask;
+catch
+    maskarray = Diffusion.lung_mask;
+end
 age = Diffusion.PatientAge;
 DataLocation = Diffusion.outputpath;
 HealthyMean = Diffusion.ADCLB_RefMean;

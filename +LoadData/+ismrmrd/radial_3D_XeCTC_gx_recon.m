@@ -47,11 +47,12 @@ clc
 % Reading can be done one acquisition (or chunk) at a time, 
 % but this is much faster for data sets that fit into RAM.
 D = dset.readAcquisition();
+%%
 % D.data = 
 % D.traj = 
 % Remove first 3 and last 3 cells
-D.data = D.data(4:end-3);
-D.traj = D.traj(4:end-3);
+% D.data = D.data(4:end-3);
+% D.traj = D.traj(4:end-3);
 
 % 1) Get data vector (handle cell)
 x = D.traj;
@@ -202,6 +203,17 @@ disp('Importing Acquisition Information Completed.')
 cellSize = cell2mat(D.data(1,1));
 Nx = size(D.data{1,1}, 1);
 
+if Ncontrast >= 3
+    for ky = 1:(enc_Ny*enc_Nz*Ncontrast)
+        fid = D.data{1, ky};
+        if size(fid,1) >= Nsamp_full+1
+            % disp(['downsample i = ', num2str(ky)])
+            fid = movmean(fid,size(fid,1)/Nsamp_full);
+            fid = downsample(fid,size(fid,1)/Nsamp_full);
+            D.data{1, ky} = fid;
+        end
+    end
+end
 XeData = zeros(Nx, enc_Ny*enc_Nz, Ncontrast, 'like', D.data{1,1});
 for ky = 1:(enc_Ny*enc_Nz)
     for c = 1:Ncontrast
@@ -403,13 +415,18 @@ end
 
 
 %% Gas Phase Contamination Removal
+gas_contam_removed = hdr.userParameters.userParameterLong(3).value;
 if(NewImages == 1)
     disp('Removing Gas Phase Contamination...')
     if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
        %correction not possible
        CorrectedDissKSpace_SS = DissolvedKSpace_SS;
     else
-       CorrectedDissKSpace_SS = GasExchangeFunctions.GasPhaseContaminationRemoval(DissolvedKSpace_SS,GasKSpace_SS,dwell_s,-freq_jump,AppendedDissolvedNMRFit.phase(3),AppendedDissolvedNMRFit.area(3),GasFlipAngle);
+        if gas_contam_removed ~= 1
+            CorrectedDissKSpace_SS = GasExchangeFunctions.GasPhaseContaminationRemoval(DissolvedKSpace_SS,GasKSpace_SS,dwell_s,-freq_jump,AppendedDissolvedNMRFit.phase(3),AppendedDissolvedNMRFit.area(3),GasFlipAngle);
+        else
+            CorrectedDissKSpace_SS = DissolvedKSpace_SS;
+        end
     end
     disp('Removing Gas Phase Contamination Completed.')
 end
@@ -445,7 +462,7 @@ hold off
 % sgtitle('Signal Dynamics','FontSize',22)
 cd(outputpath)
 savefig('SigDynamics.fig')
-close(gcf)
+% close(gcf)
 % %H - Motion
 % subplot(1,2,2);
 % hold on
@@ -472,7 +489,7 @@ if(NewImages == 1)
     %Vent Image
     disp('Reconstructing Ventilation Image...')
     UncorrectedVentImage = GasExchangeFunctions.Dissolved_HighResImageRecon(Xe_RecMatrix,GasKSpace_SS,XeTraj_SS/2,PixelShift); %2x Resolution
-    figure; Global.imslice(abs(UncorrectedVentImage))
+    % figure; Global.imslice(abs(UncorrectedVentImage))
     if strcmp(MainInput.Scanner,'Siemens') 
         for i = 1:size(UncorrectedVentImage,1)
             img = UncorrectedVentImage(:,:,i);
@@ -609,13 +626,29 @@ RBCOsc_Normalization = GasExchangeFunctions.Dissolved_RBCOscImageRecon(Xe_RecMat
 disp('Reconstructing RBC keyhole Images Completed.')
 
 %% store avriables
+GasExchange.XeTraj = XeTraj;
+GasExchange.GasKSpace = GasKSpace;
+GasExchange.DissolvedKSpace = DissolvedKSpace;
+
+GasExchange.XeTraj_SS = XeTraj_SS;
+GasExchange.GasKSpace_SS = GasKSpace_SS;
+GasExchange.DissolvedKSpace_SS = DissolvedKSpace_SS;
+GasExchange.CorrectedDissKSpace_SS = CorrectedDissKSpace_SS;
+
+try
+    GasExchange.XeImg_nsamp = XeImg_nsamp;
+    GasExchange.Xe_nprof = Xe_nprof;
+    GasExchange.Xe_interleaves = Xe_interleaves;
+    GasExchange.XeOrder = XeOrder;
+catch
+
+end
+
 GasExchange.UncorrectedVentImage = UncorrectedVentImage;
 GasExchange.VentImage = VentImage;
 GasExchange.GasImage = GasImage;
 GasExchange.DissolvedImage = DissolvedImage;
 GasExchange.CorrDissolvedImage = CorrDissolvedImage;
-GasExchange.GasKSpace_SS = GasKSpace_SS;
-GasExchange.CorrectedDissKSpace_SS = CorrectedDissKSpace_SS;
 GasExchange.AppendedDissolvedNMRFit = AppendedDissolvedNMRFit;
 GasExchange.RBC2Bar_struct = RBC2Bar_struct;
 GasExchange.RBCOsc_High_Image = RBCOsc_High_Image;
@@ -628,6 +661,7 @@ GasExchange.freq_jump = freq_jump;
 GasExchange.DissolvedNMR = DissolvedNMR;
 GasExchange.SigDynamics = SigDynamics;
 
+save(fullfile(outputpath, 'xe_recon_workspace.mat'));
 close all;
 
 

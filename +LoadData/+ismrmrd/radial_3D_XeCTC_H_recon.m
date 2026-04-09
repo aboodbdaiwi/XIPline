@@ -36,6 +36,9 @@ D = dset.readAcquisition();
 % Matrix size
 enc_Nx = hdr.encoding.encodedSpace.matrixSize.x;
 enc_Ny = hdr.encoding.encodedSpace.matrixSize.y;
+if hdr.encoding.encodedSpace.matrixSize.z >= 1
+    enc_Ny = hdr.encoding.encodedSpace.matrixSize.y .*hdr.encoding.encodedSpace.matrixSize.z;
+end
 if strcmp(MainInput.Scanner,'Siemens')
     enc_Ny = size(D.data,2);
 end
@@ -72,9 +75,16 @@ else
 end
 Proton.outputfolder = outputpath;
 %% Import Acquisition Information
+if strcmp(Institute,'XeCTC') == 1    
+    ScanVersion = 'XeCTC';
+    H_AcqMatrix = 128;
+    H_RecMatrix = H_AcqMatrix;
+elseif strcmp(Institute,'CCHMC') == 1                 
+    ScanVersion = 'CCHMC_V3';
+    H_AcqMatrix = 112;
+    H_RecMatrix = H_AcqMatrix;    
+end
 
-H_AcqMatrix = enc_Nx;
-H_RecMatrix = 2*H_AcqMatrix;
 
 %% Import Data
 disp('Importing Data...')
@@ -117,9 +127,16 @@ HPhaseDynamics = rad2deg(mean(unwrap(HPhase,1),2));
 HPulses = (1:length(HPhaseDynamics))';
 
 %Fits to data; use only 1st third to avoid exhale/movement - assuming first 5 seconds are uncorrupted
+
 HDynMean = mean(HPhaseDynamics(1000:round(length(HPulses)/3)));
 HDynFit = HDynMean*ones(size(HPhaseDynamics(1000:round(length(HPulses)/3))));
 HDynRMSE = sqrt(immse(HDynFit,HPhaseDynamics(1000:round(length(HPulses)/3))));
+if isnan(HDynMean)
+    HDynMean = mean(HPhaseDynamics(1:round(length(HPulses)/3)));
+    HDynFit = HDynMean*ones(size(HPhaseDynamics(1:round(length(HPulses)/3))));
+    HDynRMSE = sqrt(immse(HDynFit,HPhaseDynamics(1:round(length(HPulses)/3))));
+end
+
 if (3*HDynRMSE<5) 
     HDynRMSE = 5/3; %If small phase varaition, use acceptance window of 5deg
 end
@@ -194,8 +211,10 @@ try
 catch
     PixelShift = [0,0,0];
 end
+
 disp('Reconstructing UTE Image...')
-ProtonImage = zeros(H_RecMatrix*3,H_RecMatrix*3,H_RecMatrix*3,H_coils);%3x overgridding
+overgridding_factor = 3;
+ProtonImage = zeros(H_RecMatrix*overgridding_factor,H_RecMatrix*overgridding_factor,H_RecMatrix*overgridding_factor,H_coils);%3x overgridding
 for i = 1:H_coils
     if strcmp(ScanVersion,'XeCTC') %recon 2x interpolated
         ProtonImage(:,:,:,i) = GasExchangeFunctions.Dissolved_HImageRecon_CTC(H_RecMatrix,HKSpace_Steady(:,:,i),HTraj_Steady/2,PixelShift);
@@ -221,13 +240,12 @@ ProtonImageLR = imgaussfilt3(ProtonImageLR, 0.5);%reduce noise
 
 % Determine Levels
 ProtonMax = prctile(abs(ProtonImageLR(:)),99.99);
-figure; imslice(ProtonImage)
 
 disp('Proton Bias Corrected.')  
 cd(outputpath)
 %View
 ProtonMontage = figure('Name','Proton Image');set(ProtonMontage,'WindowState','minimized');
-montage(abs(ProtonImage(H_RecMatrix:2*H_RecMatrix,H_RecMatrix:2*H_RecMatrix,H_RecMatrix:2*H_RecMatrix)),'DisplayRange',[0 ProtonMax])%unregistered for these
+montage(abs(ProtonImage(H_RecMatrix:overgridding_factor*H_RecMatrix,H_RecMatrix:overgridding_factor*H_RecMatrix,H_RecMatrix:overgridding_factor*H_RecMatrix)),'DisplayRange',[0 ProtonMax])%unregistered for these
 savefig('ProtonMontage.fig')
 close(gcf)
 
@@ -238,5 +256,7 @@ Proton.filename = MainInput.HFileName;
 Proton.folder = ProtonDataLocation;
 Proton.H_RecMatrix = H_RecMatrix;
 Proton.ProtonMax = ProtonMax;
+
+save(fullfile(outputpath, 'proton_recon_workspace.mat'));
 
 end

@@ -264,7 +264,7 @@ elseif (strcmp(MainInput.XeDataext,'.h5') || strcmp(MainInput.XeDataext,'.mrd'))
         MainInput.ReconImageMode = 'xenon';
         [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
         Diffusion.Image = Image;
-    elseif strcmp(MainInput.AnalysisType,'GasExchange') && strcmp(MainInput.Institute,'XeCTC') && strcmp(MainInput.SequenceType, '3D Radial')
+    elseif strcmp(MainInput.AnalysisType,'GasExchange')  && strcmp(MainInput.SequenceType, '3D Radial')
         [GasExchange] = LoadData.ismrmrd.radial_3D_XeCTC_gx_recon(MainInput,GasExchange);
     end
 elseif strcmp(MainInput.XeDataext,'.data')  && contains(MainInput.Scanner, 'Philips', 'IgnoreCase', true)  
@@ -648,7 +648,7 @@ if (isnumeric(MainInput.NoProtonImage) && MainInput.NoProtonImage == 0) || ...
                 Proton.Image = Image;  
             elseif strcmp(MainInput.AnalysisType,'Diffusion') 
                 %
-            elseif strcmp(MainInput.AnalysisType,'GasExchange') && strcmp(MainInput.Institute,'XeCTC') && strcmp(MainInput.SequenceType, '3D Radial')
+            elseif strcmp(MainInput.AnalysisType,'GasExchange') && strcmp(MainInput.SequenceType, '3D Radial')
                 [Proton] = LoadData.ismrmrd.radial_3D_XeCTC_H_recon(MainInput, GasExchange, Proton);
             end
         elseif strcmp(MainInput.HDataext,'.dat') && strcmp(MainInput.Scanner,'Siemens') 

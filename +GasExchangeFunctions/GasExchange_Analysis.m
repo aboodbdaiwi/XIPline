@@ -958,6 +958,7 @@ close(tiff)
 % waitbar(.90,f,'Save Report....');
 % pause(1)
 disp('Exporting Results to Powerpoint Summary...')
+cd(outputpath)
 %Start new presentation
 isOpen  = Global.exportToPPTX();
 if ~isempty(isOpen) %If PowerPoint already started, then close first and then open a new one

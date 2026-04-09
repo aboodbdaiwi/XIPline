@@ -46,7 +46,8 @@ FAScale_tol = 1.33;
 SNR_tol = 25; % allowable
 
 %% Import Data File
-cd(MainInput.XeDataLocation)
+
+cd(MainInput.CalDataLocation)
 if exist(MainInput.CalFileName, 'file')
     dsetCal = LoadData.ismrmrd.Dataset(MainInput.CalFileName, 'dataset');
 else
