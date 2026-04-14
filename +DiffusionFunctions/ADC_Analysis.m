@@ -92,18 +92,7 @@ slices=length(find_slice_checker);
 Diffusion.Ndiffimg = Ndiffimg;
 Diffusion.final_mask = final_mask;
 Diffusion.noise_mask = noise_mask;
-%% Normalize the intensity of the original image to fall between [0,100].
-Ndiffimg=Ndiffimg*100;
 
-final_mask_size=size(final_mask);
-%convert 4D to 2D array (lenghth pixel inside the final mask and number of b values
-Data_vec=reshape(Ndiffimg.*final_mask,[final_mask_size(1)*final_mask_size(2)*final_mask_size(3),length(bvalues)]);
-Data_vec = Data_vec(any(Data_vec,2),:);
-pixel_location=find(final_mask); %to find pixel location to convert the array back to 3D image
-num_ones=sum(final_mask(:)); % for loopping 
-
-% nan_rows = any(isnan(Data_vec), 2);
-% Data_vec(nan_rows, :) = [];
 
 %% Calcualting the SNR and the Weighting Vector
 close all; 
@@ -117,7 +106,6 @@ signal_n_avg   = zeros(1, length(bvalues));
 CNR_vec   = zeros(1, length(bvalues));
 
 % Repeat 3D masks to match 4D diffusion images
-final_mask_4D = repmat(final_mask, [1 1 1 size(Ndiffimg,4)]);
 noise_mask_4D = repmat(noise_mask, [1 1 1 size(Ndiffimg,4)]);
 
 % Calculate ONE overall noise vector using all b-values together
@@ -130,18 +118,6 @@ noise_vec_all(noise_vec_all >= Noise99percentile_all) = [];
 mean_noise_all = mean(noise_vec_all);
 std_noise_all  = std(noise_vec_all);
 
-% Calculate mean SNR for each b-value image
-% and voxelwise SVNR / contrast maps
-for n = 1:length(bvalues)
-    curr_img = Ndiffimg(:,:,:,n);
-
-    % Mean signal inside lung mask
-    signal_vec = curr_img(final_mask > 0);
-    signal_n_avg(n) = mean(signal_vec);
-
-    % Mean SNR per b-value Using one global noise SD
-    SNR_vec(n) = round((signal_n_avg(n) / std_noise_all) * sqrt(2 - (pi/2)), 2);
-end
 % ============================================================
 % ADC reliability masking based on when signal hits noise floor
 Nb = length(bvalues);
@@ -154,36 +130,38 @@ svnr_noise_vec_all   = SVNR_maps(noise_mask_4D > 0);
 SVNR_noise_floor_all = mean(svnr_noise_vec_all);
 SVNR_noise_std_all   = std(svnr_noise_vec_all);
 
+% Calculate ONE overall noise SVNR floor across all images
+CNR_maps(isinf(CNR_maps) | isnan(CNR_maps)) = 0;
+CNR_noise_vec_all   = CNR_maps(noise_mask_4D(:,:,:,1) > 0);
+CNR_noise_floor_all = mean(CNR_noise_vec_all);
+CNR_noise_std_all   = std(CNR_noise_vec_all);
+
 % Thresholds
 SVNR_thresh_strict = 5; % for first b-value
 
 % 1) Primary mask from first b-value
-PrimaryMask = (SVNR_maps(:,:,:,1) >= SVNR_thresh_strict) & (final_mask > 0);
+SVNRMask = (SVNR_maps(:,:,:,1) >= SVNR_thresh_strict) & (final_mask > 0);
+CNRMask = (CNR_maps >= (CNR_noise_floor_all + CNR_noise_std_all)) & (final_mask > 0);
 
-% 4) Find first b-value index where voxel drops below threshold
+% 2) Find first b-value index where voxel drops below threshold
 %    If never below threshold, assign Nb+1
 FirstCrossingIdx = ones(size(final_mask)) * (Nb + 1).*final_mask;
 for n = 1:Nb
-    currBelow = (SVNR_maps(:,:,:,n) < SVNR_thresh_strict) & (FirstCrossingIdx == Nb + 1);
+    currBelow = (SVNR_maps(:,:,:,n) < (SVNR_noise_floor_all+SVNR_noise_std_all)) & (FirstCrossingIdx == Nb + 1);
     FirstCrossingIdx(currBelow) = n;
 end
+FirstCrossingIdx = FirstCrossingIdx - 1;
+FirstCrossingIdx(FirstCrossingIdx <= 1) = 0;
+FirstCrossingIdx = FirstCrossingIdx.*SVNRMask;
+Crossing_vec = FirstCrossingIdx(:);              % column vector
+Crossing_vec = Crossing_vec(Crossing_vec ~= 0);
 
-% 5) Example early-failure mask
-%    Exclude voxels that hit noise by second b-value
-EarlyFailureMask = double(FirstCrossingIdx <= 2);
-
-% 6) Final ADC reliability mask
-ADC_reliable_mask = PrimaryMask & ~EarlyFailureMask;
-
-% Optional: apply only inside original final mask
-ADC_reliable_mask = ADC_reliable_mask & (final_mask > 0);
-
-final_mask = ADC_reliable_mask;
+final_mask = SVNRMask.*CNRMask.*double(FirstCrossingIdx > 0);
 
 % Calculate mean signal / SNR for each b-value using the thresholded mask
 for n = 1:length(bvalues)
     curr_img = Ndiffimg(:,:,:,n);
-    signal_vec = curr_img(ADC_reliable_mask > 0);
+    signal_vec = curr_img(final_mask > 0);
 
     if isempty(signal_vec)
         signal_n_avg(n) = NaN;
@@ -279,6 +257,19 @@ for ii = 1 : size(tiff_info, 1)
 end
 Mask_Diff_boundaries = permute(Mask_Diff_boundaries,[1 2 4 3]);
 Diffusion.Mask_Diff_boundaries = Mask_Diff_boundaries;
+
+%% Normalize the intensity of the original image to fall between [0,100].
+Ndiffimg=Ndiffimg*100;
+
+final_mask_size=size(final_mask);
+%convert 4D to 2D array (lenghth pixel inside the final mask and number of b values
+Data_vec=reshape(Ndiffimg.*final_mask,[final_mask_size(1)*final_mask_size(2)*final_mask_size(3),length(bvalues)]);
+Data_vec = Data_vec(any(Data_vec,2),:);
+pixel_location=find(final_mask); %to find pixel location to convert the array back to 3D image
+num_ones=sum(final_mask(:)); % for loopping 
+
+% nan_rows = any(isnan(Data_vec), 2);
+% Data_vec(nan_rows, :) = [];
 %% Calculating ADC 
 %% 
 ADCvec = zeros(1,num_ones);
@@ -288,19 +279,33 @@ ADCmap = zeros(final_mask_size);
 Rmap = zeros(final_mask_size);
 Somap = zeros(final_mask_size);
 
+ApplyNoiseCutoff = false; %FirstCrossingIdx
 XIPlinefolder = 'C:\XIPline';
 switch ADCFittingType
     case 'Log Linear'
         fprintf( 'performing Linear Fitting...\n' );
-        for lin_loop=1:num_ones
-            p = polyfit(bvalues, log(Data_vec(lin_loop,:)), 1);
-            ADCvec(lin_loop) = -p(1);
-            R1 = corrcoef(bvalues',log(Data_vec(lin_loop,:))); 
-            Rvec(lin_loop)=R1(2);
-            %convert vector to 2D image 
-            choosen_pixel=pixel_location(lin_loop);
-            ADCmap(choosen_pixel) = ADCvec(lin_loop);
-            Rmap(choosen_pixel) = Rvec(lin_loop); % get R values from fit 
+        if ApplyNoiseCutoff == 1
+            for lin_loop=1:num_ones
+                p = polyfit(bvalues(1:Crossing_vec(lin_loop)), log(Data_vec(lin_loop,1:Crossing_vec(lin_loop))), 1);
+                ADCvec(lin_loop) = -p(1);
+                R1 = corrcoef(bvalues(1:Crossing_vec(lin_loop))',log(Data_vec(lin_loop,1:Crossing_vec(lin_loop)))); 
+                Rvec(lin_loop)=R1(2);
+                %convert vector to 2D image 
+                choosen_pixel=pixel_location(lin_loop);
+                ADCmap(choosen_pixel) = ADCvec(lin_loop);
+                Rmap(choosen_pixel) = Rvec(lin_loop); % get R values from fit 
+            end        
+        else
+            for lin_loop=1:num_ones
+                p = polyfit(bvalues, log(Data_vec(lin_loop,:)), 1);
+                ADCvec(lin_loop) = -p(1);
+                R1 = corrcoef(bvalues',log(Data_vec(lin_loop,:))); 
+                Rvec(lin_loop)=R1(2);
+                %convert vector to 2D image 
+                choosen_pixel=pixel_location(lin_loop);
+                ADCmap(choosen_pixel) = ADCvec(lin_loop);
+                Rmap(choosen_pixel) = Rvec(lin_loop); % get R values from fit 
+            end        
         end
         fprintf( 'done...\n' );
         %Remove background noise and airways from ADC map for linear fit

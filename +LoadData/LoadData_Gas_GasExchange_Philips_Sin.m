@@ -92,6 +92,7 @@ disp('Looking For Necessary Files Completed.')
 disp('Importing Acquisition Information...')
 XeSin = GasExchangeFunctions.loadSIN([XeSinFile.folder,'\',XeSinFile.name]);
 
+scan_name = XeSin.scan_name.vals{1}; 
 extraOvs = false;
 OvsFactor = 1.0;
 if strcmp(ScanVersion,'CCHMC')
@@ -107,6 +108,13 @@ if strcmp(ScanVersion,'CCHMC')
     DisFlipAngle = 20; %Dissolved flip angle
     GasFlipAngle = 0.5; %Gas flip angle
     freq_jump = 7143; %change in freqeuncy for dissolved and off-res
+
+    if contains(scan_name, 'GX_CPIR_1pDIXON-V4')
+        extraOvs = false;
+        OvsFactor = 1;
+        DisFlipAngle = 15; %Dissolved flip angle
+    end
+
 elseif strcmp(ScanVersion,'XeCTC')
     dwell_ms = 0.64/68; %in ms - for 64 points with 0.64ms readout   
     if (exist('XeSin','var') && isfield(XeSin, 'sample_time_interval')) %R59 passes it so will update here
@@ -146,7 +154,7 @@ if(size(folderName,2)>2)
     Notes = cat(2,folderName{1,3:end});
 end
 ScanDate = 'ScanDate'; %[folderName{1,1}(1:4),'-',folderName{1,1}(5:6),'-',folderName{1,1}(7:8)];
-if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
+if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke') || contains(scan_name, 'GX_CPIR_1pDIXON-V4')
     XeTR = XeSin.repetition_times.vals(1)*2/1000;%account for 2 acqs, convert to s
 else
     XeTR = XeSin.repetition_times.vals(1)*3/1000;%account for 3 acqs, convert to s
@@ -156,6 +164,10 @@ if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
     %CTC protocl always defines dissolved TE as mid pulse to acq
     ActTE90 = TE90; %TE90 from center of pulse
     Scanner = 'CheckRecords';
+elseif contains(scan_name, 'GX_CPIR_1pDIXON-V4')
+    %R5.6.0 dMN defines dissolved TE as mid pulse to acq already
+    ActTE90 = TE90; %TE90 from center of pulse
+    Scanner = '3T-T2';
 elseif(TE90>0.5 * pw)
     %R5.6.0 dMN defines dissolved TE as mid pulse to acq already
     ActTE90 = TE90; %TE90 from center of pulse
@@ -209,7 +221,7 @@ if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
             PreDissolvedFID = XeData(:,1,1,1,2);
             PostDissolvedFID = XeData(:,2,1,1,2);
     
-            PreGasFID = XeData(:,1,1,1,2);
+            PreGasFID = XeData(:,1,1,2,2);
             PostGasFID = XeData(:,2,1,2,2); % for this CTC Polarean protocol we only do 1 post spectra on the gas
         
             % figure;
@@ -240,7 +252,7 @@ if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
             % xlabel('Frequency')
             % ylabel('Magnitude')
             % grid on
-    
+            % 
             %Dissolved k-space
             DissolvedKSpaceInit = XeData(:,:,:,1,1);
             %Gas k-space
@@ -468,7 +480,7 @@ else
     GasKSpaceInit = GasKSpaceInit(1:XeImg_nsamp,:,:);
 
     % Put KSpaces in order and logical format
-    XeOrder = GasExchangeFunctions.GetProjectionOrder(XeInfo);
+    [XeOrder, k1, k2] = GasExchangeFunctions.GetProjectionOrder(XeInfo);
     DissolvedKSpace = GasExchangeFunctions.SortUTEData_AcqOrder(GasExchangeFunctions.reshapeUTEData(DissolvedKSpaceInit),[XeImg_nsamp, Xe_nprof, Xe_interleaves], XeOrder);
     GasKSpace = GasExchangeFunctions.SortUTEData_AcqOrder(GasExchangeFunctions.reshapeUTEData(GasKSpaceInit),[XeImg_nsamp, Xe_nprof, Xe_interleaves], XeOrder);
 
@@ -494,6 +506,11 @@ catch
 end
 %% Calculate Trajectories
 disp('Calculating Trajectories...')
+[~, folderName] = fileparts(FunctionDirectory);
+
+if ~contains(folderName, 'XIPline')
+    FunctionDirectory = fileparts(FunctionDirectory);
+end
 if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
     del = 1.25;
     if bonus_spec == 1
@@ -507,17 +524,19 @@ if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
     end
 else
     if (strcmp(Scanner,'3T-R'))%R5.3.1
-        XeTraj = GasExchangeFunctions.philipsradialcoords(0.36,1,[FunctionDirectory,'\V3 Scan Info\20191008_162511_Dissolved_Xe_20191008 - 3T-R.sin']); %0.36us delay, GM, from non-spectroscopy version
+        XeTraj = GasExchangeFunctions.philipsradialcoords(0.36,1,[FunctionDirectory,'\resources\20191008_162511_Dissolved_Xe_20191008 - 3T-R.sin']); %0.36us delay, GM, from non-spectroscopy version
     else%3T-T1; R5.6.0 dMN
         del = 0.36;
         if mod(OvsFactor,1) % strange situation for some cases that were based on 57 points readout
             del = -1;
         end
-        XeTraj = GasExchangeFunctions.philipsradialcoords(del,1,[FunctionDirectory,'\V3 Scan Info\20200210_133229_Dissolved_Xe_20191008 - 3T-T1.sin']); %0.36us delay, GM, from non-spectroscopy version
-    end
-    del = 1.65;
-    if mod(OvsFactor,1) % strange situation for some cases that were based on 57 points readout
-        del = -1.65;
+        if contains(scan_name, 'GX_CPIR_1pDIXON-V4')
+            % disp(scan_name);
+            del = 1.65;
+            XeTraj = GasExchangeFunctions.philipsradialcoords(del,0,[FunctionDirectory,'\resources\20260410_164406_dev_CPIR_gx1pDIXON-V4spec_20250926.sin']); %0.36us delay, GM, from non-spectroscopy version
+        else
+            XeTraj = GasExchangeFunctions.philipsradialcoords(del,1,[FunctionDirectory,'\resources\20200210_133229_Dissolved_Xe_20191008 - 3T-T1.sin']); %0.36us delay, GM, from non-spectroscopy version
+        end
     end
 
     XeTraj = permute(XeTraj,[4 3 2 1]);
@@ -846,7 +865,7 @@ RBCOsc_High_Image = GasExchangeFunctions.Dissolved_RBCOscImageRecon(Xe_RecMatrix
 RBCOsc_Low_Image = GasExchangeFunctions.Dissolved_RBCOscImageRecon(Xe_RecMatrix,RBCOsc_Low_Key,XeTraj_SS/2,PixelShift);%2x Resolution
 RBCOsc_Normalization = GasExchangeFunctions.Dissolved_RBCOscImageRecon(Xe_RecMatrix,DissolvedKSpace_SS_Detrend_Normalized,XeTraj_SS/2,PixelShift);%2x Resolution
 disp('Reconstructing RBC keyhole Images Completed.')
-
+close all;
 %% store avriables
 GasExchange.XeTraj = XeTraj;
 GasExchange.GasKSpace = GasKSpace;

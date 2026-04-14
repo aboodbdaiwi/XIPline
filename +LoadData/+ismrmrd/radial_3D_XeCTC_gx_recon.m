@@ -48,11 +48,10 @@ clc
 % but this is much faster for data sets that fit into RAM.
 D = dset.readAcquisition();
 %%
-% D.data = 
-% D.traj = 
+
 % Remove first 3 and last 3 cells
-% D.data = D.data(4:end-3);
-% D.traj = D.traj(4:end-3);
+D.data = D.data(1:end-2);
+D.traj = D.traj(1:end-2);
 
 % 1) Get data vector (handle cell)
 x = D.traj;
@@ -95,9 +94,9 @@ enc_Nx = hdr.encoding.encodedSpace.matrixSize.x;
 if OvsFactor >= 2
     enc_Nx = enc_Nx/OvsFactor;
 else
-    if enc_Nx >= 65
-        enc_Nx = enc_Nx / 2;
-    end
+    % if enc_Nx >= 65
+    %     enc_Nx = enc_Nx / 2;
+    % end
 end
 % enc_Ny = hdr.encoding.encodedSpace.matrixSize.y;
 size_proj = size(D.data{1}); 
@@ -193,7 +192,7 @@ ActTE90 = TE90; %TE90 from center of pulse
 Scanner = [hdr.acquisitionSystemInformation.systemVendor,'-',num2str(hdr.acquisitionSystemInformation.systemFieldStrength_T),'T'];
 Xe_AcqMatrix = enc_Nx;
 if strcmp(ScanVersion,'XeCTC')
-    Xe_RecMatrix = 112;
+    Xe_RecMatrix = 128;
 else
     Xe_RecMatrix = 2*Xe_AcqMatrix;
 end
@@ -262,8 +261,8 @@ if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
     end
     XeTraj_all = XeTraj;
     XeTraj = double(squeeze(XeTraj_all(:,:,:,1))); % same Trajectories so use gas only 
-    XeTraj(:,1,:) = 0;
-    XeTraj_norm = XeTraj ./ (2 * max(abs(XeTraj(:))));
+    % XeTraj(:,1,:) = 0;
+    % XeTraj_norm = XeTraj ./ (2 * max(abs(XeTraj(:))));
     % if (extraOvs)
     %     XeTraj = movmean(XeTraj,OvsFactor);
     %     XeTraj =  downsample(XeTraj,OvsFactor);
@@ -414,7 +413,7 @@ if SS
 end
 
 
-%% Gas Phase Contamination Removal
+% Gas Phase Contamination Removal
 gas_contam_removed = hdr.userParameters.userParameterLong(3).value;
 if(NewImages == 1)
     disp('Removing Gas Phase Contamination...')
@@ -462,7 +461,7 @@ hold off
 % sgtitle('Signal Dynamics','FontSize',22)
 cd(outputpath)
 savefig('SigDynamics.fig')
-% close(gcf)
+close(gcf)
 % %H - Motion
 % subplot(1,2,2);
 % hold on
@@ -489,7 +488,7 @@ if(NewImages == 1)
     %Vent Image
     disp('Reconstructing Ventilation Image...')
     UncorrectedVentImage = GasExchangeFunctions.Dissolved_HighResImageRecon(Xe_RecMatrix,GasKSpace_SS,XeTraj_SS/2,PixelShift); %2x Resolution
-    % figure; Global.imslice(abs(UncorrectedVentImage))
+    figure; Global.imslice(abs(UncorrectedVentImage))
     if strcmp(MainInput.Scanner,'Siemens') 
         for i = 1:size(UncorrectedVentImage,1)
             img = UncorrectedVentImage(:,:,i);

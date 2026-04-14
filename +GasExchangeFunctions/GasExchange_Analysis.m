@@ -54,8 +54,21 @@ catch
     Slices_Sa = GasExchangeFunctions.pickSlices(ProtonMaskRegistered, 'sa', 7, 3); % X-axis (YZ planes)
 
 end
-Slices_Ax = GasExchangeFunctions.pickSlices(ProtonMaskRegistered, 'ax', 7, 3); % Z-axis (XY planes)
-% Slices_Co = GasExchangeFunctions.pickSlices(ProtonMaskRegistered, 'co', 7, 3); % Y-axis (XZ planes)
+
+% % check picked slices
+% for  i = 1:length(Slices_Co)
+%     MaskSlice = ProtonMaskRegistered(:,:,Slices_Co(i));
+%     if sum(MaskSlice(:)) <= 25
+%         Slices_Co(i) = 0;
+%     end
+% end
+% num_zeros = sum(Slices_Co == 0);
+% if num_zeros >= 2
+%     Slices_Co = GasExchangeFunctions.pickSlices(ProtonMaskRegistered, 'co', 7, 3); % Y-axis (XZ planes)
+% end
+
+Slices_Ax = GasExchangeFunctions.pickSlices(GasExchange.LungMask, 'ax', 7, 3); % Z-axis (XY planes)
+Slices_Co = GasExchangeFunctions.pickSlices(GasExchange.LungMask, 'co', 7, 3); % Y-axis (XZ planes)
 % Slices_Sa = GasExchangeFunctions.pickSlices(ProtonMaskRegistered, 'sa', 7, 3); % X-axis (YZ planes)
 
 LungMask = GasExchange.LungMask > 0;
