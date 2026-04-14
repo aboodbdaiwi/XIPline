@@ -62,6 +62,7 @@ folder = HSinFile(end).folder;
 Sinname = HSinFile(end).name;
 SinFullPath = fullfile(folder,Sinname);
 HSin = GasExchangeFunctions.loadSIN(SinFullPath);
+scan_name = HSin.scan_name.vals{1}; 
 
 H_AcqMatrix = HSin.scan_resolutions.vals(1);
 if strcmp(ScanVersion,'Xe_CTC') %recon 2x interpolated
@@ -114,7 +115,12 @@ else
     if mod(OvsFactor,1) % strange situation for some cases that were based on 57 points readout
         del = -1.65;
     end    
-    HTraj = GasExchangeFunctions.philipsradialcoords(del,1,SinFullPath); %1.65us delay, GM
+    if contains(lower(scan_name), 'anatgx_cpir_bhute')
+        del = 2.7;
+        HTraj = GasExchangeFunctions.philipsradialcoords(del,0,SinFullPath); %1.65us delay, GM
+    else
+        HTraj = GasExchangeFunctions.philipsradialcoords(del,1,SinFullPath); %1.65us delay, GM
+    end
     HTraj = permute(HTraj,[4 3 2 1]);
     HTraj = GasExchangeFunctions.SortUTETraj_AcqOrder(GasExchangeFunctions.reshapeUTETraj(HTraj), [H_nsamp, H_nprof, H_interleaves], HOrder);%reshape and order
 end
@@ -213,6 +219,7 @@ end
 ProtonImage = GasExchangeFunctions.SOS_Coil_Combine(ProtonImage);%Combine Coils
 disp('Reconstructing UTE Image Competed.')
 ProtonImageHR = ProtonImage;
+% figure; imslice(abs(ProtonImageHR));
 
 %Correct Bias
 disp('Correcting Proton Bias...')

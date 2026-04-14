@@ -6,14 +6,43 @@ function idx = pickSlices(mask3d, plane, nKeep, margin)
 
     if nargin < 3 || isempty(nKeep),  nKeep  = 7; end
     if nargin < 4 || isempty(margin), margin = 5; end
-
+    
     switch lower(plane)
-        case 'ax'  % axial → vary Z; collapse X and Y
-            nz = find(squeeze(any(any(mask3d, 1), 2)));   % 1x1xZ -> Z-vector
-        case 'co'  % coronal → vary Y; collapse X and Z
-            nz = find(squeeze(any(any(mask3d, 1), 3)));   % 1xYx1 -> Y-vector
-        case 'sa'  % sagittal → vary X; collapse Y and Z
-            nz = find(squeeze(any(any(mask3d, 2), 3)));   % Xx1x1 -> X-vector
+        case 'ax'  % axial → vary Y
+            sliceIndx = zeros(1, size(mask3d,1));
+            for i = 1:size(mask3d,1)
+                mask_slice = squeeze(mask3d(i,:,:));
+                sliceIndx(i) = i;
+                if sum(mask_slice(:)) <= 25
+                    mask3d(i,:,:) = 0;
+                    sliceIndx(i) = 0;
+                end
+            end
+            nz = sliceIndx(sliceIndx ~= 0);
+        case 'co'  % coronal → vary Z
+            sliceIndx = zeros(1, size(mask3d,3));
+            for i = 1:size(mask3d,3)
+                mask_slice = mask3d(:,:,i);
+                sliceIndx(i) = i;
+                if sum(mask_slice(:)) <= 25
+                    mask3d(:,:,i) = 0;
+                    sliceIndx(i) = 0;
+                end
+            end
+            nz = sliceIndx(sliceIndx ~= 0);
+    
+        case 'sa'  % sagittal → vary X
+            sliceIndx = zeros(1, size(mask3d,2));
+            for i = 1:size(mask3d,2)
+                mask_slice = squeeze(mask3d(:,i,:));
+                sliceIndx(i) = i;
+                if sum(mask_slice(:)) <= 25
+                    mask3d(:,i,:) = 0;
+                    sliceIndx(i) = 0;
+                end
+            end
+            nz = sliceIndx(sliceIndx ~= 0);
+    
         otherwise
             error('plane must be ''ax'', ''co'', or ''sa''.');
     end
