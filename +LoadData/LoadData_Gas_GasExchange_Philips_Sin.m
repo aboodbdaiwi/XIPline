@@ -78,6 +78,7 @@ ScanVersion = MainInput.Institute;
 %     ScanVersion = 'Duke';
 % end
 XeSinFile = dir([GasDataLocation,'\*.sin']);
+
 XeSinFile = XeSinFile(1);
 
 DataFiles = dir([GasDataLocation,'\*.data']);
