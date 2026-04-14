@@ -26,11 +26,7 @@ function run_vdp_from_webapp(excelFile, includeBackupRows)
     clc;
 
     % -------- Config --------
-    cfg.mainDir         = '\\Rds6.cchmc.org\PulMed-54\CPIR_Images_Database';
-    cfg.WoodsDir        = '\\Rds6.cchmc.org\pulmed-35\Woods_CPIR_Images';
-    cfg.analysisVersion = 'vent_v100';
-    cfg.analyzerInfo    = VDPInputs.detectAnalyzer();
-    cfg.analyzer        = cfg.analyzerInfo.code;
+    cfg = VDPInputs.getPipelineConfig();
 
     if nargin < 2 || isempty(includeBackupRows)
         includeBackupRows = false;   % default: include backup rows
@@ -38,7 +34,7 @@ function run_vdp_from_webapp(excelFile, includeBackupRows)
 
 
     % -------- Resolve Excel file --------
-    if nargin < 1 || strlength(string(excelFile)) == 0
+    if nargin < 1 || isempty(excelFile) || strlength(string(excelFile)) == 0
         excelFile = iResolveExcelFile();
     else
         excelFile = char(string(excelFile));
@@ -52,16 +48,7 @@ function run_vdp_from_webapp(excelFile, includeBackupRows)
     VDPInputs.validateStandardTable(T);
 
     % -------- Filter runnable rows --------
-    runMode = cell2mat(T.RunMode);
-    T = T(~isnan(runMode) & runMode ~= 2, :);
-
-    if includeBackupRows
-        T = T(string(T.Polarizer) ~= string(cfg.analyzerInfo.otherPolarizer), :);
-    else
-        T = T(string(T.Polarizer) == string(cfg.analyzerInfo.primaryPolarizer), :);
-    end
-
-    fprintf('Runnable rows: %d\n\n', height(T));
+    T = filter_runnable_rows(T, cfg, includeBackupRows);
 
     % -------- Main loop --------
     for i = 1:height(T)
@@ -202,7 +189,6 @@ function MainInput = iBuildMainInput(row, cfg)
         MainInput.ImageQuality = imageQ;
     end
 
-    MainInput.SCAN_NUM      = row.Scan_num{1};
     MainInput.vent_file     = char(string(MainInput.vent_file));
     MainInput.anat_file     = char(string(MainInput.anat_file));
 
@@ -226,6 +212,7 @@ function MainInput = iBuildMainInput(row, cfg)
         subnum = char(string(subnum));
     end
 
+    MainInput.SCAN_NUM         = row.Scan_num;
     MainInput.xe_sernum        = row.XeSeriesNumber{1};
     MainInput.proton_sernum    = protonSer;
     MainInput.Note             = noteVal;

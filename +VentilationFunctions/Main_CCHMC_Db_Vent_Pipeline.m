@@ -1,57 +1,43 @@
 clc; clear;
 
-%excelFile = '\\rds6.cchmc.org\PulMed-43\CPIR_Share\Carter\08_Master VDP Database Inputs Table\Database_VDP_Inputs_CBM.xlsx';
-excelFile = 'C:\Users\MCM5BK\Downloads\VDP_Inputs.xlsx';
-%excelFile = 'C:\Users\MCM5BK\OneDrive - cchmc\Documents\03_Data Analysis\02_Data Logs\VDP_Inputs_OfflineCBM.xlsx';
-
-mainDir = '\\Rds6.cchmc.org\PulMed-54\CPIR_Images_Database';
+excelFile = '\\rds6.cchmc.org\PulMed-43\CPIR_Share\Carter\08_Master VDP Database Inputs Table\Database_VDP_Inputs_CBM.xlsx';
+mainDir = '\\rds6.chmccorp.cchmc.org\PulMed-54\CPIR_Images_Database';
 WoodsDir = '\\Rds6.cchmc.org\pulmed-35\Woods_CPIR_Images';
 
-%%
 % === Load Excel Table ===
-T = VentilationFunctions.LoadTable(excelFile);
+T = readcell(excelFile);
 
-T = VentilationFunctions.enforceCanonicalColumns(T);
-VentilationFunctions.validateStandardTable(T);
-
-%% filter T before running the pipeline
-T = T(~isnan(cell2mat(T.RunMode)) & cell2mat(T.RunMode) ~= 2, :);
-if strcmp(VentilationFunctions.detectAnalyzer(),'CBM')
-    T = T(string(T.Polarizer) == "McMaster, Carter", :);
-    %T = T(string(T.Polarizer) == "Munidasa, Samal", :);
-end
-%%
 % Extract relevant columns into simple cell arrays
-SexCol        = T.Sex;
-AgeCol        = T.AGE;
-SubjectCol    = T.SubjectID;
-DiseaseCol    = T.DiseaseType;
-ScanDateCol   = T.ScanDate;
-SoftCol       = T.ScannerSoftware;
-VoxelX        = T.PIXEL_SPACING_X;
-VoxelY        = T.PIXEL_SPACING_Y;
-VoxelZ        = T.SLICE_THICKNESS;
-StudyCol      = T.Study;
-SubNumCol     = T.Subject;
-SesNumCol     = T.ScanDate;
-ScanNumCol    = num2cell(T.Scan_num);
-SeqTypeCol    = T.TRAVERSAL_GEO;
-SliceOrient   = T.SliceOrientation;
-XeSerNumCol   = T.XeSeriesNumber;
-VentFileCol   = T.Vent_path;
-HSerNumCol    = T.ProtonSeriesNumber;
-AnatFileCol   = T.PROT_FILEPATH;
-FrqOffsetCol  = T.FrequencyOffsetHz;
-ImageQCol     = T.ImageQuality;
-NoteCol       = T.Notes;
-RuneCol       = T.RunMode;
+SexCol       = T(:,1);
+AgeCol       = T(:,2);
+SubjectCol   = T(:,3);
+DiseaseCol   = T(:,4);
+ScanDateCol  = T(:,5);
+SoftCol      = T(:,6);
+VoxelX       = T(:,7);
+VoxelY       = T(:,8);
+VoxelZ       = T(:,9);
+StudyCol      = T(:,10);
+SubNumCol    = T(:,11);
+SesNumCol    = T(:,12);
+ScanNumCol   = T(:,13);
+SeqTypeCol   = T(:,14);
+SliceOrient  = T(:,15);
+XeSerNumCol    = T(:,16);
+VentFileCol  = T(:,17);
+HSerNumCol    = T(:,18);
+AnatFileCol  = T(:,19);
+FrqOffsetCol    = T(:,20);
+ImageQCol    = T(:,21);
+NoteCol      = T(:,22);
+RuneCol      = T(:,23);
 
 nSubjects = size(SexCol,1);
 
 %% 
 
 clc;
-for i = 1:nSubjects
+for i = 11 % always start from 2
     fprintf('Processing subject %d of %d\n', i, nSubjects);
 
     if ismissing(AgeCol{i})
@@ -83,7 +69,7 @@ for i = 1:nSubjects
     MainInput.ScannerSoftware  = SoftCol{i};
     MainInput.SequenceType     = SeqTypeCol{i};
     MainInput.denoiseXe        = 'no';
-    MainInput.Analyst          = VentilationFunctions.detectAnalyzer();
+    MainInput.Analyst          = 'MRM';
     MainInput.VoxelSize        = sprintf('[%s,%s,%s]', num2str(VoxelX{i}), num2str(VoxelY{i}), num2str(VoxelZ{i}));
     MainInput.PIXEL_SPACING_X  = VoxelX{i};
     MainInput.PIXEL_SPACING_Y  = VoxelY{i};
@@ -96,15 +82,15 @@ for i = 1:nSubjects
         MainInput.anat_file = '';
         ImageQCol{i} = '1-Failed';
     else
-        if contains(fullfile(VentFileCol{i}), mainDir(17:end), 'IgnoreCase', true) || contains(VentFileCol{i}, WoodsDir, 'IgnoreCase', true)
-            MainInput.vent_file = fullfile(VentFileCol{i});
+        if contains(VentFileCol{i}, mainDir, 'IgnoreCase', true) || contains(VentFileCol{i}, WoodsDir, 'IgnoreCase', true)
+            MainInput.vent_file = VentFileCol{i};
         else
             MainInput.vent_file = fullfile(mainDir, VentFileCol{i});
         end
         
         % Anat file
-        if contains(fullfile(AnatFileCol{i}), mainDir(17:end), 'IgnoreCase', true) || contains(AnatFileCol{i}, WoodsDir, 'IgnoreCase', true)
-            MainInput.anat_file = fullfile(AnatFileCol{i});
+        if contains(AnatFileCol{i}, mainDir, 'IgnoreCase', true) || contains(AnatFileCol{i}, WoodsDir, 'IgnoreCase', true)
+            MainInput.anat_file = AnatFileCol{i};
         else
             MainInput.anat_file = fullfile(mainDir, AnatFileCol{i});
         end
