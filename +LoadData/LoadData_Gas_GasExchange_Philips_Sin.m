@@ -531,7 +531,7 @@ else
         end
         if contains(scan_name, 'GX_CPIR_1pDIXON-V4')
             % disp(scan_name);
-            del = 1.65;
+            del = 2.9;
             XeTraj = GasExchangeFunctions.philipsradialcoords(del,0,[FunctionDirectory,'\resources\20260410_164406_dev_CPIR_gx1pDIXON-V4spec_20250926.sin']); %0.36us delay, GM, from non-spectroscopy version
         else
             XeTraj = GasExchangeFunctions.philipsradialcoords(del,1,[FunctionDirectory,'\resources\20200210_133229_Dissolved_Xe_20191008 - 3T-T1.sin']); %0.36us delay, GM, from non-spectroscopy version

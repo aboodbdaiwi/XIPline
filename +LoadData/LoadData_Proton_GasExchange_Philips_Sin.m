@@ -116,7 +116,7 @@ else
         del = -1.65;
     end    
     if contains(lower(scan_name), 'anatgx_cpir_bhute')
-        del = 2.7;
+        del = 13.5;
         HTraj = GasExchangeFunctions.philipsradialcoords(del,0,SinFullPath); %1.65us delay, GM
     else
         HTraj = GasExchangeFunctions.philipsradialcoords(del,1,SinFullPath); %1.65us delay, GM
