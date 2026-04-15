@@ -116,7 +116,7 @@ function DiffusionAnalysis_Report(Diffusion, MainInput)
     settinglabels = {'Scanner','Scan Software','Sequence','Recon','XIPline Commit','Denoise','N4Bias',...
         'ADC Fit', 'SEM-Analysis','CM-Analysis', 'RefAgeCor.','Image Quality','Note','ProcessDate', 'Analyst Initials'};
     try
-        if MainInput.N4Bias == 0
+        if MainInput.N4Bias == 0 || strcmp(MainInput.N4Bias,'no')
             N4bias = 'no';
         else
             N4bias = 'yes';

@@ -48,10 +48,49 @@ clc
 % but this is much faster for data sets that fit into RAM.
 D = dset.readAcquisition();
 %%
+inst = hdr.acquisitionSystemInformation.institutionName;
+try
+    bonus_spectra_present = hdr.userParameters.userParameterLong(5).value;
+    bonus_spectra_count   = hdr.userParameters.userParameterLong(4).value;
+    gas_contam_removed    = hdr.userParameters.userParameterLong(3).value;
 
-% Remove first 3 and last 3 cells
-D.data = D.data(1:end-2);
-D.traj = D.traj(1:end-2);
+    if bonus_spectra_present == 1 && gas_contam_removed == 1
+        % Extract indices
+        bonus_spectra_indices = hdr.userParameters.userParameterString(2).value;
+        bonus_spectra_indices = str2double(regexp(bonus_spectra_indices, '\d+', 'match'));
+
+        % If indices came from Python → convert to MATLAB indexing
+        bonus_spectra_indices = bonus_spectra_indices + 1;
+
+        % ---- STORE BONUS DATA FIRST ----
+        bonus_fid = D.data(bonus_spectra_indices);
+
+        n_fids = numel(bonus_fid);
+        
+        % ---- ASSIGN LIKE PYTHON ----
+        if n_fids == 6 && strcmp(inst, 'CCHMC')
+            PreDissolvedFID  = bonus_fid{1};
+            PostDissolvedFID = bonus_fid{4};
+            PreGasFID        = bonus_fid{2};
+            PostGasFID       = bonus_fid{5};
+
+        elseif n_fids == 2 && strcmp(inst, 'Polarean')
+            zeros_fid = zeros(size(bonus_fid{1}));
+
+            PreDissolvedFID  = zeros_fid;
+            PostDissolvedFID = bonus_fid{1};
+            PreGasFID        = zeros_fid;
+            PostGasFID       = bonus_fid{2};
+        else
+            error('Unsupported combination: n_fids=%d, inst=%s', n_fids, inst);
+        end
+
+        % ---- NOW REMOVE FROM DATA ----
+        D.data(bonus_spectra_indices) = [];
+    end
+catch
+end
+
 
 % 1) Get data vector (handle cell)
 x = D.traj;
@@ -141,8 +180,14 @@ end
 
 ReconVersion = 'TEST';%If not connected to git, can't determine hash so state test
 NumPlotSlices = 7;%must be odd to work as expected
-ScanVersion = 'XeCTC';
-
+try 
+    ScanVersion = inst;
+catch
+    ScanVersion = 'XeCTC';
+end
+if strcmp(ScanVersion,'Polarean') 
+    ScanVersion = 'XeCTC';
+end
 if OvsFactor >= 2
     extraOvs = true;
 else
@@ -228,6 +273,17 @@ if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
     GasKSpace = XeData(:,:,2);
 
     if(extraOvs)
+        if bonus_spectra_present == 1
+            try
+                PostDissolvedFID = movmean(PostDissolvedFID,OvsFactor);
+                PostDissolvedFID =  downsample(PostDissolvedFID,OvsFactor);
+        
+                PostGasFID = movmean(PostGasFID,OvsFactor);
+                PostGasFID =  downsample(PostGasFID,OvsFactor);
+            catch
+
+            end
+        end
         DissolvedKSpace = movmean(DissolvedKSpace,OvsFactor);
         DissolvedKSpace = downsample(DissolvedKSpace,OvsFactor);
         
@@ -245,7 +301,7 @@ GasKSpace = double(GasKSpace);
 DissolvedKSpace = double(DissolvedKSpace);
 disp('Importing Data Completed.')
 
-
+GasExchange.OvsFactor = OvsFactor;
 %% Calculate Trajectories
 disp('Calculating Trajectories...')
 if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
@@ -317,57 +373,72 @@ disp('Determining Image Offset Completed.')
 
 %% Spectra
 disp('Fitting Spectrum...') 
-cd(MainInput.CalDataLocation)
-[GasExResults, ~] = Calibration.StartCalibrationAnalysis(MainInput);
-time = GasExResults.DisFit.t;
-AppendedDissolvedNMRFit = GasExResults.DisFit;
-AppendedDissolvedFit = (time(2)-time(1))*fftshift(fft(AppendedDissolvedNMRFit.calcComponentTimeDomainSignal(time),[],1),1);
-% 
-% if strcmp(MainInput.CalDataext,'.data') && strcmp(MainInput.Scanner,'Philips')
-%         [GasExResults, ~] = Calibration.XeCTC_Calibration(MainInput); 
-% elseif strcmp(MainInput.CalDataext,'.dat') && strcmp(MainInput.Scanner,'Siemens')
-% elseif strcmp(MainInput.CalDataext,'.7') && strcmp(MainInput.Scanner,'GE')
-% elseif strcmp(MainInput.CalDataext,'.mrd') || strcmp(MainInput.CalDataext,'.MRD') || strcmp(MainInput.CalDataext,'.h5')
-%     if strcmp(MainInput.Scanner,'Siemens') || strcmp(MainInput.Scanner,'Philips')
-%         [GasExResults, ~] = GasExchangeFunctions.XeCTC_Calibration_MRD(MainInput);
-%     elseif strcmp(MainInput.Scanner,'GE')
-%         [GasExResults, ~] = GasExchangeFunctions.XeCTC_Calibration_GEMRD(MainInput);
-%     end
-% end
-% 
-% % Look for files with the Calibration.h5 extension first
-% MainInput.CalFileName = dir(fullfile(MainInput.XeDataLocation, '*Calibration.h5'));
-% 
-% % Check if the directory listing is empty
-% if isempty(MainInput.CalFileName)
-%     % If empty, look for files with the .mrd extension
-%     MainInput.CalFileName = dir(fullfile(MainInput.XeDataLocation, '*Calibration.mrd'));
-%     % Check if the directory listing is still empty
-%     if isempty(MainInput.CalFileName)
-%         % If still empty, look for files with the .MRD extension
-%         MainInput.CalFileName = dir(fullfile(MainInput.XeDataLocation, '*Calibration.MRD'));
-%     end
-% else
-%     error('Calibration data is required');
-% end
-% 
-% MainInput.CalFileName = MainInput.CalFileName.name;
-% MainInput.CalFullPath = fullfile(MainInput.XeDataLocation, MainInput.CalFileName);
-% if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
-%     try
-%         if strcmp(MainInput.Scanner,'Siemens') || strcmp(MainInput.Scanner,'Philips')
-%             [GasExResults, ~] = GasExchangeFunctions.XeCTC_Calibration_MRD(MainInput);
-%         elseif strcmp(MainInput.Scanner,'GE')
-%             [GasExResults, ~] = GasExchangeFunctions.XeCTC_Calibration_GEMRD(MainInput);
-%         end
-%     catch
-%         error('Error. Could not analyze calibration Data file')
-%         success = 0;
-%     end
-%     time = GasExResults.DisFit.t;
-%     AppendedDissolvedNMRFit = GasExResults.DisFit;
-%     AppendedDissolvedFit = (time(2)-time(1))*fftshift(fft(AppendedDissolvedNMRFit.calcComponentTimeDomainSignal(time),[],1),1);
-% end
+
+if bonus_spectra_present == 0
+    cd(MainInput.CalDataLocation)
+    [GasExResults, ~] = Calibration.StartCalibrationAnalysis(MainInput);
+    time = GasExResults.DisFit.t;
+    AppendedDissolvedNMRFit = GasExResults.DisFit;
+    AppendedDissolvedFit = (time(2)-time(1))*fftshift(fft(AppendedDissolvedNMRFit.calcComponentTimeDomainSignal(time),[],1),1);
+
+elseif bonus_spectra_present == 1
+    %Set parameters
+    XeSpec_nsamp = size(PostDissolvedFID,1);
+    time = double(dwell_s*(0:XeSpec_nsamp-1));
+
+    %Dissolved Phase fitting
+    %initial guesses
+    area_guess = [0.27*abs(PostDissolvedFID(1)) abs(PostDissolvedFID(1)) 0.1*abs(PostDissolvedFID(1))]; 
+    area_lowerBounds = [0 0 0]; % Always positive
+    area_upperBounds = 1E10*[1 1 1]; % Make it finite, but huge
+    freq_guess = [534 -126 -7084];
+    freq_lowerBounds = [500 -2000 -12000];
+    freq_upperBounds = [2000 0 -4000];
+    fwhm_guesses = [300 273 44];
+    fwhm_lowerBounds = [0 0 0];
+    fwhm_upperBounds = inf*[1 1 1];
+    fwhmG_guess = [0 275 0];
+    fwhmG_lowerBounds = [0 0 0];
+    fwhmG_upperBounds = [0 inf 0];
+    phase_guesses = [-95 151 9];
+    phase_lowerBounds = -inf*[1 1 1];
+    phase_upperBounds = inf*[1 1 1];
+
+    if sum(PreDissolvedFID(:)) > 0
+        %fit prepended dissolved for better guesses
+        PrependedDissolvedNMRFit = GasExchangeFunctions.GasExchange_Spectro.NMR_TimeFit_v(PreDissolvedFID,time,area_guess,freq_guess,fwhm_guesses,fwhmG_guess,phase_guesses,[],[]);
+        PrependedDissolvedNMRFit.fitTimeDomainSignal();%initial fit
+        PrependedDissolvedNMRFit.setBounds(area_lowerBounds,area_upperBounds,...
+            freq_lowerBounds,freq_upperBounds,...
+            fwhm_lowerBounds,fwhm_upperBounds,...
+            fwhmG_lowerBounds,fwhmG_upperBounds,...
+            phase_lowerBounds,phase_upperBounds);%add bounds
+        PrependedDissolvedNMRFit.fitTimeDomainSignal();%refit
+    
+        %fit appended dissolved
+        AppendedDissolvedNMRFit = GasExchangeFunctions.GasExchange_Spectro.NMR_TimeFit_v(PostDissolvedFID,time,area_guess,PrependedDissolvedNMRFit.freq,PrependedDissolvedNMRFit.fwhm,PrependedDissolvedNMRFit.fwhmG,PrependedDissolvedNMRFit.phase,[],[]);
+        AppendedDissolvedNMRFit.fitTimeDomainSignal();%initial fit
+        AppendedDissolvedNMRFit.setBounds(area_lowerBounds,area_upperBounds,...
+            freq_lowerBounds,freq_upperBounds,...
+            fwhm_lowerBounds,fwhm_upperBounds,...
+            fwhmG_lowerBounds,fwhmG_upperBounds,...
+            phase_lowerBounds,phase_upperBounds);%add bounds
+        AppendedDissolvedNMRFit.fitTimeDomainSignal();%refit
+        AppendedDissolvedFit = dwell_s*fftshift(fft(AppendedDissolvedNMRFit.calcComponentTimeDomainSignal(time),[],1),1);
+    else
+        %fit appended dissolved
+        AppendedDissolvedNMRFit = GasExchangeFunctions.GasExchange_Spectro.NMR_TimeFit_v(PostDissolvedFID,time,area_guess,freq_guess,fwhm_guesses,fwhmG_guess,phase_guesses,[],[]);
+        AppendedDissolvedNMRFit.fitTimeDomainSignal();%initial fit
+        AppendedDissolvedNMRFit.setBounds(area_lowerBounds,area_upperBounds,...
+            freq_lowerBounds,freq_upperBounds,...
+            fwhm_lowerBounds,fwhm_upperBounds,...
+            fwhmG_lowerBounds,fwhmG_upperBounds,...
+            phase_lowerBounds,phase_upperBounds);%add bounds
+        AppendedDissolvedNMRFit.fitTimeDomainSignal();%refit
+        AppendedDissolvedFit = dwell_s*fftshift(fft(AppendedDissolvedNMRFit.calcComponentTimeDomainSignal(time),[],1),1);
+
+    end
+end
 
 %View
 DissolvedNMR = figure('Name','Dissolved Phase Spectrum');set(DissolvedNMR,'WindowState','minimized');
@@ -397,7 +468,7 @@ hold off
 disp('Fitting Spectrum Completed.')
 cd(outputpath)
 savefig('DissolvedNMR.fig')
-close(gcf)
+% close(gcf)
 %% Remove approch to steady state for Dissolved Phase
 %copy to new variable before modifying
 SS = true;
@@ -414,12 +485,20 @@ end
 
 
 % Gas Phase Contamination Removal
-gas_contam_removed = hdr.userParameters.userParameterLong(3).value;
+try
+    gas_contam_removed = hdr.userParameters.userParameterLong(3).value;
+catch
+    gas_contam_removed = 0;
+end
 if(NewImages == 1)
     disp('Removing Gas Phase Contamination...')
     if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
        %correction not possible
-       CorrectedDissKSpace_SS = DissolvedKSpace_SS;
+       if bonus_spectra_present == 1 && gas_contam_removed == 0
+             CorrectedDissKSpace_SS = GasExchangeFunctions.GasPhaseContaminationRemoval(DissolvedKSpace_SS,GasKSpace_SS,dwell_s,-freq_jump,AppendedDissolvedNMRFit.phase(3),AppendedDissolvedNMRFit.area(3),GasFlipAngle);
+       else
+            CorrectedDissKSpace_SS = DissolvedKSpace_SS;
+       end
     else
         if gas_contam_removed ~= 1
             CorrectedDissKSpace_SS = GasExchangeFunctions.GasPhaseContaminationRemoval(DissolvedKSpace_SS,GasKSpace_SS,dwell_s,-freq_jump,AppendedDissolvedNMRFit.phase(3),AppendedDissolvedNMRFit.area(3),GasFlipAngle);

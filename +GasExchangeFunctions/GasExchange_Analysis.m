@@ -227,7 +227,7 @@ montage(abs(RBCImage),'DisplayRange',[])
 disp('Correcting Image Intensities for Comparison...')
 %T2* scaling
 %M0 = Mt/(e^(-t/T2*))
-T2Star_corr = true;
+T2Star_corr = 1;
 
 if T2Star_corr == 1
     GasImageScaled = GasImage/(exp(-ActTE90/GasT2Star));

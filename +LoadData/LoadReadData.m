@@ -616,7 +616,7 @@ if (isnumeric(MainInput.NoProtonImage) && MainInput.NoProtonImage == 0) || ...
             Proton.Image = HImage;
             Proton.filename = file_name;
             Proton.folder = file_folder;
-        elseif strcmp(MainInput.XeDataext,'.data')  && contains(MainInput.Scanner, 'Philips', 'IgnoreCase', true)   
+        elseif strcmp(MainInput.HDataext,'.data')  && contains(MainInput.Scanner, 'Philips', 'IgnoreCase', true)   
             MainInput.ReconImageMode = 'proton';
             if strcmp(MainInput.AnalysisType,'Ventilation') && strcmp(MainInput.SequenceType, '2D GRE') ...
                     && (strcmp(MainInput.ScannerSoftware, '5.3.1') || strcmp(MainInput.ScannerSoftware, '5.6.1'))
