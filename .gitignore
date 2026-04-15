@@ -1,7 +1,7 @@
 ## Ignore temporary files
 
 ## Added by Abood Bdaiwi
-*.png
+#*.png
 *.pyc
 *.h5
 *.mat
