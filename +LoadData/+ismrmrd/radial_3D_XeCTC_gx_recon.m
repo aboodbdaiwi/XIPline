@@ -89,6 +89,8 @@ try
         D.data(bonus_spectra_indices) = [];
     end
 catch
+    bonus_spectra_present = 0;
+    gas_contam_removed    = 0;
 end
 
 
@@ -188,6 +190,7 @@ end
 if strcmp(ScanVersion,'Polarean') 
     ScanVersion = 'XeCTC';
 end
+ScanVersion = 'XeCTC'; % hard code for now
 if OvsFactor >= 2
     extraOvs = true;
 else
@@ -468,7 +471,7 @@ hold off
 disp('Fitting Spectrum Completed.')
 cd(outputpath)
 savefig('DissolvedNMR.fig')
-% close(gcf)
+close(gcf)
 %% Remove approch to steady state for Dissolved Phase
 %copy to new variable before modifying
 SS = true;
@@ -567,7 +570,7 @@ if(NewImages == 1)
     %Vent Image
     disp('Reconstructing Ventilation Image...')
     UncorrectedVentImage = GasExchangeFunctions.Dissolved_HighResImageRecon(Xe_RecMatrix,GasKSpace_SS,XeTraj_SS/2,PixelShift); %2x Resolution
-    figure; Global.imslice(abs(UncorrectedVentImage))
+    % figure; Global.imslice(abs(UncorrectedVentImage))
     if strcmp(MainInput.Scanner,'Siemens') 
         for i = 1:size(UncorrectedVentImage,1)
             img = UncorrectedVentImage(:,:,i);
