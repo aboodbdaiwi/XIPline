@@ -138,6 +138,11 @@ HPulses = (1:length(HPhaseDynamics))';
 HDynMean = mean(HPhaseDynamics(1000:round(length(HPulses)/3)));
 HDynFit = HDynMean*ones(size(HPhaseDynamics(1000:round(length(HPulses)/3))));
 HDynRMSE = sqrt(immse(HDynFit,HPhaseDynamics(1000:round(length(HPulses)/3))));
+if isnan(HDynMean)
+    HDynMean = mean(HPhaseDynamics(1:round(length(HPulses)/3)));
+    HDynFit = HDynMean*ones(size(HPhaseDynamics(1:round(length(HPulses)/3))));
+    HDynRMSE = sqrt(immse(HDynFit,HPhaseDynamics(1:round(length(HPulses)/3))));
+end
 if (3*HDynRMSE<5) 
     HDynRMSE = 5/3; %If small phase varaition, use acceptance window of 5deg
 end
