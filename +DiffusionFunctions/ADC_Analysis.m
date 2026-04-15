@@ -156,8 +156,8 @@ FirstCrossingIdx = FirstCrossingIdx.*SVNRMask;
 Crossing_vec = FirstCrossingIdx(:);              % column vector
 Crossing_vec = Crossing_vec(Crossing_vec ~= 0);
 
-final_mask = SVNRMask.*CNRMask.*double(FirstCrossingIdx > 0);
-
+final_mask = SVNRMask.*double(FirstCrossingIdx > 0);
+% figure; imslice(FirstCrossingIdx)
 % Calculate mean signal / SNR for each b-value using the thresholded mask
 for n = 1:length(bvalues)
     curr_img = Ndiffimg(:,:,:,n);
