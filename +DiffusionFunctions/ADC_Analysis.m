@@ -279,7 +279,7 @@ ADCmap = zeros(final_mask_size);
 Rmap = zeros(final_mask_size);
 Somap = zeros(final_mask_size);
 
-ApplyNoiseCutoff = false; %FirstCrossingIdx
+ApplyNoiseCutoff = true; %FirstCrossingIdx
 XIPlinefolder = 'C:\XIPline';
 switch ADCFittingType
     case 'Log Linear'
