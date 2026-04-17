@@ -56,6 +56,32 @@ catch
     MainInput.AnalysisCode_hash = 'TEST';%If not connected to git, can't determine hash so state test
 end
 
+% Check conditions
+if startsWith(MainInput.Xe_name, 'IM') && isempty(MainInput.XeDataext)
+    dataFolder = MainInput.XeDataLocation;
+    % Get all files in the directory
+    files = dir(dataFolder);
+    for i = 1:length(files)
+        fname = files(i).name;
+        % Skip folders
+        if files(i).isdir
+            continue;
+        end
+        % Check:
+        % 1) starts with 'IM'
+        % 2) has no extension
+        [~, name, ext] = fileparts(fname);
+        if startsWith(fname, 'IM') && isempty(ext)
+            oldFile = fullfile(dataFolder, fname);
+            newFile = fullfile(dataFolder, [fname, '.dcm']);
+
+            % Rename file
+            movefile(oldFile, newFile);
+        end
+    end
+    MainInput.XeDataext = '.dcm';
+end
+
 % Assign default OutputPath if not provided
 if ~isfield(MainInput, 'OutputPath') || isempty(MainInput.OutputPath)
     MainInput.OutputPath = MainInput.XeDataLocation;
@@ -546,6 +572,33 @@ if (isnumeric(MainInput.NoProtonImage) && MainInput.NoProtonImage == 0) || ...
    (ischar(MainInput.NoProtonImage) && strcmp(MainInput.NoProtonImage, 'no'))
     % try 
         cd(MainInput.HDataLocation)
+        
+        % Check conditions
+        if startsWith(MainInput.HFileName, 'IM') && isempty(MainInput.HDataext)
+            dataFolder = MainInput.HDataLocation;
+            % Get all files in the directory
+            files = dir(dataFolder);
+            for i = 1:length(files)
+                fname = files(i).name;
+                % Skip folders
+                if files(i).isdir
+                    continue;
+                end
+                % Check:
+                % 1) starts with 'IM'
+                % 2) has no extension
+                [~, name, ext] = fileparts(fname);
+                if startsWith(fname, 'IM') && isempty(ext)
+                    oldFile = fullfile(dataFolder, fname);
+                    newFile = fullfile(dataFolder, [fname, '.dcm']);
+        
+                    % Rename file
+                    movefile(oldFile, newFile);
+                end
+            end
+            MainInput.HDataext = '.dcm';
+        end
+
         % Only create analysis folder if analysisversion is not specified
         if ~isfield(MainInput, "analysisversion")
         
