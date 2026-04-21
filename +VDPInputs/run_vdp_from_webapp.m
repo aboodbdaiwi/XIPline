@@ -48,7 +48,7 @@ function run_vdp_from_webapp(excelFile, includeBackupRows)
     VDPInputs.validateStandardTable(T);
 
     % -------- Filter runnable rows --------
-    T = filter_runnable_rows(T, cfg, includeBackupRows);
+    T = VDPInputs.filter_runnable_rows(T, cfg, includeBackupRows);
 
     % -------- Main loop --------
     for i = 1:height(T)
