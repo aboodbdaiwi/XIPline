@@ -1,5 +1,5 @@
 function T = coerceExcelTypes(T)
-    import VentilationFunctions.*
+    import VDPInputs.*
     vars = T.Properties.VariableNames;   % cell array of char
 
     targetStringVars = { ...
