@@ -10,9 +10,16 @@ ScanDate = MainInput.ScanDate;
 ReconType = MainInput.ReconType;
 VoxelSize = MainInput.VoxelSize;
 
+% Ventilation file
 vent_file = MainInput.vent_file;
+[MainInput.XeDataLocation, MainInput.Xe_name, MainInput.XeDataext] = fileparts(vent_file);
+
+% Proton / anatomical file
 anat_file = MainInput.anat_file;
+[MainInput.HDataLocation, MainInput.HFileName, MainInput.HDataext] = fileparts(anat_file);
+
 analysisFolder = MainInput.analysisFolder;
+
 % mask_file_name = MainInput.mask_file_name;
 MainInput.OutputPath = analysisFolder;
 

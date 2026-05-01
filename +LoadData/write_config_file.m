@@ -22,6 +22,9 @@ function write_config_file(MainInput)
         fprintf('Deleted old config_H.txt\n');
     end
 
+    if ~isfield(MainInput, 'freqoffset') 
+        MainInput.freqoffset = 0;
+    end
     % -------- Write Xenon Config --------
     if isfield(MainInput, 'ReconImageMode') && strcmpi(MainInput.ReconImageMode, 'xenon')
         fid = fopen(configXePath, 'w');

@@ -1,0 +1,400 @@
+ CAUTION - Investigational device
+ Limited by Federal Law to investigational use.
+
+ Internal reconstruction parameters:
+ 
+ Reconstruction parameters independent of mix, echo and location:
+ 
+ 00 00 00: scan_name                    : CPIR_Vent_HANNING_2DSOS_WIP
+ 00 00 00: start_scan_date_time         : 13-OCT-2021 11:37:17.28
+ 00 00 00: recon_command                :           19
+ 00 00 00: force_immed_zrecon_flag      :            1
+ 00 00 00: nr_mixes                     :            1
+ 00 00 00: total_nr_profiles            :          650
+ 00 00 00: min_nrs_profs_each_side      :            0           13            0            0
+ 00 00 00: min_nrs_profs_total          :            0           25            0            0
+ 00 00 00: data_rate                    :        84691
+ 00 00 00: data_burst_size              :         3612
+ 00 00 00: input_buffer_fraction        :       0.0000
+ 00 00 00: sample_time_interval         :       5.4800
+ 00 00 00: min_data_compress_factor     :            1
+ 00 00 00: max_data_compress_factor     :            4
+ 00 00 00: min_def_window_perc          :       0.1000
+ 00 00 00: max_def_window_perc          :      99.9000
+ 00 00 00: min_def_window_perc_range    :       7.0000
+ 00 00 00: min_normalized_image_perc    :       0.1000
+ 00 00 00: max_normalized_image_perc    :      99.9000
+ 00 00 00: nrs_bytes_per_pixel          :            2            2
+ 00 00 00: pixel_maxima                 :         4095         4095
+ 00 00 00: snr_maxima                   :     600.0000     600.0000
+ 00 00 00: snr_safety_factors           :       2.5000       2.5000
+ 00 00 00: acq_gamma                    :   11776.2266
+ 01 00 00: stack_reverse                :            0
+ 01 00 00: stack_slice_number           :            1
+ 00 00 00: relative_fear_bandwidth      :       0.1000
+ 00 00 00: shutter_type                 :            2
+ 00 00 00: enable_uniform_scaling       :            1
+ 00 00 00: enable_profile_ordering      :            1
+ 00 00 00: save_raw_data                :            1
+ 00 00 00: memory_allowed_space         :        15991
+ 00 00 00: memory_scheme_index          :           18
+ 00 00 00: enable_jdb_detection         :            1
+ 00 00 00: enable_jdb_suppression       :            1
+ 00 00 00: jdb_threshold_1              :           40
+ 00 00 00: jdb_threshold_2              :          300
+ 00 00 00: enable_frc                   :            1
+ 00 00 00: enable_frc_receiver          :            0
+ 00 00 00: enable_frc_ampl_corr         :            1
+ 00 00 00: frc_resolution               :            0
+ 00 00 00: frc_oversample_noise_factor  :          137
+ 00 00 00: enable_dc_offset_corr        :            1
+ 00 00 00: dc_fixed_nr_samples          :            1
+ 00 00 00: dc_min_encoding_number       :          -72
+ 00 00 00: dc_max_encoding_number       :           72
+ 01 00 00: noise_clip_factors           :       1.1500
+ 01 00 01: noise_rel_to_abs_channels    :            0
+ 01 00 00: pat_post_coil_position       :       0.0000       0.0000       0.0000
+ 00 00 00: image_uniformity             :            6
+ 00 00 00: coca_qbc_nr_channels         :            1
+ 00 00 00: b0map_prescan_max_resols     :            0            0            0
+ 01 00 00: b0_acq_numbers               :            0
+ 01 00 00: b0_rec_numbers               :            0
+ 00 00 00: k_space_traj_type            :            2
+ 00 00 00: non_cart_skip_gr_roll_off    :            0
+ 00 00 00: non_cart_sampl_dens_nr_iters :            0
+ 00 00 00: max_pre_xrec_queue_length    :           25
+ 00 00 00: k_space_traj_grad_ch_delay   :       0.0000
+ 00 00 00: non_cart_phase_corr_type     :            0
+ 00 00 00: xqueue_enable_compression    :            0
+ 00 00 00: non_cart_enable_shutter      :            0
+ 00 00 00: non_cart_enable_deblurring   :            0
+ 00 00 00: non_cart_enable_B0_map_updat :            0
+ 00 00 00: non_cart_angle_step          :       0.0000
+ 00 00 00: non_cart_angle               :       0.0000
+ 00 00 00: b0_map_conv_phase_to_freq    :       0.0000
+ 00 00 00: spiral_trajectory_shape      :            0
+ 00 00 00: spiral_in_out_type           :            0
+ 00 00 00: spiral_concomitant_corr_enab :            1
+ 00 00 00: spiral_output_images         :            0
+ 00 00 00: spiral_amplitude_correction  :      15.0000
+ 00 00 00: spiral_test_F0_offset        :       0.0000
+ 00 00 00: spiral_nr_grd_smpls_rmp_dn   :           78
+ 00 00 00: spiral_inout_zero_grd_pts    :            0
+ 01 00 00: water_fat_shift              :       0.0000
+ 00 00 00: qmet_log_enable              :            1
+ 00 00 00: geometry_correction          :            1
+ 00 00 00: geom_corr_enable_b0_corr     :            0
+ 00 00 00: geom_corr_type               :            0
+ 00 00 00: geom_corr_interpol_method    :            3
+ 00 00 00: geom_corr_sel_intensity_corr :            0
+ 00 00 00: geom_corr_max_distortion     :      72.0000
+ 00 00 00: geom_corr_b0_ref_radius      :     350.0000
+ 00 00 00: sel_intensity_corr_threshold :       8.0000
+ 01 01 03: geom_corr_b0_field_coeffs    :  -3.2000e-01
+ 01 01 05: geom_corr_b0_field_coeffs    :  -2.3150e+00
+ 01 01 07: geom_corr_b0_field_coeffs    :   1.2130e+00
+ 01 01 09: geom_corr_b0_field_coeffs    :   1.0893e+02
+ 01 01 11: geom_corr_b0_field_coeffs    :  -1.9218e+03
+ 01 01 13: geom_corr_b0_field_coeffs    :  -2.7744e+03
+ 01 01 15: geom_corr_b0_field_coeffs    :   4.5175e+03
+ 01 01 17: geom_corr_b0_field_coeffs    :  -3.3246e+03
+ 01 01 19: geom_corr_b0_field_coeffs    :   1.7625e+03
+ 01 01 21: geom_corr_b0_field_coeffs    :  -7.6750e+02
+ 01 01 23: geom_corr_b0_field_coeffs    :   2.8707e+02
+ 01 01 25: geom_corr_b0_field_coeffs    :  -9.4958e+01
+ 01 01 27: geom_corr_b0_field_coeffs    :   2.9484e+01
+ 01 01 29: geom_corr_b0_field_coeffs    :  -1.1131e+01
+ 01 01 31: geom_corr_b0_field_coeffs    :   5.5130e+00
+ 00 00 00: geom_corr_gx_ref_radius      :     300.0000
+ 01 01 02: geom_corr_gx_field_c_coeffs  :       0.0000    3000.0000
+ 01 01 04: geom_corr_gx_field_c_coeffs  :       0.0000    -246.6200
+ 01 01 06: geom_corr_gx_field_c_coeffs  :       0.0000    -146.5200
+ 01 01 08: geom_corr_gx_field_c_coeffs  :       0.0000      55.5500
+ 01 01 10: geom_corr_gx_field_c_coeffs  :       0.0000      -6.8700
+ 01 01 12: geom_corr_gx_field_c_coeffs  :       0.0000      -0.9000
+ 00 00 00: geom_corr_gy_ref_radius      :     300.0000
+ 01 01 02: geom_corr_gy_field_s_coeffs  :       0.0000    3000.0000
+ 01 01 04: geom_corr_gy_field_s_coeffs  :       0.0000    -254.9500
+ 01 01 06: geom_corr_gy_field_s_coeffs  :       0.0000    -140.8600
+ 01 01 08: geom_corr_gy_field_s_coeffs  :       0.0000      54.1300
+ 01 01 10: geom_corr_gy_field_s_coeffs  :       0.0000      -7.0300
+ 01 01 12: geom_corr_gy_field_s_coeffs  :       0.0000      -0.7200
+ 00 00 00: geom_corr_gz_ref_radius      :     300.0000
+ 01 01 02: geom_corr_gz_field_coeffs    :    3000.0000
+ 01 01 04: geom_corr_gz_field_coeffs    :    -278.9000
+ 01 01 06: geom_corr_gz_field_coeffs    :    -459.5000
+ 01 01 08: geom_corr_gz_field_coeffs    :     186.1000
+ 01 01 10: geom_corr_gz_field_coeffs    :     -24.6000
+ 01 01 12: geom_corr_gz_field_coeffs    :       8.1000
+ 01 01 14: geom_corr_gz_field_coeffs    :     -18.3000
+ 01 01 16: geom_corr_gz_field_coeffs    :      17.2000
+ 00 00 00: geom_corr_validity_radius    :     350.0000
+ 01 00 00: geom_corr_max_overs_facs     :       1.0800       1.0800       1.0000
+ 00 00 00: geom_corr_min_valid_jacobian :       0.1429
+ 00 00 00: geom_corr_max_valid_jacobian :       7.0000
+ 00 00 00: apt_processing               :            0
+ 00 00 00: measurement_combination_type :            1
+ 
+ Reconstruction parameters dependent of mix:
+ 
+ 01 00 00: sequence_types               :            2
+ 01 00 00: nr_dynamic_scans             :            2
+ 01 00 00: nr_cardiac_phases            :            1
+ 01 00 00: nr_echoes                    :            1
+ 01 00 00: nr_locations                 :           13
+ 01 00 00: nr_rows                      :            1
+ 01 00 00: nr_extra_attr_values         :            1
+ 01 00 00: nr_measurements              :            1
+ 01 00 00: encoding_dimensions          :            2
+ 01 00 00: encoded_properties           :            0            1            2            4
+ 01 00 00: recon_resolutions            :          192          192            1            1
+ 01 00 00: output_resolutions           :          192          192            1            1
+ 01 00 00: complex_disk_output_images   :            4
+ 01 00 00: complex_hidden_output_images :            0
+ 01 00 00: complex_view_output_images   :            0
+ 01 00 00: repetition_times             :      10.6623
+ 01 00 00: inversion_delays             :       0.0000       0.0000
+ 01 00 00: shutter_radiuses             :     290.0000     290.0000     240.0000
+ 01 00 00: shutter_box_sizes            :     450.0000     450.0000     450.0000
+ 01 00 00: voxel_sizes                  :       1.8229       1.8229      15.0000
+ 01 00 00: ph_recon_resolutions         :          192
+ 
+ Reconstruction parameters dependent of mix and echo:
+ 
+ 01 01 00: non_cart_min_encoding_nrs    :            0            0            0            0
+ 01 01 00: non_cart_max_encoding_nrs    :          902           24            0            0
+ 01 01 00: min_encoding_numbers         :          -58          -58            0            0
+ 01 01 00: max_encoding_numbers         :           57           57            0            0
+ 01 01 00: oversample_factors           :       1.0000       1.0000       1.0000       1.0000
+ 01 01 00: spectrum_signs               :            1            1            1            1
+ 01 01 00: spectrum_origins             :            0            0            0            0
+ 01 01 00: filter_types                 :            1            1            0            0
+ 01 01 00: filter_widths                :       0.7000       0.7000       0.0000       0.0000
+ 01 01 00: filter_lifts                 :       0.3000       0.3000       0.0000       0.0000
+ 01 01 00: elliptical_filter_types      :            1
+ 01 01 00: elliptical_filter_widths     :       0.9700       0.9700       0.9700       0.0000
+ 01 01 00: elliptical_filter_lifts      :       0.9900
+ 01 01 00: echo_times                   :       1.5222
+ 01 01 00: ph_min_encoding_numbers      :          -58            0
+ 01 01 00: ph_max_encoding_numbers      :           57            0
+ 01 01 00: ph_oversample_factors        :       1.0000
+ 01 01 00: ph_spectrum_signs            :            1
+ 01 01 00: ph_spectrum_origins          :            0
+ 
+ Reconstruction parameters dependent of mix and location:
+ 
+ 01 00 01: in_plane_transformations     :            3
+ 01 00 01: slice_orientations           :            2
+ 01 00 01: location_center_coordinates  :      89.4990      -3.0982      -6.3482
+ 01 01 01: location_matrices            :       0.0000       0.0000      -1.0000
+ 01 02 01: location_matrices            :      -1.0000       0.0000       0.0000
+ 01 03 01: location_matrices            :       0.0000      -1.0000       0.0000
+ 01 00 02: in_plane_transformations     :            3
+ 01 00 02: slice_orientations           :            2
+ 01 00 02: location_center_coordinates  :      74.4990      -3.0982      -6.3482
+ 01 01 02: location_matrices            :       0.0000       0.0000      -1.0000
+ 01 02 02: location_matrices            :      -1.0000       0.0000       0.0000
+ 01 03 02: location_matrices            :       0.0000      -1.0000       0.0000
+ 01 00 03: in_plane_transformations     :            3
+ 01 00 03: slice_orientations           :            2
+ 01 00 03: location_center_coordinates  :      59.4990      -3.0982      -6.3482
+ 01 01 03: location_matrices            :       0.0000       0.0000      -1.0000
+ 01 02 03: location_matrices            :      -1.0000       0.0000       0.0000
+ 01 03 03: location_matrices            :       0.0000      -1.0000       0.0000
+ 01 00 04: in_plane_transformations     :            3
+ 01 00 04: slice_orientations           :            2
+ 01 00 04: location_center_coordinates  :      44.4990      -3.0982      -6.3482
+ 01 01 04: location_matrices            :       0.0000       0.0000      -1.0000
+ 01 02 04: location_matrices            :      -1.0000       0.0000       0.0000
+ 01 03 04: location_matrices            :       0.0000      -1.0000       0.0000
+ 01 00 05: in_plane_transformations     :            3
+ 01 00 05: slice_orientations           :            2
+ 01 00 05: location_center_coordinates  :      29.4990      -3.0982      -6.3482
+ 01 01 05: location_matrices            :       0.0000       0.0000      -1.0000
+ 01 02 05: location_matrices            :      -1.0000       0.0000       0.0000
+ 01 03 05: location_matrices            :       0.0000      -1.0000       0.0000
+ 01 00 06: in_plane_transformations     :            3
+ 01 00 06: slice_orientations           :            2
+ 01 00 06: location_center_coordinates  :      14.4990      -3.0982      -6.3482
+ 01 01 06: location_matrices            :       0.0000       0.0000      -1.0000
+ 01 02 06: location_matrices            :      -1.0000       0.0000       0.0000
+ 01 03 06: location_matrices            :       0.0000      -1.0000       0.0000
+ 01 00 07: in_plane_transformations     :            3
+ 01 00 07: slice_orientations           :            2
+ 01 00 07: location_center_coordinates  :      -0.5010      -3.0982      -6.3482
+ 01 01 07: location_matrices            :       0.0000       0.0000      -1.0000
+ 01 02 07: location_matrices            :      -1.0000       0.0000       0.0000
+ 01 03 07: location_matrices            :       0.0000      -1.0000       0.0000
+ 01 00 08: in_plane_transformations     :            3
+ 01 00 08: slice_orientations           :            2
+ 01 00 08: location_center_coordinates  :     -15.5010      -3.0982      -6.3482
+ 01 01 08: location_matrices            :       0.0000       0.0000      -1.0000
+ 01 02 08: location_matrices            :      -1.0000       0.0000       0.0000
+ 01 03 08: location_matrices            :       0.0000      -1.0000       0.0000
+ 01 00 09: in_plane_transformations     :            3
+ 01 00 09: slice_orientations           :            2
+ 01 00 09: location_center_coordinates  :     -30.5010      -3.0982      -6.3482
+ 01 01 09: location_matrices            :       0.0000       0.0000      -1.0000
+ 01 02 09: location_matrices            :      -1.0000       0.0000       0.0000
+ 01 03 09: location_matrices            :       0.0000      -1.0000       0.0000
+ 01 00 10: in_plane_transformations     :            3
+ 01 00 10: slice_orientations           :            2
+ 01 00 10: location_center_coordinates  :     -45.5010      -3.0982      -6.3482
+ 01 01 10: location_matrices            :       0.0000       0.0000      -1.0000
+ 01 02 10: location_matrices            :      -1.0000       0.0000       0.0000
+ 01 03 10: location_matrices            :       0.0000      -1.0000       0.0000
+ 01 00 11: in_plane_transformations     :            3
+ 01 00 11: slice_orientations           :            2
+ 01 00 11: location_center_coordinates  :     -60.5010      -3.0982      -6.3482
+ 01 01 11: location_matrices            :       0.0000       0.0000      -1.0000
+ 01 02 11: location_matrices            :      -1.0000       0.0000       0.0000
+ 01 03 11: location_matrices            :       0.0000      -1.0000       0.0000
+ 01 00 12: in_plane_transformations     :            3
+ 01 00 12: slice_orientations           :            2
+ 01 00 12: location_center_coordinates  :     -75.5010      -3.0982      -6.3482
+ 01 01 12: location_matrices            :       0.0000       0.0000      -1.0000
+ 01 02 12: location_matrices            :      -1.0000       0.0000       0.0000
+ 01 03 12: location_matrices            :       0.0000      -1.0000       0.0000
+ 01 00 13: in_plane_transformations     :            3
+ 01 00 13: slice_orientations           :            2
+ 01 00 13: location_center_coordinates  :     -90.5010      -3.0982      -6.3482
+ 01 01 13: location_matrices            :       0.0000       0.0000      -1.0000
+ 01 02 13: location_matrices            :      -1.0000       0.0000       0.0000
+ 01 03 13: location_matrices            :       0.0000      -1.0000       0.0000
+ 
+ Reconstruction parameters dependent of stack or location:
+ 
+ 00 00 00: nr_channel_names             :            3
+ 01 00 00: channel_names                : _ConnTRC_MNDCC/OTHER_13C.E1
+ 02 00 00: channel_names                : _ConnQBCDCC/BODY_QUAD.E1
+ 03 00 00: channel_names                : _ConnQBCDCC/BODY_QUAD.E2
+ 01 00 00: receiving_coils              : OTHER_13C
+ 01 00 00: receive_coil_types           :            4
+ 01 00 00: quad_receive_coils           :            0
+ 01 00 00: receiver_nrs                 :            0            0            0
+ 01 00 00: nr_measured_channels         :            1
+ 01 00 00: ph_nr_measured_channels      :            1
+ 01 00 01: measured_channels            :            0
+ 01 00 01: ph_measured_channels         :            0
+ 00 00 00: nr_groups                    :            4
+ 01 00 00: nr_measured_channels_per_gro :            1            0            1            1
+ 01 00 01: measured_channels_per_group  :            0
+ 01 00 03: measured_channels_per_group  :            1
+ 01 00 04: measured_channels_per_group  :            2
+ 01 00 01: channel_combinations         : 1
+ 
+ Reconstruction parameters dependent of mix, echo and location:
+ 
+ 01 01 01: zeroth_phase_errors          :       0.0000
+ 01 01 01: first_phase_errors           :       0.0000       0.0000       0.0000       0.0000
+ 01 01 01: geom_corr_inv_eff_grads      :       0.0000       0.0000       0.0415
+ 01 01 02: zeroth_phase_errors          :       0.0000
+ 01 01 02: first_phase_errors           :       0.0000       0.0000       0.0000       0.0000
+ 01 01 02: geom_corr_inv_eff_grads      :       0.0000       0.0000       0.0415
+ 01 01 03: zeroth_phase_errors          :       0.0000
+ 01 01 03: first_phase_errors           :       0.0000       0.0000       0.0000       0.0000
+ 01 01 03: geom_corr_inv_eff_grads      :       0.0000       0.0000       0.0415
+ 01 01 04: zeroth_phase_errors          :       0.0000
+ 01 01 04: first_phase_errors           :       0.0000       0.0000       0.0000       0.0000
+ 01 01 04: geom_corr_inv_eff_grads      :       0.0000       0.0000       0.0415
+ 01 01 05: zeroth_phase_errors          :       0.0000
+ 01 01 05: first_phase_errors           :       0.0000       0.0000       0.0000       0.0000
+ 01 01 05: geom_corr_inv_eff_grads      :       0.0000       0.0000       0.0415
+ 01 01 06: zeroth_phase_errors          :       0.0000
+ 01 01 06: first_phase_errors           :       0.0000       0.0000       0.0000       0.0000
+ 01 01 06: geom_corr_inv_eff_grads      :       0.0000       0.0000       0.0415
+ 01 01 07: zeroth_phase_errors          :       0.0000
+ 01 01 07: first_phase_errors           :       0.0000       0.0000       0.0000       0.0000
+ 01 01 07: geom_corr_inv_eff_grads      :       0.0000       0.0000       0.0415
+ 01 01 08: zeroth_phase_errors          :       0.0000
+ 01 01 08: first_phase_errors           :       0.0000       0.0000       0.0000       0.0000
+ 01 01 08: geom_corr_inv_eff_grads      :       0.0000       0.0000       0.0415
+ 01 01 09: zeroth_phase_errors          :       0.0000
+ 01 01 09: first_phase_errors           :       0.0000       0.0000       0.0000       0.0000
+ 01 01 09: geom_corr_inv_eff_grads      :       0.0000       0.0000       0.0415
+ 01 01 10: zeroth_phase_errors          :       0.0000
+ 01 01 10: first_phase_errors           :       0.0000       0.0000       0.0000       0.0000
+ 01 01 10: geom_corr_inv_eff_grads      :       0.0000       0.0000       0.0415
+ 01 01 11: zeroth_phase_errors          :       0.0000
+ 01 01 11: first_phase_errors           :       0.0000       0.0000       0.0000       0.0000
+ 01 01 11: geom_corr_inv_eff_grads      :       0.0000       0.0000       0.0415
+ 01 01 12: zeroth_phase_errors          :       0.0000
+ 01 01 12: first_phase_errors           :       0.0000       0.0000       0.0000       0.0000
+ 01 01 12: geom_corr_inv_eff_grads      :       0.0000       0.0000       0.0415
+ 01 01 13: zeroth_phase_errors          :       0.0000
+ 01 01 13: first_phase_errors           :       0.0000       0.0000       0.0000       0.0000
+ 01 01 13: geom_corr_inv_eff_grads      :       0.0000       0.0000       0.0415
+ 
+ Reconstruction parameters for database storage of images:
+ 
+ 00 00 00: scan_resolutions             :          116           25            1            1
+ 01 00 00: flip_angles                  :      15.4600
+ 00 00 00: slice_thickness              :      15.0000
+ 01 00 00: spacing_between_slices_arr   :      15.0000
+ 01 01 00: acquisition_contrasts        :            7
+ 00 00 01: location_phase_enc_dirs      :            2
+ 00 00 01: loc_ap_rl_fh_row_image_oris  :       0.0000       1.0000       0.0000
+ 00 00 01: loc_ap_rl_fh_col_image_oris  :       0.0000       0.0000      -1.0000
+ 00 00 01: loc_ap_rl_fh_offcentres      :     -89.4990      -3.0982       6.1483
+ 00 00 01: ap_rl_fh_ovs_offcentres      :       0.0000       0.0000       0.0000
+ 00 00 02: location_phase_enc_dirs      :            2
+ 00 00 02: loc_ap_rl_fh_row_image_oris  :       0.0000       1.0000       0.0000
+ 00 00 02: loc_ap_rl_fh_col_image_oris  :       0.0000       0.0000      -1.0000
+ 00 00 02: loc_ap_rl_fh_offcentres      :     -74.4990      -3.0982       6.1483
+ 00 00 02: ap_rl_fh_ovs_offcentres      :       0.0000       0.0000       0.0000
+ 00 00 03: location_phase_enc_dirs      :            2
+ 00 00 03: loc_ap_rl_fh_row_image_oris  :       0.0000       1.0000       0.0000
+ 00 00 03: loc_ap_rl_fh_col_image_oris  :       0.0000       0.0000      -1.0000
+ 00 00 03: loc_ap_rl_fh_offcentres      :     -59.4990      -3.0982       6.1483
+ 00 00 03: ap_rl_fh_ovs_offcentres      :       0.0000       0.0000       0.0000
+ 00 00 04: location_phase_enc_dirs      :            2
+ 00 00 04: loc_ap_rl_fh_row_image_oris  :       0.0000       1.0000       0.0000
+ 00 00 04: loc_ap_rl_fh_col_image_oris  :       0.0000       0.0000      -1.0000
+ 00 00 04: loc_ap_rl_fh_offcentres      :     -44.4990      -3.0982       6.1483
+ 00 00 04: ap_rl_fh_ovs_offcentres      :       0.0000       0.0000       0.0000
+ 00 00 05: location_phase_enc_dirs      :            2
+ 00 00 05: loc_ap_rl_fh_row_image_oris  :       0.0000       1.0000       0.0000
+ 00 00 05: loc_ap_rl_fh_col_image_oris  :       0.0000       0.0000      -1.0000
+ 00 00 05: loc_ap_rl_fh_offcentres      :     -29.4990      -3.0982       6.1483
+ 00 00 05: ap_rl_fh_ovs_offcentres      :       0.0000       0.0000       0.0000
+ 00 00 06: location_phase_enc_dirs      :            2
+ 00 00 06: loc_ap_rl_fh_row_image_oris  :       0.0000       1.0000       0.0000
+ 00 00 06: loc_ap_rl_fh_col_image_oris  :       0.0000       0.0000      -1.0000
+ 00 00 06: loc_ap_rl_fh_offcentres      :     -14.4990      -3.0982       6.1483
+ 00 00 06: ap_rl_fh_ovs_offcentres      :       0.0000       0.0000       0.0000
+ 00 00 07: location_phase_enc_dirs      :            2
+ 00 00 07: loc_ap_rl_fh_row_image_oris  :       0.0000       1.0000       0.0000
+ 00 00 07: loc_ap_rl_fh_col_image_oris  :       0.0000       0.0000      -1.0000
+ 00 00 07: loc_ap_rl_fh_offcentres      :       0.5010      -3.0982       6.1483
+ 00 00 07: ap_rl_fh_ovs_offcentres      :       0.0000       0.0000       0.0000
+ 00 00 08: location_phase_enc_dirs      :            2
+ 00 00 08: loc_ap_rl_fh_row_image_oris  :       0.0000       1.0000       0.0000
+ 00 00 08: loc_ap_rl_fh_col_image_oris  :       0.0000       0.0000      -1.0000
+ 00 00 08: loc_ap_rl_fh_offcentres      :      15.5010      -3.0982       6.1483
+ 00 00 08: ap_rl_fh_ovs_offcentres      :       0.0000       0.0000       0.0000
+ 00 00 09: location_phase_enc_dirs      :            2
+ 00 00 09: loc_ap_rl_fh_row_image_oris  :       0.0000       1.0000       0.0000
+ 00 00 09: loc_ap_rl_fh_col_image_oris  :       0.0000       0.0000      -1.0000
+ 00 00 09: loc_ap_rl_fh_offcentres      :      30.5010      -3.0982       6.1483
+ 00 00 09: ap_rl_fh_ovs_offcentres      :       0.0000       0.0000       0.0000
+ 00 00 10: location_phase_enc_dirs      :            2
+ 00 00 10: loc_ap_rl_fh_row_image_oris  :       0.0000       1.0000       0.0000
+ 00 00 10: loc_ap_rl_fh_col_image_oris  :       0.0000       0.0000      -1.0000
+ 00 00 10: loc_ap_rl_fh_offcentres      :      45.5010      -3.0982       6.1483
+ 00 00 10: ap_rl_fh_ovs_offcentres      :       0.0000       0.0000       0.0000
+ 00 00 11: location_phase_enc_dirs      :            2
+ 00 00 11: loc_ap_rl_fh_row_image_oris  :       0.0000       1.0000       0.0000
+ 00 00 11: loc_ap_rl_fh_col_image_oris  :       0.0000       0.0000      -1.0000
+ 00 00 11: loc_ap_rl_fh_offcentres      :      60.5010      -3.0982       6.1483
+ 00 00 11: ap_rl_fh_ovs_offcentres      :       0.0000       0.0000       0.0000
+ 00 00 12: location_phase_enc_dirs      :            2
+ 00 00 12: loc_ap_rl_fh_row_image_oris  :       0.0000       1.0000       0.0000
+ 00 00 12: loc_ap_rl_fh_col_image_oris  :       0.0000       0.0000      -1.0000
+ 00 00 12: loc_ap_rl_fh_offcentres      :      75.5010      -3.0982       6.1483
+ 00 00 12: ap_rl_fh_ovs_offcentres      :       0.0000       0.0000       0.0000
+ 00 00 13: location_phase_enc_dirs      :            2
+ 00 00 13: loc_ap_rl_fh_row_image_oris  :       0.0000       1.0000       0.0000
+ 00 00 13: loc_ap_rl_fh_col_image_oris  :       0.0000       0.0000      -1.0000
+ 00 00 13: loc_ap_rl_fh_offcentres      :      90.5010      -3.0982       6.1483
+ 00 00 13: ap_rl_fh_ovs_offcentres      :       0.0000       0.0000       0.0000
+ 

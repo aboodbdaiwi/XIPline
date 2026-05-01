@@ -1,0 +1,847 @@
+# === DATA DESCRIPTION FILE ======================================================
+#
+# CAUTION - Investigational device.
+# Limited by Federal Law to investigational use.
+#
+# Scan name   : RawExp - CPIR_Vent_2DSOS
+# Dataset name: RAW_004
+#
+# Gyroscan SW release            : 5.6-0
+# Reconstruction Host SW Version :   1
+# Reconstruction   AP SW Version :   1
+#
+# === GENERAL INFORMATION ========================================================
+#
+# n.a. n.a. n.a.  number of ...                        value
+# ---- ---- ----  ----------------------------------   -----
+.    0    0    0  number_of_mixes                    :     1
+#
+# mix  n.a. n.a.  number of ...                        value
+# ---- ---- ----  ----------------------------------   -----
+.    0    0    0  number_of_encoding_dimensions      :     2
+.    0    0    0  number_of_dynamic_scans            :     2
+.    0    0    0  number_of_cardiac_phases           :     1
+.    0    0    0  number_of_echoes                   :     1
+.    0    0    0  number_of_locations                :    13
+.    0    0    0  number_of_extra_attribute_1_values :     1
+.    0    0    0  number_of_extra_attribute_2_values :     1
+.    0    0    0  number_of_signal_averages          :     1
+#
+# mix  echo n.a.  k-space coordinate ranges            start  end
+# ---- ---- ----  ----------------------------------   -----  -----
+.    0    0    0  kx_range                           :  -451    451
+.    0    0    0  ky_range                           :     0     24
+#
+# mix  echo n.a.  k-space oversample factors           value
+# ---- ---- ----  ----------------------------------   ---------
+.    0    0    0  kx_oversample_factor               :    1.0000
+.    0    0    0  ky_oversample_factor               :    1.0000
+#
+# mix  n.a. n.a.  reconstruction matrix                value
+# ---- ---- ----  ----------------------------------   -----
+.    0    0    0  X-resolution                       :   192
+.    0    0    0  Y-resolution                       :   192
+#
+# mix  echo loca  imaging space coordinate ranges      start  end
+# ---- ---- ----  ----------------------------------   -----  -----
+.    0    0    0  X_range                            :   -96     95
+.    0    0    0  Y_range                            :   -96     95
+.    0    0    1  X_range                            :   -96     95
+.    0    0    1  Y_range                            :   -96     95
+.    0    0    2  X_range                            :   -96     95
+.    0    0    2  Y_range                            :   -96     95
+.    0    0    3  X_range                            :   -96     95
+.    0    0    3  Y_range                            :   -96     95
+.    0    0    4  X_range                            :   -96     95
+.    0    0    4  Y_range                            :   -96     95
+.    0    0    5  X_range                            :   -96     95
+.    0    0    5  Y_range                            :   -96     95
+.    0    0    6  X_range                            :   -96     95
+.    0    0    6  Y_range                            :   -96     95
+.    0    0    7  X_range                            :   -96     95
+.    0    0    7  Y_range                            :   -96     95
+.    0    0    8  X_range                            :   -96     95
+.    0    0    8  Y_range                            :   -96     95
+.    0    0    9  X_range                            :   -96     95
+.    0    0    9  Y_range                            :   -96     95
+.    0    0   10  X_range                            :   -96     95
+.    0    0   10  Y_range                            :   -96     95
+.    0    0   11  X_range                            :   -96     95
+.    0    0   11  Y_range                            :   -96     95
+.    0    0   12  X_range                            :   -96     95
+.    0    0   12  Y_range                            :   -96     95
+#
+# Complex data vector types:
+# --------------------------
+# STD = Standard data vector (image data or spectroscopy data)
+# REJ = Rejected standard data vector
+#       (only for scans with arrhythmia rejection)
+# PHX = Correction data vector for EPI/GraSE phase correction
+# FRX = Correction data vector for frequency spectrum correction
+# NOI = Preparation phase data vector for noise determination
+# NAV = Phase navigator data vector
+# DNA = Dynamic phase navigator vector
+#
+# Other attributes of complex data vectors:
+# -----------------------------------------
+# mix      = mixed sequence number
+# dyn      = dynamic scan number
+# card     = cardiac phase number
+# echo     = echo number
+# loca     = location number
+# chan     = synco channel number
+# extr1    = extra attribute 1 (semantics depend on type of scan)
+# extr2    = extra attribute 2 (   ''       ''   ''  ''  ''  '' )
+# ky,kz    = k-space coordinates in 1st and 2nd preparation direction (image data)
+# kx,ky,kz = k-space coordinates in 1st, 2nd and 3rd preparation direction (spectroscopy data)
+# aver     = sequence number of this signal average
+# sign     = sign of measurement gradient used for this data vector (1 = positive, -1 = negative)
+# rf       = sequence number of this rf echo (only for TSE, TFE, GraSE)
+# grad     = sequence number of this gradient echo (only for EPI/GraSE)
+# enc      = encoding time (only for EPI/GraSE)
+# rtop     = R-top offset in ms
+# rr       = RR-interval length in ms
+# size   = data vector size   in number of bytes (1 complex element = 2 floats = 8 bytes)
+# offset = data vector offset in number of bytes (first data vector starts at offset 0)
+#
+# The complex data vectors are represented as binary data in little endian single precision IEEE float format.
+#
+# Please note that complex data vector attributes which are not relevant for a certain type of vector
+# may have arbitrary values!
+#
+# Fourier transformations:
+# ------------------------
+# The Fourier transformation lengths for STD, NAV and REJ data are (by definition) equal to
+# to reconstruction matrix length * k-space oversample sample factor
+# in each applicable direction.
+#
+# The centre point of the k-space must be positioned in the middle of the interval with this length,
+# (or just right from the middle if the Fourier transformation length is even), according to the
+# specified k-space coordinate ranges. Apply a cyclic wrap-around to data that extends outside the
+# interval, and zerofill missing data before Fourier transformation.
+# After Fourier transformation, the imaging space coordinate ranges specify the position, length 
+# and direction of the relevant part of the frequency spectrum. Apply a cyclic wrap-around if
+# needed. If start value > end value, read the spectrum part between these positions in reverse order.
+#
+# Corrections:
+# ------------
+# Depending on the type of scan, one or more of the following corrections may have to be applied:
+# - frequency spectrum correction (using FRX data)
+# - EPI/GraSE phase correction    (using PHX data)
+# - rf echo amplitude correction  (using PHX data, only for GraSE scans)
+# 
+# These corrections can be applied to STD, NAV and REJ data vectors after forward Fourier transformation
+# in the measurement direction, by multiplying the selected part of the frequency spectrum of
+# these data vectors with the PHX and FRX correction data vector that has corresponding identifying
+# complex data vector attributes.
+# 
+# Remarks:
+# - In GraSE scans you may get a PHX correction data vector for each rf echo. These correction vectors
+#   differ only a scale factor from each other, and can be used for rf echo amplitude correction.
+#   If you don't want this correction, use the correction data vectors with rf echo = 0 only.
+# - Depending on the type of scan, several of the FRX correction data vectors may be identical.
+#
+# Identifying attributes of complex data vectors:
+# -----------------------------------------------
+# The next table specifies the identifying attributes for each type of complex data vector:
+#
+# typ mix   dyn   card  echo  loca  chan  extr1 extr2 ky    kz    n.a.  aver  sign  rf    grad  enc   rtop  rr    size   offset
+# --- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ------ ------
+#
+# STD   *     *     *     *     *     *     *     *     *     *           *     *     *     *
+# REJ   *     *     *     *     *     *     *     *     *     *           *     *     *     *
+# PHX   *                 *     *     *                                         *     *     *
+# FRX   *                 *     *     *                                         *            
+# NOI                           *     *                                                      
+# NAV   *     *     *     *     *     *     *     *     *     *           *     *     *     *
+# DNA         *                       *                                         *           *
+#
+# === START OF DATA VECTOR INDEX =================================================
+#
+# typ mix   dyn   card  echo  loca  chan  extr1 extr2 ky    kz    n.a.  aver  sign  rf    grad  enc   rtop  rr    size   offset
+# --- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ------ ------
+#
+  NOI     0     0     0     0     0     0     0     0     0     0     0     0     1     0     0     0     0     0 158920 0
+  STD     0     0     0     0     0     0     0     0     1     0     0     0     1     0    38    75     0     0   7224 158920
+  STD     0     0     0     0     0     0     0     0    23     0     0     0     1     0    38    75     0     0   7224 166144
+  STD     0     0     0     0     0     0     0     0     3     0     0     0     1     0    38    75     0     0   7224 173368
+  STD     0     0     0     0     0     0     0     0    21     0     0     0     1     0    38    75     0     0   7224 180592
+  STD     0     0     0     0     0     0     0     0     5     0     0     0     1     0    38    75     0     0   7224 187816
+  STD     0     0     0     0     0     0     0     0    19     0     0     0     1     0    38    75     0     0   7224 195040
+  STD     0     0     0     0     0     0     0     0     7     0     0     0     1     0    38    75     0     0   7224 202264
+  STD     0     0     0     0     0     0     0     0    17     0     0     0     1     0    38    75     0     0   7224 209488
+  STD     0     0     0     0     0     0     0     0     9     0     0     0     1     0    38    75     0     0   7224 216712
+  STD     0     0     0     0     0     0     0     0    15     0     0     0     1     0    38    75     0     0   7224 223936
+  STD     0     0     0     0     0     0     0     0    11     0     0     0     1     0    38    75     0     0   7224 231160
+  STD     0     0     0     0     0     0     0     0    13     0     0     0     1     0    38    75     0     0   7224 238384
+  STD     0     0     0     0     0     0     0     0     0     0     0     0     1     0    38    75     0     0   7224 245608
+  STD     0     0     0     0     0     0     0     0    24     0     0     0     1     0    38    75     0     0   7224 252832
+  STD     0     0     0     0     0     0     0     0     2     0     0     0     1     0    38    75     0     0   7224 260056
+  STD     0     0     0     0     0     0     0     0    22     0     0     0     1     0    38    75     0     0   7224 267280
+  STD     0     0     0     0     0     0     0     0     4     0     0     0     1     0    38    75     0     0   7224 274504
+  STD     0     0     0     0     0     0     0     0    20     0     0     0     1     0    38    75     0     0   7224 281728
+  STD     0     0     0     0     0     0     0     0     6     0     0     0     1     0    38    75     0     0   7224 288952
+  STD     0     0     0     0     0     0     0     0    18     0     0     0     1     0    38    75     0     0   7224 296176
+  STD     0     0     0     0     0     0     0     0     8     0     0     0     1     0    38    75     0     0   7224 303400
+  STD     0     0     0     0     0     0     0     0    16     0     0     0     1     0    38    75     0     0   7224 310624
+  STD     0     0     0     0     0     0     0     0    10     0     0     0     1     0    38    75     0     0   7224 317848
+  STD     0     0     0     0     0     0     0     0    14     0     0     0     1     0    38    75     0     0   7224 325072
+  STD     0     0     0     0     0     0     0     0    12     0     0     0     1     0    38    75     0     0   7224 332296
+  STD     0     1     0     0     0     0     0     0     1     0     0     0     1     0    38    75     0     0   7224 339520
+  STD     0     1     0     0     0     0     0     0    23     0     0     0     1     0    38    75     0     0   7224 346744
+  STD     0     1     0     0     0     0     0     0     3     0     0     0     1     0    38    75     0     0   7224 353968
+  STD     0     1     0     0     0     0     0     0    21     0     0     0     1     0    38    75     0     0   7224 361192
+  STD     0     1     0     0     0     0     0     0     5     0     0     0     1     0    38    75     0     0   7224 368416
+  STD     0     1     0     0     0     0     0     0    19     0     0     0     1     0    38    75     0     0   7224 375640
+  STD     0     1     0     0     0     0     0     0     7     0     0     0     1     0    38    75     0     0   7224 382864
+  STD     0     1     0     0     0     0     0     0    17     0     0     0     1     0    38    75     0     0   7224 390088
+  STD     0     1     0     0     0     0     0     0     9     0     0     0     1     0    38    75     0     0   7224 397312
+  STD     0     1     0     0     0     0     0     0    15     0     0     0     1     0    38    75     0     0   7224 404536
+  STD     0     1     0     0     0     0     0     0    11     0     0     0     1     0    38    75     0     0   7224 411760
+  STD     0     1     0     0     0     0     0     0    13     0     0     0     1     0    38    75     0     0   7224 418984
+  STD     0     1     0     0     0     0     0     0     0     0     0     0     1     0    38    75     0     0   7224 426208
+  STD     0     1     0     0     0     0     0     0    24     0     0     0     1     0    38    75     0     0   7224 433432
+  STD     0     1     0     0     0     0     0     0     2     0     0     0     1     0    38    75     0     0   7224 440656
+  STD     0     1     0     0     0     0     0     0    22     0     0     0     1     0    38    75     0     0   7224 447880
+  STD     0     1     0     0     0     0     0     0     4     0     0     0     1     0    38    75     0     0   7224 455104
+  STD     0     1     0     0     0     0     0     0    20     0     0     0     1     0    38    75     0     0   7224 462328
+  STD     0     1     0     0     0     0     0     0     6     0     0     0     1     0    38    75     0     0   7224 469552
+  STD     0     1     0     0     0     0     0     0    18     0     0     0     1     0    38    75     0     0   7224 476776
+  STD     0     1     0     0     0     0     0     0     8     0     0     0     1     0    38    75     0     0   7224 484000
+  STD     0     1     0     0     0     0     0     0    16     0     0     0     1     0    38    75     0     0   7224 491224
+  STD     0     1     0     0     0     0     0     0    10     0     0     0     1     0    38    75     0     0   7224 498448
+  STD     0     1     0     0     0     0     0     0    14     0     0     0     1     0    38    75     0     0   7224 505672
+  STD     0     1     0     0     0     0     0     0    12     0     0     0     1     0    38    75     0     0   7224 512896
+  STD     0     0     0     0     1     0     0     0     1     0     0     0     1     0    38    75     0     0   7224 520120
+  STD     0     0     0     0     1     0     0     0    23     0     0     0     1     0    38    75     0     0   7224 527344
+  STD     0     0     0     0     1     0     0     0     3     0     0     0     1     0    38    75     0     0   7224 534568
+  STD     0     0     0     0     1     0     0     0    21     0     0     0     1     0    38    75     0     0   7224 541792
+  STD     0     0     0     0     1     0     0     0     5     0     0     0     1     0    38    75     0     0   7224 549016
+  STD     0     0     0     0     1     0     0     0    19     0     0     0     1     0    38    75     0     0   7224 556240
+  STD     0     0     0     0     1     0     0     0     7     0     0     0     1     0    38    75     0     0   7224 563464
+  STD     0     0     0     0     1     0     0     0    17     0     0     0     1     0    38    75     0     0   7224 570688
+  STD     0     0     0     0     1     0     0     0     9     0     0     0     1     0    38    75     0     0   7224 577912
+  STD     0     0     0     0     1     0     0     0    15     0     0     0     1     0    38    75     0     0   7224 585136
+  STD     0     0     0     0     1     0     0     0    11     0     0     0     1     0    38    75     0     0   7224 592360
+  STD     0     0     0     0     1     0     0     0    13     0     0     0     1     0    38    75     0     0   7224 599584
+  STD     0     0     0     0     1     0     0     0     0     0     0     0     1     0    38    75     0     0   7224 606808
+  STD     0     0     0     0     1     0     0     0    24     0     0     0     1     0    38    75     0     0   7224 614032
+  STD     0     0     0     0     1     0     0     0     2     0     0     0     1     0    38    75     0     0   7224 621256
+  STD     0     0     0     0     1     0     0     0    22     0     0     0     1     0    38    75     0     0   7224 628480
+  STD     0     0     0     0     1     0     0     0     4     0     0     0     1     0    38    75     0     0   7224 635704
+  STD     0     0     0     0     1     0     0     0    20     0     0     0     1     0    38    75     0     0   7224 642928
+  STD     0     0     0     0     1     0     0     0     6     0     0     0     1     0    38    75     0     0   7224 650152
+  STD     0     0     0     0     1     0     0     0    18     0     0     0     1     0    38    75     0     0   7224 657376
+  STD     0     0     0     0     1     0     0     0     8     0     0     0     1     0    38    75     0     0   7224 664600
+  STD     0     0     0     0     1     0     0     0    16     0     0     0     1     0    38    75     0     0   7224 671824
+  STD     0     0     0     0     1     0     0     0    10     0     0     0     1     0    38    75     0     0   7224 679048
+  STD     0     0     0     0     1     0     0     0    14     0     0     0     1     0    38    75     0     0   7224 686272
+  STD     0     0     0     0     1     0     0     0    12     0     0     0     1     0    38    75     0     0   7224 693496
+  STD     0     1     0     0     1     0     0     0     1     0     0     0     1     0    38    75     0     0   7224 700720
+  STD     0     1     0     0     1     0     0     0    23     0     0     0     1     0    38    75     0     0   7224 707944
+  STD     0     1     0     0     1     0     0     0     3     0     0     0     1     0    38    75     0     0   7224 715168
+  STD     0     1     0     0     1     0     0     0    21     0     0     0     1     0    38    75     0     0   7224 722392
+  STD     0     1     0     0     1     0     0     0     5     0     0     0     1     0    38    75     0     0   7224 729616
+  STD     0     1     0     0     1     0     0     0    19     0     0     0     1     0    38    75     0     0   7224 736840
+  STD     0     1     0     0     1     0     0     0     7     0     0     0     1     0    38    75     0     0   7224 744064
+  STD     0     1     0     0     1     0     0     0    17     0     0     0     1     0    38    75     0     0   7224 751288
+  STD     0     1     0     0     1     0     0     0     9     0     0     0     1     0    38    75     0     0   7224 758512
+  STD     0     1     0     0     1     0     0     0    15     0     0     0     1     0    38    75     0     0   7224 765736
+  STD     0     1     0     0     1     0     0     0    11     0     0     0     1     0    38    75     0     0   7224 772960
+  STD     0     1     0     0     1     0     0     0    13     0     0     0     1     0    38    75     0     0   7224 780184
+  STD     0     1     0     0     1     0     0     0     0     0     0     0     1     0    38    75     0     0   7224 787408
+  STD     0     1     0     0     1     0     0     0    24     0     0     0     1     0    38    75     0     0   7224 794632
+  STD     0     1     0     0     1     0     0     0     2     0     0     0     1     0    38    75     0     0   7224 801856
+  STD     0     1     0     0     1     0     0     0    22     0     0     0     1     0    38    75     0     0   7224 809080
+  STD     0     1     0     0     1     0     0     0     4     0     0     0     1     0    38    75     0     0   7224 816304
+  STD     0     1     0     0     1     0     0     0    20     0     0     0     1     0    38    75     0     0   7224 823528
+  STD     0     1     0     0     1     0     0     0     6     0     0     0     1     0    38    75     0     0   7224 830752
+  STD     0     1     0     0     1     0     0     0    18     0     0     0     1     0    38    75     0     0   7224 837976
+  STD     0     1     0     0     1     0     0     0     8     0     0     0     1     0    38    75     0     0   7224 845200
+  STD     0     1     0     0     1     0     0     0    16     0     0     0     1     0    38    75     0     0   7224 852424
+  STD     0     1     0     0     1     0     0     0    10     0     0     0     1     0    38    75     0     0   7224 859648
+  STD     0     1     0     0     1     0     0     0    14     0     0     0     1     0    38    75     0     0   7224 866872
+  STD     0     1     0     0     1     0     0     0    12     0     0     0     1     0    38    75     0     0   7224 874096
+  STD     0     0     0     0     2     0     0     0     1     0     0     0     1     0    38    75     0     0   7224 881320
+  STD     0     0     0     0     2     0     0     0    23     0     0     0     1     0    38    75     0     0   7224 888544
+  STD     0     0     0     0     2     0     0     0     3     0     0     0     1     0    38    75     0     0   7224 895768
+  STD     0     0     0     0     2     0     0     0    21     0     0     0     1     0    38    75     0     0   7224 902992
+  STD     0     0     0     0     2     0     0     0     5     0     0     0     1     0    38    75     0     0   7224 910216
+  STD     0     0     0     0     2     0     0     0    19     0     0     0     1     0    38    75     0     0   7224 917440
+  STD     0     0     0     0     2     0     0     0     7     0     0     0     1     0    38    75     0     0   7224 924664
+  STD     0     0     0     0     2     0     0     0    17     0     0     0     1     0    38    75     0     0   7224 931888
+  STD     0     0     0     0     2     0     0     0     9     0     0     0     1     0    38    75     0     0   7224 939112
+  STD     0     0     0     0     2     0     0     0    15     0     0     0     1     0    38    75     0     0   7224 946336
+  STD     0     0     0     0     2     0     0     0    11     0     0     0     1     0    38    75     0     0   7224 953560
+  STD     0     0     0     0     2     0     0     0    13     0     0     0     1     0    38    75     0     0   7224 960784
+  STD     0     0     0     0     2     0     0     0     0     0     0     0     1     0    38    75     0     0   7224 968008
+  STD     0     0     0     0     2     0     0     0    24     0     0     0     1     0    38    75     0     0   7224 975232
+  STD     0     0     0     0     2     0     0     0     2     0     0     0     1     0    38    75     0     0   7224 982456
+  STD     0     0     0     0     2     0     0     0    22     0     0     0     1     0    38    75     0     0   7224 989680
+  STD     0     0     0     0     2     0     0     0     4     0     0     0     1     0    38    75     0     0   7224 996904
+  STD     0     0     0     0     2     0     0     0    20     0     0     0     1     0    38    75     0     0   7224 1004128
+  STD     0     0     0     0     2     0     0     0     6     0     0     0     1     0    38    75     0     0   7224 1011352
+  STD     0     0     0     0     2     0     0     0    18     0     0     0     1     0    38    75     0     0   7224 1018576
+  STD     0     0     0     0     2     0     0     0     8     0     0     0     1     0    38    75     0     0   7224 1025800
+  STD     0     0     0     0     2     0     0     0    16     0     0     0     1     0    38    75     0     0   7224 1033024
+  STD     0     0     0     0     2     0     0     0    10     0     0     0     1     0    38    75     0     0   7224 1040248
+  STD     0     0     0     0     2     0     0     0    14     0     0     0     1     0    38    75     0     0   7224 1047472
+  STD     0     0     0     0     2     0     0     0    12     0     0     0     1     0    38    75     0     0   7224 1054696
+  STD     0     1     0     0     2     0     0     0     1     0     0     0     1     0    38    75     0     0   7224 1061920
+  STD     0     1     0     0     2     0     0     0    23     0     0     0     1     0    38    75     0     0   7224 1069144
+  STD     0     1     0     0     2     0     0     0     3     0     0     0     1     0    38    75     0     0   7224 1076368
+  STD     0     1     0     0     2     0     0     0    21     0     0     0     1     0    38    75     0     0   7224 1083592
+  STD     0     1     0     0     2     0     0     0     5     0     0     0     1     0    38    75     0     0   7224 1090816
+  STD     0     1     0     0     2     0     0     0    19     0     0     0     1     0    38    75     0     0   7224 1098040
+  STD     0     1     0     0     2     0     0     0     7     0     0     0     1     0    38    75     0     0   7224 1105264
+  STD     0     1     0     0     2     0     0     0    17     0     0     0     1     0    38    75     0     0   7224 1112488
+  STD     0     1     0     0     2     0     0     0     9     0     0     0     1     0    38    75     0     0   7224 1119712
+  STD     0     1     0     0     2     0     0     0    15     0     0     0     1     0    38    75     0     0   7224 1126936
+  STD     0     1     0     0     2     0     0     0    11     0     0     0     1     0    38    75     0     0   7224 1134160
+  STD     0     1     0     0     2     0     0     0    13     0     0     0     1     0    38    75     0     0   7224 1141384
+  STD     0     1     0     0     2     0     0     0     0     0     0     0     1     0    38    75     0     0   7224 1148608
+  STD     0     1     0     0     2     0     0     0    24     0     0     0     1     0    38    75     0     0   7224 1155832
+  STD     0     1     0     0     2     0     0     0     2     0     0     0     1     0    38    75     0     0   7224 1163056
+  STD     0     1     0     0     2     0     0     0    22     0     0     0     1     0    38    75     0     0   7224 1170280
+  STD     0     1     0     0     2     0     0     0     4     0     0     0     1     0    38    75     0     0   7224 1177504
+  STD     0     1     0     0     2     0     0     0    20     0     0     0     1     0    38    75     0     0   7224 1184728
+  STD     0     1     0     0     2     0     0     0     6     0     0     0     1     0    38    75     0     0   7224 1191952
+  STD     0     1     0     0     2     0     0     0    18     0     0     0     1     0    38    75     0     0   7224 1199176
+  STD     0     1     0     0     2     0     0     0     8     0     0     0     1     0    38    75     0     0   7224 1206400
+  STD     0     1     0     0     2     0     0     0    16     0     0     0     1     0    38    75     0     0   7224 1213624
+  STD     0     1     0     0     2     0     0     0    10     0     0     0     1     0    38    75     0     0   7224 1220848
+  STD     0     1     0     0     2     0     0     0    14     0     0     0     1     0    38    75     0     0   7224 1228072
+  STD     0     1     0     0     2     0     0     0    12     0     0     0     1     0    38    75     0     0   7224 1235296
+  STD     0     0     0     0     3     0     0     0     1     0     0     0     1     0    38    75     0     0   7224 1242520
+  STD     0     0     0     0     3     0     0     0    23     0     0     0     1     0    38    75     0     0   7224 1249744
+  STD     0     0     0     0     3     0     0     0     3     0     0     0     1     0    38    75     0     0   7224 1256968
+  STD     0     0     0     0     3     0     0     0    21     0     0     0     1     0    38    75     0     0   7224 1264192
+  STD     0     0     0     0     3     0     0     0     5     0     0     0     1     0    38    75     0     0   7224 1271416
+  STD     0     0     0     0     3     0     0     0    19     0     0     0     1     0    38    75     0     0   7224 1278640
+  STD     0     0     0     0     3     0     0     0     7     0     0     0     1     0    38    75     0     0   7224 1285864
+  STD     0     0     0     0     3     0     0     0    17     0     0     0     1     0    38    75     0     0   7224 1293088
+  STD     0     0     0     0     3     0     0     0     9     0     0     0     1     0    38    75     0     0   7224 1300312
+  STD     0     0     0     0     3     0     0     0    15     0     0     0     1     0    38    75     0     0   7224 1307536
+  STD     0     0     0     0     3     0     0     0    11     0     0     0     1     0    38    75     0     0   7224 1314760
+  STD     0     0     0     0     3     0     0     0    13     0     0     0     1     0    38    75     0     0   7224 1321984
+  STD     0     0     0     0     3     0     0     0     0     0     0     0     1     0    38    75     0     0   7224 1329208
+  STD     0     0     0     0     3     0     0     0    24     0     0     0     1     0    38    75     0     0   7224 1336432
+  STD     0     0     0     0     3     0     0     0     2     0     0     0     1     0    38    75     0     0   7224 1343656
+  STD     0     0     0     0     3     0     0     0    22     0     0     0     1     0    38    75     0     0   7224 1350880
+  STD     0     0     0     0     3     0     0     0     4     0     0     0     1     0    38    75     0     0   7224 1358104
+  STD     0     0     0     0     3     0     0     0    20     0     0     0     1     0    38    75     0     0   7224 1365328
+  STD     0     0     0     0     3     0     0     0     6     0     0     0     1     0    38    75     0     0   7224 1372552
+  STD     0     0     0     0     3     0     0     0    18     0     0     0     1     0    38    75     0     0   7224 1379776
+  STD     0     0     0     0     3     0     0     0     8     0     0     0     1     0    38    75     0     0   7224 1387000
+  STD     0     0     0     0     3     0     0     0    16     0     0     0     1     0    38    75     0     0   7224 1394224
+  STD     0     0     0     0     3     0     0     0    10     0     0     0     1     0    38    75     0     0   7224 1401448
+  STD     0     0     0     0     3     0     0     0    14     0     0     0     1     0    38    75     0     0   7224 1408672
+  STD     0     0     0     0     3     0     0     0    12     0     0     0     1     0    38    75     0     0   7224 1415896
+  STD     0     1     0     0     3     0     0     0     1     0     0     0     1     0    38    75     0     0   7224 1423120
+  STD     0     1     0     0     3     0     0     0    23     0     0     0     1     0    38    75     0     0   7224 1430344
+  STD     0     1     0     0     3     0     0     0     3     0     0     0     1     0    38    75     0     0   7224 1437568
+  STD     0     1     0     0     3     0     0     0    21     0     0     0     1     0    38    75     0     0   7224 1444792
+  STD     0     1     0     0     3     0     0     0     5     0     0     0     1     0    38    75     0     0   7224 1452016
+  STD     0     1     0     0     3     0     0     0    19     0     0     0     1     0    38    75     0     0   7224 1459240
+  STD     0     1     0     0     3     0     0     0     7     0     0     0     1     0    38    75     0     0   7224 1466464
+  STD     0     1     0     0     3     0     0     0    17     0     0     0     1     0    38    75     0     0   7224 1473688
+  STD     0     1     0     0     3     0     0     0     9     0     0     0     1     0    38    75     0     0   7224 1480912
+  STD     0     1     0     0     3     0     0     0    15     0     0     0     1     0    38    75     0     0   7224 1488136
+  STD     0     1     0     0     3     0     0     0    11     0     0     0     1     0    38    75     0     0   7224 1495360
+  STD     0     1     0     0     3     0     0     0    13     0     0     0     1     0    38    75     0     0   7224 1502584
+  STD     0     1     0     0     3     0     0     0     0     0     0     0     1     0    38    75     0     0   7224 1509808
+  STD     0     1     0     0     3     0     0     0    24     0     0     0     1     0    38    75     0     0   7224 1517032
+  STD     0     1     0     0     3     0     0     0     2     0     0     0     1     0    38    75     0     0   7224 1524256
+  STD     0     1     0     0     3     0     0     0    22     0     0     0     1     0    38    75     0     0   7224 1531480
+  STD     0     1     0     0     3     0     0     0     4     0     0     0     1     0    38    75     0     0   7224 1538704
+  STD     0     1     0     0     3     0     0     0    20     0     0     0     1     0    38    75     0     0   7224 1545928
+  STD     0     1     0     0     3     0     0     0     6     0     0     0     1     0    38    75     0     0   7224 1553152
+  STD     0     1     0     0     3     0     0     0    18     0     0     0     1     0    38    75     0     0   7224 1560376
+  STD     0     1     0     0     3     0     0     0     8     0     0     0     1     0    38    75     0     0   7224 1567600
+  STD     0     1     0     0     3     0     0     0    16     0     0     0     1     0    38    75     0     0   7224 1574824
+  STD     0     1     0     0     3     0     0     0    10     0     0     0     1     0    38    75     0     0   7224 1582048
+  STD     0     1     0     0     3     0     0     0    14     0     0     0     1     0    38    75     0     0   7224 1589272
+  STD     0     1     0     0     3     0     0     0    12     0     0     0     1     0    38    75     0     0   7224 1596496
+  STD     0     0     0     0     4     0     0     0     1     0     0     0     1     0    38    75     0     0   7224 1603720
+  STD     0     0     0     0     4     0     0     0    23     0     0     0     1     0    38    75     0     0   7224 1610944
+  STD     0     0     0     0     4     0     0     0     3     0     0     0     1     0    38    75     0     0   7224 1618168
+  STD     0     0     0     0     4     0     0     0    21     0     0     0     1     0    38    75     0     0   7224 1625392
+  STD     0     0     0     0     4     0     0     0     5     0     0     0     1     0    38    75     0     0   7224 1632616
+  STD     0     0     0     0     4     0     0     0    19     0     0     0     1     0    38    75     0     0   7224 1639840
+  STD     0     0     0     0     4     0     0     0     7     0     0     0     1     0    38    75     0     0   7224 1647064
+  STD     0     0     0     0     4     0     0     0    17     0     0     0     1     0    38    75     0     0   7224 1654288
+  STD     0     0     0     0     4     0     0     0     9     0     0     0     1     0    38    75     0     0   7224 1661512
+  STD     0     0     0     0     4     0     0     0    15     0     0     0     1     0    38    75     0     0   7224 1668736
+  STD     0     0     0     0     4     0     0     0    11     0     0     0     1     0    38    75     0     0   7224 1675960
+  STD     0     0     0     0     4     0     0     0    13     0     0     0     1     0    38    75     0     0   7224 1683184
+  STD     0     0     0     0     4     0     0     0     0     0     0     0     1     0    38    75     0     0   7224 1690408
+  STD     0     0     0     0     4     0     0     0    24     0     0     0     1     0    38    75     0     0   7224 1697632
+  STD     0     0     0     0     4     0     0     0     2     0     0     0     1     0    38    75     0     0   7224 1704856
+  STD     0     0     0     0     4     0     0     0    22     0     0     0     1     0    38    75     0     0   7224 1712080
+  STD     0     0     0     0     4     0     0     0     4     0     0     0     1     0    38    75     0     0   7224 1719304
+  STD     0     0     0     0     4     0     0     0    20     0     0     0     1     0    38    75     0     0   7224 1726528
+  STD     0     0     0     0     4     0     0     0     6     0     0     0     1     0    38    75     0     0   7224 1733752
+  STD     0     0     0     0     4     0     0     0    18     0     0     0     1     0    38    75     0     0   7224 1740976
+  STD     0     0     0     0     4     0     0     0     8     0     0     0     1     0    38    75     0     0   7224 1748200
+  STD     0     0     0     0     4     0     0     0    16     0     0     0     1     0    38    75     0     0   7224 1755424
+  STD     0     0     0     0     4     0     0     0    10     0     0     0     1     0    38    75     0     0   7224 1762648
+  STD     0     0     0     0     4     0     0     0    14     0     0     0     1     0    38    75     0     0   7224 1769872
+  STD     0     0     0     0     4     0     0     0    12     0     0     0     1     0    38    75     0     0   7224 1777096
+  STD     0     1     0     0     4     0     0     0     1     0     0     0     1     0    38    75     0     0   7224 1784320
+  STD     0     1     0     0     4     0     0     0    23     0     0     0     1     0    38    75     0     0   7224 1791544
+  STD     0     1     0     0     4     0     0     0     3     0     0     0     1     0    38    75     0     0   7224 1798768
+  STD     0     1     0     0     4     0     0     0    21     0     0     0     1     0    38    75     0     0   7224 1805992
+  STD     0     1     0     0     4     0     0     0     5     0     0     0     1     0    38    75     0     0   7224 1813216
+  STD     0     1     0     0     4     0     0     0    19     0     0     0     1     0    38    75     0     0   7224 1820440
+  STD     0     1     0     0     4     0     0     0     7     0     0     0     1     0    38    75     0     0   7224 1827664
+  STD     0     1     0     0     4     0     0     0    17     0     0     0     1     0    38    75     0     0   7224 1834888
+  STD     0     1     0     0     4     0     0     0     9     0     0     0     1     0    38    75     0     0   7224 1842112
+  STD     0     1     0     0     4     0     0     0    15     0     0     0     1     0    38    75     0     0   7224 1849336
+  STD     0     1     0     0     4     0     0     0    11     0     0     0     1     0    38    75     0     0   7224 1856560
+  STD     0     1     0     0     4     0     0     0    13     0     0     0     1     0    38    75     0     0   7224 1863784
+  STD     0     1     0     0     4     0     0     0     0     0     0     0     1     0    38    75     0     0   7224 1871008
+  STD     0     1     0     0     4     0     0     0    24     0     0     0     1     0    38    75     0     0   7224 1878232
+  STD     0     1     0     0     4     0     0     0     2     0     0     0     1     0    38    75     0     0   7224 1885456
+  STD     0     1     0     0     4     0     0     0    22     0     0     0     1     0    38    75     0     0   7224 1892680
+  STD     0     1     0     0     4     0     0     0     4     0     0     0     1     0    38    75     0     0   7224 1899904
+  STD     0     1     0     0     4     0     0     0    20     0     0     0     1     0    38    75     0     0   7224 1907128
+  STD     0     1     0     0     4     0     0     0     6     0     0     0     1     0    38    75     0     0   7224 1914352
+  STD     0     1     0     0     4     0     0     0    18     0     0     0     1     0    38    75     0     0   7224 1921576
+  STD     0     1     0     0     4     0     0     0     8     0     0     0     1     0    38    75     0     0   7224 1928800
+  STD     0     1     0     0     4     0     0     0    16     0     0     0     1     0    38    75     0     0   7224 1936024
+  STD     0     1     0     0     4     0     0     0    10     0     0     0     1     0    38    75     0     0   7224 1943248
+  STD     0     1     0     0     4     0     0     0    14     0     0     0     1     0    38    75     0     0   7224 1950472
+  STD     0     1     0     0     4     0     0     0    12     0     0     0     1     0    38    75     0     0   7224 1957696
+  STD     0     0     0     0     5     0     0     0     1     0     0     0     1     0    38    75     0     0   7224 1964920
+  STD     0     0     0     0     5     0     0     0    23     0     0     0     1     0    38    75     0     0   7224 1972144
+  STD     0     0     0     0     5     0     0     0     3     0     0     0     1     0    38    75     0     0   7224 1979368
+  STD     0     0     0     0     5     0     0     0    21     0     0     0     1     0    38    75     0     0   7224 1986592
+  STD     0     0     0     0     5     0     0     0     5     0     0     0     1     0    38    75     0     0   7224 1993816
+  STD     0     0     0     0     5     0     0     0    19     0     0     0     1     0    38    75     0     0   7224 2001040
+  STD     0     0     0     0     5     0     0     0     7     0     0     0     1     0    38    75     0     0   7224 2008264
+  STD     0     0     0     0     5     0     0     0    17     0     0     0     1     0    38    75     0     0   7224 2015488
+  STD     0     0     0     0     5     0     0     0     9     0     0     0     1     0    38    75     0     0   7224 2022712
+  STD     0     0     0     0     5     0     0     0    15     0     0     0     1     0    38    75     0     0   7224 2029936
+  STD     0     0     0     0     5     0     0     0    11     0     0     0     1     0    38    75     0     0   7224 2037160
+  STD     0     0     0     0     5     0     0     0    13     0     0     0     1     0    38    75     0     0   7224 2044384
+  STD     0     0     0     0     5     0     0     0     0     0     0     0     1     0    38    75     0     0   7224 2051608
+  STD     0     0     0     0     5     0     0     0    24     0     0     0     1     0    38    75     0     0   7224 2058832
+  STD     0     0     0     0     5     0     0     0     2     0     0     0     1     0    38    75     0     0   7224 2066056
+  STD     0     0     0     0     5     0     0     0    22     0     0     0     1     0    38    75     0     0   7224 2073280
+  STD     0     0     0     0     5     0     0     0     4     0     0     0     1     0    38    75     0     0   7224 2080504
+  STD     0     0     0     0     5     0     0     0    20     0     0     0     1     0    38    75     0     0   7224 2087728
+  STD     0     0     0     0     5     0     0     0     6     0     0     0     1     0    38    75     0     0   7224 2094952
+  STD     0     0     0     0     5     0     0     0    18     0     0     0     1     0    38    75     0     0   7224 2102176
+  STD     0     0     0     0     5     0     0     0     8     0     0     0     1     0    38    75     0     0   7224 2109400
+  STD     0     0     0     0     5     0     0     0    16     0     0     0     1     0    38    75     0     0   7224 2116624
+  STD     0     0     0     0     5     0     0     0    10     0     0     0     1     0    38    75     0     0   7224 2123848
+  STD     0     0     0     0     5     0     0     0    14     0     0     0     1     0    38    75     0     0   7224 2131072
+  STD     0     0     0     0     5     0     0     0    12     0     0     0     1     0    38    75     0     0   7224 2138296
+  STD     0     1     0     0     5     0     0     0     1     0     0     0     1     0    38    75     0     0   7224 2145520
+  STD     0     1     0     0     5     0     0     0    23     0     0     0     1     0    38    75     0     0   7224 2152744
+  STD     0     1     0     0     5     0     0     0     3     0     0     0     1     0    38    75     0     0   7224 2159968
+  STD     0     1     0     0     5     0     0     0    21     0     0     0     1     0    38    75     0     0   7224 2167192
+  STD     0     1     0     0     5     0     0     0     5     0     0     0     1     0    38    75     0     0   7224 2174416
+  STD     0     1     0     0     5     0     0     0    19     0     0     0     1     0    38    75     0     0   7224 2181640
+  STD     0     1     0     0     5     0     0     0     7     0     0     0     1     0    38    75     0     0   7224 2188864
+  STD     0     1     0     0     5     0     0     0    17     0     0     0     1     0    38    75     0     0   7224 2196088
+  STD     0     1     0     0     5     0     0     0     9     0     0     0     1     0    38    75     0     0   7224 2203312
+  STD     0     1     0     0     5     0     0     0    15     0     0     0     1     0    38    75     0     0   7224 2210536
+  STD     0     1     0     0     5     0     0     0    11     0     0     0     1     0    38    75     0     0   7224 2217760
+  STD     0     1     0     0     5     0     0     0    13     0     0     0     1     0    38    75     0     0   7224 2224984
+  STD     0     1     0     0     5     0     0     0     0     0     0     0     1     0    38    75     0     0   7224 2232208
+  STD     0     1     0     0     5     0     0     0    24     0     0     0     1     0    38    75     0     0   7224 2239432
+  STD     0     1     0     0     5     0     0     0     2     0     0     0     1     0    38    75     0     0   7224 2246656
+  STD     0     1     0     0     5     0     0     0    22     0     0     0     1     0    38    75     0     0   7224 2253880
+  STD     0     1     0     0     5     0     0     0     4     0     0     0     1     0    38    75     0     0   7224 2261104
+  STD     0     1     0     0     5     0     0     0    20     0     0     0     1     0    38    75     0     0   7224 2268328
+  STD     0     1     0     0     5     0     0     0     6     0     0     0     1     0    38    75     0     0   7224 2275552
+  STD     0     1     0     0     5     0     0     0    18     0     0     0     1     0    38    75     0     0   7224 2282776
+  STD     0     1     0     0     5     0     0     0     8     0     0     0     1     0    38    75     0     0   7224 2290000
+  STD     0     1     0     0     5     0     0     0    16     0     0     0     1     0    38    75     0     0   7224 2297224
+  STD     0     1     0     0     5     0     0     0    10     0     0     0     1     0    38    75     0     0   7224 2304448
+  STD     0     1     0     0     5     0     0     0    14     0     0     0     1     0    38    75     0     0   7224 2311672
+  STD     0     1     0     0     5     0     0     0    12     0     0     0     1     0    38    75     0     0   7224 2318896
+  STD     0     0     0     0     6     0     0     0     1     0     0     0     1     0    38    75     0     0   7224 2326120
+  STD     0     0     0     0     6     0     0     0    23     0     0     0     1     0    38    75     0     0   7224 2333344
+  STD     0     0     0     0     6     0     0     0     3     0     0     0     1     0    38    75     0     0   7224 2340568
+  STD     0     0     0     0     6     0     0     0    21     0     0     0     1     0    38    75     0     0   7224 2347792
+  STD     0     0     0     0     6     0     0     0     5     0     0     0     1     0    38    75     0     0   7224 2355016
+  STD     0     0     0     0     6     0     0     0    19     0     0     0     1     0    38    75     0     0   7224 2362240
+  STD     0     0     0     0     6     0     0     0     7     0     0     0     1     0    38    75     0     0   7224 2369464
+  STD     0     0     0     0     6     0     0     0    17     0     0     0     1     0    38    75     0     0   7224 2376688
+  STD     0     0     0     0     6     0     0     0     9     0     0     0     1     0    38    75     0     0   7224 2383912
+  STD     0     0     0     0     6     0     0     0    15     0     0     0     1     0    38    75     0     0   7224 2391136
+  STD     0     0     0     0     6     0     0     0    11     0     0     0     1     0    38    75     0     0   7224 2398360
+  STD     0     0     0     0     6     0     0     0    13     0     0     0     1     0    38    75     0     0   7224 2405584
+  STD     0     0     0     0     6     0     0     0     0     0     0     0     1     0    38    75     0     0   7224 2412808
+  STD     0     0     0     0     6     0     0     0    24     0     0     0     1     0    38    75     0     0   7224 2420032
+  STD     0     0     0     0     6     0     0     0     2     0     0     0     1     0    38    75     0     0   7224 2427256
+  STD     0     0     0     0     6     0     0     0    22     0     0     0     1     0    38    75     0     0   7224 2434480
+  STD     0     0     0     0     6     0     0     0     4     0     0     0     1     0    38    75     0     0   7224 2441704
+  STD     0     0     0     0     6     0     0     0    20     0     0     0     1     0    38    75     0     0   7224 2448928
+  STD     0     0     0     0     6     0     0     0     6     0     0     0     1     0    38    75     0     0   7224 2456152
+  STD     0     0     0     0     6     0     0     0    18     0     0     0     1     0    38    75     0     0   7224 2463376
+  STD     0     0     0     0     6     0     0     0     8     0     0     0     1     0    38    75     0     0   7224 2470600
+  STD     0     0     0     0     6     0     0     0    16     0     0     0     1     0    38    75     0     0   7224 2477824
+  STD     0     0     0     0     6     0     0     0    10     0     0     0     1     0    38    75     0     0   7224 2485048
+  STD     0     0     0     0     6     0     0     0    14     0     0     0     1     0    38    75     0     0   7224 2492272
+  STD     0     0     0     0     6     0     0     0    12     0     0     0     1     0    38    75     0     0   7224 2499496
+  STD     0     1     0     0     6     0     0     0     1     0     0     0     1     0    38    75     0     0   7224 2506720
+  STD     0     1     0     0     6     0     0     0    23     0     0     0     1     0    38    75     0     0   7224 2513944
+  STD     0     1     0     0     6     0     0     0     3     0     0     0     1     0    38    75     0     0   7224 2521168
+  STD     0     1     0     0     6     0     0     0    21     0     0     0     1     0    38    75     0     0   7224 2528392
+  STD     0     1     0     0     6     0     0     0     5     0     0     0     1     0    38    75     0     0   7224 2535616
+  STD     0     1     0     0     6     0     0     0    19     0     0     0     1     0    38    75     0     0   7224 2542840
+  STD     0     1     0     0     6     0     0     0     7     0     0     0     1     0    38    75     0     0   7224 2550064
+  STD     0     1     0     0     6     0     0     0    17     0     0     0     1     0    38    75     0     0   7224 2557288
+  STD     0     1     0     0     6     0     0     0     9     0     0     0     1     0    38    75     0     0   7224 2564512
+  STD     0     1     0     0     6     0     0     0    15     0     0     0     1     0    38    75     0     0   7224 2571736
+  STD     0     1     0     0     6     0     0     0    11     0     0     0     1     0    38    75     0     0   7224 2578960
+  STD     0     1     0     0     6     0     0     0    13     0     0     0     1     0    38    75     0     0   7224 2586184
+  STD     0     1     0     0     6     0     0     0     0     0     0     0     1     0    38    75     0     0   7224 2593408
+  STD     0     1     0     0     6     0     0     0    24     0     0     0     1     0    38    75     0     0   7224 2600632
+  STD     0     1     0     0     6     0     0     0     2     0     0     0     1     0    38    75     0     0   7224 2607856
+  STD     0     1     0     0     6     0     0     0    22     0     0     0     1     0    38    75     0     0   7224 2615080
+  STD     0     1     0     0     6     0     0     0     4     0     0     0     1     0    38    75     0     0   7224 2622304
+  STD     0     1     0     0     6     0     0     0    20     0     0     0     1     0    38    75     0     0   7224 2629528
+  STD     0     1     0     0     6     0     0     0     6     0     0     0     1     0    38    75     0     0   7224 2636752
+  STD     0     1     0     0     6     0     0     0    18     0     0     0     1     0    38    75     0     0   7224 2643976
+  STD     0     1     0     0     6     0     0     0     8     0     0     0     1     0    38    75     0     0   7224 2651200
+  STD     0     1     0     0     6     0     0     0    16     0     0     0     1     0    38    75     0     0   7224 2658424
+  STD     0     1     0     0     6     0     0     0    10     0     0     0     1     0    38    75     0     0   7224 2665648
+  STD     0     1     0     0     6     0     0     0    14     0     0     0     1     0    38    75     0     0   7224 2672872
+  STD     0     1     0     0     6     0     0     0    12     0     0     0     1     0    38    75     0     0   7224 2680096
+  STD     0     0     0     0     7     0     0     0     1     0     0     0     1     0    38    75     0     0   7224 2687320
+  STD     0     0     0     0     7     0     0     0    23     0     0     0     1     0    38    75     0     0   7224 2694544
+  STD     0     0     0     0     7     0     0     0     3     0     0     0     1     0    38    75     0     0   7224 2701768
+  STD     0     0     0     0     7     0     0     0    21     0     0     0     1     0    38    75     0     0   7224 2708992
+  STD     0     0     0     0     7     0     0     0     5     0     0     0     1     0    38    75     0     0   7224 2716216
+  STD     0     0     0     0     7     0     0     0    19     0     0     0     1     0    38    75     0     0   7224 2723440
+  STD     0     0     0     0     7     0     0     0     7     0     0     0     1     0    38    75     0     0   7224 2730664
+  STD     0     0     0     0     7     0     0     0    17     0     0     0     1     0    38    75     0     0   7224 2737888
+  STD     0     0     0     0     7     0     0     0     9     0     0     0     1     0    38    75     0     0   7224 2745112
+  STD     0     0     0     0     7     0     0     0    15     0     0     0     1     0    38    75     0     0   7224 2752336
+  STD     0     0     0     0     7     0     0     0    11     0     0     0     1     0    38    75     0     0   7224 2759560
+  STD     0     0     0     0     7     0     0     0    13     0     0     0     1     0    38    75     0     0   7224 2766784
+  STD     0     0     0     0     7     0     0     0     0     0     0     0     1     0    38    75     0     0   7224 2774008
+  STD     0     0     0     0     7     0     0     0    24     0     0     0     1     0    38    75     0     0   7224 2781232
+  STD     0     0     0     0     7     0     0     0     2     0     0     0     1     0    38    75     0     0   7224 2788456
+  STD     0     0     0     0     7     0     0     0    22     0     0     0     1     0    38    75     0     0   7224 2795680
+  STD     0     0     0     0     7     0     0     0     4     0     0     0     1     0    38    75     0     0   7224 2802904
+  STD     0     0     0     0     7     0     0     0    20     0     0     0     1     0    38    75     0     0   7224 2810128
+  STD     0     0     0     0     7     0     0     0     6     0     0     0     1     0    38    75     0     0   7224 2817352
+  STD     0     0     0     0     7     0     0     0    18     0     0     0     1     0    38    75     0     0   7224 2824576
+  STD     0     0     0     0     7     0     0     0     8     0     0     0     1     0    38    75     0     0   7224 2831800
+  STD     0     0     0     0     7     0     0     0    16     0     0     0     1     0    38    75     0     0   7224 2839024
+  STD     0     0     0     0     7     0     0     0    10     0     0     0     1     0    38    75     0     0   7224 2846248
+  STD     0     0     0     0     7     0     0     0    14     0     0     0     1     0    38    75     0     0   7224 2853472
+  STD     0     0     0     0     7     0     0     0    12     0     0     0     1     0    38    75     0     0   7224 2860696
+  STD     0     1     0     0     7     0     0     0     1     0     0     0     1     0    38    75     0     0   7224 2867920
+  STD     0     1     0     0     7     0     0     0    23     0     0     0     1     0    38    75     0     0   7224 2875144
+  STD     0     1     0     0     7     0     0     0     3     0     0     0     1     0    38    75     0     0   7224 2882368
+  STD     0     1     0     0     7     0     0     0    21     0     0     0     1     0    38    75     0     0   7224 2889592
+  STD     0     1     0     0     7     0     0     0     5     0     0     0     1     0    38    75     0     0   7224 2896816
+  STD     0     1     0     0     7     0     0     0    19     0     0     0     1     0    38    75     0     0   7224 2904040
+  STD     0     1     0     0     7     0     0     0     7     0     0     0     1     0    38    75     0     0   7224 2911264
+  STD     0     1     0     0     7     0     0     0    17     0     0     0     1     0    38    75     0     0   7224 2918488
+  STD     0     1     0     0     7     0     0     0     9     0     0     0     1     0    38    75     0     0   7224 2925712
+  STD     0     1     0     0     7     0     0     0    15     0     0     0     1     0    38    75     0     0   7224 2932936
+  STD     0     1     0     0     7     0     0     0    11     0     0     0     1     0    38    75     0     0   7224 2940160
+  STD     0     1     0     0     7     0     0     0    13     0     0     0     1     0    38    75     0     0   7224 2947384
+  STD     0     1     0     0     7     0     0     0     0     0     0     0     1     0    38    75     0     0   7224 2954608
+  STD     0     1     0     0     7     0     0     0    24     0     0     0     1     0    38    75     0     0   7224 2961832
+  STD     0     1     0     0     7     0     0     0     2     0     0     0     1     0    38    75     0     0   7224 2969056
+  STD     0     1     0     0     7     0     0     0    22     0     0     0     1     0    38    75     0     0   7224 2976280
+  STD     0     1     0     0     7     0     0     0     4     0     0     0     1     0    38    75     0     0   7224 2983504
+  STD     0     1     0     0     7     0     0     0    20     0     0     0     1     0    38    75     0     0   7224 2990728
+  STD     0     1     0     0     7     0     0     0     6     0     0     0     1     0    38    75     0     0   7224 2997952
+  STD     0     1     0     0     7     0     0     0    18     0     0     0     1     0    38    75     0     0   7224 3005176
+  STD     0     1     0     0     7     0     0     0     8     0     0     0     1     0    38    75     0     0   7224 3012400
+  STD     0     1     0     0     7     0     0     0    16     0     0     0     1     0    38    75     0     0   7224 3019624
+  STD     0     1     0     0     7     0     0     0    10     0     0     0     1     0    38    75     0     0   7224 3026848
+  STD     0     1     0     0     7     0     0     0    14     0     0     0     1     0    38    75     0     0   7224 3034072
+  STD     0     1     0     0     7     0     0     0    12     0     0     0     1     0    38    75     0     0   7224 3041296
+  STD     0     0     0     0     8     0     0     0     1     0     0     0     1     0    38    75     0     0   7224 3048520
+  STD     0     0     0     0     8     0     0     0    23     0     0     0     1     0    38    75     0     0   7224 3055744
+  STD     0     0     0     0     8     0     0     0     3     0     0     0     1     0    38    75     0     0   7224 3062968
+  STD     0     0     0     0     8     0     0     0    21     0     0     0     1     0    38    75     0     0   7224 3070192
+  STD     0     0     0     0     8     0     0     0     5     0     0     0     1     0    38    75     0     0   7224 3077416
+  STD     0     0     0     0     8     0     0     0    19     0     0     0     1     0    38    75     0     0   7224 3084640
+  STD     0     0     0     0     8     0     0     0     7     0     0     0     1     0    38    75     0     0   7224 3091864
+  STD     0     0     0     0     8     0     0     0    17     0     0     0     1     0    38    75     0     0   7224 3099088
+  STD     0     0     0     0     8     0     0     0     9     0     0     0     1     0    38    75     0     0   7224 3106312
+  STD     0     0     0     0     8     0     0     0    15     0     0     0     1     0    38    75     0     0   7224 3113536
+  STD     0     0     0     0     8     0     0     0    11     0     0     0     1     0    38    75     0     0   7224 3120760
+  STD     0     0     0     0     8     0     0     0    13     0     0     0     1     0    38    75     0     0   7224 3127984
+  STD     0     0     0     0     8     0     0     0     0     0     0     0     1     0    38    75     0     0   7224 3135208
+  STD     0     0     0     0     8     0     0     0    24     0     0     0     1     0    38    75     0     0   7224 3142432
+  STD     0     0     0     0     8     0     0     0     2     0     0     0     1     0    38    75     0     0   7224 3149656
+  STD     0     0     0     0     8     0     0     0    22     0     0     0     1     0    38    75     0     0   7224 3156880
+  STD     0     0     0     0     8     0     0     0     4     0     0     0     1     0    38    75     0     0   7224 3164104
+  STD     0     0     0     0     8     0     0     0    20     0     0     0     1     0    38    75     0     0   7224 3171328
+  STD     0     0     0     0     8     0     0     0     6     0     0     0     1     0    38    75     0     0   7224 3178552
+  STD     0     0     0     0     8     0     0     0    18     0     0     0     1     0    38    75     0     0   7224 3185776
+  STD     0     0     0     0     8     0     0     0     8     0     0     0     1     0    38    75     0     0   7224 3193000
+  STD     0     0     0     0     8     0     0     0    16     0     0     0     1     0    38    75     0     0   7224 3200224
+  STD     0     0     0     0     8     0     0     0    10     0     0     0     1     0    38    75     0     0   7224 3207448
+  STD     0     0     0     0     8     0     0     0    14     0     0     0     1     0    38    75     0     0   7224 3214672
+  STD     0     0     0     0     8     0     0     0    12     0     0     0     1     0    38    75     0     0   7224 3221896
+  STD     0     1     0     0     8     0     0     0     1     0     0     0     1     0    38    75     0     0   7224 3229120
+  STD     0     1     0     0     8     0     0     0    23     0     0     0     1     0    38    75     0     0   7224 3236344
+  STD     0     1     0     0     8     0     0     0     3     0     0     0     1     0    38    75     0     0   7224 3243568
+  STD     0     1     0     0     8     0     0     0    21     0     0     0     1     0    38    75     0     0   7224 3250792
+  STD     0     1     0     0     8     0     0     0     5     0     0     0     1     0    38    75     0     0   7224 3258016
+  STD     0     1     0     0     8     0     0     0    19     0     0     0     1     0    38    75     0     0   7224 3265240
+  STD     0     1     0     0     8     0     0     0     7     0     0     0     1     0    38    75     0     0   7224 3272464
+  STD     0     1     0     0     8     0     0     0    17     0     0     0     1     0    38    75     0     0   7224 3279688
+  STD     0     1     0     0     8     0     0     0     9     0     0     0     1     0    38    75     0     0   7224 3286912
+  STD     0     1     0     0     8     0     0     0    15     0     0     0     1     0    38    75     0     0   7224 3294136
+  STD     0     1     0     0     8     0     0     0    11     0     0     0     1     0    38    75     0     0   7224 3301360
+  STD     0     1     0     0     8     0     0     0    13     0     0     0     1     0    38    75     0     0   7224 3308584
+  STD     0     1     0     0     8     0     0     0     0     0     0     0     1     0    38    75     0     0   7224 3315808
+  STD     0     1     0     0     8     0     0     0    24     0     0     0     1     0    38    75     0     0   7224 3323032
+  STD     0     1     0     0     8     0     0     0     2     0     0     0     1     0    38    75     0     0   7224 3330256
+  STD     0     1     0     0     8     0     0     0    22     0     0     0     1     0    38    75     0     0   7224 3337480
+  STD     0     1     0     0     8     0     0     0     4     0     0     0     1     0    38    75     0     0   7224 3344704
+  STD     0     1     0     0     8     0     0     0    20     0     0     0     1     0    38    75     0     0   7224 3351928
+  STD     0     1     0     0     8     0     0     0     6     0     0     0     1     0    38    75     0     0   7224 3359152
+  STD     0     1     0     0     8     0     0     0    18     0     0     0     1     0    38    75     0     0   7224 3366376
+  STD     0     1     0     0     8     0     0     0     8     0     0     0     1     0    38    75     0     0   7224 3373600
+  STD     0     1     0     0     8     0     0     0    16     0     0     0     1     0    38    75     0     0   7224 3380824
+  STD     0     1     0     0     8     0     0     0    10     0     0     0     1     0    38    75     0     0   7224 3388048
+  STD     0     1     0     0     8     0     0     0    14     0     0     0     1     0    38    75     0     0   7224 3395272
+  STD     0     1     0     0     8     0     0     0    12     0     0     0     1     0    38    75     0     0   7224 3402496
+  STD     0     0     0     0     9     0     0     0     1     0     0     0     1     0    38    75     0     0   7224 3409720
+  STD     0     0     0     0     9     0     0     0    23     0     0     0     1     0    38    75     0     0   7224 3416944
+  STD     0     0     0     0     9     0     0     0     3     0     0     0     1     0    38    75     0     0   7224 3424168
+  STD     0     0     0     0     9     0     0     0    21     0     0     0     1     0    38    75     0     0   7224 3431392
+  STD     0     0     0     0     9     0     0     0     5     0     0     0     1     0    38    75     0     0   7224 3438616
+  STD     0     0     0     0     9     0     0     0    19     0     0     0     1     0    38    75     0     0   7224 3445840
+  STD     0     0     0     0     9     0     0     0     7     0     0     0     1     0    38    75     0     0   7224 3453064
+  STD     0     0     0     0     9     0     0     0    17     0     0     0     1     0    38    75     0     0   7224 3460288
+  STD     0     0     0     0     9     0     0     0     9     0     0     0     1     0    38    75     0     0   7224 3467512
+  STD     0     0     0     0     9     0     0     0    15     0     0     0     1     0    38    75     0     0   7224 3474736
+  STD     0     0     0     0     9     0     0     0    11     0     0     0     1     0    38    75     0     0   7224 3481960
+  STD     0     0     0     0     9     0     0     0    13     0     0     0     1     0    38    75     0     0   7224 3489184
+  STD     0     0     0     0     9     0     0     0     0     0     0     0     1     0    38    75     0     0   7224 3496408
+  STD     0     0     0     0     9     0     0     0    24     0     0     0     1     0    38    75     0     0   7224 3503632
+  STD     0     0     0     0     9     0     0     0     2     0     0     0     1     0    38    75     0     0   7224 3510856
+  STD     0     0     0     0     9     0     0     0    22     0     0     0     1     0    38    75     0     0   7224 3518080
+  STD     0     0     0     0     9     0     0     0     4     0     0     0     1     0    38    75     0     0   7224 3525304
+  STD     0     0     0     0     9     0     0     0    20     0     0     0     1     0    38    75     0     0   7224 3532528
+  STD     0     0     0     0     9     0     0     0     6     0     0     0     1     0    38    75     0     0   7224 3539752
+  STD     0     0     0     0     9     0     0     0    18     0     0     0     1     0    38    75     0     0   7224 3546976
+  STD     0     0     0     0     9     0     0     0     8     0     0     0     1     0    38    75     0     0   7224 3554200
+  STD     0     0     0     0     9     0     0     0    16     0     0     0     1     0    38    75     0     0   7224 3561424
+  STD     0     0     0     0     9     0     0     0    10     0     0     0     1     0    38    75     0     0   7224 3568648
+  STD     0     0     0     0     9     0     0     0    14     0     0     0     1     0    38    75     0     0   7224 3575872
+  STD     0     0     0     0     9     0     0     0    12     0     0     0     1     0    38    75     0     0   7224 3583096
+  STD     0     1     0     0     9     0     0     0     1     0     0     0     1     0    38    75     0     0   7224 3590320
+  STD     0     1     0     0     9     0     0     0    23     0     0     0     1     0    38    75     0     0   7224 3597544
+  STD     0     1     0     0     9     0     0     0     3     0     0     0     1     0    38    75     0     0   7224 3604768
+  STD     0     1     0     0     9     0     0     0    21     0     0     0     1     0    38    75     0     0   7224 3611992
+  STD     0     1     0     0     9     0     0     0     5     0     0     0     1     0    38    75     0     0   7224 3619216
+  STD     0     1     0     0     9     0     0     0    19     0     0     0     1     0    38    75     0     0   7224 3626440
+  STD     0     1     0     0     9     0     0     0     7     0     0     0     1     0    38    75     0     0   7224 3633664
+  STD     0     1     0     0     9     0     0     0    17     0     0     0     1     0    38    75     0     0   7224 3640888
+  STD     0     1     0     0     9     0     0     0     9     0     0     0     1     0    38    75     0     0   7224 3648112
+  STD     0     1     0     0     9     0     0     0    15     0     0     0     1     0    38    75     0     0   7224 3655336
+  STD     0     1     0     0     9     0     0     0    11     0     0     0     1     0    38    75     0     0   7224 3662560
+  STD     0     1     0     0     9     0     0     0    13     0     0     0     1     0    38    75     0     0   7224 3669784
+  STD     0     1     0     0     9     0     0     0     0     0     0     0     1     0    38    75     0     0   7224 3677008
+  STD     0     1     0     0     9     0     0     0    24     0     0     0     1     0    38    75     0     0   7224 3684232
+  STD     0     1     0     0     9     0     0     0     2     0     0     0     1     0    38    75     0     0   7224 3691456
+  STD     0     1     0     0     9     0     0     0    22     0     0     0     1     0    38    75     0     0   7224 3698680
+  STD     0     1     0     0     9     0     0     0     4     0     0     0     1     0    38    75     0     0   7224 3705904
+  STD     0     1     0     0     9     0     0     0    20     0     0     0     1     0    38    75     0     0   7224 3713128
+  STD     0     1     0     0     9     0     0     0     6     0     0     0     1     0    38    75     0     0   7224 3720352
+  STD     0     1     0     0     9     0     0     0    18     0     0     0     1     0    38    75     0     0   7224 3727576
+  STD     0     1     0     0     9     0     0     0     8     0     0     0     1     0    38    75     0     0   7224 3734800
+  STD     0     1     0     0     9     0     0     0    16     0     0     0     1     0    38    75     0     0   7224 3742024
+  STD     0     1     0     0     9     0     0     0    10     0     0     0     1     0    38    75     0     0   7224 3749248
+  STD     0     1     0     0     9     0     0     0    14     0     0     0     1     0    38    75     0     0   7224 3756472
+  STD     0     1     0     0     9     0     0     0    12     0     0     0     1     0    38    75     0     0   7224 3763696
+  STD     0     0     0     0    10     0     0     0     1     0     0     0     1     0    38    75     0     0   7224 3770920
+  STD     0     0     0     0    10     0     0     0    23     0     0     0     1     0    38    75     0     0   7224 3778144
+  STD     0     0     0     0    10     0     0     0     3     0     0     0     1     0    38    75     0     0   7224 3785368
+  STD     0     0     0     0    10     0     0     0    21     0     0     0     1     0    38    75     0     0   7224 3792592
+  STD     0     0     0     0    10     0     0     0     5     0     0     0     1     0    38    75     0     0   7224 3799816
+  STD     0     0     0     0    10     0     0     0    19     0     0     0     1     0    38    75     0     0   7224 3807040
+  STD     0     0     0     0    10     0     0     0     7     0     0     0     1     0    38    75     0     0   7224 3814264
+  STD     0     0     0     0    10     0     0     0    17     0     0     0     1     0    38    75     0     0   7224 3821488
+  STD     0     0     0     0    10     0     0     0     9     0     0     0     1     0    38    75     0     0   7224 3828712
+  STD     0     0     0     0    10     0     0     0    15     0     0     0     1     0    38    75     0     0   7224 3835936
+  STD     0     0     0     0    10     0     0     0    11     0     0     0     1     0    38    75     0     0   7224 3843160
+  STD     0     0     0     0    10     0     0     0    13     0     0     0     1     0    38    75     0     0   7224 3850384
+  STD     0     0     0     0    10     0     0     0     0     0     0     0     1     0    38    75     0     0   7224 3857608
+  STD     0     0     0     0    10     0     0     0    24     0     0     0     1     0    38    75     0     0   7224 3864832
+  STD     0     0     0     0    10     0     0     0     2     0     0     0     1     0    38    75     0     0   7224 3872056
+  STD     0     0     0     0    10     0     0     0    22     0     0     0     1     0    38    75     0     0   7224 3879280
+  STD     0     0     0     0    10     0     0     0     4     0     0     0     1     0    38    75     0     0   7224 3886504
+  STD     0     0     0     0    10     0     0     0    20     0     0     0     1     0    38    75     0     0   7224 3893728
+  STD     0     0     0     0    10     0     0     0     6     0     0     0     1     0    38    75     0     0   7224 3900952
+  STD     0     0     0     0    10     0     0     0    18     0     0     0     1     0    38    75     0     0   7224 3908176
+  STD     0     0     0     0    10     0     0     0     8     0     0     0     1     0    38    75     0     0   7224 3915400
+  STD     0     0     0     0    10     0     0     0    16     0     0     0     1     0    38    75     0     0   7224 3922624
+  STD     0     0     0     0    10     0     0     0    10     0     0     0     1     0    38    75     0     0   7224 3929848
+  STD     0     0     0     0    10     0     0     0    14     0     0     0     1     0    38    75     0     0   7224 3937072
+  STD     0     0     0     0    10     0     0     0    12     0     0     0     1     0    38    75     0     0   7224 3944296
+  STD     0     1     0     0    10     0     0     0     1     0     0     0     1     0    38    75     0     0   7224 3951520
+  STD     0     1     0     0    10     0     0     0    23     0     0     0     1     0    38    75     0     0   7224 3958744
+  STD     0     1     0     0    10     0     0     0     3     0     0     0     1     0    38    75     0     0   7224 3965968
+  STD     0     1     0     0    10     0     0     0    21     0     0     0     1     0    38    75     0     0   7224 3973192
+  STD     0     1     0     0    10     0     0     0     5     0     0     0     1     0    38    75     0     0   7224 3980416
+  STD     0     1     0     0    10     0     0     0    19     0     0     0     1     0    38    75     0     0   7224 3987640
+  STD     0     1     0     0    10     0     0     0     7     0     0     0     1     0    38    75     0     0   7224 3994864
+  STD     0     1     0     0    10     0     0     0    17     0     0     0     1     0    38    75     0     0   7224 4002088
+  STD     0     1     0     0    10     0     0     0     9     0     0     0     1     0    38    75     0     0   7224 4009312
+  STD     0     1     0     0    10     0     0     0    15     0     0     0     1     0    38    75     0     0   7224 4016536
+  STD     0     1     0     0    10     0     0     0    11     0     0     0     1     0    38    75     0     0   7224 4023760
+  STD     0     1     0     0    10     0     0     0    13     0     0     0     1     0    38    75     0     0   7224 4030984
+  STD     0     1     0     0    10     0     0     0     0     0     0     0     1     0    38    75     0     0   7224 4038208
+  STD     0     1     0     0    10     0     0     0    24     0     0     0     1     0    38    75     0     0   7224 4045432
+  STD     0     1     0     0    10     0     0     0     2     0     0     0     1     0    38    75     0     0   7224 4052656
+  STD     0     1     0     0    10     0     0     0    22     0     0     0     1     0    38    75     0     0   7224 4059880
+  STD     0     1     0     0    10     0     0     0     4     0     0     0     1     0    38    75     0     0   7224 4067104
+  STD     0     1     0     0    10     0     0     0    20     0     0     0     1     0    38    75     0     0   7224 4074328
+  STD     0     1     0     0    10     0     0     0     6     0     0     0     1     0    38    75     0     0   7224 4081552
+  STD     0     1     0     0    10     0     0     0    18     0     0     0     1     0    38    75     0     0   7224 4088776
+  STD     0     1     0     0    10     0     0     0     8     0     0     0     1     0    38    75     0     0   7224 4096000
+  STD     0     1     0     0    10     0     0     0    16     0     0     0     1     0    38    75     0     0   7224 4103224
+  STD     0     1     0     0    10     0     0     0    10     0     0     0     1     0    38    75     0     0   7224 4110448
+  STD     0     1     0     0    10     0     0     0    14     0     0     0     1     0    38    75     0     0   7224 4117672
+  STD     0     1     0     0    10     0     0     0    12     0     0     0     1     0    38    75     0     0   7224 4124896
+  STD     0     0     0     0    11     0     0     0     1     0     0     0     1     0    38    75     0     0   7224 4132120
+  STD     0     0     0     0    11     0     0     0    23     0     0     0     1     0    38    75     0     0   7224 4139344
+  STD     0     0     0     0    11     0     0     0     3     0     0     0     1     0    38    75     0     0   7224 4146568
+  STD     0     0     0     0    11     0     0     0    21     0     0     0     1     0    38    75     0     0   7224 4153792
+  STD     0     0     0     0    11     0     0     0     5     0     0     0     1     0    38    75     0     0   7224 4161016
+  STD     0     0     0     0    11     0     0     0    19     0     0     0     1     0    38    75     0     0   7224 4168240
+  STD     0     0     0     0    11     0     0     0     7     0     0     0     1     0    38    75     0     0   7224 4175464
+  STD     0     0     0     0    11     0     0     0    17     0     0     0     1     0    38    75     0     0   7224 4182688
+  STD     0     0     0     0    11     0     0     0     9     0     0     0     1     0    38    75     0     0   7224 4189912
+  STD     0     0     0     0    11     0     0     0    15     0     0     0     1     0    38    75     0     0   7224 4197136
+  STD     0     0     0     0    11     0     0     0    11     0     0     0     1     0    38    75     0     0   7224 4204360
+  STD     0     0     0     0    11     0     0     0    13     0     0     0     1     0    38    75     0     0   7224 4211584
+  STD     0     0     0     0    11     0     0     0     0     0     0     0     1     0    38    75     0     0   7224 4218808
+  STD     0     0     0     0    11     0     0     0    24     0     0     0     1     0    38    75     0     0   7224 4226032
+  STD     0     0     0     0    11     0     0     0     2     0     0     0     1     0    38    75     0     0   7224 4233256
+  STD     0     0     0     0    11     0     0     0    22     0     0     0     1     0    38    75     0     0   7224 4240480
+  STD     0     0     0     0    11     0     0     0     4     0     0     0     1     0    38    75     0     0   7224 4247704
+  STD     0     0     0     0    11     0     0     0    20     0     0     0     1     0    38    75     0     0   7224 4254928
+  STD     0     0     0     0    11     0     0     0     6     0     0     0     1     0    38    75     0     0   7224 4262152
+  STD     0     0     0     0    11     0     0     0    18     0     0     0     1     0    38    75     0     0   7224 4269376
+  STD     0     0     0     0    11     0     0     0     8     0     0     0     1     0    38    75     0     0   7224 4276600
+  STD     0     0     0     0    11     0     0     0    16     0     0     0     1     0    38    75     0     0   7224 4283824
+  STD     0     0     0     0    11     0     0     0    10     0     0     0     1     0    38    75     0     0   7224 4291048
+  STD     0     0     0     0    11     0     0     0    14     0     0     0     1     0    38    75     0     0   7224 4298272
+  STD     0     0     0     0    11     0     0     0    12     0     0     0     1     0    38    75     0     0   7224 4305496
+  STD     0     1     0     0    11     0     0     0     1     0     0     0     1     0    38    75     0     0   7224 4312720
+  STD     0     1     0     0    11     0     0     0    23     0     0     0     1     0    38    75     0     0   7224 4319944
+  STD     0     1     0     0    11     0     0     0     3     0     0     0     1     0    38    75     0     0   7224 4327168
+  STD     0     1     0     0    11     0     0     0    21     0     0     0     1     0    38    75     0     0   7224 4334392
+  STD     0     1     0     0    11     0     0     0     5     0     0     0     1     0    38    75     0     0   7224 4341616
+  STD     0     1     0     0    11     0     0     0    19     0     0     0     1     0    38    75     0     0   7224 4348840
+  STD     0     1     0     0    11     0     0     0     7     0     0     0     1     0    38    75     0     0   7224 4356064
+  STD     0     1     0     0    11     0     0     0    17     0     0     0     1     0    38    75     0     0   7224 4363288
+  STD     0     1     0     0    11     0     0     0     9     0     0     0     1     0    38    75     0     0   7224 4370512
+  STD     0     1     0     0    11     0     0     0    15     0     0     0     1     0    38    75     0     0   7224 4377736
+  STD     0     1     0     0    11     0     0     0    11     0     0     0     1     0    38    75     0     0   7224 4384960
+  STD     0     1     0     0    11     0     0     0    13     0     0     0     1     0    38    75     0     0   7224 4392184
+  STD     0     1     0     0    11     0     0     0     0     0     0     0     1     0    38    75     0     0   7224 4399408
+  STD     0     1     0     0    11     0     0     0    24     0     0     0     1     0    38    75     0     0   7224 4406632
+  STD     0     1     0     0    11     0     0     0     2     0     0     0     1     0    38    75     0     0   7224 4413856
+  STD     0     1     0     0    11     0     0     0    22     0     0     0     1     0    38    75     0     0   7224 4421080
+  STD     0     1     0     0    11     0     0     0     4     0     0     0     1     0    38    75     0     0   7224 4428304
+  STD     0     1     0     0    11     0     0     0    20     0     0     0     1     0    38    75     0     0   7224 4435528
+  STD     0     1     0     0    11     0     0     0     6     0     0     0     1     0    38    75     0     0   7224 4442752
+  STD     0     1     0     0    11     0     0     0    18     0     0     0     1     0    38    75     0     0   7224 4449976
+  STD     0     1     0     0    11     0     0     0     8     0     0     0     1     0    38    75     0     0   7224 4457200
+  STD     0     1     0     0    11     0     0     0    16     0     0     0     1     0    38    75     0     0   7224 4464424
+  STD     0     1     0     0    11     0     0     0    10     0     0     0     1     0    38    75     0     0   7224 4471648
+  STD     0     1     0     0    11     0     0     0    14     0     0     0     1     0    38    75     0     0   7224 4478872
+  STD     0     1     0     0    11     0     0     0    12     0     0     0     1     0    38    75     0     0   7224 4486096
+  STD     0     0     0     0    12     0     0     0     1     0     0     0     1     0    38    75     0     0   7224 4493320
+  STD     0     0     0     0    12     0     0     0    23     0     0     0     1     0    38    75     0     0   7224 4500544
+  STD     0     0     0     0    12     0     0     0     3     0     0     0     1     0    38    75     0     0   7224 4507768
+  STD     0     0     0     0    12     0     0     0    21     0     0     0     1     0    38    75     0     0   7224 4514992
+  STD     0     0     0     0    12     0     0     0     5     0     0     0     1     0    38    75     0     0   7224 4522216
+  STD     0     0     0     0    12     0     0     0    19     0     0     0     1     0    38    75     0     0   7224 4529440
+  STD     0     0     0     0    12     0     0     0     7     0     0     0     1     0    38    75     0     0   7224 4536664
+  STD     0     0     0     0    12     0     0     0    17     0     0     0     1     0    38    75     0     0   7224 4543888
+  STD     0     0     0     0    12     0     0     0     9     0     0     0     1     0    38    75     0     0   7224 4551112
+  STD     0     0     0     0    12     0     0     0    15     0     0     0     1     0    38    75     0     0   7224 4558336
+  STD     0     0     0     0    12     0     0     0    11     0     0     0     1     0    38    75     0     0   7224 4565560
+  STD     0     0     0     0    12     0     0     0    13     0     0     0     1     0    38    75     0     0   7224 4572784
+  STD     0     0     0     0    12     0     0     0     0     0     0     0     1     0    38    75     0     0   7224 4580008
+  STD     0     0     0     0    12     0     0     0    24     0     0     0     1     0    38    75     0     0   7224 4587232
+  STD     0     0     0     0    12     0     0     0     2     0     0     0     1     0    38    75     0     0   7224 4594456
+  STD     0     0     0     0    12     0     0     0    22     0     0     0     1     0    38    75     0     0   7224 4601680
+  STD     0     0     0     0    12     0     0     0     4     0     0     0     1     0    38    75     0     0   7224 4608904
+  STD     0     0     0     0    12     0     0     0    20     0     0     0     1     0    38    75     0     0   7224 4616128
+  STD     0     0     0     0    12     0     0     0     6     0     0     0     1     0    38    75     0     0   7224 4623352
+  STD     0     0     0     0    12     0     0     0    18     0     0     0     1     0    38    75     0     0   7224 4630576
+  STD     0     0     0     0    12     0     0     0     8     0     0     0     1     0    38    75     0     0   7224 4637800
+  STD     0     0     0     0    12     0     0     0    16     0     0     0     1     0    38    75     0     0   7224 4645024
+  STD     0     0     0     0    12     0     0     0    10     0     0     0     1     0    38    75     0     0   7224 4652248
+  STD     0     0     0     0    12     0     0     0    14     0     0     0     1     0    38    75     0     0   7224 4659472
+  STD     0     0     0     0    12     0     0     0    12     0     0     0     1     0    38    75     0     0   7224 4666696
+  STD     0     1     0     0    12     0     0     0     1     0     0     0     1     0    38    75     0     0   7224 4673920
+  STD     0     1     0     0    12     0     0     0    23     0     0     0     1     0    38    75     0     0   7224 4681144
+  STD     0     1     0     0    12     0     0     0     3     0     0     0     1     0    38    75     0     0   7224 4688368
+  STD     0     1     0     0    12     0     0     0    21     0     0     0     1     0    38    75     0     0   7224 4695592
+  STD     0     1     0     0    12     0     0     0     5     0     0     0     1     0    38    75     0     0   7224 4702816
+  STD     0     1     0     0    12     0     0     0    19     0     0     0     1     0    38    75     0     0   7224 4710040
+  STD     0     1     0     0    12     0     0     0     7     0     0     0     1     0    38    75     0     0   7224 4717264
+  STD     0     1     0     0    12     0     0     0    17     0     0     0     1     0    38    75     0     0   7224 4724488
+  STD     0     1     0     0    12     0     0     0     9     0     0     0     1     0    38    75     0     0   7224 4731712
+  STD     0     1     0     0    12     0     0     0    15     0     0     0     1     0    38    75     0     0   7224 4738936
+  STD     0     1     0     0    12     0     0     0    11     0     0     0     1     0    38    75     0     0   7224 4746160
+  STD     0     1     0     0    12     0     0     0    13     0     0     0     1     0    38    75     0     0   7224 4753384
+  STD     0     1     0     0    12     0     0     0     0     0     0     0     1     0    38    75     0     0   7224 4760608
+  STD     0     1     0     0    12     0     0     0    24     0     0     0     1     0    38    75     0     0   7224 4767832
+  STD     0     1     0     0    12     0     0     0     2     0     0     0     1     0    38    75     0     0   7224 4775056
+  STD     0     1     0     0    12     0     0     0    22     0     0     0     1     0    38    75     0     0   7224 4782280
+  STD     0     1     0     0    12     0     0     0     4     0     0     0     1     0    38    75     0     0   7224 4789504
+  STD     0     1     0     0    12     0     0     0    20     0     0     0     1     0    38    75     0     0   7224 4796728
+  STD     0     1     0     0    12     0     0     0     6     0     0     0     1     0    38    75     0     0   7224 4803952
+  STD     0     1     0     0    12     0     0     0    18     0     0     0     1     0    38    75     0     0   7224 4811176
+  STD     0     1     0     0    12     0     0     0     8     0     0     0     1     0    38    75     0     0   7224 4818400
+  STD     0     1     0     0    12     0     0     0    16     0     0     0     1     0    38    75     0     0   7224 4825624
+  STD     0     1     0     0    12     0     0     0    10     0     0     0     1     0    38    75     0     0   7224 4832848
+  STD     0     1     0     0    12     0     0     0    14     0     0     0     1     0    38    75     0     0   7224 4840072
+  STD     0     1     0     0    12     0     0     0    12     0     0     0     1     0    38    75     0     0   7224 4847296
+#
+# === END OF DATA VECTOR INDEX ===================================================
+#
+# mix  echo loca  linear phase errors                  value
+# ---- ---- ----  ----------------------------------   ---------
+.    0    0    0  0th_order_phase_error_X            :    0.0000
+.    0    0    0  1st_order_phase_error_X            :    0.0000
+.    0    0    1  0th_order_phase_error_X            :    0.0000
+.    0    0    1  1st_order_phase_error_X            :    0.0000
+.    0    0    2  0th_order_phase_error_X            :    0.0000
+.    0    0    2  1st_order_phase_error_X            :    0.0000
+.    0    0    3  0th_order_phase_error_X            :    0.0000
+.    0    0    3  1st_order_phase_error_X            :    0.0000
+.    0    0    4  0th_order_phase_error_X            :    0.0000
+.    0    0    4  1st_order_phase_error_X            :    0.0000
+.    0    0    5  0th_order_phase_error_X            :    0.0000
+.    0    0    5  1st_order_phase_error_X            :    0.0000
+.    0    0    6  0th_order_phase_error_X            :    0.0000
+.    0    0    6  1st_order_phase_error_X            :    0.0000
+.    0    0    7  0th_order_phase_error_X            :    0.0000
+.    0    0    7  1st_order_phase_error_X            :    0.0000
+.    0    0    8  0th_order_phase_error_X            :    0.0000
+.    0    0    8  1st_order_phase_error_X            :    0.0000
+.    0    0    9  0th_order_phase_error_X            :    0.0000
+.    0    0    9  1st_order_phase_error_X            :    0.0000
+.    0    0   10  0th_order_phase_error_X            :    0.0000
+.    0    0   10  1st_order_phase_error_X            :    0.0000
+.    0    0   11  0th_order_phase_error_X            :    0.0000
+.    0    0   11  1st_order_phase_error_X            :    0.0000
+.    0    0   12  0th_order_phase_error_X            :    0.0000
+.    0    0   12  1st_order_phase_error_X            :    0.0000
+#
+# === END OF DATA DESCRIPTION FILE ===============================================

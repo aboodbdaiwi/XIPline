@@ -9,9 +9,9 @@ Created on Sat Jun 20 16:47:16 2022
 
 import numpy as np
 import matplotlib.pyplot as plt 
-
+ 
 # Readphilips node - confidential
-import readphilips as rp
+import ReadPhilips.readphilips as rp
 #from readphilips.file_io import io
 
 # Sigpy functionality
