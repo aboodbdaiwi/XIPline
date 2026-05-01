@@ -689,7 +689,7 @@ try
                     [Proton, MainInput] = LoadData.philips_Hanat_2DSpiral_recon(MainInput, Proton);
 
                 elseif strcmp(MainInput.AnalysisType,'Ventilation') && strcmp(MainInput.SequenceType, '3D FLORET')               
-                    [Proton, MainInput] = LoadData.philips_Hanat_2DSpiral_recon(MainInput, Proton);
+                    [Proton, MainInput] = LoadData.philips_Hanat_3DFLORET_recon(MainInput, Proton);
                 elseif strcmp(MainInput.AnalysisType,'GasExchange') && strcmp(MainInput.SequenceType, '3D Radial')        
                     PixelShift = GasExchange.PixelShift; 
                     if sum(PixelShift) > 1
