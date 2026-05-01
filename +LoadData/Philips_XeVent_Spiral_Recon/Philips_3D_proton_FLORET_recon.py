@@ -19,20 +19,17 @@ Modification date:
 """
 
 # %% Import packages
-import os
-import sys
-if getattr(sys, 'frozen', False):
-    base_path = sys._MEIPASS
-    os.environ["PATH"] = base_path + os.pathsep + os.environ.get("PATH", "")
+
 from scipy.io import savemat
 import cv2
 from sklearn.cluster import KMeans
+import os
 import nibabel as nib
 from functions import tv, convexalg, util
 import sigpy_local.mri as mr
 import sigpy_local.plot as pl
 import sigpy_local as sp
-import ReadPhilips.readphilips as rp
+import ReadPhilips.readphilips as rp 
 import numpy as np
 import matplotlib.pyplot as plt
 plt.style.use('dark_background')
@@ -95,22 +92,20 @@ else:
 
 # %% Import data and trajectories
 
-def read_config_and_find_files(config_path=r"C:\XIPline\offline_recon\config_Xe.txt"):
+# Data folder location
+def read_config_and_find_files(config_path=r"C:\XIPline\offline_recon\config_H.txt"):
     # Read the config file
     with open(config_path, 'r') as f:
         lines = f.readlines()
 
     # Extract datalocation and freq_offset
     datalocation = None
-    freq_offset = None
     for line in lines:
         line = line.strip()
         if line.lower().startswith("datalocation"):
             datalocation = line.split('=', 1)[1].strip()
-        elif line.lower().startswith("freq_offset"):
-            freq_offset = float(line.split('=', 1)[1].strip())
 
-    if datalocation is None or freq_offset is None:
+    if datalocation is None:
         raise ValueError("Missing datalocation or freq_offset in config file.")
 
     # Find .data and .sin files in the datalocation
@@ -130,23 +125,16 @@ def read_config_and_find_files(config_path=r"C:\XIPline\offline_recon\config_Xe.
     trajfile_r = fr"{trajfile}"
     datalocation_r = fr"{datalocation}"
 
-    return datafile_r, trajfile_r, datalocation_r, freq_offset
+    return datafile_r, trajfile_r, datalocation_r
 
-config_Xe_path=r"C:\XIPline\offline_recon\config_Xe.txt"
-datafile, trajfile, datalocation, freq_offset = read_config_and_find_files(config_Xe_path)
+config_H_path=r"C:\XIPline\offline_recon\config_H2.txt"
+datafile, trajfile, datalocation  = read_config_and_find_files(config_H_path)
 print("Data file:", datafile)
 print("Trajectory file:", trajfile)
 print("Data location:", datalocation)
-print("Frequency offset:", freq_offset)
 
 
 #%%
-#location = r"D:\OneDrive - cchmc\Lab\Random Subject analysis\CPIR_FLORET_Ventilation"
-# Exact filenames in that folder
-#fname_coord = r"20251203_105839_CPIR_VENT_FLORET_303750_285140_13_2.sin"
-#fname_data  = r"raw_211.data"
-#fname_data  = r"20251203_105839_CPIR_VENT_FLORET_303750_285140_13_2.raw"
-
 location = datalocation
 fname_coord = trajfile
 fname_data  = datafile
@@ -158,8 +146,7 @@ dl.raw_corr = True
 dl.compute()
 data_load = np.array(dl.data)
 data_load = np.squeeze(data_load)
-data_load = np.reshape(data_load, (np.shape(data_load)[
-                        0]*np.shape(data_load)[1], np.shape(data_load)[2]))
+data_load = np.reshape(data_load, (np.shape(data_load)[0], np.shape(data_load)[1]*np.shape(data_load)[2], np.shape(data_load)[3]))
 if np.size(np.shape(data_load)) != 2:
     print('Incorrect data dimensions.')
 
@@ -194,13 +181,13 @@ except FileNotFoundError:
 
 #%% Understand data sizes and merge dimensions
 N_dimensions = np.shape(coords)[2]  # dimensions
-N_samp = np.shape(data_load)[1]  # samples per projection
-N_proj = np.shape(data_load)[0]  # number of projections
+N_samp = np.shape(data_load)[2]  # samples per projection
+N_proj = np.shape(data_load)[1]  # number of projections
 
 # Plot trajectories:
 plt.figure()
 ax = plt.axes(projection='3d')
-N_visual = 100  # Number of projections you want to show, inefficient for large n
+N_visual = 500  # Number of projections you want to show, inefficient for large n
 color = iter(plt.cm.viridis(np.linspace(0, 1, N_visual)))
 for i in np.linspace(0, N_proj-1, N_visual):
     i = int(i)
@@ -230,23 +217,22 @@ scan_resolution = 128  # 90 for ISMRM, 100 for Penn
 
 # Visualize
 fig, (ax1, ax2) = plt.subplots(2, sharex=False)
-ax1.plot(abs(data_load[:, 0]), color='r')
+ax1.plot(abs(data_load[0,:, 0]), color='r')
 ax1.set_ylabel('k0 intensity')
 ax1.set_title("magnetization decay")
 ax1.set_xlabel("projection number")
-ax2.plot(abs(data_load[0, :]), color='b')
+ax2.plot(abs(data_load[0,0, :]), color='b')
 ax2.set_ylabel('k-space intensity')
 ax2.set_xlabel('sample number')
 ax2.set_title("fid")
 fig.tight_layout(pad=1.0, w_pad=0.5, h_pad=1.0)
 
 # Normalize data to max k0
-k0 = np.abs(data_load[:, 0])
+# k0 for each channel and projection
+k0 = np.abs(data_load[:, :, 0])
 
-data_normalized = np.zeros_like(data_load)
-
-for i in range(data_load.shape[0]):  # loop over rows
-    data_normalized[i, :] = data_load[i, :] / k0[i]
+# Normalize
+data_normalized = data_load / k0[:, :, None]
 
 if normalize_data:
     data_load = data_normalized
@@ -270,7 +256,7 @@ traj = ImageSize * traj
 
 # Select only a subset of trajectories and data
 subset = int(N_proj*subsample_pc/100)
-data_load_subset = data_load[:subset, :]
+data_load_subset = data_load[0,:subset, :]
 traj_subset = traj[:subset, ...]
 
 # Update values
@@ -316,9 +302,10 @@ plt.show()
 # Akin to adding a channel dimension for sense operations
 
 # Add an extra dimension for channel
-data_load_channel = np.reshape(data_load_subset, (1, np.shape(
-    data_load_subset)[0], np.shape(data_load_subset)[1]))
+#data_load_channel = np.reshape(data_load_subset, (1, np.shape(
+#    data_load_subset)[0], np.shape(data_load_subset)[1]))
 
+data_load_channel = data_load[:,:subset, :]
 # Estimate sensitivity map - assume all ones for single channel
 mps = np.ones((1, ImageSize, ImageSize, ImageSize), dtype=int)
 
@@ -350,36 +337,18 @@ dcf = np.reshape(dcf, (1, np.shape(dcf)[0], np.shape(dcf)[1]))
 
 # %% Generate a hyperpolarized weighting for the inverse NUFFT
 
-# Simulate T2* decay
-t2_star_xe = 18  # ms
-readout = 15  # ms
-dwell_time = readout/N_samp
-relaxation = np.zeros((N_samp,))
-for i in range(N_samp):
-    relaxation[i] = np.exp(-i*dwell_time/t2_star_xe)
+# Generate proton weighting for inverse NUFFT
+# Proton data does not need hyperpolarized RF-decay correction
 
-# Simulate RF decay
-k = np.zeros((N_proj, N_samp))
-for i in range(N_proj):
-    # With T2star
-    k[i, :] = k0[i] * relaxation
-
-    # Without T2star
-    # k[i, :] = k0[i]
-
+k = np.ones((N_proj, N_samp), dtype=np.float32)
 
 # Visualize
-fig, (ax1, ax2) = plt.subplots(2, sharex=False)
-# First few points of kspace_data2 have zero signal due to LNA issue
-ax1.plot(abs(k[:, 0]), color='g')
-ax1.set_ylabel('$signal intensity')
-ax1.set_title("magnetization decay from excitation")
-ax1.set_xlabel("projection number")
-ax2.plot(abs(k[0, :]), color='y')
-ax2.set_ylabel('signal intensity')
-ax2.set_xlabel('sample number')
-ax2.set_title("magnetization decay from T$_2^*$")
-fig.tight_layout(pad=1.0, w_pad=0.5, h_pad=1.0)
+fig, ax = plt.subplots(1, 1)
+ax.plot(np.abs(k[0, :]))
+ax.set_ylabel('weight')
+ax.set_xlabel('sample number')
+ax.set_title('Proton NUFFT weighting')
+fig.tight_layout()
 
 # %% Initialize linear algebra operators
 
@@ -431,65 +400,132 @@ with device:
 
 # Set device
 with device:
-    def mvd(x): return sp.to_device(x, device)
-    def mvc(x): return sp.to_device(x, sp.cpu_device)
 
-    data = mvd(data_load_channel)
+    def mvd(x):
+        return sp.to_device(x, device)
 
-    # Compute norm
-    if use_dcf:
-        data_norm_dcf = xp.linalg.norm(data * dcf**0.5)
-    else:
-        data_norm = xp.linalg.norm(data)
+    def mvc(x):
+        return sp.to_device(x, sp.cpu_device)
 
-    # Correct for sample density and normalize
-    if use_dcf:
-        b = data * dcf**0.5
-        b = b/xp.linalg.norm(data_norm_dcf)
-    else:
-        b = data
-        b = b/xp.linalg.norm(data_norm)
+    # Move data to device
+    data_all = mvd(data_load_channel)
 
-    # Compute a single x = A.H b operation (i.e. inverse NUFFT)
-    A_dcf = D * F * S
-    b_dcf = data * dcf**0.5 / xp.linalg.norm(data * dcf**0.5)
-    img_nufft = mvc(abs(A_dcf.H * b_dcf))
-    pl.ImagePlot(np.rot90(img_nufft[:, :, int(recon_resolution/3):int(recon_resolution/1.5):2], 2),
-                 x=0, y=1, z=2,
-                 title="Reconstruction using inverse NUFFT")
+    Nchannels = data_all.shape[0]
+
+    img_nufft_ch = []
+    #img_cg_ch = []
+    #img_cs_cg_ch = []
+
+    for ch in range(Nchannels):
+
+        print(f"\nReconstructing channel {ch+1}/{Nchannels}")
+
+        data = data_all[ch, :, :]
+
+        # -----------------------------
+        # Normalize data
+        # -----------------------------
+        if use_dcf:
+            data_norm_dcf = xp.linalg.norm(data * dcf**0.5)
+            b = data * dcf**0.5 / data_norm_dcf
+        else:
+            data_norm = xp.linalg.norm(data)
+            b = data / data_norm
+
+        # -----------------------------
+        # Inverse NUFFT
+        # -----------------------------
+        A_dcf = D * F * S
+
+        if use_dcf:
+            b_dcf = data * dcf**0.5 / xp.linalg.norm(data * dcf**0.5)
+        else:
+            b_dcf = data / xp.linalg.norm(data)
+
+        img_nufft_tmp = mvc(A_dcf.H * b_dcf)
+        img_nufft_ch.append(img_nufft_tmp)
+
+        # -----------------------------
+        # PSF, only need once
+        # -----------------------------
+        if ch == 0:
+            b_dcf_psf = xp.ones_like(b) * dcf**0.5
+            img_nufft_psf = mvc(abs(A_dcf.H * b_dcf_psf))
+        ''' 
+        # -----------------------------
+        # CG reconstruction
+        # -----------------------------
+        img_cg_tmp = mvc(convexalg.cg(
+            num_iters=200,
+            ptol=1e-2,
+            A=A,
+            b=b,
+            lamda=lamda_l2,
+            verbose=True,
+            draw_output=True,
+            save=None
+        ))
+
+        img_cg_ch.append(img_cg_tmp)
+
+        # -----------------------------
+        # CS reconstruction
+        # -----------------------------
+        img_cs_cg_tmp = mvc(convexalg.admm(
+            num_iters=num_iters,
+            ptol=ptol,
+            A=A,
+            b=b,
+            num_normal=num_normal,
+            lst_proxg=lst_proxg,
+            rho=rho,
+            lst_g=lst_g,
+            method="cg",
+            verbose=True,
+            draw_output=True
+        ))
+
+        img_cs_cg_ch.append(img_cs_cg_tmp)
+    '''
+    # Convert list to arrays
+    img_nufft_ch = np.asarray(img_nufft_ch)
+    #img_cg_ch = np.asarray(img_cg_ch)
+    #img_cs_cg_ch = np.asarray(img_cs_cg_ch)
+
+    # Shape should be:
+    # (Nchannels, Nx, Ny, Nz)
+
+    # -----------------------------
+    # Channel combination
+    # Root-sum-of-squares
+    # -----------------------------
+    img_nufft = np.sqrt(np.sum(np.abs(img_nufft_ch)**2, axis=0))
+    #img_cg = np.sqrt(np.sum(np.abs(img_cg_ch)**2, axis=0))
+    #img_cs_cg = np.sqrt(np.sum(np.abs(img_cs_cg_ch)**2, axis=0))
+
+    # -----------------------------
+    # Display combined images
+    # -----------------------------
+    pl.ImagePlot(
+        np.rot90(img_nufft[:, :, int(recon_resolution/3):int(recon_resolution/1.5):2], 2),
+        x=0, y=1, z=2,
+        title="Combined reconstruction using inverse NUFFT"
+    )
     
-    # Make a point spread function to understand aliasing
-    b_dcf_psf = xp.ones(np.shape(b)) * dcf**0.5
-    img_nufft_psf = mvc(
-        abs(A_dcf.H * b_dcf_psf))
-    # img_nufft_psf /= np.median(abs(img_nufft_psf))
+    ''' 
+    pl.ImagePlot(
+        np.rot90(img_cg[:, :, int(recon_resolution/3):int(recon_resolution/1.5):2], 2),
+        x=0, y=1, z=2,
+        title="Combined reconstruction using CG"
+    )
 
-    # Solve ||Ax - b||^2 + lamda||x||^2 using conjugate gradient descent
-    img_cg = mvc(abs(convexalg.cg(num_iters=200,
-                                  ptol=1e-2,
-                                  A=A, b=b,
-                                  lamda=lamda_l2,  # l2-norm constraint for additional regularization
-                                  verbose=True,
-                                  draw_output=True,
-                                  save=None)))
-    pl.ImagePlot(np.rot90(img_cg[:, :, int(recon_resolution/3):int(recon_resolution/1.5):2], 2),
-                 x=0, y=1, z=2,
-                 title="Reconstruction using CG")
-
-    # Solve ||Ax - b||^2 + lamda_1 |Wx| + lamda_2 |Gx| using ADMM
-    img_cs_cg = mvc(abs(convexalg.admm(num_iters=num_iters,
-                                       ptol=ptol,
-                                       A=A, b=b,
-                                       num_normal=num_normal,
-                                       lst_proxg=lst_proxg,
-                                       rho=rho,
-                                       lst_g=lst_g,
-                                       method="cg",
-                                       verbose=True,
-                                       draw_output=True)))
-    pl.ImagePlot(np.rot90(img_cs_cg[:, :, int(recon_resolution/3):int(recon_resolution/1.5):2], 2),
-                 x=0, y=1, z=2,
-                 title='Reconstruction using CS: ADMM w/ CG')
+    pl.ImagePlot(
+        np.rot90(img_cs_cg[:, :, int(recon_resolution/3):int(recon_resolution/1.5):2], 2),
+        x=0, y=1, z=2,
+        title="Combined reconstruction using CS: ADMM w/ CG"
+    )    
+    '''    
+    
     
 # %% Manipulate images for plotting
 
@@ -499,97 +535,8 @@ dy = 0
 rot = 1
 
 img_nufft = np.flipud(util.ps(util.ir(img_nufft, rot), dx, dy))
-img_cg = np.flipud(util.ps(util.ir(img_cg, rot), dx, dy))
-img_cs_cg = np.flipud(util.ps(util.ir(img_cs_cg, rot), dx, dy))
-
-
-# %% Plot a 3D point spread function:
-
-fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-
-# Make data.
-X = np.arange(recon_resolution)
-Y = np.arange(recon_resolution)
-X, Y = np.meshgrid(X, Y)
-Z = np.log(img_nufft_psf[:, :, recon_resolution//2])
-# Z = (img_nufft_psf[:, :, recon_resolution//2])
-
-# Plot the surface.
-surf = ax.plot_surface(X, Y, Z, cmap="seismic",
-                       linewidth=0, antialiased=False, vmin=-3, vmax=3)
-ax.set_yticklabels([])
-ax.set_xticklabels([])
-ax.set_zticklabels([])
-ax.axis('off')
-cbar = plt.colorbar(surf, location='bottom')
-cbar.set_ticks([-2, 0, 2])
-cbar.ax.tick_params(labelsize=22)
-cbar.outline.set_color('black')
-
-# %% Image segmentation and noise estimation (automatic)
-
-# Perform clustering
-N_clusters = 2
-kmeans = KMeans(n_clusters=N_clusters, random_state=0).fit(np.reshape(
-    img_cs_cg, (np.shape(np.ravel(img_cs_cg))[0], 1)))  # Reshape to (voxelcount,1) shape array
-clustered = kmeans.cluster_centers_[kmeans.labels_]
-
-# Binarize
-if N_clusters == 2:
-    clustered[clustered == np.percentile(clustered, 75)] = 1
-    clustered[clustered == np.percentile(clustered, 25)] = 0
-
-# Reshape clusters into images
-img_cluster = np.zeros(shape=(N_clusters, np.shape(
-    img_cs_cg)[0], np.shape(img_cs_cg)[1], np.shape(img_cs_cg)[2]))
-labels = kmeans.labels_
-for n in range(N_clusters):
-    cluster_temp = []
-    for i in range(len(labels)):
-        if (labels[i]) == n:
-            cluster_temp.append(float(clustered[i]))
-        else:
-            cluster_temp.append(1)
-    img_cluster[n, :, :, :] = np.array(cluster_temp).reshape(img_cs_cg.shape)
-
-# Calculate norm of each cluster*img_cs to see which one is larger (and which one is signal versus noise)
-norm_cluster0 = np.linalg.norm(img_cluster[0, :, :, :]*img_cs_cg)
-norm_cluster1 = np.linalg.norm(img_cluster[1, :, :, :]*img_cs_cg)
-
-if norm_cluster0 >= norm_cluster1:
-    img_signal = img_cluster[0, :, :, :]
-    img_noise = img_cluster[1, :, :, :]
-else:
-    img_signal = img_cluster[1, :, :, :]
-    img_noise = img_cluster[0, :, :, :]
-
-# Binarize noise mask
-img_noise[img_noise != 1] = 0
-
-# Erode the noise image
-kernel = np.ones((7, 7), np.uint8)
-img_noise = cv2.erode(img_noise, kernel, iterations=5)
-
-# Dilate the signal image (optional)
-kernel = np.ones((3, 3), np.uint8)
-# img_signal = cv2.dilate(img_signal, kernel, iterations=2)
-
-# Visualize
-sp.plot.ImagePlot(2*img_signal - img_noise, x=0, y=1, z=2,
-                  title="Signal and noise mask, estimated using k-means",
-                  vmin=0, vmax=2, colormap="YlGnBu_r")
-
-# Calculate SNR:
-snr_nufft = np.mean((img_signal*img_nufft)[img_signal != 0]
-                    / np.std((img_noise*img_nufft)[img_nufft != 0]))
-print("SNR for inverse NUFFT: " + str(snr_nufft))
-snr_cg = np.mean((img_signal*img_cg)[img_signal != 0]
-                 / np.std((img_noise*img_cg)[img_cg != 0]))
-print("SNR for iterative nufft: " + str(snr_cg))
-snr_cs_cg = np.mean((img_signal*img_cs_cg)[img_signal != 0]
-                    / np.std((img_noise*img_cs_cg)[img_cs_cg != 0]))
-print("SNR for compressed sense: " + str(snr_cs_cg))
-
+#img_cg = np.flipud(util.ps(util.ir(img_cg, rot), dx, dy))
+#img_cs_cg = np.flipud(util.ps(util.ir(img_cs_cg, rot), dx, dy))
 
 # %% Make path to save image results
 
@@ -601,7 +548,6 @@ if not results_exist:
     os.makedirs(location + "/results")
     print("A new directory inside: " + location +
           " called 'results' has been created.")
-
 # %% Save images as Nifti files
 
 # Build an array using matrix multiplication
@@ -645,20 +591,11 @@ ni_img = nib.Nifti1Image(abs(img_nufft), affine=aff)
 nib.save(ni_img, location + '/results/img_nufft_' +
          str(subsample_pc) + 'pc.nii.gz')
 
-ni_img = nib.Nifti1Image(abs(img_cs_cg), affine=aff)
-nib.save(ni_img, location + '/results/img_cs_' +
-         str(subsample_pc) + 'pc.nii.gz')
-
 
 # Save matlab files
 savemat(location + "\\img_ventilation_nufft.mat",
         mdict={'img_ventilation_nufft': img_nufft})
-savemat(location + "\\img_ventilation_cs_small_rho.mat",
-        mdict={'img_ventilation_cs_small_rho': img_cs_cg})
-savemat(location + "\\img_ventilation_mask.mat",
-        mdict={'img_ventilation_mask': img_signal})
-savemat(location + "\\img_ventilation_mask_noise.mat",
-        mdict={'img_ventilation_mask_noise': img_noise})
+
 
 
 #%% Ensure output path exists
@@ -666,14 +603,12 @@ os.makedirs(location, exist_ok=True)
 
 # Convert to float32 (recommended for NIfTI)
 img_nufft   = img_nufft.astype(np.float32)
-img_cs_cg   = img_cs_cg.astype(np.float32)
-img_signal  = img_signal.astype(np.float32)
-img_noise   = img_noise.astype(np.float32)
+
 
 # Save NIfTI files
 nib.save(nib.Nifti1Image(img_nufft, aff),
          os.path.join(location, 'img_ventilation_nufft.nii.gz'))
-
+''' 
 nib.save(nib.Nifti1Image(img_cs_cg, aff),
          os.path.join(location, 'img_ventilation_cs_small_rho.nii.gz'))
 
@@ -682,96 +617,8 @@ nib.save(nib.Nifti1Image(img_signal, aff),
 
 nib.save(nib.Nifti1Image(img_noise, aff),
          os.path.join(location, 'img_ventilation_mask_noise.nii.gz'))
-
+'''
 print("All NIfTI images saved successfully")
-
-# %% Make a beautiful plot showing magnitude and SNR
-
-# Select slice
-plot_slice = int(recon_resolution*0.45)
-
-# Generate images
-img_nufft_slice = abs(img_nufft[:, :, plot_slice])
-img_nufft_slice /= np.percentile(np.ravel(img_nufft_slice), 99.9)
-img_nufft_snr_slice = abs(
-    img_nufft[:, :, plot_slice]/np.std((img_noise*img_nufft)[img_noise != 0]))
-img_cs_slice = abs(img_cs_cg[:, :, plot_slice])
-img_cs_slice /= np.percentile(np.ravel(img_cs_slice), 99.9)
-img_cs_snr_slice = abs(
-    img_cs_cg[:, :, plot_slice]/np.std((img_noise*img_cs_cg)[img_noise != 0]))
-
-# Plot
-plt.figure(figsize=(3, 6), dpi=100)
-fig, ((ax1, ax2)) = plt.subplots(1, 2, sharey=True, gridspec_kw={'wspace': 0, 'hspace': 0},
-                                 squeeze=True)
-img_plot1 = ax1.imshow(img_nufft_slice, cmap="gray", vmin=0, vmax=1)
-img_plot2 = ax2.imshow(img_nufft_snr_slice, cmap="jet", vmin=0, vmax=35)
-ax1.axis('off')
-ax2.axis('off')
-
-plt.figure(figsize=(3, 6), dpi=100)
-fig, ((ax1, ax2)) = plt.subplots(1, 2, sharey=True, gridspec_kw={'wspace': 0, 'hspace': 0},
-                                 squeeze=True)
-img_plot1 = ax1.imshow(img_cs_slice, cmap="gray", vmin=0, vmax=1)
-img_plot2 = ax2.imshow(img_cs_snr_slice, cmap="jet", vmin=0, vmax=35)
-ax1.axis('off')
-ax2.axis('off')
-
-# %% Make an image summary
-
-# Select slice
-plot_slice = int(recon_resolution*0.45)
-
-vmax_snr = np.percentile([util.calculate_snr(img_nufft, img_nufft[img_noise == 1]),
-                          util.calculate_snr(img_cg, img_cg[img_noise == 1]),
-                          util.calculate_snr(
-                              img_cs_cg, img_cs_cg[img_noise == 1])], 99.9)
-
-# Set up subplot
-plt.figure()
-fig, axes = plt.subplots(nrows=3, ncols=2, figsize=(6, 6))
-if use_dcf:
-    fig.suptitle('Image reconstructions: with DCF \n max_iter=%i, \u03C1=%.1e, $p_{tol}$=%.1e \n $A^TA$=%i, \u03BB$_1$=%.1e, \u03BB$_2$=%.1e' % (
-        num_iters, rho, ptol, num_normal, lamda_1, lamda_2), y=1.03)
-else:
-    fig.suptitle('Image reconstructions: without DCF \n max_iter=%i, \u03C1=%.1e, $p_{tol}$=%.1e \n $A^TA$=%i, \u03BB$_1$=%.1e, \u03BB$_2$=%.1e' % (
-        num_iters, rho, ptol, num_normal, lamda_1, lamda_2), y=1.03)
-
-ax = axes[0, 0]
-im = ax.imshow(img_nufft[:, :, plot_slice], cmap="gray")
-ax.set_title(r'$F^HD(b)$')
-fig.colorbar(im, ax=ax)
-ax.axis('off')
-ax = axes[0, 1]
-snr = ax.imshow(util.calculate_snr(
-    img_nufft[:, :, plot_slice], img_nufft[img_noise == 1]), cmap="jet", vmax=vmax_snr)
-ax.set_title('snr, mean = %0.4f' % snr_nufft)
-fig.colorbar(snr, ax=ax)
-ax.axis('off')
-
-ax = axes[1, 0]
-im = ax.imshow(img_cg[:, :, plot_slice], cmap="gray")
-ax.set_title(r'$||Ax-b||^2_2$')
-fig.colorbar(im, ax=ax)
-ax.axis('off')
-ax = axes[1, 1]
-snr = ax.imshow(util.calculate_snr(
-    img_cg[:, :, plot_slice], img_cg[img_noise == 1]), cmap="jet", vmax=vmax_snr)
-ax.set_title('snr, mean = %0.4f' % snr_cg)
-fig.colorbar(snr, ax=ax)
-ax.axis('off')
-
-ax = axes[2, 0]
-im = ax.imshow(img_cs_cg[:, :, plot_slice], cmap="gray")
-ax.set_title(r'$||Ax-b||^2_2 + g(x)$ (cg)')
-fig.colorbar(im, ax=ax)
-ax.axis('off')
-ax = axes[2, 1]
-snr = ax.imshow(util.calculate_snr(
-    img_cs_cg[:, :, plot_slice], img_cs_cg[img_noise == 1]), cmap="jet", vmax=vmax_snr)
-ax.set_title('snr, mean = %0.4f' % snr_cs_cg)
-fig.colorbar(snr, ax=ax)
-ax.axis('off')
 
 # %% create .exe
 

@@ -29,7 +29,7 @@ function [Ventilation, MainInput] = philips_XeVent_3DFLORET_recon(MainInput, Ven
     end
 
     % Step 3: Wait for img_ventilation.nii.gz
-    outputFile = fullfile(MainInput.XeDataLocation, 'img_ventilation.nii.gz');
+    outputFile = fullfile(MainInput.XeDataLocation, 'img_ventilation_cs_small_rho.nii.gz');
     waitTimes = [1, 5, 10];  % seconds
     fileFound = false;
 
@@ -52,10 +52,8 @@ function [Ventilation, MainInput] = philips_XeVent_3DFLORET_recon(MainInput, Ven
             A1 = LoadData.load_untouch_nii(outputFile);
         end
         A = double(squeeze(A1.img));
-        A = permute(A,[1, 3, 2]);
-        A = imrotate(A, 90);
-        A = flip(A, 2);
-        A = flip(A, 3);
+        A = permute(A,[3, 2, 1]);
+        A = flip(A, 1);
         %imslice(A)
         % Assign to output struct
         Ventilation.Image    = A;
