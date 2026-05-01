@@ -21,15 +21,14 @@ Modification date:
 # %% Import packages
 
 from scipy.io import savemat
-from skimage.metrics import structural_similarity as ssim
 import cv2
 from sklearn.cluster import KMeans
 import os
 import nibabel as nib
 from functions import tv, convexalg, util
-import sigpy.mri as mr
-import sigpy.plot as pl
-import sigpy as sp
+import sigpy_local.mri as mr
+import sigpy_local.plot as pl
+import sigpy_local as sp
 import ReadPhilips.readphilips as rp
 import numpy as np
 import matplotlib.pyplot as plt
@@ -41,9 +40,19 @@ plt.style.use('dark_background')
 
 # % Reconstruction settings
 # Device settings
-devnum = 0
-device = sp.Device(devnum)
-xp = device.xp
+
+try:
+    devnum = 0  # GPU
+    device = sp.Device(devnum)
+    xp = device.xp
+    print(f"Using GPU (device {devnum})")
+except Exception as e:
+    print(f"GPU not available or failed: {e}")
+    print("Falling back to CPU")
+
+    devnum = -1
+    device = sp.Device(devnum)
+    xp = device.xp
 
 # Density compensation
 use_dcf = True
