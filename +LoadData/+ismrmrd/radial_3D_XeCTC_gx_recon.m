@@ -38,16 +38,22 @@ GasDataLocation = MainInput.XeDataLocation;
 %% Read some fields from the XML header %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % We need to check if optional fields exists before trying to read them
-
 hdr = LoadData.ismrmrd.xml.deserialize(dset.readxml);
-Ncontrast = hdr.encoding.encodingLimits.contrast.maximum;
+try
+    Ncontrast = hdr.encoding.encodingLimits.contrast.maximum;
+catch
+    try
+        Ncontrast = hdr.encoding(3).encodingLimits.contrast.maximum;
+    catch
+    end
+end
 
 %% Read all the data
 clc
 % Reading can be done one acquisition (or chunk) at a time, 
 % but this is much faster for data sets that fit into RAM.
 D = dset.readAcquisition();
-%%
+
 inst = hdr.acquisitionSystemInformation.institutionName;
 try
     bonus_spectra_present = hdr.userParameters.userParameterLong(5).value;
@@ -92,7 +98,6 @@ catch
     bonus_spectra_present = 0;
     gas_contam_removed    = 0;
 end
-
 
 % 1) Get data vector (handle cell)
 x = D.traj;
@@ -270,10 +275,11 @@ for ky = 1:(enc_Ny*enc_Nz)
 end
 
 if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
-    %Dissolved k-space
-    DissolvedKSpace = XeData(:,:,1);
+    order = D.head.idx.contrast;
     %Gas k-space
-    GasKSpace = XeData(:,:,2);
+    GasKSpace = XeData(:,:,order(1));  
+    %Dissolved k-space
+    DissolvedKSpace = XeData(:,:,order(2));
 
     if(extraOvs)
         if bonus_spectra_present == 1

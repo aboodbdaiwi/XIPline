@@ -3,8 +3,8 @@
 # %% Import packages
 ''' '''
 #import cupy as cp
-import nibabel as nib
-import readphilips as rp
+import nibabel as nib 
+import ReadPhilips.readphilips as rp
 import numpy as np
 import matplotlib.pyplot as plt
 plt.style.use('dark_background')

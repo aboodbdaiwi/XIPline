@@ -17,7 +17,7 @@ if cupy_enabled:
             f"For more details, see the error stack below:\n{e}"
         )
         cupy_enabled = False
-cupy_enabled = False
+
 if cupy_enabled:  # pragma: no cover
     try:
         cudnn_enabled = util.find_spec("cupy.cuda.cudnn") is not None
@@ -50,9 +50,10 @@ mpi4py_enabled = util.find_spec("mpi4py") is not None
 if util.find_spec("torch") is not None:
     try:
         import torch  # noqa
+
         pytorch_enabled = True
     except ImportError:
-        print('Warning : Pytorch installed but can import')
+        print("Warning : Pytorch installed but can import")
         pytorch_enabled = False
 else:
     pytorch_enabled = False

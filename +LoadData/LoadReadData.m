@@ -310,7 +310,10 @@ elseif strcmp(MainInput.XeDataext,'.data')  && contains(MainInput.Scanner, 'Phil
 
     elseif strcmp(MainInput.AnalysisType,'Ventilation') && strcmp(MainInput.SequenceType, '2D Spiral')                 
         [Ventilation, MainInput] = LoadData.philips_XeVent_2DSpiral_recon(MainInput, Ventilation); 
-    
+ 
+    elseif strcmp(MainInput.AnalysisType,'Ventilation') && strcmp(MainInput.SequenceType, '3D FLORET')                 
+        [Ventilation, MainInput] = LoadData.philips_XeVent_3DFLORET_recon(MainInput, Ventilation); 
+
     elseif strcmp(MainInput.AnalysisType,'Diffusion')  && strcmp(MainInput.SequenceType, '2D GRE')  ...
             && (strcmp(MainInput.ScannerSoftware, '3.2.3') || strcmp(MainInput.ScannerSoftware, '5.1.7'))
         [Image, file_folder, file_name] = LoadData.LoadData_Gas_VentDiff_Philips_GRE_R323(MainInput);
@@ -567,199 +570,201 @@ elseif strcmp(MainInput.AnalysisType,'Diffusion')
 end
 
 %% Load/Read Proton data 
-
-if (isnumeric(MainInput.NoProtonImage) && MainInput.NoProtonImage == 0) || ...
-   (ischar(MainInput.NoProtonImage) && strcmp(MainInput.NoProtonImage, 'no'))
-    % try 
-        cd(MainInput.HDataLocation)
-        
-        % Check conditions
-        if startsWith(MainInput.HFileName, 'IM') && isempty(MainInput.HDataext)
-            dataFolder = MainInput.HDataLocation;
-            % Get all files in the directory
-            files = dir(dataFolder);
-            for i = 1:length(files)
-                fname = files(i).name;
-                % Skip folders
-                if files(i).isdir
-                    continue;
-                end
-                % Check:
-                % 1) starts with 'IM'
-                % 2) has no extension
-                [~, name, ext] = fileparts(fname);
-                if startsWith(fname, 'IM') && isempty(ext)
-                    oldFile = fullfile(dataFolder, fname);
-                    newFile = fullfile(dataFolder, [fname, '.dcm']);
-        
-                    % Rename file
-                    movefile(oldFile, newFile);
-                end
-            end
-            MainInput.HDataext = '.dcm';
-        end
-
-        % Only create analysis folder if analysisversion is not specified
-        if ~isfield(MainInput, "analysisversion")
-        
-            % Determine required subfolder
-            if strcmp(MainInput.AnalysisType,'Ventilation')
-                subFolder = 'Ventilation_Analysis';
-            elseif strcmp(MainInput.AnalysisType,'GasExchange')
-                subFolder = 'GasExchange_Analysis';
-            elseif strcmp(MainInput.AnalysisType,'Diffusion')
-                subFolder = '';   % No folder creation defined
-            else
-                error('Unsupported AnalysisType: %s', MainInput.AnalysisType);
-            end
-        
-            % Proceed only if a subfolder is defined
-            if ~isempty(subFolder)
-        
-                % Check if HDataLocation already ends with the subfolder
-                [~, lastFolder] = fileparts(MainInput.HDataLocation);
-        
-                if ~strcmp(lastFolder, subFolder)
-                    targetDir = fullfile(MainInput.HDataLocation, subFolder);
-                else
-                    targetDir = MainInput.HDataLocation;
-                end
-        
-                % Create directory if it does not exist
-                if ~exist(targetDir, 'dir')
-                    mkdir(targetDir);
-                end
-            end
-        end
-
-        if strcmp(MainInput.HDataext,'.dcm')      
-            if strcmp(MainInput.CCHMC_DbVentAnalysis,'yes')
-                [HImage, file_folder, file_name, DicomInfo] = LoadData.Single_DICOM_Load(MainInput.anat_file);  
-            else
-                [HImage, file_folder, file_name, DicomInfo] = LoadData.DICOM_Load(MainInput.HDataLocation);  
-            end
-            Proton.Image = double(HImage);
-            Proton.filename = file_name;
-            Proton.folder = file_folder;
-            Proton.DicomInfo = DicomInfo;
-        elseif strcmp(MainInput.HDataext,'.mat') == 1 
-            DataFiles = dir([MainInput.HDataLocation,'\*.mat']);
-            file_name = DataFiles.name;
-            file_folder = DataFiles.folder;
-            file_with_path = strcat(file_folder,'\',file_name);  % join path and filename to open
-            load(file_with_path);
-            file_name2 = file_name; 
-            file_name2(end-3:end)=[];    
-            Proton.Image = eval(file_name2);
-            Proton.filename = file_name;
-            Proton.folder = file_folder;
+try
+    if (isnumeric(MainInput.NoProtonImage) && MainInput.NoProtonImage == 0) || ...
+       (ischar(MainInput.NoProtonImage) && strcmp(MainInput.NoProtonImage, 'no'))
+        % try 
+            cd(MainInput.HDataLocation)
             
-        elseif strcmp(MainInput.HDataext,'.nii') == 1 || strcmp(MainInput.HDataext,'.gz') == 1 
-            [file_folder, file_name] = fileparts(MainInput.HFullPath);
-            try
-                A1 = LoadData.load_nii(MainInput.HFullPath); % Original
-            catch
-                A1 = LoadData.load_nii(MainInput.HFullPath); % Original
-            end            
-            A=A1.img;
-            A = double(squeeze(A));
-            I90=imrotate(A,90);
-            Ifv=flip(I90,2); % Original                   
-            HImage=Ifv;        
-            Proton.Image = HImage;
-            Proton.filename = file_name;
-            Proton.folder = file_folder;
-        elseif strcmp(MainInput.HDataext,'.data')  && contains(MainInput.Scanner, 'Philips', 'IgnoreCase', true)   
-            MainInput.ReconImageMode = 'proton';
-            if strcmp(MainInput.AnalysisType,'Ventilation') && strcmp(MainInput.SequenceType, '2D GRE') ...
-                    && (strcmp(MainInput.ScannerSoftware, '5.3.1') || strcmp(MainInput.ScannerSoftware, '5.6.1'))
-                [Image, file_folder, file_name] = LoadData.LoadData_Gas_VentDiff_Philips_GRE(MainInput.XeDataLocation);
-                Proton.Image = Image;
-                Proton.filename = file_name;
-                Proton.folder = file_folder;     
-            elseif strcmp(MainInput.AnalysisType,'Ventilation') && strcmp(MainInput.SequenceType, '2D GRE') && strcmp(MainInput.ScannerSoftware, '5.9.0')               
-                [Image, file_folder, file_name] = LoadData.LoadData_Gas_VentDiff_Philips_GRE_R590(MainInput);
-                Proton.Image = Image;
-                Proton.filename = file_name;
-                Proton.folder = file_folder; 
-            elseif strcmp(MainInput.AnalysisType,'Ventilation') && strcmp(MainInput.SequenceType, '2D Spiral')               
-                [Proton, MainInput] = LoadData.philips_Hanat_2DSpiral_recon(MainInput, Proton);
-
-            elseif strcmp(MainInput.AnalysisType,'GasExchange') && strcmp(MainInput.SequenceType, '3D Radial')        
-                PixelShift = GasExchange.PixelShift; 
-                if sum(PixelShift) > 1
-                    PixelShift = GasExchange.PixelShift;
-                else
-                    PixelShift = [0; 0; 0];
+            % Check conditions
+            if startsWith(MainInput.HFileName, 'IM') && isempty(MainInput.HDataext)
+                dataFolder = MainInput.HDataLocation;
+                % Get all files in the directory
+                files = dir(dataFolder);
+                for i = 1:length(files)
+                    fname = files(i).name;
+                    % Skip folders
+                    if files(i).isdir
+                        continue;
+                    end
+                    % Check:
+                    % 1) starts with 'IM'
+                    % 2) has no extension
+                    [~, name, ext] = fileparts(fname);
+                    if startsWith(fname, 'IM') && isempty(ext)
+                        oldFile = fullfile(dataFolder, fname);
+                        newFile = fullfile(dataFolder, [fname, '.dcm']);
+            
+                        % Rename file
+                        movefile(oldFile, newFile);
+                    end
                 end
-                [Proton] = LoadData.LoadData_Proton_GasExchange_Philips_Sin(MainInput.HDataLocation,PixelShift,MainInput.Institute,Proton,GasExchange);
+                MainInput.HDataext = '.dcm';
             end
-        elseif (strcmp(MainInput.HDataext,'.h5') || strcmp(MainInput.HDataext,'.mrd'))              
-            if strcmp(MainInput.AnalysisType,'Ventilation')  
+    
+            % Only create analysis folder if analysisversion is not specified
+            if ~isfield(MainInput, "analysisversion")
+            
+                % Determine required subfolder
+                if strcmp(MainInput.AnalysisType,'Ventilation')
+                    subFolder = 'Ventilation_Analysis';
+                elseif strcmp(MainInput.AnalysisType,'GasExchange')
+                    subFolder = 'GasExchange_Analysis';
+                elseif strcmp(MainInput.AnalysisType,'Diffusion')
+                    subFolder = '';   % No folder creation defined
+                else
+                    error('Unsupported AnalysisType: %s', MainInput.AnalysisType);
+                end
+            
+                % Proceed only if a subfolder is defined
+                if ~isempty(subFolder)
+            
+                    % Check if HDataLocation already ends with the subfolder
+                    [~, lastFolder] = fileparts(MainInput.HDataLocation);
+            
+                    if ~strcmp(lastFolder, subFolder)
+                        targetDir = fullfile(MainInput.HDataLocation, subFolder);
+                    else
+                        targetDir = MainInput.HDataLocation;
+                    end
+            
+                    % Create directory if it does not exist
+                    if ~exist(targetDir, 'dir')
+                        mkdir(targetDir);
+                    end
+                end
+            end
+    
+            if strcmp(MainInput.HDataext,'.dcm')      
+                if strcmp(MainInput.CCHMC_DbVentAnalysis,'yes')
+                    [HImage, file_folder, file_name, DicomInfo] = LoadData.Single_DICOM_Load(MainInput.anat_file);  
+                else
+                    [HImage, file_folder, file_name, DicomInfo] = LoadData.DICOM_Load(MainInput.HDataLocation);  
+                end
+                Proton.Image = double(HImage);
+                Proton.filename = file_name;
+                Proton.folder = file_folder;
+                Proton.DicomInfo = DicomInfo;
+            elseif strcmp(MainInput.HDataext,'.mat') == 1 
+                DataFiles = dir([MainInput.HDataLocation,'\*.mat']);
+                file_name = DataFiles.name;
+                file_folder = DataFiles.folder;
+                file_with_path = strcat(file_folder,'\',file_name);  % join path and filename to open
+                load(file_with_path);
+                file_name2 = file_name; 
+                file_name2(end-3:end)=[];    
+                Proton.Image = eval(file_name2);
+                Proton.filename = file_name;
+                Proton.folder = file_folder;
+                
+            elseif strcmp(MainInput.HDataext,'.nii') == 1 || strcmp(MainInput.HDataext,'.gz') == 1 
+                [file_folder, file_name] = fileparts(MainInput.HFullPath);
+                try
+                    A1 = LoadData.load_nii(MainInput.HFullPath); % Original
+                catch
+                    A1 = LoadData.load_nii(MainInput.HFullPath); % Original
+                end            
+                A=A1.img;
+                A = double(squeeze(A));
+                I90=imrotate(A,90);
+                Ifv=flip(I90,2); % Original                   
+                HImage=Ifv;        
+                Proton.Image = HImage;
+                Proton.filename = file_name;
+                Proton.folder = file_folder;
+            elseif strcmp(MainInput.HDataext,'.data')  && contains(MainInput.Scanner, 'Philips', 'IgnoreCase', true)   
                 MainInput.ReconImageMode = 'proton';
-                [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
-                Proton.Image = Image;  
-            elseif strcmp(MainInput.AnalysisType,'Diffusion') 
-                %
-            elseif strcmp(MainInput.AnalysisType,'GasExchange') && strcmp(MainInput.SequenceType, '3D Radial')
-                [Proton] = LoadData.ismrmrd.radial_3D_XeCTC_H_recon(MainInput, GasExchange, Proton);
-            end
-        elseif strcmp(MainInput.HDataext,'.dat') && strcmp(MainInput.Scanner,'Siemens') 
-                    HFullPath = MainInput.HFullPath;
-                    HDataLocation = MainInput.XeDataLocation;
-                    HFileName = MainInput.HFileName;
-                    H_name = MainInput.H_name;
-                    H_ext = MainInput.HDataext;
-                    cd(HDataLocation)                  
-                if strcmp(MainInput.AnalysisType,'Ventilation')    
-                    LoadData.ismrmrd.Siemens.gre_to_ismrmrd(HFileName,H_name,fullfile(HDataLocation,[H_name '.h5']));
-                    MainInput.HFileName = [H_name '.h5'];
+                if strcmp(MainInput.AnalysisType,'Ventilation') && strcmp(MainInput.SequenceType, '2D GRE') ...
+                        && (strcmp(MainInput.ScannerSoftware, '5.3.1') || strcmp(MainInput.ScannerSoftware, '5.6.1'))
+                    [Image, file_folder, file_name] = LoadData.LoadData_Gas_VentDiff_Philips_GRE(MainInput.XeDataLocation);
+                    Proton.Image = Image;
+                    Proton.filename = file_name;
+                    Proton.folder = file_folder;     
+                elseif strcmp(MainInput.AnalysisType,'Ventilation') && strcmp(MainInput.SequenceType, '2D GRE') && strcmp(MainInput.ScannerSoftware, '5.9.0')               
+                    [Image, file_folder, file_name] = LoadData.LoadData_Gas_VentDiff_Philips_GRE_R590(MainInput);
+                    Proton.Image = Image;
+                    Proton.filename = file_name;
+                    Proton.folder = file_folder; 
+                elseif strcmp(MainInput.AnalysisType,'Ventilation') && strcmp(MainInput.SequenceType, '2D Spiral')               
+                    [Proton, MainInput] = LoadData.philips_Hanat_2DSpiral_recon(MainInput, Proton);
+    
+                elseif strcmp(MainInput.AnalysisType,'GasExchange') && strcmp(MainInput.SequenceType, '3D Radial')        
+                    PixelShift = GasExchange.PixelShift; 
+                    if sum(PixelShift) > 1
+                        PixelShift = GasExchange.PixelShift;
+                    else
+                        PixelShift = [0; 0; 0];
+                    end
+                    [Proton] = LoadData.LoadData_Proton_GasExchange_Philips_Sin(MainInput.HDataLocation,PixelShift,MainInput.Institute,Proton,GasExchange);
+                end
+            elseif (strcmp(MainInput.HDataext,'.h5') || strcmp(MainInput.HDataext,'.mrd'))              
+                if strcmp(MainInput.AnalysisType,'Ventilation')  
                     MainInput.ReconImageMode = 'proton';
                     [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
                     Proton.Image = Image;  
                 elseif strcmp(MainInput.AnalysisType,'Diffusion') 
+                    %
+                elseif strcmp(MainInput.AnalysisType,'GasExchange') && strcmp(MainInput.SequenceType, '3D Radial')
+                    [Proton] = LoadData.ismrmrd.radial_3D_XeCTC_H_recon(MainInput, GasExchange, Proton);
+                end
+            elseif strcmp(MainInput.HDataext,'.dat') && strcmp(MainInput.Scanner,'Siemens') 
+                        HFullPath = MainInput.HFullPath;
+                        HDataLocation = MainInput.XeDataLocation;
+                        HFileName = MainInput.HFileName;
+                        H_name = MainInput.H_name;
+                        H_ext = MainInput.HDataext;
+                        cd(HDataLocation)                  
+                    if strcmp(MainInput.AnalysisType,'Ventilation')    
+                        LoadData.ismrmrd.Siemens.gre_to_ismrmrd(HFileName,H_name,fullfile(HDataLocation,[H_name '.h5']));
+                        MainInput.HFileName = [H_name '.h5'];
+                        MainInput.ReconImageMode = 'proton';
+                        [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
+                        Proton.Image = Image;  
+                    elseif strcmp(MainInput.AnalysisType,'Diffusion') 
+                        % not supported yet
+                    elseif strcmp(MainInput.AnalysisType,'GasExchange')
+                        LoadData.ismrmrd.Siemens.ute_to_ismrmrd(HFileName,H_name,fullfile(HDataLocation,[H_name '.h5']));
+                        MainInput.HFileName = [H_name '.h5'];         
+                        [Proton] = LoadData.ismrmrd.radial_3D_XeCTC_H_recon(MainInput,GasExchange);
+                    end
+            elseif strcmp(MainInput.HDataext,'.7') && strcmp(MainInput.Scanner,'GE') 
+                        % (needs testing) this code hasn't been tested due to
+                        % GE data availability  
+                        HFullPath = MainInput.HFullPath;
+                        HDataLocation = MainInput.XeDataLocation;
+                        HFileName = MainInput.HFileName;
+                        H_name = MainInput.H_name;
+                        H_ext = MainInput.HDataext;
+                        cd(HDataLocation) 
+                    if strcmp(MainInput.AnalysisType,'Ventilation')    
+                        MainInput.ReconImageMode = 'proton';
+                        LoadData.ismrmrd.GE.gre_to_ismrmrd(HFileName,H_name,fullfile(HDataLocation,[H_name '.h5']),MainInput);
+                        MainInput.HFileName = [H_name '.h5'];
+                        [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
+                        Proton.Image  = Image;  
+                    elseif strcmp(MainInput.AnalysisType,'Diffusion')  
                     % not supported yet
-                elseif strcmp(MainInput.AnalysisType,'GasExchange')
-                    LoadData.ismrmrd.Siemens.ute_to_ismrmrd(HFileName,H_name,fullfile(HDataLocation,[H_name '.h5']));
-                    MainInput.HFileName = [H_name '.h5'];         
-                    [Proton] = LoadData.ismrmrd.radial_3D_XeCTC_H_recon(MainInput,GasExchange);
-                end
-        elseif strcmp(MainInput.HDataext,'.7') && strcmp(MainInput.Scanner,'GE') 
-                    % (needs testing) this code hasn't been tested due to
-                    % GE data availability  
-                    HFullPath = MainInput.HFullPath;
-                    HDataLocation = MainInput.XeDataLocation;
-                    HFileName = MainInput.HFileName;
-                    H_name = MainInput.H_name;
-                    H_ext = MainInput.HDataext;
-                    cd(HDataLocation) 
-                if strcmp(MainInput.AnalysisType,'Ventilation')    
-                    MainInput.ReconImageMode = 'proton';
-                    LoadData.ismrmrd.GE.gre_to_ismrmrd(HFileName,H_name,fullfile(HDataLocation,[H_name '.h5']),MainInput);
-                    MainInput.HFileName = [H_name '.h5'];
-                    [Image] = LoadData.ismrmrd.cartesian_2D_recon(MainInput);
-                    Proton.Image  = Image;  
-                elseif strcmp(MainInput.AnalysisType,'Diffusion')  
-                % not supported yet
-                elseif strcmp(MainInput.AnalysisType,'GasExchange')  
-                    LoadData.ismrmrd.GE.ute_to_ismrmrd(HFileName,H_name,fullfile(HDataLocation,[H_name '.h5']));                    
-                    MainInput.HFileName = [H_name '.h5'];         
-                    [Proton] = LoadData.ismrmrd.radial_3D_XeCTC_H_recon(MainInput,GasExchange);
-                end
-
-    %--------------------- add new read load function here --------------------
-                
-    %     elseif strcmp(MainInput.HDataext,'add DataType') == 1
-            %  add load/read function here 
-        end 
-        Proton.Image = (Proton.Image - min(Proton.Image(:)))./(max(Proton.Image(:)) - min(Proton.Image(:)));
-
-    % catch
-    %     disp('something went wrong, please check log file')
-    %     MainInput.NoProtonImage = 1;
-    % end
-end % end of Load/Read Proton data 
-
+                    elseif strcmp(MainInput.AnalysisType,'GasExchange')  
+                        LoadData.ismrmrd.GE.ute_to_ismrmrd(HFileName,H_name,fullfile(HDataLocation,[H_name '.h5']));                    
+                        MainInput.HFileName = [H_name '.h5'];         
+                        [Proton] = LoadData.ismrmrd.radial_3D_XeCTC_H_recon(MainInput,GasExchange);
+                    end
+    
+        %--------------------- add new read load function here --------------------
+                    
+        %     elseif strcmp(MainInput.HDataext,'add DataType') == 1
+                %  add load/read function here 
+            end 
+            Proton.Image = (Proton.Image - min(Proton.Image(:)))./(max(Proton.Image(:)) - min(Proton.Image(:)));
+    
+        % catch
+        %     disp('something went wrong, please check log file')
+        %     MainInput.NoProtonImage = 1;
+        % end
+    end % end of Load/Read Proton data 
+catch
+    disp('no proton data was selected or something went wrong, please check log')
+end
 close all;
 end
 
