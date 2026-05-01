@@ -607,8 +607,8 @@ nib.save(ni_img, location + '/results/img_nufft_' +
 
 
 # Save matlab files
-savemat(location + "\\img_ventilation_nufft.mat",
-        mdict={'img_ventilation_nufft': img_nufft})
+savemat(location + "\\img_proton_nufft.mat",
+        mdict={'img_proton_nufft': img_nufft})
 
 
 
@@ -618,10 +618,9 @@ os.makedirs(location, exist_ok=True)
 # Convert to float32 (recommended for NIfTI)
 img_nufft   = img_nufft.astype(np.float32)
 
-
 # Save NIfTI files
 nib.save(nib.Nifti1Image(img_nufft, aff),
-         os.path.join(location, 'img_ventilation_nufft.nii.gz'))
+         os.path.join(location, 'img_proton_nufft.nii.gz'))
 ''' 
 nib.save(nib.Nifti1Image(img_cs_cg, aff),
          os.path.join(location, 'img_ventilation_cs_small_rho.nii.gz'))

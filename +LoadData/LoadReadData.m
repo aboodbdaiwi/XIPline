@@ -687,7 +687,9 @@ try
                     Proton.folder = file_folder; 
                 elseif strcmp(MainInput.AnalysisType,'Ventilation') && strcmp(MainInput.SequenceType, '2D Spiral')               
                     [Proton, MainInput] = LoadData.philips_Hanat_2DSpiral_recon(MainInput, Proton);
-    
+
+                elseif strcmp(MainInput.AnalysisType,'Ventilation') && strcmp(MainInput.SequenceType, '3D FLORET')               
+                    [Proton, MainInput] = LoadData.philips_Hanat_2DSpiral_recon(MainInput, Proton);
                 elseif strcmp(MainInput.AnalysisType,'GasExchange') && strcmp(MainInput.SequenceType, '3D Radial')        
                     PixelShift = GasExchange.PixelShift; 
                     if sum(PixelShift) > 1
