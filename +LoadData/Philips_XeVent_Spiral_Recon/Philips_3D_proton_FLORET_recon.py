@@ -21,8 +21,6 @@ Modification date:
 # %% Import packages
 
 from scipy.io import savemat
-import cv2
-from sklearn.cluster import KMeans
 import os
 import nibabel as nib
 from functions import tv, convexalg, util
@@ -127,7 +125,7 @@ def read_config_and_find_files(config_path=r"C:\XIPline\offline_recon\config_H.t
 
     return datafile_r, trajfile_r, datalocation_r
 
-config_H_path=r"C:\XIPline\offline_recon\config_H2.txt"
+config_H_path=r"C:\XIPline\offline_recon\config_H.txt"
 datafile, trajfile, datalocation  = read_config_and_find_files(config_H_path)
 print("Data file:", datafile)
 print("Trajectory file:", trajfile)
@@ -200,10 +198,26 @@ ax.set_xlabel('$k_x$')
 plt.title('FLORET coordinates')
 plt.show()
 
+# Extract useful information from header
+scan_date = traj.header.get('sin').get('start_scan_date_time')[0]
+voxel_size = float(traj.header.get('sin').get('voxel_sizes')[0][0])
+slice_thickness = float(traj.header.get(
+    'sin').get('slice_thickness')[0][0])
+slice_spacing = traj.header.get(
+    'sin').get('spacing_between_slices_arr')[0]
+recon_resolution = int(traj.header.get(
+    'sin').get('recon_resolutions')[0][0])
+field_of_view = voxel_size * recon_resolution
+scan_resolution = int(traj.header.get(
+    'sin').get('scan_resolutions')[0][0])
+location_center_coordinates = traj.header.get(
+    'sin').get('location_center_coordinates')[0]
+loc_ap_rl_fh_offcentres = traj.header.get(
+    'sin').get('loc_ap_rl_fh_offcentres')[0]
 
 # Define some parameters manually
-recon_resolution = 128  # 120 for ISMRM, 128 for Penn
-scan_resolution = 128  # 90 for ISMRM, 100 for Penn
+recon_resolution = int(np.ceil(1.33 * scan_resolution))
+scan_resolution  = int(np.ceil(1.33 * scan_resolution))
 
 # %% Examine k-space
 
@@ -631,10 +645,10 @@ print("All NIfTI images saved successfully")
 This will create a single .exe file under \dist. 
 rmdir /s /q build
 rmdir /s /q dist
-del Philips_3D_XeVent_FLORET_recon.exe.spec
+del Philips_3D_proton_FLORET_recon.exe.spec
 
 pyinstaller --onefile ^
-  --name="Philips_3D_XeVent_FLORET_recon" ^
+  --name="Philips_3D_proton_FLORET_recon" ^
   --hidden-import=fastrlock ^
   --hidden-import=cupy ^
   --hidden-import=cupy_backends.cuda._softlink ^
@@ -642,6 +656,6 @@ pyinstaller --onefile ^
   --collect-all cupy ^
   --collect-all cupy_backends ^
   --collect-all fastrlock ^
-  Philips_3D_XeVent_FLORET_recon.py
+  Philips_3D_proton_FLORET_recon.py
   
 '''

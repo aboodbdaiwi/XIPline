@@ -213,10 +213,26 @@ ax.set_xlabel('$k_x$')
 plt.title('FLORET coordinates')
 plt.show()
 
+# Extract useful information from header
+scan_date = traj.header.get('sin').get('start_scan_date_time')[0]
+voxel_size = float(traj.header.get('sin').get('voxel_sizes')[0][0])
+slice_thickness = float(traj.header.get(
+    'sin').get('slice_thickness')[0][0])
+slice_spacing = traj.header.get(
+    'sin').get('spacing_between_slices_arr')[0]
+recon_resolution = int(traj.header.get(
+    'sin').get('recon_resolutions')[0][0])
+field_of_view = voxel_size * recon_resolution
+scan_resolution = int(traj.header.get(
+    'sin').get('scan_resolutions')[0][0])
+location_center_coordinates = traj.header.get(
+    'sin').get('location_center_coordinates')[0]
+loc_ap_rl_fh_offcentres = traj.header.get(
+    'sin').get('loc_ap_rl_fh_offcentres')[0]
 
 # Define some parameters manually
-recon_resolution = 128  # 120 for ISMRM, 128 for Penn
-scan_resolution = 128  # 90 for ISMRM, 100 for Penn
+recon_resolution = int(np.ceil(1.33 * scan_resolution))
+scan_resolution  = int(np.ceil(1.33 * scan_resolution))
 
 # %% Examine k-space
 
