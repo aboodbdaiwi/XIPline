@@ -1,0 +1,19 @@
+name: decay-modeled-cs-paper
+channels:
+- conda-forge
+dependencies:
+- python>=3.9
+- numpy>=1.20.0
+- scipy
+- pip
+- matplotlib
+- jupyter
+- scikit-learn
+- scikit-image
+- tqdm
+- numba
+- pywavelets
+- cupy # Comment for no GPU
+- nccl # Comment for no GPU
+- cudnn # Comment for no GPU
+- sympy
