@@ -40,7 +40,7 @@ When implementing new features, or debugging, we recommend using the debugging M
 
 ##### Set up XIPline folder
 
-1. Download the [`XIPline`](https://zenodo.org/records/16053654) folder.
+1. Download the [`XIPline`](https://zenodo.org/records/20041867) folder.
    
 2. Unzip the folder and place it directly in the `C:\` drive **without renaming or moving** it.
    
