@@ -229,13 +229,26 @@ elseif strcmp(MainInput.XeDataext,'.mat')
 %         file_with_path = strcat(file_folder,'\',file_name);  % join path and filename to open
         load(MainInput.XeFullPath);
         file_name2 = file_name; 
-        file_name2(end-3:end)=[];    
+        file_name2(end-3:end)=[];  
+        try 
+            Images = squeeze(double(eval(file_name2)));
+        catch
+            if strcmp(MainInput.Scanner, 'GE') 
+                try
+                    file_name = 'bbabs';
+                    Images = squeeze(double(bbabs));
+                catch
+                    % skip
+                end              
+            end   
+        end
+    
     if strcmp(MainInput.AnalysisType,'Ventilation')                 
-        Ventilation.Image = eval(file_name2);
+        Ventilation.Image = Images;
         Ventilation.filename = file_name;
         Ventilation.folder = file_folder;       
     elseif strcmp(MainInput.AnalysisType,'Diffusion') 
-        Diffusion.Image = eval(file_name2);
+        Diffusion.Image = Images;
         Diffusion.filename = file_name;
         Diffusion.folder = file_folder;
     elseif strcmp(MainInput.AnalysisType,'GasExchange') == 1 && strcmp(MainInput.Institute,'CCHMC') == 1  

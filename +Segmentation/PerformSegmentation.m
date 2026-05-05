@@ -145,7 +145,7 @@ switch MainInput.SegmentationMethod
                 
                 terminate(pyenv)
                 pyenv('Version', pythonPath);
-                system('pip install numpy')
+                system('pip install numpy==1.26.4')
                 system('pip install keras==2.10.0'); % Specific version of Keras
                 system('pip install tensorflow==2.10.1'); % Specific version of TensorFlow
                 system('pip install nibabel')

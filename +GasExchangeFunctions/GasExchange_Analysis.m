@@ -82,13 +82,22 @@ ActTE90 = GasExchange.ActTE90;
 freq_jump = GasExchange.freq_jump;
 
 switch MainInput.HealthyReferenceType
-    case 'Default' 
+    case 'Default'         
         MainInput.ImportHealthyCohort = 0;
         GasExchange.ImportHealthyCohort = 'yes';
         Scriptlocation = mfilename('fullpath');
         idcs = strfind(Scriptlocation,filesep);%determine location of file separators
         Scriptlocation = [Scriptlocation(1:idcs(end)-1),filesep];%remove file
-        HealthyCohortFullPath = fullfile(Scriptlocation, 'HealthyCohort.mat');
+        % First attempt: local path
+        HealthyCohortFullPath = fullfile(Scriptlocation, 'HealthyCohort.mat');        
+        % If not found, try fallback
+        if ~exist(HealthyCohortFullPath, 'file')
+            HealthyCohortFullPath = fullfile('C:\XIPline\GX_Healthy_Reference', 'HealthyCohort.mat');
+        end        
+        % Final check
+        if ~exist(HealthyCohortFullPath, 'file')
+            error('No healthy reference was found.');
+        end
     case 'Import' 
         MainInput.ImportHealthyCohort = 1;
         HealthyCohortFullPath = GasExchange.HealthyCohortFullPath;
