@@ -99,6 +99,63 @@ catch
     gas_contam_removed    = 0;
 end
 
+if strcmp(MainInput.Institute,'CCHMC')
+    gas_contam_removed    = hdr.userParameters.userParameterLong(3).value;
+    if gas_contam_removed == 0
+
+        % Find long vectors in D.data and D.traj, store them, then remove them from D    
+        longThresh = 1000;  % define what "long" means    
+        bonus_spectra_Data = {};
+        bonus_spectra_Traj = {};    
+        keepData = true(size(D.data));
+        keepTraj = true(size(D.traj));
+        
+        % -------- Check D.data --------
+        for i = 1:numel(D.data)
+            x = D.data{i};
+            if isnumeric(x) && isvector(x) && numel(x) > longThresh
+                bonus_spectra_Data{end+1} = x;
+                keepData(i) = false;
+            end
+        end
+        
+        % -------- Check D.traj --------
+        for i = 1:numel(D.traj)
+            x = D.traj{i};
+            if isnumeric(x) && isvector(x) && numel(x) > longThresh
+                bonus_spectra_Traj{end+1} = x; 
+                keepTraj(i) = false;
+            end
+        end
+        
+        % -------- Remove long vectors from D --------
+        D.data = D.data(keepData);
+        D.traj = D.traj(keepData);
+        
+        fprintf('Removed %d long vectors from D.data\n', numel(bonus_spectra_Data));
+        fprintf('Removed %d long vectors from D.traj\n', numel(bonus_spectra_Traj));
+
+        n_fids = size(bonus_spectra_Data,2);
+        
+        % ---- ASSIGN LIKE PYTHON ----
+        if n_fids == 6 && strcmp(MainInput.Institute,'CCHMC')
+            PreDissolvedFID  = bonus_spectra_Data{1};
+            PostDissolvedFID = bonus_spectra_Data{4};
+            PreGasFID        = bonus_spectra_Data{2};
+            PostGasFID       = bonus_spectra_Data{5};
+        elseif n_fids == 2 && strcmp(MainInput.Institute,'Polarean')
+            zeros_fid = zeros(size(bonus_spectra_Data{1}));
+            PreDissolvedFID  = zeros_fid;
+            PostDissolvedFID = bonus_spectra_Data{1};
+            PreGasFID        = zeros_fid;
+            PostGasFID       = bonus_spectra_Data{2};
+        else
+            error('Unsupported combination: n_fids=%d, inst=%s', n_fids, inst);
+        end        
+    end
+    bonus_spectra_present = 1;
+
+end
 % 1) Get data vector (handle cell)
 x = D.traj;
 if iscell(x), x = x{1}; end           % now x is complex vector/array
@@ -136,7 +193,15 @@ fprintf('Nsamp_full = %d, OvsFactor = %.6g\n',  Nsamp_full,  OvsFactor);
 
 %% Encoding and reconstruction information
 % Matrix size
-enc_Nx = hdr.encoding.encodedSpace.matrixSize.x;
+try
+    enc_Nx = hdr.encoding.encodedSpace.matrixSize.x;
+    enc_Ny = hdr.encoding.encodedSpace.matrixSize.y;
+    enc_Nz = hdr.encoding.encodedSpace.matrixSize.z;
+catch
+    enc_Nx = hdr.encoding(1).encodedSpace.matrixSize.x;
+    enc_Ny = hdr.encoding(1).encodedSpace.matrixSize.y;
+    enc_Nz = hdr.encoding(1).encodedSpace.matrixSize.z;
+end
 if OvsFactor >= 2
     enc_Nx = enc_Nx/OvsFactor;
 else
@@ -152,25 +217,27 @@ for i = 1:length(D.data)
         Ny = Ny + 1;
     end
 end
-enc_Ny = Ny/Ncontrast;
+% enc_Ny = Ny/Ncontrast;
 % if strcmp(MainInput.Scanner,'Siemens')
 %     enc_Ny = 5000/2;
 % elseif strcmp(MainInput.Scanner,'GE')
 %     enc_Ny = length(D.data)/2;
 % end
-enc_Nz = hdr.encoding.encodedSpace.matrixSize.z;
-enc_Ny = hdr.encoding.encodedSpace.matrixSize.y;
-rec_Nx = hdr.encoding.reconSpace.matrixSize.x;
-rec_Ny = hdr.encoding.reconSpace.matrixSize.y;
-rec_Nz = hdr.encoding.reconSpace.matrixSize.z;
 
-% Field of View
-enc_FOVx = hdr.encoding.encodedSpace.fieldOfView_mm.x;
-enc_FOVy = hdr.encoding.encodedSpace.fieldOfView_mm.y;
-enc_FOVz = hdr.encoding.encodedSpace.fieldOfView_mm.z;
-rec_FOVx = hdr.encoding.reconSpace.fieldOfView_mm.x;
-rec_FOVy = hdr.encoding.reconSpace.fieldOfView_mm.y;
-rec_FOVz = hdr.encoding.reconSpace.fieldOfView_mm.z;
+try
+    rec_Nx = hdr.encoding.reconSpace.matrixSize.x;
+    rec_Ny = hdr.encoding.reconSpace.matrixSize.y;
+    rec_Nz = hdr.encoding.reconSpace.matrixSize.z;
+    
+    % Field of View
+    enc_FOVx = hdr.encoding.encodedSpace.fieldOfView_mm.x;
+    enc_FOVy = hdr.encoding.encodedSpace.fieldOfView_mm.y;
+    enc_FOVz = hdr.encoding.encodedSpace.fieldOfView_mm.z;
+    rec_FOVx = hdr.encoding.reconSpace.fieldOfView_mm.x;
+    rec_FOVy = hdr.encoding.reconSpace.fieldOfView_mm.y;
+    rec_FOVz = hdr.encoding.reconSpace.fieldOfView_mm.z;
+catch
+end
 
 %% Define Fixed Variables, Subject to Change with Sequence
 %General information
@@ -280,6 +347,10 @@ if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
     GasKSpace = XeData(:,:,order(1));  
     %Dissolved k-space
     DissolvedKSpace = XeData(:,:,order(2));
+    % if strcmp(MainInput.Institute,'CCHMC')
+    %     GasKSpace = XeData(:,:,order(2));  
+    %     DissolvedKSpace = XeData(:,:,order(1));
+    % end
 
     if(extraOvs)
         if bonus_spectra_present == 1
@@ -504,12 +575,14 @@ if(NewImages == 1)
     if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
        %correction not possible
        if bonus_spectra_present == 1 && gas_contam_removed == 0
-             CorrectedDissKSpace_SS = GasExchangeFunctions.GasPhaseContaminationRemoval(DissolvedKSpace_SS,GasKSpace_SS,dwell_s,-freq_jump,AppendedDissolvedNMRFit.phase(3),AppendedDissolvedNMRFit.area(3),GasFlipAngle);
+            disp('apply gas_contam_removal');
+            CorrectedDissKSpace_SS = GasExchangeFunctions.GasPhaseContaminationRemoval(DissolvedKSpace_SS,GasKSpace_SS,dwell_s,-freq_jump,AppendedDissolvedNMRFit.phase(3),AppendedDissolvedNMRFit.area(3),GasFlipAngle);
        else
             CorrectedDissKSpace_SS = DissolvedKSpace_SS;
        end
     else
         if gas_contam_removed ~= 1
+            disp('apply gas_contam_removal');
             CorrectedDissKSpace_SS = GasExchangeFunctions.GasPhaseContaminationRemoval(DissolvedKSpace_SS,GasKSpace_SS,dwell_s,-freq_jump,AppendedDissolvedNMRFit.phase(3),AppendedDissolvedNMRFit.area(3),GasFlipAngle);
         else
             CorrectedDissKSpace_SS = DissolvedKSpace_SS;
@@ -549,7 +622,7 @@ hold off
 % sgtitle('Signal Dynamics','FontSize',22)
 cd(outputpath)
 savefig('SigDynamics.fig')
-close(gcf)
+% close(gcf)
 % %H - Motion
 % subplot(1,2,2);
 % hold on

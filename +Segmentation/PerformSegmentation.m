@@ -48,10 +48,12 @@ switch MainInput.SegmentationMethod
             disp('models folder already exists in the destination folder.');
         end
     
-        % copy model to the HPXeAnalysisApp folder
-        FunctionDirectory = which('XIPline');
-        idcs = strfind(FunctionDirectory,filesep);%determine location of file separators
-        FunctionDirectory = FunctionDirectory(1:idcs(end)-1);%remove file
+        % Current function/script full path
+        fullFilePath = mfilename('fullpath');
+        
+        % Function directory
+        FunctionDirectory = fileparts(fullFilePath);
+        [FunctionDirectory,~] = fileparts(FunctionDirectory);
 
         sourcemodel1Path = [FunctionDirectory,'\+Segmentation\AutoSegmentation.py'];
         sourcemodel2Path = [FunctionDirectory,'\+Segmentation\2DVent_Xe_axial_1000e_20250509.hdf5'];
