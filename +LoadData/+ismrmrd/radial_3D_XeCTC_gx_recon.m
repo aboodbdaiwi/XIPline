@@ -70,23 +70,28 @@ try
 
         % ---- STORE BONUS DATA FIRST ----
         bonus_fid = D.data(bonus_spectra_indices);
-
-        n_fids = numel(bonus_fid);
         
-        % ---- ASSIGN LIKE PYTHON ----
-        if n_fids == 6 && strcmp(inst, 'CCHMC')
+        n_fids = numel(bonus_fid);        
+        PreDissolvedFID  = [];
+        PostDissolvedFID = [];
+        PreGasFID        = [];
+        PostGasFID       = [];
+        
+        if n_fids == 6 
             PreDissolvedFID  = bonus_fid{1};
             PostDissolvedFID = bonus_fid{4};
             PreGasFID        = bonus_fid{2};
             PostGasFID       = bonus_fid{5};
-
-        elseif n_fids == 2 && strcmp(inst, 'Polarean')
-            zeros_fid = zeros(size(bonus_fid{1}));
-
-            PreDissolvedFID  = zeros_fid;
-            PostDissolvedFID = bonus_fid{1};
-            PreGasFID        = zeros_fid;
-            PostGasFID       = bonus_fid{2};
+        elseif n_fids == 4 
+            PreDissolvedFID  = bonus_fid{1};
+            PostDissolvedFID = bonus_fid{3};
+            PreGasFID        = bonus_fid{2};
+            PostGasFID       = bonus_fid{4};
+        elseif n_fids == 2 
+            PostDissolvedFID = bonus_fid{3};
+            PostGasFID       = bonus_fid{4};            
+        elseif n_fids == 0
+            warning('No bonus FIDs found. Skipping bonus spectra assignment.');
         else
             error('Unsupported combination: n_fids=%d, inst=%s', n_fids, inst);
         end
@@ -104,7 +109,7 @@ if strcmp(MainInput.Institute,'CCHMC')
     if gas_contam_removed == 0
 
         % Find long vectors in D.data and D.traj, store them, then remove them from D    
-        longThresh = 1000;  % define what "long" means    
+        longThresh = 500;  % define what "long" means    
         bonus_spectra_Data = {};
         bonus_spectra_Traj = {};    
         keepData = true(size(D.data));
@@ -138,12 +143,12 @@ if strcmp(MainInput.Institute,'CCHMC')
         n_fids = size(bonus_spectra_Data,2);
         
         % ---- ASSIGN LIKE PYTHON ----
-        if n_fids == 6 && strcmp(MainInput.Institute,'CCHMC')
+        if n_fids == 6 
             PreDissolvedFID  = bonus_spectra_Data{1};
             PostDissolvedFID = bonus_spectra_Data{4};
             PreGasFID        = bonus_spectra_Data{2};
             PostGasFID       = bonus_spectra_Data{5};
-        elseif n_fids == 2 && strcmp(MainInput.Institute,'Polarean')
+        elseif n_fids == 2 
             zeros_fid = zeros(size(bonus_spectra_Data{1}));
             PreDissolvedFID  = zeros_fid;
             PostDissolvedFID = bonus_spectra_Data{1};
@@ -622,7 +627,7 @@ hold off
 % sgtitle('Signal Dynamics','FontSize',22)
 cd(outputpath)
 savefig('SigDynamics.fig')
-% close(gcf)
+close(gcf)
 % %H - Motion
 % subplot(1,2,2);
 % hold on
