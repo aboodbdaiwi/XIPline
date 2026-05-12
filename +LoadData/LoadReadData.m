@@ -57,31 +57,44 @@ catch
 end
 
 % Check conditions
-if startsWith(MainInput.Xe_name, 'IM') && isempty(MainInput.XeDataext)
-    dataFolder = MainInput.XeDataLocation;
-    % Get all files in the directory
-    files = dir(dataFolder);
-    for i = 1:length(files)
-        fname = files(i).name;
-        % Skip folders
-        if files(i).isdir
-            continue;
+if  strcmp(MainInput.AnalysisType,'GasExchange') == 0
+    try
+        if strcmp(MainInput.CCHMC_DbVentAnalysis,'yes') || strcmp(MainInput.CCHMC_DbDiffAnalysis,'yes')
+            if strcmp(MainInput.AnalysisType,'Ventilation')     
+                [~, MainInput.Xe_name, MainInput.XeDataext] = fileparts(MainInput.vent_file);
+            elseif strcmp(MainInput.AnalysisType,'Diffusion')
+                [~, MainInput.Xe_name, MainInput.XeDataext] = fileparts(MainInput.diff_file);                
+            elseif strcmp(MainInput.AnalysisType,'GasExchange')            
+            end
         end
-        % Check:
-        % 1) starts with 'IM'
-        % 2) has no extension
-        [~, name, ext] = fileparts(fname);
-        if startsWith(fname, 'IM') && isempty(ext)
-            oldFile = fullfile(dataFolder, fname);
-            newFile = fullfile(dataFolder, [fname, '.dcm']);
 
-            % Rename file
-            movefile(oldFile, newFile);
+        if startsWith(MainInput.Xe_name, 'IM') && isempty(MainInput.XeDataext)
+            dataFolder = MainInput.XeDataLocation;
+            % Get all files in the directory
+            files = dir(dataFolder);
+            for i = 1:length(files)
+                fname = files(i).name;
+                % Skip folders
+                if files(i).isdir
+                    continue;
+                end
+                % Check:
+                % 1) starts with 'IM'
+                % 2) has no extension
+                [~, name, ext] = fileparts(fname);
+                if startsWith(fname, 'IM') && isempty(ext)
+                    oldFile = fullfile(dataFolder, fname);
+                    newFile = fullfile(dataFolder, [fname, '.dcm']);
+        
+                    % Rename file
+                    movefile(oldFile, newFile);
+                end
+            end
+            MainInput.XeDataext = '.dcm';
         end
+    catch
     end
-    MainInput.XeDataext = '.dcm';
 end
-
 % Assign default OutputPath if not provided
 if ~isfield(MainInput, 'OutputPath') || isempty(MainInput.OutputPath)
     MainInput.OutputPath = MainInput.XeDataLocation;
@@ -588,32 +601,43 @@ try
        (ischar(MainInput.NoProtonImage) && strcmp(MainInput.NoProtonImage, 'no'))
         % try 
             cd(MainInput.HDataLocation)
-            
-            % Check conditions
-            if startsWith(MainInput.HFileName, 'IM') && isempty(MainInput.HDataext)
-                dataFolder = MainInput.HDataLocation;
-                % Get all files in the directory
-                files = dir(dataFolder);
-                for i = 1:length(files)
-                    fname = files(i).name;
-                    % Skip folders
-                    if files(i).isdir
-                        continue;
+            if  strcmp(MainInput.AnalysisType,'GasExchange') == 0
+                try
+                    % Check conditions
+                    if strcmp(MainInput.CCHMC_DbVentAnalysis,'yes') || strcmp(MainInput.CCHMC_DbDiffAnalysis,'yes')
+                        if strcmp(MainInput.AnalysisType,'Ventilation')     
+                            [~, MainInput.HFileName, MainInput.HDataext] = fileparts(MainInput.anat_file);
+                        elseif strcmp(MainInput.AnalysisType,'Diffusion')             
+                        elseif strcmp(MainInput.AnalysisType,'GasExchange')            
+                        end
+                    end                    
+                    if startsWith(MainInput.HFileName, 'IM') && isempty(MainInput.HDataext)
+                        dataFolder = MainInput.HDataLocation;
+                        % Get all files in the directory
+                        files = dir(dataFolder);
+                        for i = 1:length(files)
+                            fname = files(i).name;
+                            % Skip folders
+                            if files(i).isdir
+                                continue;
+                            end
+                            % Check:
+                            % 1) starts with 'IM'
+                            % 2) has no extension
+                            [~, name, ext] = fileparts(fname);
+                            if startsWith(fname, 'IM') && isempty(ext)
+                                oldFile = fullfile(dataFolder, fname);
+                                newFile = fullfile(dataFolder, [fname, '.dcm']);
+                    
+                                % Rename file
+                                movefile(oldFile, newFile);
+                            end
+                        end
+                        MainInput.HDataext = '.dcm';
                     end
-                    % Check:
-                    % 1) starts with 'IM'
-                    % 2) has no extension
-                    [~, name, ext] = fileparts(fname);
-                    if startsWith(fname, 'IM') && isempty(ext)
-                        oldFile = fullfile(dataFolder, fname);
-                        newFile = fullfile(dataFolder, [fname, '.dcm']);
-            
-                        % Rename file
-                        movefile(oldFile, newFile);
-                    end
+                catch
                 end
-                MainInput.HDataext = '.dcm';
-            end
+            end                  
     
             % Only create analysis folder if analysisversion is not specified
             if ~isfield(MainInput, "analysisversion")
