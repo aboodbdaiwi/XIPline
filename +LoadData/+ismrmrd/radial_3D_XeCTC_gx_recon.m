@@ -293,6 +293,9 @@ catch
         freq_jump = 7702; %change in freqeuncy for dissolved and off-res
     end
 end
+if freq_jump >= 7000
+    freq_jump = 7143;
+end
     
 %% Import Acquisition Information
 disp('Importing Acquisition Information...')
@@ -360,8 +363,14 @@ if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
     if(extraOvs)
         if bonus_spectra_present == 1
             try
+                PreDissolvedFID = movmean(PreDissolvedFID,OvsFactor);
+                PreDissolvedFID =  downsample(PreDissolvedFID,OvsFactor);
+        
                 PostDissolvedFID = movmean(PostDissolvedFID,OvsFactor);
                 PostDissolvedFID =  downsample(PostDissolvedFID,OvsFactor);
+        
+                PreGasFID = movmean(PreGasFID,OvsFactor);
+                PreGasFID =  downsample(PreGasFID,OvsFactor);
         
                 PostGasFID = movmean(PostGasFID,OvsFactor);
                 PostGasFID =  downsample(PostGasFID,OvsFactor);
@@ -370,7 +379,7 @@ if strcmp(ScanVersion,'XeCTC') || strcmp(ScanVersion,'Duke')
             end
         end
         DissolvedKSpace = movmean(DissolvedKSpace,OvsFactor);
-        DissolvedKSpace = downsample(DissolvedKSpace,OvsFactor);
+        DissolvedKSpace = downsample(DissolvedKSpace,OvsFactor).*100;
         
         GasKSpace = movmean(GasKSpace,OvsFactor);
         GasKSpace = downsample(GasKSpace,OvsFactor);
@@ -385,6 +394,12 @@ end
 GasKSpace = double(GasKSpace);
 DissolvedKSpace = double(DissolvedKSpace);
 disp('Importing Data Completed.')
+
+scaleFac = abs(PostGasFID(1,1))/abs(GasKSpace(1,end,end)); %These should be almost identical at k0
+scaleFac1dis = abs(PostDissolvedFID(1,1))/abs(DissolvedKSpace(1,end,end)); %These should be almost identical at k0
+scaleFac = 100; % hard code it for now
+DissolvedKSpace = DissolvedKSpace .* scaleFac;
+GasKSpace = GasKSpace .* scaleFac;
 
 GasExchange.OvsFactor = OvsFactor;
 %% Calculate Trajectories
@@ -489,7 +504,7 @@ elseif bonus_spectra_present == 1
     phase_lowerBounds = -inf*[1 1 1];
     phase_upperBounds = inf*[1 1 1];
 
-    if sum(PreDissolvedFID(:)) > 0
+    if sum(abs(PreDissolvedFID(:))) > 0
         %fit prepended dissolved for better guesses
         PrependedDissolvedNMRFit = GasExchangeFunctions.GasExchange_Spectro.NMR_TimeFit_v(PreDissolvedFID,time,area_guess,freq_guess,fwhm_guesses,fwhmG_guess,phase_guesses,[],[]);
         PrependedDissolvedNMRFit.fitTimeDomainSignal();%initial fit
@@ -597,7 +612,7 @@ if(NewImages == 1)
 end
        %CorrectedDissKSpace_SS = GasExchangeFunctions.GasPhaseContaminationRemoval(DissolvedKSpace_SS,GasKSpace_SS,dwell_s,-freq_jump,AppendedDissolvedNMRFit.phase(3),AppendedDissolvedNMRFit.area(3),GasFlipAngle);
 
-
+CorrectedDissKSpace_SS = double(CorrectedDissKSpace_SS);
 %% View k0 dynamics
 XePulses = (1:size(CorrectedDissKSpace_SS,2))'+SS_ind;%start after steady state
 
