@@ -82,13 +82,22 @@ ActTE90 = GasExchange.ActTE90;
 freq_jump = GasExchange.freq_jump;
 
 switch MainInput.HealthyReferenceType
-    case 'Default' 
+    case 'Default'         
         MainInput.ImportHealthyCohort = 0;
         GasExchange.ImportHealthyCohort = 'yes';
         Scriptlocation = mfilename('fullpath');
         idcs = strfind(Scriptlocation,filesep);%determine location of file separators
         Scriptlocation = [Scriptlocation(1:idcs(end)-1),filesep];%remove file
-        HealthyCohortFullPath = fullfile(Scriptlocation, 'HealthyCohort.mat');
+        % First attempt: local path
+        HealthyCohortFullPath = fullfile(Scriptlocation, 'HealthyCohort.mat');        
+        % If not found, try fallback
+        if ~exist(HealthyCohortFullPath, 'file')
+            HealthyCohortFullPath = fullfile('C:\XIPline\GX_Healthy_Reference', 'HealthyCohort.mat');
+        end        
+        % Final check
+        if ~exist(HealthyCohortFullPath, 'file')
+            error('No healthy reference was found.');
+        end
     case 'Import' 
         MainInput.ImportHealthyCohort = 1;
         HealthyCohortFullPath = GasExchange.HealthyCohortFullPath;
@@ -812,16 +821,29 @@ for slice=1:H_RecMatrix %repeat for rest of slices
 end
 % read tiff
 cd(outputpath)
-tiff_info = imfinfo('BinnedVent.tif'); % return tiff structure, one element per image
-BinnedVentmap = uint8(zeros(tiff_info(1).Height ,tiff_info(1).Width ,3,length(tiff_info)));
-%concatenate each successive tiff to tiff_stack
-for ii = 2 : size(tiff_info, 1)
-    temp_tiff = imread('BinnedVent.tif', ii);
-    BinnedVentmap(:,:,:,ii) = temp_tiff;
+try
+    tiff_info = imfinfo('BinnedVent.tif'); % return tiff structure, one element per image
+    BinnedVentmap = uint8(zeros(tiff_info(1).Height ,tiff_info(1).Width ,3,length(tiff_info)));
+    %concatenate each successive tiff to tiff_stack
+    for ii = 2 : size(tiff_info, 1)
+        temp_tiff = imread('BinnedVent.tif', ii);
+        BinnedVentmap(:,:,:,ii) = temp_tiff;
+    end
+    BinnedVentmap = permute(BinnedVentmap,[1 2 4 3]);
+    GasExchange.BinnedVentmap = BinnedVentmap;
+    disp('Saving Vent Tiff Completed. Saving Dissolved Tiff...')
+catch
+    tiff_info = imfinfo('BinnedVent.tif'); % return tiff structure, one element per image
+    BinnedVentmap = uint8(zeros(tiff_info(1).Height ,tiff_info(1).Width ,3,length(tiff_info)));
+    %concatenate each successive tiff to tiff_stack
+    for ii = 2 : size(tiff_info, 1)
+        temp_tiff = imread('BinnedVent.tif', ii);
+        BinnedVentmap(:,:,:,ii) = temp_tiff;
+    end
+    BinnedVentmap = permute(BinnedVentmap,[1 2 4 3]);
+    GasExchange.BinnedVentmap = BinnedVentmap;
+    disp('Saving Vent Tiff Completed. Saving Dissolved Tiff...')    
 end
-BinnedVentmap = permute(BinnedVentmap,[1 2 4 3]);
-GasExchange.BinnedVentmap = BinnedVentmap;
-disp('Saving Vent Tiff Completed. Saving Dissolved Tiff...')
 % S = orthosliceViewer(BinnedVentmap);
 
 %Dissolved Binned

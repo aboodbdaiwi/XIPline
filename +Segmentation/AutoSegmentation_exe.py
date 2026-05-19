@@ -9,6 +9,8 @@ import numpy as np
 from keras.models import load_model
 import nibabel as nib
 from scipy.io import savemat, loadmat
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 def save_NIBnifti(file,outpath):
     # save .nii file
@@ -28,13 +30,17 @@ def Segment3D(SegmentType):
     # % load model
     if SegmentType == 'vent_2D_1ch_cor':
         #model = load_model(modelFolder+'2DVent_Xe_coronal_1000e_20250509.hdf5',compile=False) 
-        model = load_model(modelFolder+'2DVent_XeCTC_20250603_1000epochs.hdf5',compile=False) 
+        #model = load_model(modelFolder+'2DVent_XeCTC_20250603_1000epochs.hdf5',compile=False) 
+        model = load_model(modelFolder+'2DVent_XeCTC_20251003_1000epochs.hdf5',compile=False)
     elif SegmentType == 'vent_2D_2ch_cor':
         model = load_model(modelFolder+'2DVent_Xe_H_coronal_1000e_20230528.hdf5',compile=False) 
     elif SegmentType == 'vent_2D_1ch_axi':
         model = load_model(modelFolder+'2DVent_Xe_axial_1000e_20250509.hdf5',compile=False) 
-    elif SegmentType == 'diff_2D_1ch_axi':
-        model = load_model(modelFolder+'2DDiff_Xe_axial_2000e_20240118.hdf5',compile=False)         
+    elif SegmentType == 'vent_anat_2D_1ch_cor':
+        model = load_model(modelFolder+'2DVent_H_coronal_2000e_20230818.hdf5',compile=False)         
+    elif SegmentType == 'diff_2D_1ch':
+        #model = load_model(modelFolder+'2DDiff_Xe_axial_2000e_20240118.hdf5',compile=False)   
+        model = load_model(modelFolder+'2DDiff_XeCTC_20251020_1000epochs.hdf5',compile=False)        
     elif SegmentType == 'gx_3D_1ch_iso':
         #model = load_model(modelFolder+'3DGasExchange_Xe_100e_20250324.hdf5',compile=False) 
         model = load_model(modelFolder+'3DGasExchange_Xe_200e_20230623.hdf5',compile=False) 
@@ -80,7 +86,7 @@ def read_configSeg_file(config_path=r"C:\XIPline\config_segmentation.txt"):
 
     if SegmentType is None:
         raise ValueError("Missing SegmentType in config file.")
-
+ 
     return SegmentType
 
 config_segmentation_path=r"C:\XIPline\config_segmentation.txt"
@@ -94,6 +100,7 @@ save_NIBnifti(MaskOut,outpath)
 
 '''
     To create the exe file:
+    use xe_recon env
         	pip install pyinstaller
         	In terminal, run:
             pyinstaller --onefile --name="AutoSegmentation.exe" AutoSegmentation_exe.py
