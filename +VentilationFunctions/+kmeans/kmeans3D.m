@@ -52,12 +52,34 @@ end
 % calculate mask
 s=size(image3D);
 mask=zeros(s);
-for i=1:s(1)
-    for j=1:s(2)
-        for slice=1:s(3)
-          c=abs(image3D(i,j,slice)-mu);
-          a=find(c==min(c));  
-          mask(i,j,slice)=a(1);
+s = size(image3D);
+% for i=1:s(1) 
+%     for j=1:s(2) 
+%         for slice=1:s(3) 
+%             c=abs(image3D(i,j,slice)-mu); 
+%             a=find(c==min(c)); 
+%             mask(i,j,slice)=a(1); 
+%         end 
+%     end 
+% end
+if ndims(image3D) == 2
+    mask = zeros(s(1),s(2));
+    for i = 1:s(1)
+        for j = 1:s(2)
+            c = abs(image3D(i,j) - mu);
+            a = find(c == min(c));
+            mask(i,j) = a(1);
+        end
+    end
+elseif ndims(image3D) == 3
+    mask = zeros(s(1),s(2),s(3));
+    for i = 1:s(1)
+        for j = 1:s(2)
+            for slice = 1:s(3)
+                c = abs(image3D(i,j,slice) - mu);
+                a = find(c == min(c));
+                mask(i,j,slice) = a(1);
+            end
         end
     end
 end
