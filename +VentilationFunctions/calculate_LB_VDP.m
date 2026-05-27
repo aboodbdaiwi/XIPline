@@ -207,6 +207,9 @@ end
 if ~isfield(Ventilation, 'MedianFilter') || isempty(Ventilation.MedianFilter)
     Ventilation.MedianFilter = 'no';
 end
+if strcmp(Ventilation.LB_Normalization,'HybridLBm') 
+    Ventilation.MedianFilter = 'yes';
+end
 if strcmp(Ventilation.MedianFilter,'yes') 
     VentBinMap2 = VentilationFunctions.medFilter(VentBinMap2).*maskarray;
 end

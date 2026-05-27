@@ -690,7 +690,19 @@ try
                 load(file_with_path);
                 file_name2 = file_name; 
                 file_name2(end-3:end)=[];    
-                Proton.Image = eval(file_name2);
+                try 
+                    Images = squeeze(double(eval(file_name2)));
+                catch
+                    if strcmp(MainInput.Scanner, 'GE') 
+                        try
+                            file_name = 'bbabs';
+                            Images = squeeze(double(bbabs));
+                        catch
+                            % skip
+                        end              
+                    end   
+                end
+                Proton.Image = Images;
                 Proton.filename = file_name;
                 Proton.folder = file_folder;
                 
