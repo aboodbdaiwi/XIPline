@@ -20,8 +20,8 @@ function pdf_ref_trunc = ADC_RefGamma(age)
 %
 
 %% ---------------- Linear model coefficients -------------------------
-bMean = [0.0274639; 0.000233964];     % mean intercept, slope
-bSD   = [0.0100438; 3.25466e-05];     % SD intercept, slope
+bMean = [0.0276251; 0.000333964];     % mean intercept, slope
+bSD   = [0.0073146; 2.05466e-05];     % SD intercept, slope
 
 mu_age_raw    = @(a) bMean(1) + bMean(2).*a;
 sigma_age_raw = @(a) bSD(1);%   + bSD(2).*a;

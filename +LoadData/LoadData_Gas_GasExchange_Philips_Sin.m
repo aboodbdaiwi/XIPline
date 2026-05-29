@@ -899,7 +899,7 @@ GasExchange.DissolvedNMR = DissolvedNMR;
 GasExchange.SigDynamics = SigDynamics;
 GasExchange.TE90 = TE90;
 GasExchange.XeSin = XeSin;
-
-save(fullfile(outputpath, 'xe_recon_workspace.mat'));
 close all;
+save(fullfile(outputpath, 'xe_recon_workspace.mat'));
+
 end

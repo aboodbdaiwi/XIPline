@@ -82,7 +82,7 @@ function [Image, parentPath, filename] = LoadData_Gas_VentDiff_Philips_GRE(MainI
                     newX  = round(origX * scale);
                 
                     % Resize with uniform scale
-                    resized_img = imresize(diffimg(:,:,sl,b), [newY, newX], 'bicubic');
+                    resized_img = imresize(diffimg(:,:,sl,b), [newY, newX], 'bilinear');
                 
                     % Pad to imsize x imsize
                     padded_img = zeros(imsize, imsize);
@@ -133,7 +133,7 @@ function [Image, parentPath, filename] = LoadData_Gas_VentDiff_Philips_GRE(MainI
                     newX  = round(origX * scale);
                     
                     % Resize using uniform scale
-                    resized_img = imresize(diffimg(:,:,sl), [newY, newX]);
+                    resized_img = imresize(diffimg(:,:,sl), [newY, newX], 'bilinear');
                     
                     % ---- FORCE BORDER PIXELS TO ZERO ----
                     resized_img(1, :)   = 0;

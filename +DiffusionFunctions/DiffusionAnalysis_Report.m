@@ -93,7 +93,7 @@ function DiffusionAnalysis_Report(Diffusion, MainInput)
     
     % Add Title Bar
     Global.exportToPPTX('addtext','Diffusion Analysis Report', 'Position',[1.5 0 5 0.5], 'FontSize',25,'FontWeight','bold','Color',[1 0 0],'BackgroundColor',[1 1 1],'HorizontalAlignment','center');
-    
+
     SubjInfo = {MainInput.SubjectID,MainInput.Age,MainInput.Sex,MainInput.Disease, MainInput.ScanDate};
     % Header row 
     SubjInfosummary = cell(2, 5);
@@ -251,9 +251,9 @@ function DiffusionAnalysis_Report(Diffusion, MainInput)
     end
 
     % Insert Histogram Image
-    try
-        histImg = fullfile(Diffusion.outputpath,'LB_ADC_Histogram.png'); %LB_ADC_Histogram
-    catch
+    histImg = fullfile(Diffusion.outputpath,'LB_ADC_Histogram.png');
+    
+    if ~isfile(histImg)
         histImg = fullfile(Diffusion.outputpath,'ADC_Histogram.png');
     end
     if isfile(histImg)
@@ -292,8 +292,13 @@ function DiffusionAnalysis_Report(Diffusion, MainInput)
     figMsk = makeOneRowMontage(Pr, 'Mask Overlay');
     
     figADC = makeOneRowMontage(Diffusion.ADCcoloredmap, 'ADC Map');
-    
-    LB_Diffmap = Diffusion.LB_colorDiffmap;  % fallback
+    try
+        LB_Diffmap = Diffusion.LB_colorDiffmap;  % fallback
+    catch
+        LB_Diffmap = zeros(size(Diffusion.Image,1), ...
+                           size(Diffusion.Image,2), ...
+                           size(Diffusion.Image,3));
+    end
     if ndims(LB_Diffmap) == 4  && size(LB_Diffmap,4) == 3% grayscale: [X Y Z 1]
         LB_Diffmap = permute(LB_Diffmap, [1 2 4 3]);  % 
         LB_Diffmap = squeeze(LB_Diffmap);  % remove singleton dimension

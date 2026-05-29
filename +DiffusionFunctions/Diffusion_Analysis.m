@@ -40,9 +40,9 @@ end
 
 % ADC_Analysis = Diffusion.ADC_Analysis;
 ADC_Analysis = 'yes';
-Diffusion.ADCLB_RefMean = 0.0002*MainInput.Age+0.029; % mean equetion for healthy co. 
-Diffusion.ADCLB_RefSD = 5e-5*MainInput.Age+0.0121; 
-
+Age = str2double(string(MainInput.Age));
+Diffusion.ADCLB_RefMean = 0.0003 * Age + 0.024;
+Diffusion.ADCLB_RefSD = 2e-5*Age+0.0073;
 
 ADCFittingType = Diffusion.ADCFittingType;
 
@@ -135,23 +135,24 @@ else
 end
 cd(outputpath)
 %% Healthy Reference 
-Diffusion.HealthyRef.ADC = '0.00±0.00';
-Diffusion.HealthyRef.LDR = '0.00±0.00';
-Diffusion.HealthyRef.NDR = '0.00±0.00';
-Diffusion.HealthyRef.HDR = '0.00±0.00';
-Diffusion.HealthyRef.ADCskewness = '0.00±0.00';
-Diffusion.HealthyRef.ADCkurtosis = '0.00±0.00';
-Diffusion.HealthyRef.ADCFitR2 = '0.00±0.00';
-Diffusion.HealthyRef.DDC = '0.00±0.00';
-Diffusion.HealthyRef.LmD = '0.00±0.00';
-Diffusion.HealthyRef.alpha = '0.00±0.00';
-Diffusion.HealthyRef.R = '0.00±0.00';
-Diffusion.HealthyRef.r = '0.00±0.00';
-Diffusion.HealthyRef.h = '0.00±0.00';
-Diffusion.HealthyRef.Lm = '0.00±0.00';
-Diffusion.HealthyRef.SVR = '0.00±0.00';
-Diffusion.HealthyRef.Na = '0.00±0.00';
-Diffusion.HealthyRef.LmD  = '0.00±0.00';
+
+Diffusion.HealthyRef.ADC = [num2str(Diffusion.ADCLB_RefMean),'±',num2str(Diffusion.ADCLB_RefSD)];
+Diffusion.HealthyRef.LDR = '19.7±17.7';
+Diffusion.HealthyRef.NDR = '64.9±16.6';
+Diffusion.HealthyRef.HDR = '15.3±15.2';
+Diffusion.HealthyRef.ADCskewness = '0.42±0.58';
+Diffusion.HealthyRef.ADCkurtosis = '11.1±5.1';
+Diffusion.HealthyRef.ADCFitR2 = '0.90±0.04';
+Diffusion.HealthyRef.DDC = [num2str(0.0003*Age+0.021),'±',num2str(1e-4*Age+0.0075)];
+Diffusion.HealthyRef.LmD = '144±21';
+Diffusion.HealthyRef.alpha = '0.83±0.20';
+Diffusion.HealthyRef.R = '309±49';
+Diffusion.HealthyRef.r = '131±31';
+Diffusion.HealthyRef.h = '178±42';
+Diffusion.HealthyRef.Lm = '181±52';
+Diffusion.HealthyRef.SVR = '235±40';
+Diffusion.HealthyRef.Na = '171±67';
+Diffusion.HealthyRef.LmD  = '144±21';
 Diffusion.HealthyRef.AgeCorrected = 'no';
 
 if ~isfield(MainInput, 'ImageQuality') || isempty(MainInput.ImageQuality)
@@ -182,32 +183,6 @@ for i = 1:numel(fieldsToInit)
     f = fieldsToInit{i};
     Diffusion.(f) = NaN;
 end
-
-%% Save images and maskes
-% ==== File Deletion Helper Function ====
-delete_if_exist = @(pattern) cellfun(@(f) delete(fullfile(outputpath, f)), ...
-    {dir(fullfile(outputpath, pattern)).name}, 'UniformOutput', false);
-
-% ==== Delete any older matching files ====
-delete_if_exist('DiffusionImage*.nii*');
-delete_if_exist('LungMask*.nii*');
-delete_if_exist('AirwayMask*.nii*');
-
-% diffusion images
-niftiwrite(abs(fliplr(rot90(diffimg,-1))),[outputpath,'\DiffusionImage.nii'],'Compressed',true);
-info = niftiinfo([outputpath,'\DiffusionImage.nii.gz']);
-info.Description = strcat('Package Version: ', 'Version1');
-niftiwrite(abs(fliplr(rot90(diffimg,-1))),[outputpath,'\DiffusionImage.nii'],info,'Compressed',true);
-% lung mask
-niftiwrite(abs(fliplr(rot90(lung_mask,-1))),[outputpath,'\LungMask.nii'],'Compressed',true);
-info = niftiinfo([outputpath,'\LungMask.nii.gz']);
-info.Description = strcat('Package Version: ', 'Version1');
-niftiwrite(abs(fliplr(rot90(lung_mask,-1))),[outputpath,'\LungMask.nii'],info,'Compressed',true);
-% airway mask
-niftiwrite(abs(fliplr(rot90(airway_mask,-1))),[outputpath,'\AirwayMask.nii'],'Compressed',true);
-info = niftiinfo([outputpath,'\AirwayMask.nii.gz']);
-info.Description = strcat('Package Version: ', 'Version1');
-niftiwrite(abs(fliplr(rot90(airway_mask,-1))),[outputpath,'\AirwayMask.nii'],info,'Compressed',true);
 
 
 %% ADC Analysis

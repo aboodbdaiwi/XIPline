@@ -14,8 +14,8 @@ function MASK = SegmentXeLung(V,MASK)
 
 % if ~any(MASK(:))
     % No initial mask, generate one
-    nzcof = 1; 
-    SE = 1;
+    nzcof = 2; 
+    SE = 2;
     Image = V(:,:,:,1);
     Image = Image./max(Image(:));
     [counts,~] = imhist(Image,256);

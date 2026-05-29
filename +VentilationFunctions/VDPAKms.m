@@ -19,7 +19,7 @@ function [VDP, VDPmap] = VDPAKms(image, mask, SliceOrientation, ImageResolution)
         dilated_mask(:,:,i) = double(imdilate(maskarray(:,:,i), se) > 0);
     end
     temp_handles.he = Ventilation.Image; %xe.img;
-    temp_handles.lungsmask = dilated_mask; % maskarray
+    temp_handles.lungsmask = dilated_mask; % maskarray  || dilated_mask
     temp_handles.vessel_mask = zeros(size(image));
     temp_handles.lobemask = maskarray;
     temp_handles.ventmaskbinary = maskarray;

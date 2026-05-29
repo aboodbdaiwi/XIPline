@@ -12,7 +12,6 @@ ReconType = MainInput.ReconType;
 diff_file = MainInput.diff_file;
 
 analysisFolder = MainInput.analysisfolder;
-
 MainInput.OutputPath = analysisFolder;
 
 xedatapath = diff_file;
@@ -110,18 +109,24 @@ Outputs.AnalysisCode_hash = MainInput.AnalysisCode_hash;
 cd(MainInput.XeDataLocation)
 
 % % % diary Log.txt
-MainInput.SegmentationMethod = 'Auto'; % 'Threshold' || 'Manual' || 'Auto'
-MainInput.SegmentAnatomy = 'Parenchyma'; % 'Airway'; || 'Parenchyma'
-MainInput.Imagestosegment = 'Xenon';  % 'Xe & Proton Registered' | 'Xenon' | 'Registered Proton'
-
-MainInput.AIScript = 'Python';
-MainInput.thresholdlevel = 0.6; % 'threshold' 
-MainInput.SE = 1;
-
-MainInput.SegmentManual = 'Freehand'; % 'AppSegmenter' || 'Freehand'
-% MainInput.SliceOrientation = SliceOrientation; % 'coronal' ||'transversal' || 'sagittal' ||'isotropic'
-[Proton,Ventilation,Diffusion,GasExchange] = Segmentation.PerformSegmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
-
+load_mask = true;
+if load_mask == 1
+    maskpath = fullfile(MainInput.MaskPath,'mask.mat');
+    load(maskpath);
+    Diffusion.LungMask = Editedmask;
+else
+    MainInput.SegmentationMethod = 'Auto'; % 'Threshold' || 'Manual' || 'Auto'
+    MainInput.SegmentAnatomy = 'Parenchyma'; % 'Airway'; || 'Parenchyma'
+    MainInput.Imagestosegment = 'Xenon';  % 'Xe & Proton Registered' | 'Xenon' | 'Registered Proton'
+    
+    MainInput.AIScript = 'Python';
+    MainInput.thresholdlevel = 0.6; % 'threshold' 
+    MainInput.SE = 1;
+    
+    MainInput.SegmentManual = 'Freehand'; % 'AppSegmenter' || 'Freehand'
+    % MainInput.SliceOrientation = SliceOrientation; % 'coronal' ||'transversal' || 'sagittal' ||'isotropic'
+    [Proton,Ventilation,Diffusion,GasExchange] = Segmentation.PerformSegmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
+end
 if ~isfield(Diffusion, 'AirwayMask')
     Diffusion.AirwayMask = zeros(size(Diffusion.LungMask));
 end
@@ -129,12 +134,18 @@ end
 % figure; imslice(Diffusion.LungMask)
 %%
 
-if MainInput.num_b_values == 3
+if MainInput.num_b_values == 2
+    Diffusion.b_values = [0, 6.5];
+    Diffusion.SmallDeltaTime = 3.5; % ms
+    Diffusion.BigDeltaTime = 3.5; % ms
+    Diffusion.GapTime = 0;
+    Diffusion.MorphometryAnalysis = 'no';
+elseif MainInput.num_b_values == 3
     Diffusion.b_values = [0, 7.5, 15];
     Diffusion.SmallDeltaTime = 3.5; % ms
     Diffusion.BigDeltaTime = 3.5; % ms
     Diffusion.GapTime = 0;
-     Diffusion.MorphometryAnalysis = 'no';
+     Diffusion.MorphometryAnalysis = 'no';     
 elseif MainInput.num_b_values == 4
     Diffusion.b_values = [0, 10, 20, 30];
     Diffusion.SmallDeltaTime = 5.0; % ms
@@ -166,8 +177,9 @@ Outputs.MorphometryAnalysis = Diffusion.MorphometryAnalysis;
 %MainInput.PatientAge = MainInput.Age;
 Diffusion.ADCFittingType = 'Log Weighted Linear'; % Log Weighted Linear | Bayesian | Non-Linear | Log Linear
 Diffusion.ADCLB_Analysis = 'no';
-Diffusion.ADCLB_RefMean = 0.0002*MainInput.Age+0.029; % mean equetion for healthy co. 
-Diffusion.ADCLB_RefSD = 5e-5*MainInput.Age+0.0121; 
+Age = str2double(string(MainInput.Age));
+Diffusion.ADCLB_RefMean = 0.0002 * Age + 0.029;
+Diffusion.ADCLB_RefSD = 5e-5*Age+0.0121; 
 
 Outputs.ADCFittingType = Diffusion.ADCFittingType;
 Outputs.ADCLB_Analysis = Diffusion.ADCLB_Analysis;
@@ -250,7 +262,31 @@ if strcmp(Diffusion.MorphometryAnalysis, 'yes') && strcmp(Diffusion.CMMorphometr
     Outputs.SVR_map = Diffusion.SVR_map;
     Outputs.Na_map = Diffusion.Na_map;
     Outputs.So_map = Diffusion.So_map;
+else
+    Outputs.R_mean = [];
+    Outputs.h_mean = [];
+    Outputs.r_mean = [];
+    Outputs.Lm_mean = [];
+    Outputs.SVR_mean = [];
+    Outputs.Na_mean = [];
+    
+    Outputs.R_std = [];
+    Outputs.h_std = [];
+    Outputs.r_std = [];
+    Outputs.Lm_std = [];
+    Outputs.SVR_std = [];
+    Outputs.Na_std = [];
+
+    % store result
+    Outputs.R_map = [];
+    Outputs.h_map = [];
+    Outputs.r_map = [];
+    Outputs.Lm_map = [];
+    Outputs.SVR_map = [];
+    Outputs.Na_map = [];
+    Outputs.So_map = [];
 end
+
 if strcmp(Diffusion.MorphometryAnalysis, 'yes') && strcmp(Diffusion.SEMMorphometry, 'yes') 
     Outputs.DDC_mean = Diffusion.DDC_mean;
     Outputs.alpha_mean = Diffusion.alpha_mean;
@@ -269,6 +305,24 @@ if strcmp(Diffusion.MorphometryAnalysis, 'yes') && strcmp(Diffusion.SEMMorphomet
     Outputs.DDC_std = Diffusion.DDC_std; 
     Outputs.alpha_std = Diffusion.alpha_std; 
     Outputs.LmD_std = Diffusion.LmD_std;
+else
+    Outputs.DDC_mean = [];
+    Outputs.alpha_mean = [];
+    Outputs.LmD_mean = [];
+    Outputs.DDC_std = [];
+    Outputs.alpha_std = [];
+    Outputs.LmD_std =  [];
+
+    Outputs.DDC_map = [];
+    Outputs.alpha_map = [];
+    Outputs.SEMSo_map = [];
+    Outputs.LmD_map = [];
+    Outputs.DDC_mean = [];
+    Outputs.alpha_mean = [];
+    Outputs.LmD_mean = [];
+    Outputs.DDC_std = [];
+    Outputs.alpha_std = [];
+    Outputs.LmD_std = [];
 end
 
 
