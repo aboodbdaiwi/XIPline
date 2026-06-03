@@ -15,15 +15,18 @@ function [GasExchange] = GasExchange_Analysis(GasExchange,Proton,MainInput)
 %      LungMask
 %
 %   Example: 
-%   LoadData_Proton_GasExchange_Philips_Sin('C:\Users\mwillmering\Documents\Subject1')
 %
-% 
-%   Package: https://github.com/cchmc-cpir/CCHMC-Gas-Exchange-Processing-Package
+%   Package: https://github.com/aboodbdaiwi/XIPline
+%
+%   Author: Abdullah S. Bdaiwi
+%   Work email: abdullah.bdaiwi@cchmc.org
+%   Personal email: abdaiwi89@gmail.com
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
 %
 %   Author: Matthew Willmering
 %   Work email: matthew.willmering@cchmc.org
 %   Personal email: matt.willmering@gmail.com
-%   Website: https://cpir.cchmc.org/
+%   Website: https://www.cincinnatichildrens.org/research/divisions/c/cpir
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % f = waitbar(0,'Reading necessary variables...');
