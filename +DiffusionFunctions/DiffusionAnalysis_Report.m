@@ -395,50 +395,72 @@ function DiffusionAnalysis_Report(Diffusion, MainInput)
     delete(ppt);
 end
 
-
 function figHandle = makeOneRowMontage(vol, figName)
 
-    % Detect grayscale or RGB
     sz = size(vol);
 
-    if numel(sz) == 3
-        % Grayscale: X × Y × Z
+    if ndims(vol) == 3
         isRGB = false;
+        H = sz(1);
+        W = sz(2);
         numSlices = sz(3);
-    elseif numel(sz) == 4 && sz(3)==3
-        % RGB stored as X × Y × 3 × Z
+
+    elseif ndims(vol) == 4 && sz(3) == 3
         isRGB = true;
+        H = sz(1);
+        W = sz(2);
         numSlices = sz(4);
-    elseif numel(sz) == 4 && sz(4)==3
-        % RGB stored as X × Y × Z × 3
+
+    elseif ndims(vol) == 4 && sz(4) == 3
         isRGB = true;
+        H = sz(1);
+        W = sz(2);
         numSlices = sz(3);
-        vol = permute(vol, [1 2 4 3]); % convert to X×Y×3×Z
+        vol = permute(vol,[1 2 4 3]);
+
     else
         error('Unsupported volume dimensions. Must be grayscale or RGB.');
     end
 
-    % Create figure
-    figHandle = figure('Name', figName, 'Visible', 'off');
-
-    % ---- Display montage in 1 row ----
     if isRGB
-        montage(vol, 'Size', [1 numSlices]);
+        montageImg = zeros(H, numSlices*W, 3, 'like', vol);
 
+        for s = 1:numSlices
+            cIdx = (s-1)*W + (1:W);
+            montageImg(:,cIdx,:) = vol(:,:,:,s);
+        end
     else
-        % reshape grayscale to X × Y × 1 × Z
-        vol4d = reshape(vol, [sz(1), sz(2), 1, numSlices]);
-        montage(vol4d, 'Size', [1 numSlices], 'DisplayRange', []);
+        montageImg = zeros(H, numSlices*W, 'like', vol);
+
+        for s = 1:numSlices
+            cIdx = (s-1)*W + (1:W);
+            montageImg(:,cIdx) = vol(:,:,s);
+        end
     end
 
-    % ---- Adjust figure to fit montage ----
-    set(gca, 'Units', 'pixels');
-    axPos = get(gca, 'Position');
+    figHandle = figure('Name',figName, ...
+        'Visible','off', ...
+        'MenuBar','none', ...
+        'ToolBar','none', ...
+        'DockControls','off', ...
+        'Resize','off', ...
+        'Color','black', ...
+        'Units','pixels');
 
-    set(figHandle, 'Units', 'pixels', ...
-                   'Position', [100 100 axPos(3) axPos(4)]);
+    ax = axes('Parent',figHandle, ...
+        'Units','normalized', ...
+        'Position',[0 0 1 1]);
 
-    set(gca, 'Units', 'normalized', 'Position', [0 0 1 1]);
+    if isRGB
+        image(ax,montageImg);
+    else
+        imshow(montageImg,[],'Parent',ax);
+    end
 
+    axis(ax,'image');
+    axis(ax,'off');
+
+    set(figHandle,'Position',[100 100 size(montageImg,2) size(montageImg,1)]);
+
+    drawnow;
 end
-

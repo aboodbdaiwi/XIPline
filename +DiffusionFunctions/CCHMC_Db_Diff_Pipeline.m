@@ -109,7 +109,7 @@ Outputs.AnalysisCode_hash = MainInput.AnalysisCode_hash;
 cd(MainInput.XeDataLocation)
 
 % % % diary Log.txt
-load_mask = true;
+load_mask = false;
 if load_mask == 1
     maskpath = fullfile(MainInput.MaskPath,'mask.mat');
     load(maskpath);
@@ -178,8 +178,8 @@ Outputs.MorphometryAnalysis = Diffusion.MorphometryAnalysis;
 Diffusion.ADCFittingType = 'Log Weighted Linear'; % Log Weighted Linear | Bayesian | Non-Linear | Log Linear
 Diffusion.ADCLB_Analysis = 'no';
 Age = str2double(string(MainInput.Age));
-Diffusion.ADCLB_RefMean = 0.0002 * Age + 0.029;
-Diffusion.ADCLB_RefSD = 5e-5*Age+0.0121; 
+Diffusion.ADCLB_RefMean = 0.0003 * Age + 0.024;
+Diffusion.ADCLB_RefSD = 2e-5*Age+0.0073;
 
 Outputs.ADCFittingType = Diffusion.ADCFittingType;
 Outputs.ADCLB_Analysis = Diffusion.ADCLB_Analysis;
