@@ -122,8 +122,10 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
                 Xe_Img = Diffusion.Image(:,:,:,1);
             end
             % run N4
-            [Xe_Img, ~] = Segmentation.N4_bias_correction(Xe_Img, MainInput.XeDataLocation);
-            
+            try
+                [Xe_Img, ~] = Segmentation.N4_bias_correction(Xe_Img, MainInput.XeDataLocation);
+            catch
+            end
             % Normalize each slice independently
             NXe_Img = zeros(size(Xe_Img));
             for sl = 1:size(Xe_Img, 3)

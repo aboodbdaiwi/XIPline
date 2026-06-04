@@ -1,36 +1,32 @@
 clc; clear;
 
-
-
-excelFile = 'D:\OneDrive - cchmc\Lab\Random Subject analysis\CPIR_Diff_Analysis\Req12702_AB_rawDiff_AD_12092025.xlsx';
-% excelFile = 'D:\OneDrive - cchmc\Lab\Random Subject analysis\CPIR_Diff_Analysis\Req12702_AB_dcmDiff_AD_12092025.xlsx';
+% excelFile = 'D:\OneDrive - cchmc\Lab\Random Subject analysis\CPIR_Diff_Analysis\Validation\comparison_output_rawDiff.xlsx';
+excelFile = 'D:\OneDrive - cchmc\Lab\Random Subject analysis\CPIR_Diff_Analysis\Validation\main_rawDiff.xlsx';
 mainDir = '\\rds6.chmccorp.cchmc.org\PulMed-54\CPIR_Images_Database';
 WoodsDir = '\\Rds6.cchmc.org\pulmed-35\Woods_CPIR_Images';
 
 % === Load Excel Table ===
 T = readcell(excelFile);
-% excelFile: full path or file name string
-% T: table already read from Excel (e.g., readtable)
-
 [~, excelName, excelExt] = fileparts(excelFile);
 
 if contains(excelName, "rawDiff")
     % Extract relevant columns into simple cell arrays
-    StudyCol     = T(:,1);
-    SubjectCol   = T(:,2);
-    ScanDateCol  = T(:,3);
-    SubNumCol    = T(:,4);
-    DiffFileCol  = T(:,5);
-    ACQ_TypeCol  = T(:,6);
+    StudyCol     = T(:,2);
+    SubjectCol   = T(:,3);
+    ScanDateCol  = T(:,4);
+    SubNumCol    = T(:,5);
+    DiffFileCol  = T(:,6);
+    ACQ_TypeCol  = T(:,7);
     % SerNum     = T(:,7);
-    ScannerSW    = T(:,8);
+    ScannerSW    = T(:,9);
     ScannerCol   = ''; % T(:,9)   % keep as-is if you truly want blank
     SexCol       = T(:,10);
     AgeCol       = T(:,11);
-    DiseaseCol   = T(:,12);
-    NoteCol      = T(:,14);
-    ImageQCol      = T(:,15);
-    RuneCol      = T(:,16);
+    DiseaseCol   = T(:,13);
+    NoteCol      = T(:,15);
+    ImageQCol    = T(:,16);
+    RuneCol      = T(:,20);
+    MaskCol      = T(:,18);
 
 elseif contains(excelName, "dcmDiff")
     % Extract relevant columns into simple cell arrays
@@ -53,14 +49,12 @@ else
     error("excelFile name must contain 'rawDiff' or 'dcmDiff'. Got: %s", excelFile);
 end
 
-
 nSubjects = size(SexCol,1);
 
 %% 
 
 clc;
-
-for i = 411%:nSubjects % always start from 2
+for i = 230%:nSubjects % always start from 2
     fprintf('Processing subject %d of %d\n', i, nSubjects);
 
     if ismissing(AgeCol{i})
@@ -89,11 +83,12 @@ for i = 411%:nSubjects % always start from 2
     MainInput.SequenceType     = '2D GRE';
     MainInput.denoiseXe        = 'no';
     MainInput.Analyst          = 'Database';
-    MainInput.N4Bias           = 'yes';
+    MainInput.N4Bias           = 'no';
     MainInput.AnalysisMethod   = 'W.Linear';
     MainInput.AgeCor           = 'no';    
     MainInput.Note             = NoteCol{i};
     MainInput.ImageQuality     = ImageQCol{i};
+    MainInput.MaskPath         = MaskCol{i};
     MainInput.SliceOrientation = 'transversal';
     MainInput.DiffAcqOrder = 'b-value interleave';
     % diff file
@@ -104,7 +99,12 @@ for i = 411%:nSubjects % always start from 2
     end
 
     MainInput.diff_file = char(MainInput.diff_file);
-
+    % Get folder path from file
+    [filePath,~,~] = fileparts(MainInput.diff_file);
+    analysisFolder = fullfile(filePath,'Diffusion_Analysis');
+    if exist(analysisFolder,'dir')
+        rmdir(analysisFolder,'s');
+    end
     MainInput.ScannerSoftware = ScannerSW{i};
     if contains(MainInput.ScannerSoftware, "5.9")
         MainInput.ScannerSoftware = '5.9.0';
@@ -117,7 +117,8 @@ for i = 411%:nSubjects % always start from 2
     elseif contains(MainInput.ScannerSoftware, "3.2")
         MainInput.ScannerSoftware = '3.2.3';            
     end
-    [~, ~, ext] = fileparts(MainInput.diff_file);      
+    [~, filename, ext] = fileparts(MainInput.diff_file);  
+
     if strcmpi(ext,'.dcm')
         MainInput.ReconType = 'online';  
         Dinfo = dicominfo(MainInput.diff_file);
@@ -138,12 +139,13 @@ for i = 411%:nSubjects % always start from 2
         MainInput.sernum  = int2str(SerNum{i});
 
     elseif strcmp(ext,'.data') 
+        MainInput.Scanner = 'Philips'; 
         MainInput.ReconType = 'offline';
         % extract bvalues and file name from .list file
         toks = regexp(MainInput.diff_file,'^(.*?)(\.list|\.data)?$','tokens');
         prefix = toks{1}{1};
         listname = sprintf('%s.list',prefix);
-     
+        
         fid = fopen(listname,'r');
     
         dataset_name = '';
@@ -238,18 +240,33 @@ for i = 411%:nSubjects % always start from 2
     MainInput.OutputPath = analysisfolder;
     cd(MainInput.analysisfolder);
     
+    T{i,21} = analysisfolder;
 
     % Run pipeline
-    DiffusionFunctions.CCHMC_Db_Diff_Pipeline(MainInput)
-    % if ismissing(DiffFileCol{i})
-    %     VentilationFunctions.CCHMC_Db_Diff_Pipeline_NoData(MainInput)
-    % else
-    %     if RuneCol{i} == 0
-    %         VentilationFunctions.CCHMC_Db_Diff_Pipeline(MainInput);
-    %     elseif RuneCol{i} == 1
-    %         VentilationFunctions.CCHMC_Db_Diff_Pipeline_rerun(MainInput);
-    %     end
-    %  
-    % end
+    % DiffusionFunctions.CCHMC_Db_Diff_Pipeline(MainInput)
+    if ismissing(DiffFileCol{i})
+        DiffusionFunctions.CCHMC_Db_Diff_Pipeline_NoData(MainInput)
+    else
+        if RuneCol{i} == 0 && ~strcmp(ImageQCol{i}, '1-Failed')
+            DiffusionFunctions.CCHMC_Db_Diff_Pipeline(MainInput);
+        elseif strcmp(ImageQCol{i}, '1-Failed')
+            DiffusionFunctions.CCHMC_Db_Diff_Pipeline_NoData(MainInput)
+        elseif RuneCol{i} == 1
+            DiffusionFunctions.CCHMC_Db_Diff_Pipeline_rerun(MainInput);
+        end
+
+    end
 
 end
+
+% % Replace missing entries with empty strings
+% for i = 1:numel(T)
+%     if ismissing(T{i})
+%         T{i} = '';
+%     end
+% end
+% excelFile = 'D:\OneDrive - cchmc\Lab\Random Subject analysis\CPIR_Diff_Analysis\Validation\main_rawDiff.xlsx';
+% writecell(T, excelFile);
+% 
+% fprintf('Table saved.\n');
+

@@ -32,6 +32,7 @@ ADCAnalysisType = Diffusion.ADCAnalysisType;
 WinBUGSPath = Diffusion.WinBUGSPath;
 outputpath = Diffusion.outputpath;
 PatientAge = Diffusion.PatientAge;
+PatientAge = str2double(string(PatientAge));
 tic
 
 %% create a final mask
@@ -45,7 +46,6 @@ maskarray_dilated = imdilate(final_mask, SE);
 zerofillings = double(diffimg(:,:,:,1) == 0);
 
 artifact_mask = zeros(size(diffimg));
-
 for i = 1:2%length(bvalues)
     % artifact_mask(:,:,:,i) = Segmentation.SegmentLungthresh(diffimg(:,:,:,i),1,3.5); 
     artifact_mask(:,:,:,i) = Segmentation.SegmentXeLung(diffimg(:,:,:,i)); 
@@ -53,7 +53,11 @@ end
 artifact_mask = sum(artifact_mask,4);
 artifact_mask = double(artifact_mask > 0);
 
+% artifact_mask = Segmentation.SegmentXeLung(diffimg(:,:,:,1));
+% artifact_mask = artifact_mask > 0;
+
 noise_mask = double(imcomplement(maskarray_dilated).*~zerofillings.*~artifact_mask);
+% noise_mask = double(imcomplement(maskarray_dilated).*~zerofillings);
 
 % figure; imslice(noise_mask)
 % figure; imslice(noise_mask)
@@ -157,6 +161,19 @@ Crossing_vec = FirstCrossingIdx(:);              % column vector
 Crossing_vec = Crossing_vec(Crossing_vec ~= 0);
 
 final_mask = SVNRMask.*double(FirstCrossingIdx > 0);
+for s = 1:size(final_mask,3)
+    slice = final_mask(:,:,s);
+    if sum(slice(:)) <= 5
+        final_mask(:,:,s) = 0;
+    end
+end
+if sum(final_mask(:)) <= 50
+    final_mask=Nfinal_mask;
+    Crossing_vec = final_mask(:).*Nb; 
+end
+
+Diffusion.lung_mask = final_mask;
+Diffusion.final_mask = final_mask;
 % figure; imslice(FirstCrossingIdx)
 % Calculate mean signal / SNR for each b-value using the thresholded mask
 for n = 1:length(bvalues)
@@ -192,6 +209,33 @@ t = uitable(SNRFig,'Data',SNR_table{:,:},'ColumnName',...
 % print('SNR Table','-dpng','-r300');
 saveas(gca,'SNR_Table.png')
 close all; 
+
+%% Save images and maskes
+% ==== File Deletion Helper Function ====
+delete_if_exist = @(pattern) cellfun(@(f) delete(fullfile(outputpath, f)), ...
+    {dir(fullfile(outputpath, pattern)).name}, 'UniformOutput', false);
+
+% ==== Delete any older matching files ====
+delete_if_exist('DiffusionImage*.nii*');
+delete_if_exist('LungMask*.nii*');
+delete_if_exist('AirwayMask*.nii*');
+
+% diffusion images
+niftiwrite(abs(fliplr(rot90(diffimg,-1))),[outputpath,'\DiffusionImage.nii'],'Compressed',true);
+info = niftiinfo([outputpath,'\DiffusionImage.nii.gz']);
+info.Description = strcat('Package Version: ', 'Version1');
+niftiwrite(abs(fliplr(rot90(diffimg,-1))),[outputpath,'\DiffusionImage.nii'],info,'Compressed',true);
+% lung mask
+niftiwrite(abs(fliplr(rot90(final_mask,-1))),[outputpath,'\LungMask.nii'],'Compressed',true);
+info = niftiinfo([outputpath,'\LungMask.nii.gz']);
+info.Description = strcat('Package Version: ', 'Version1');
+niftiwrite(abs(fliplr(rot90(final_mask,-1))),[outputpath,'\LungMask.nii'],info,'Compressed',true);
+% airway mask
+niftiwrite(abs(fliplr(rot90(airway_mask,-1))),[outputpath,'\AirwayMask.nii'],'Compressed',true);
+info = niftiinfo([outputpath,'\AirwayMask.nii.gz']);
+info.Description = strcat('Package Version: ', 'Version1');
+niftiwrite(abs(fliplr(rot90(airway_mask,-1))),[outputpath,'\AirwayMask.nii'],info,'Compressed',true);
+
 
 %% Output mask boundaries  with xenon image overlays:
 
@@ -314,10 +358,17 @@ switch ADCFittingType
     case 'Log Weighted Linear'
         fprintf( 'performing W.Linear Fitting...\n' );
         for wlin_loop = 1:num_ones
-            x = bvalues;
-            y = log(Data_vec(wlin_loop,:));              
-            w = weight_vec';            
-            m = 1;   % m is the polynomial degree
+            if ApplyNoiseCutoff == 1
+                x = bvalues(1:Crossing_vec(wlin_loop));
+                y = log(Data_vec(wlin_loop,1:Crossing_vec(wlin_loop)));              
+                w = weight_vec(1:Crossing_vec(wlin_loop))';            
+                m = 1;   % m is the polynomial degree                
+            else
+                x = bvalues;
+                y = log(Data_vec(wlin_loop,:));              
+                w = weight_vec';            
+                m = 1;   % m is the polynomial degree
+            end
             %Calculating the ADC map
             p_w = DiffusionFunctions.polyfitweighted(x,y,m,w); %or we can use p = wpolyfit(x,y,m,w); it does the same thing  
             ADCvec(wlin_loop) = -p_w(1);
@@ -539,7 +590,7 @@ close all
 %% N4 Bias 
 
 if ~isfield(MainInput, 'N4Bias') || isempty(MainInput.N4Bias)
-    MainInput.N4Bias = 'yes';
+    MainInput.N4Bias = 'no';
 end
 val = MainInput.N4Bias;
 
@@ -570,8 +621,16 @@ disp('Saving ADCmap Tiff...')
 %ADCmap Binned
 Proton_Image = zeros(size(ADCmap));
 for slice=1:size(ADCmap,3) %repeat for rest of slices
-    [~,~] = Global.imoverlay(squeeze(abs(Proton_Image(:,:,slice))),squeeze(ADCmap(:,:,slice)),[],[0,0.99*max(Proton_Image(:))],cmap,1,gca);
-    colormap(gca,cmap); clim([0 0.14]);   
+    ADCmapslice = ADCmap(:,:,slice);
+    if sum(ADCmapslice(:)) > 0
+        [~,~] = Global.imoverlay(squeeze(abs(Proton_Image(:,:,slice))),squeeze(ADCmap(:,:,slice)),[],[0,0.99*max(Proton_Image(:))],cmap,1,gca);
+        colormap(gca,cmap); clim([0 0.14]);   
+    elseif sum(ADCmapslice(:)) == 0
+        imagesc(gca, zeros(size(ADCmapslice)));
+        axis(gca,'image','off');
+        colormap(gca,cmap);
+        clim(gca,[0 0.14]);
+    end
 %     X = print('-RGBImage',['-r',num2str(size(ADCmap,2)/2)]);%2 inches
      Xdata = getframe(gcf);
      X = Xdata.cdata;    

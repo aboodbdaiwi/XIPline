@@ -29,6 +29,7 @@ catch
 end
 age = Diffusion.PatientAge;
 DataLocation = Diffusion.outputpath;
+cd(DataLocation)
 HealthyMean = Diffusion.ADCLB_RefMean;
 HealthySD = Diffusion.ADCLB_RefSD;
 
@@ -177,6 +178,9 @@ writetable(ADC_BinTable,[DataLocation,excel_file_name],'Sheet',1)
 % saveas(gca,'MeanSTDPercent_ADCBins.png');
 % close all;
 %% create Histogram
+ADC_vec=ADCmap;
+ADC_vec(maskarray==0)=NaN;
+ADC_vec(ADC_vec==0)=NaN;
 healthy_mean_Osc=HealthyADCmean;
 healthy_std_Osc=HealthyADCstd;
 norm_lim_high = healthy_mean_Osc + healthy_std_Osc;
@@ -289,18 +293,19 @@ pat.FaceAlpha = 'flat';
 uistack(pat,'bottom');
 xlim([0 0.14])
 % axis([Mean_Edges(2) Mean_Edges(end-1) -inf inf])
-legend1 = sprintf('LDP:%0.1f%%  ' ,DiffLowPercent);
-legend2 = sprintf('NDP:%0.1f%%  ' ,DiffNormalPercent);
-legend3 = sprintf('HDP:%0.1f%%  ' ,DiffHighPercent);
-legend4 = sprintf('Mean: %f±%f ',round(DiffMean,4),round(DiffStd,4));
+legend1 = sprintf('LDP:%1.1f%%  ' ,DiffLowPercent);
+legend2 = sprintf('NDP:%1.1f%%  ' ,DiffNormalPercent);
+legend3 = sprintf('HDP:%1.1f%%  ' ,DiffHighPercent);
+legend4 = sprintf('Mean: %1.4f±%1.4f ',round(DiffMean,4),round(DiffStd,4));
 
-Mean_Healthy_predicted=sprintf('Healthy: %f±%f ',HealthyADCmean,HealthyADCstd);
+Mean_Healthy_predicted=sprintf('Healthy: %1.4f±%1.4f ',HealthyADCmean,HealthyADCstd);
 lgd = legend([legend1  legend2  legend3  legend4],Mean_Healthy_predicted);
 lgd.FontSize = 16;   % <-- bigger legend
 title('Linear Binning ADC Histogram','Fontweight','bold','FontSize',15)
 xlabel('ADC (cm^2/s)')
 set(gca,'FontSize',20, 'FontWeight','bold')
 hold off
+cd(DataLocation)
 saveas(gca,'LB_ADC_Histogram.png');
 close all;
 
@@ -480,9 +485,32 @@ Global.exportToPPTX('addtext',sprintf('b0 Image'),'Position',[0.5 0.15 5 3],'Col
 Global.exportToPPTX('addpicture',LBADC_Montage,...
     'Position',[0.5 2.5 scale_fac scale_fac*(LBADC_MontagePosition(4)/LBADC_MontagePosition(3))]);
 Global.exportToPPTX('addtext',sprintf('ADC Color Map'),'Position',[0.5 2.2 5 3],'Color','r','FontSize',20);
-
+cd(DataLocation)
 %Histogram 
-LBADC_hist=imread('LB_ADC_Histogram.png');    
+histFile = fullfile(DataLocation,'LB_ADC_Histogram.png');
+
+% First check
+if ~isfile(histFile)
+    pause(1);
+    drawnow;
+    rehash;
+end
+
+% Second check
+if ~isfile(histFile)
+    pause(4);
+    drawnow;
+    rehash;
+end
+
+% Final check before reading
+if isfile(histFile)
+    LBADC_hist = imread(histFile);
+else
+    warning('Histogram image not found after waiting: %s', histFile);
+    LBADC_hist = [];
+end
+
 Global.exportToPPTX('addpicture',LBADC_hist,'Position',[0 4.5 7.5 7.5*(size(LBADC_hist,1)/size(LBADC_hist,2))]);
 
 %ADC Bins Summary
@@ -509,7 +537,8 @@ fprintf('PowerPoint file has been saved\n');
 % close all;
 BinnedADCmap =  permute(BinnedADCmap,[1 2 4 3]); 
 
-% store result    
+% store result   
+Diffusion.LB_ADCmap = ADCmap;
 Diffusion.LB_colorDiffmap = BinnedADCmap;
 Diffusion.LBADCMean = DiffMean;
 Diffusion.LBADCStd = DiffStd;

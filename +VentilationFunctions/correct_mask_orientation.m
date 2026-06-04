@@ -1,6 +1,6 @@
 function [CorrectedMask, Ventilation] = correct_mask_orientation(Ventilation)
     
-    testmask = Segmentation.SegmentLungthresh(Ventilation.Image,3,1); 
+    testmask = Segmentation.SegmentLungthresh(Ventilation.Image,1,0.6); 
     structuringElementSize = 2;
     se = strel('disk', structuringElementSize); % Create a disk-shaped structuring element
     testmask = double(imclose(testmask, se)); % Perform morphological closing
