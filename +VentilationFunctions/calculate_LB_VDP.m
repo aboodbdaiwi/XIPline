@@ -692,43 +692,66 @@ lung_voxels = ScaledVentImagenan2(maskarray == 1);
 % Compute skewness
 Ventilation.LB_skewness = skewness(double(lung_voxels));
 %% %% write tiff and read back BinnedVent maps
-%Tiffs (Binned Images)
-cd(LB_outputpath)
-tiff = figure('MenuBar','none','ToolBar','none','DockControls','off','Resize','off','WindowState','minimized');%figure for tiffs
-ax1 = axes('Parent',tiff);ax2 = axes('Parent',tiff);%make axis for both images
-set(ax1,'Visible','off');set(ax2,'Visible','off');%turn off axis
-set(ax1,'units','inches');set(ax2,'units','inches');%make axis units inches
-set(ax1,'position',[0 0 2 2]);set(ax2,'position',[0 0 2 2]);%make axis same as image
-set(gcf,'units','inches'); % set the figure units to pixels
-set(gcf,'position',[1 1 2 2])% set the position of the figure to axes
-disp('Saving Vent Tiff...')
-%Vent Binned
-for slice=1:size(VentBinMap2,3) %repeat for rest of slices
-    [~,~] = Global.imoverlay(squeeze(abs(Proton.ProtonRegistered(:,:,slice))),squeeze(VentBinMap2(:,:,slice)),[1,6],[0,0.99*max(Proton.ProtonRegistered(:))],SixBinMap,1,gca);
-    colormap(gca,SixBinMap)   
-%     X = print('-RGBImage',['-r',num2str(size(VentBinMap2,2)/2)]);%2 inches
-%      hImage = get( gca, 'Children' ); 
-%      X = hImage.CData;   
-     Xdata = getframe(gcf);
-     X = Xdata.cdata;     
-    if (slice == 1)
-        imwrite(X,fullfile(LB_outputpath,'BinnedVent.tif'),'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
+%% Write BinnedVent TIFF
+
+disp('Saving BinnedVent Tiff...')
+tiffFile = fullfile(LB_outputpath,'BinnedVent.tif');
+if isfile(tiffFile)
+    delete(tiffFile);
+end
+
+HImage = abs(Proton.ProtonRegistered);
+frameH  = size(HImage,1);
+frameW  = size(HImage,2);
+nSlices = size(VentBinMap2,3);
+
+BinnedVentmap = uint8(zeros(frameH,frameW,3,nSlices));
+protonMax = max(HImage(:));
+if protonMax == 0 || isnan(protonMax)
+    protonMax = 1;
+end
+tiffFig = figure('MenuBar','none','ToolBar','none','DockControls','off', ...
+    'Resize','off','WindowState','minimized','Visible','off');
+ax1 = axes('Parent',tiffFig);
+set(ax1,'Visible','off','Units','pixels','Position',[1 1 frameW frameH]);
+set(tiffFig,'Units','pixels','Position',[100 100 frameW frameH]);
+
+for slice = 1:nSlices
+    cla(ax1)
+    protonSlice = HImage(:,:,slice);
+    ventSlice   = VentBinMap2(:,:,slice);
+    Global.imoverlay( ...
+        protonSlice, ...
+        ventSlice, ...
+        [1,6], ...
+        [0,0.99*protonMax], ...
+        SixBinMap, ...
+        1, ...
+        ax1);
+    colormap(gca,SixBinMap)
+    axis(ax1,'image')
+    axis(ax1,'off')
+    drawnow
+
+    Xdata = getframe(ax1);
+    X = Xdata.cdata;
+
+    if size(X,1) ~= frameH || size(X,2) ~= frameW
+        X = imresize(X,[frameH frameW]);
+    end
+    BinnedVentmap(:,:,:,slice) = X;
+    if slice == 1
+        imwrite(X,tiffFile,'tif', ...
+            'Description','Package Version: 1; Cohort: test');
     else
-        imwrite(X,fullfile(LB_outputpath,'BinnedVent.tif'),'WriteMode','append','Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%append tiff
+        imwrite(X,tiffFile,'tif','WriteMode','append', ...
+            'Description','Package Version: 1; Cohort: test');
     end
 end
-disp('Saving Vent Tiff Completed.')
-close all;
-% read tiff
-cd(LB_outputpath)
-tiff_info = imfinfo('BinnedVent.tif'); % return tiff structure, one element per image
-% tiff_stack = imread('BinnedVent.tif', 1) ; % read in first image
-BinnedVentmap = uint8(zeros(tiff_info(1).Height ,tiff_info(1).Width ,3,length(tiff_info)));
-%concatenate each successive tiff to tiff_stack
-for ii = 2 : size(tiff_info, 1)
-    temp_tiff = imread('BinnedVent.tif', ii);
-    BinnedVentmap(:,:,:,ii) = temp_tiff;
-end
+close(tiffFig)
+Ventilation.BinnedVentmap = BinnedVentmap;
+
+disp('BinnedVent Tiff Completed.')
 % S = orthosliceViewer((BinnedVentmap)); %colormap(SixBinMap);
 %% save result in a powerpoint file // Abdullah 1/27/2020
 %% 
