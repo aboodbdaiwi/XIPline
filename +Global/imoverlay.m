@@ -138,12 +138,21 @@ B = repmat(mat2gray(double(B),double(climB)),[1,1,3]);
 
 % Display the back image
 axes(haxes);
-hB = imagesc(B);axis image off;
+% hB = imagesc(B);axis image off;
 % set(gca,'Position',[0,0,1,1]); set(gca,'WindowState', 'minimized');
+hB = imagesc(haxes,B);
+set(haxes,'Visible','off');
+set(haxes,'Units','normalized','Position',[0 0 1 1]);
+axis(haxes,'off');
+axis(haxes,'ij');
+daspect(haxes,[1 1 1]);
+pbaspect(haxes,[size(B,2) size(B,1) 1]);
 
 % Add the front image on top of the back image
-hold on;
-hF = imagesc(F,climF);
+% hold on;
+% hF = imagesc(F,climF);
+hold(haxes,'on');
+hF = imagesc(haxes,F,climF);
 
 % If images are different sizes, map the front image to back coordinates
 set(hF,'XData',get(hB,'XData'),...
@@ -152,6 +161,8 @@ set(hF,'XData',get(hB,'XData'),...
 % Make the foreground image transparent
 alphadata = alpha.*(F >= climF(1));
 set(hF,'AlphaData',alphadata);
+set(haxes,'Units','normalized','Position',[0 0 1 1]);
+set(haxes,'LooseInset',[0 0 0 0]);
 
 if exist('f', 'var') && isvalid(f)
     set(f, 'Visible', 'off');
