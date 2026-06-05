@@ -488,25 +488,25 @@ elseif bonus_spectra_present == 1
 
     %Dissolved Phase fitting
     %initial guesses
-    area_guess = [0.27*abs(PostDissolvedFID(1)) abs(PostDissolvedFID(1)) 0.1*abs(PostDissolvedFID(1))]; 
-    area_lowerBounds = [0 0 0]; % Always positive
-    area_upperBounds = 1E10*[1 1 1]; % Make it finite, but huge
-    freq_guess = [534 -126 -7084];
-    freq_lowerBounds = [500 -2000 -12000];
-    freq_upperBounds = [2000 0 -4000];
-    fwhm_guesses = [300 273 44];
-    fwhm_lowerBounds = [0 0 0];
-    fwhm_upperBounds = inf*[1 1 1];
-    fwhmG_guess = [0 275 0];
-    fwhmG_lowerBounds = [0 0 0];
-    fwhmG_upperBounds = [0 inf 0];
-    phase_guesses = [-95 151 9];
-    phase_lowerBounds = -inf*[1 1 1];
-    phase_upperBounds = inf*[1 1 1];
+    area_guess = double([0.27*abs(PostDissolvedFID(1)) abs(PostDissolvedFID(1)) 0.1*abs(PostDissolvedFID(1))]); 
+    area_lowerBounds = double([0 0 0]); % Always positive
+    area_upperBounds = double(1E10*[1 1 1]); % Make it finite, but huge
+    freq_guess = double([534 -126 -7084]);
+    freq_lowerBounds = double([500 -2000 -12000]);
+    freq_upperBounds = double([2000 0 -4000]);
+    fwhm_guesses = double([300 273 44]);
+    fwhm_lowerBounds = double([0 0 0]);
+    fwhm_upperBounds = double(inf*[1 1 1]);
+    fwhmG_guess = double([0 275 0]);
+    fwhmG_lowerBounds = double([0 0 0]);
+    fwhmG_upperBounds = double([0 inf 0]);
+    phase_guesses = double([-95 151 9]);
+    phase_lowerBounds = double(-inf*[1 1 1]);
+    phase_upperBounds = double(inf*[1 1 1]);
 
     if sum(abs(PreDissolvedFID(:))) > 0
         %fit prepended dissolved for better guesses
-        PrependedDissolvedNMRFit = GasExchangeFunctions.GasExchange_Spectro.NMR_TimeFit_v(PreDissolvedFID,time,area_guess,freq_guess,fwhm_guesses,fwhmG_guess,phase_guesses,[],[]);
+        PrependedDissolvedNMRFit = GasExchangeFunctions.GasExchange_Spectro.NMR_TimeFit_v(double(PreDissolvedFID),time,area_guess,freq_guess,fwhm_guesses,fwhmG_guess,phase_guesses,[],[]);
         PrependedDissolvedNMRFit.fitTimeDomainSignal();%initial fit
         PrependedDissolvedNMRFit.setBounds(area_lowerBounds,area_upperBounds,...
             freq_lowerBounds,freq_upperBounds,...
