@@ -2010,6 +2010,8 @@ if strcmp(GasExchange.writereport,'yes')
         'FontSize',10, 'FontWeight','bold', ...
         'Color',[0 0 1], 'HorizontalAlignment','left'); 
 
+     Global.exportToPPTX('addtext',['Report location:',pptDir], 'Position',[0 8.7 16 0.3], 'FontSize',12,'FontWeight','bold','Color',[0 0 1],'HorizontalAlignment','left');
+    
     %------------------------------------------------------------------------------------------------------
     % Save & close
     Global.exportToPPTX('save',pptxName);

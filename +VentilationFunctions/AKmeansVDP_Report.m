@@ -296,50 +296,90 @@ end
 
 % Local function
 function figHandle = makeTwoRowMontage(vol, figName)
-    % Detect grayscale or RGB
+
     sz = size(vol);
-    
-    if numel(sz) == 3
-        % Grayscale: X × Y × Z
+
+    if ndims(vol) == 3
         isRGB = false;
+        H = sz(1);
+        W = sz(2);
         numSlices = sz(3);
-    elseif numel(sz) == 4 && sz(3) == 3
-        % RGB: X × Y × Z × 3 → handled as indexed RGB
+
+    elseif ndims(vol) == 4 && sz(3) == 3
         isRGB = true;
+        H = sz(1);
+        W = sz(2);
         numSlices = sz(4);
+
     else
-        error('Unsupported volume dimensions: must be grayscale or RGB 4D');
+        error('Unsupported volume dimensions: expected X × Y × Z or X × Y × 3 × Z');
     end
 
     % Pad if odd number of slices
-    if mod(numSlices, 2) == 1
+    if mod(numSlices,2) == 1
         if isRGB
-            vol2 = permute(vol, [1 2 4 3]); 
-            padSlice = zeros(sz(1), sz(2), 1, 3);
-            vol2 = cat(3, vol2, padSlice);  % add slice at end
-            vol = permute(vol2, [1 2 4 3]); 
-            numSlices = numSlices + 1;
+            padSlice = zeros(H,W,3,1,'like',vol);
+            vol = cat(4,vol,padSlice);
         else
-            padSlice = zeros(sz(1), sz(2), 1, 'like', vol);
-            vol = cat(3, vol, padSlice);
-            numSlices = numSlices + 1;
+            padSlice = zeros(H,W,1,'like',vol);
+            vol = cat(3,vol,padSlice);
+        end
+        numSlices = numSlices + 1;
+    end
+
+    nCols = numSlices / 2;
+
+    % Build montage manually
+    if isRGB
+        montageImg = zeros(2*H, nCols*W, 3, 'like', vol);
+
+        for s = 1:numSlices
+            row = ceil(s/nCols);
+            col = s - (row-1)*nCols;
+
+            rIdx = (row-1)*H + (1:H);
+            cIdx = (col-1)*W + (1:W);
+
+            montageImg(rIdx,cIdx,:) = vol(:,:,:,s);
+        end
+    else
+        montageImg = zeros(2*H, nCols*W, 'like', vol);
+
+        for s = 1:numSlices
+            row = ceil(s/nCols);
+            col = s - (row-1)*nCols;
+
+            rIdx = (row-1)*H + (1:H);
+            cIdx = (col-1)*W + (1:W);
+
+            montageImg(rIdx,cIdx) = vol(:,:,s);
         end
     end
 
-    % Create figure
-    figHandle = figure('Name', figName, 'Visible', 'off');
+    % Create tightly cropped figure
+    figHandle = figure('Name',figName, ...
+        'Visible','off', ...
+        'MenuBar','none', ...
+        'ToolBar','none', ...
+        'DockControls','off', ...
+        'Resize','off', ...
+        'Color','black', ...
+        'Units','pixels');
 
-    % Display montage
+    ax = axes('Parent',figHandle, ...
+        'Units','normalized', ...
+        'Position',[0 0 1 1]);
+
     if isRGB
-        montage(vol, 'Size', [2, numSlices/2]);
+        image(ax,montageImg);
     else
-        montage(reshape(vol, [sz(1), sz(2), 1, numSlices]), ...
-                'Size', [2, numSlices/2], 'DisplayRange', []);
+        imshow(montageImg,[],'Parent',ax);
     end
 
-    % Format figure size
-    set(gca, 'Units', 'pixels');
-    axPos = get(gca, 'Position');
-    set(figHandle, 'Units', 'pixels', 'Position', [100 100 axPos(3) axPos(4)]);
-    set(gca, 'Units', 'normalized', 'Position', [0 0 1 1]);
+    axis(ax,'image');
+    axis(ax,'off');
+
+    set(figHandle,'Position',[100 100 size(montageImg,2) size(montageImg,1)]);
+
+    drawnow;
 end
