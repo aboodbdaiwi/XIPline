@@ -240,47 +240,47 @@ else
     Outputs.DiffHigh2Percent = [];
 end
 if strcmp(Diffusion.MorphometryAnalysis, 'yes') && strcmp(Diffusion.CMMorphometry, 'yes')
-    Outputs.R_mean = Diffusion.R_mean;
+    Outputs.AcinarRadius_mean = Diffusion.R_mean;
     Outputs.h_mean = Diffusion.h_mean;
-    Outputs.r_mean = Diffusion.r_mean;
+    Outputs.AlveolarRadius_mean = Diffusion.r_mean;
     Outputs.Lm_mean = Diffusion.Lm_mean;
     Outputs.SVR_mean = Diffusion.SVR_mean;
     Outputs.Na_mean = Diffusion.Na_mean;
     
-    Outputs.R_std = Diffusion.R_std;
+    Outputs.AcinarRadius_std = Diffusion.R_std;
     Outputs.h_std = Diffusion.h_std;
-    Outputs.r_std = Diffusion.r_std;
+    Outputs.AlveolarRadius_std = Diffusion.r_std;
     Outputs.Lm_std = Diffusion.Lm_std;
     Outputs.SVR_std = Diffusion.SVR_std;
     Outputs.Na_std = Diffusion.Na_std;
 
     % store result
-    Outputs.R_map = Diffusion.R_map;
+    Outputs.AcinarRadius_map = Diffusion.R_map;
     Outputs.h_map = Diffusion.h_map;
-    Outputs.r_map = Diffusion.r_map;
+    Outputs.AlveolarRadius_map = Diffusion.r_map;
     Outputs.Lm_map = Diffusion.Lm_map;
     Outputs.SVR_map = Diffusion.SVR_map;
     Outputs.Na_map = Diffusion.Na_map;
     Outputs.So_map = Diffusion.So_map;
 else
-    Outputs.R_mean = [];
+    Outputs.AcinarRadius_mean = [];
     Outputs.h_mean = [];
-    Outputs.r_mean = [];
+    Outputs.AlveolarRadius_mean = [];
     Outputs.Lm_mean = [];
     Outputs.SVR_mean = [];
     Outputs.Na_mean = [];
     
-    Outputs.R_std = [];
+    Outputs.AcinarRadius_std = [];
     Outputs.h_std = [];
-    Outputs.r_std = [];
+    Outputs.AlveolarRadius_std = [];
     Outputs.Lm_std = [];
     Outputs.SVR_std = [];
     Outputs.Na_std = [];
 
     % store result
-    Outputs.R_map = [];
+    Outputs.AcinarRadius_map = [];
     Outputs.h_map = [];
-    Outputs.r_map = [];
+    Outputs.AlveolarRadius_map = [];
     Outputs.Lm_map = [];
     Outputs.SVR_map = [];
     Outputs.Na_map = [];
