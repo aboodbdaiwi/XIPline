@@ -80,23 +80,23 @@ function CCHMC_Db_Diff_Pipeline_NoData(MainInput)
     Outputs.DiffHigh1Percent = '';
     Outputs.DiffHigh2Percent = '';
     
-    Outputs.R_mean = '';
+    Outputs.AcinarRadius_mean = '';
     Outputs.h_mean ='';
-    Outputs.r_mean = '';
+    Outputs.AlveolarRadius_mean = '';
     Outputs.Lm_mean ='';
     Outputs.SVR_mean = '';
     Outputs.Na_mean = '';
     
-    Outputs.R_std = '';
+    Outputs.AcinarRadius_std = '';
     Outputs.h_std = '';
-    Outputs.r_std = '';
+    Outputs.AlveolarRadius_std = '';
     Outputs.Lm_std = '';
     Outputs.SVR_std = '';
     Outputs.Na_std ='';
 
-    Outputs.R_map ='';
+    Outputs.AcinarRadius_map ='';
     Outputs.h_map = '';
-    Outputs.r_map = '';
+    Outputs.AlveolarRadius_map = '';
     Outputs.Lm_map = '';
     Outputs.SVR_map = '';
     Outputs.Na_map = '';
