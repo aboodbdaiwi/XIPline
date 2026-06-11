@@ -179,31 +179,22 @@ if strcmp(MainInput.XeDataext,'.dcm')
         elseif strcmp(MainInput.AnalysisType,'Diffusion')
             [Image, file_folder, FileNames, DicomInfo] = LoadData.Single_DICOM_Load(MainInput.diff_file);  
         elseif strcmp(MainInput.AnalysisType,'GasExchange')
-        
         end
     else
-        [Image, file_folder, FileNames, DicomInfo] = LoadData.DICOM_Load(MainInput.XeDataLocation);     
-        % try
-        %     if isfield(DicomInfo, 'AcquisitionDate')
-        %         MainInput.ScanDate = DicomInfo.AcquisitionDate;
-        %     elseif isfield(DicomInfo, 'SeriesDate')
-        %         MainInput.ScanDate = DicomInfo.SeriesDate;
-        %     elseif isfield(DicomInfo, 'StudyDate')
-        %         MainInput.ScanDate = DicomInfo.StudyDate;
-        %     else
-        %         MainInput.ScanDate = '00000000';
-        %     end
-        % catch
-        %     MainInput.ScanDate = '00000000';
-        % end        
+        if strcmp(MainInput.AnalysisType,'Ventilation')                 
+           [Image, file_folder, FileNames, DicomInfo] = LoadData.DICOM_Load_vent(MainInput.XeDataLocation); 
+        elseif strcmp(MainInput.AnalysisType,'Diffusion')
+           [Image, file_folder, FileNames, DicomInfo] = LoadData.DICOM_Load_diff(MainInput.XeDataLocation); 
+        elseif strcmp(MainInput.AnalysisType,'GasExchange')
+        end    
     end
           
-    if strcmp(MainInput.AnalysisType,'Ventilation')                  
+    if strcmp(MainInput.AnalysisType,'Ventilation')             
         Ventilation.Image = Image;
         Ventilation.filename = FileNames;
         Ventilation.folder = file_folder;
         Ventilation.DicomInfo = DicomInfo;
-    elseif strcmp(MainInput.AnalysisType,'Diffusion') 
+    elseif strcmp(MainInput.AnalysisType,'Diffusion')         
         if length(size(Image)) == 3
             try               
                 Nb = MainInput.Nbvalues;
@@ -676,7 +667,7 @@ try
                 if strcmp(MainInput.CCHMC_DbVentAnalysis,'yes')
                     [HImage, file_folder, file_name, DicomInfo] = LoadData.Single_DICOM_Load(MainInput.anat_file);  
                 else
-                    [HImage, file_folder, file_name, DicomInfo] = LoadData.DICOM_Load(MainInput.HDataLocation);  
+                    [HImage, file_folder, file_name, DicomInfo] = LoadData.DICOM_Load_vent(MainInput.HDataLocation);  
                 end
                 Proton.Image = double(HImage);
                 Proton.filename = file_name;
