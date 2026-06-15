@@ -1,4 +1,4 @@
-function [imag_vol, path, FileNames, info] = DICOM_Load_vent(DataPath)
+function [imag_vol, path, FileNames, info] = DICOM_Load_diff(DataPath)
 %% A function to read in lung masks segmented in Amira and exported as DICOM Files
 % 
 % Written by Z.I. Cleveland 03/25/2015

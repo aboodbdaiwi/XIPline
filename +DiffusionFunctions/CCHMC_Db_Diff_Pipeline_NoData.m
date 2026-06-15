@@ -17,6 +17,7 @@ function CCHMC_Db_Diff_Pipeline_NoData(MainInput)
     Outputs.analysispath = MainInput.analysisfolder(57:end);
     Outputs.maindirectory = MainInput.diff_file(1:56);
     Outputs.ReconType = MainInput.ReconType;
+    Outputs.SCAN_NUM = MainInput.subnum;
     Outputs.MaskPath = ''; 
     Outputs.Note = MainInput.Note; 
     Outputs.ImageQuality = MainInput.ImageQuality;

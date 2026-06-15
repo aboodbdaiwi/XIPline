@@ -218,6 +218,7 @@ for i = 230%:nSubjects % always start from 2
     MainInput.analysisversion  = analysisversion;
        % Format subject number with leading zeros
     subnum = SubNumCol{i};
+    MainInput.subnum = subnum;
     if isnumeric(subnum)
         subnum = num2str(subnum, '%04d');
     end

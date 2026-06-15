@@ -25,6 +25,7 @@ MainInput.Scanner = 'Philips';
 
 Outputs.Institute = MainInput.Institute;
 Outputs.Scanner = MainInput.Scanner;
+Outputs.SCAN_NUM = MainInput.subnum;
 
 % get segmentation 
 MainInput.SE = 1;
