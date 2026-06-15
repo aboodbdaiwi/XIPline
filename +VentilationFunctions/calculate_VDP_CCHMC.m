@@ -210,12 +210,11 @@ MaskRegistered = Ventilation.Mask_Proton_Reg;
 % S = orthosliceViewer((MaskRegistered)); %colormap(SixBinMap);
 
 %% Output mask images with ventilation overlays:
-
+scaledImage2 = MR/max(MR,[],'all');
 tiffFile = fullfile(outputPath,'Mask_Vent_Reg.tif');
 if ~isfile(tiffFile) || ~isfield(Ventilation,'Mask_Vent_Reg')
     disp('Saving Mask_Vent_Reg Tiff...')
     MR = Ventilation.Image;
-    scaledImage2 = MR/max(MR,[],'all');
     frameH = size(scaledImage2,1);
     frameW = size(scaledImage2,2);
     nSlices = size(maskarray,3);
@@ -594,6 +593,9 @@ imwrite(savedProtonImages,fullFileName2,'png');
 
 % Xe_Vent Images
 subplot(4,1,4)
+if isfield(Ventilation, 'Mask_Vent_Reg')
+    Mask_Vent_Reg = Ventilation.Mask_Vent_Reg;
+end
 Mask_Vent_Reg = permute(Mask_Vent_Reg,[1 2 4 3]);
 if Image_3D == 1
 Mask_Vent_RegMontage=montage(reshape(Mask_Vent_Reg,[size(Mask_Vent_Reg,1),...
