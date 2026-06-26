@@ -332,23 +332,32 @@ end
 % Local function
 function figHandle = makeTwoRowMontage(vol, figName)
 
-    sz = size(vol);
+sz = size(vol);
 
-    if ndims(vol) == 3
-        isRGB = false;
-        H = sz(1);
-        W = sz(2);
-        numSlices = sz(3);
+if ndims(vol) == 3
+    isRGB = false;
+    H = sz(1);
+    W = sz(2);
+    numSlices = sz(3);
 
-    elseif ndims(vol) == 4 && sz(3) == 3
-        isRGB = true;
-        H = sz(1);
-        W = sz(2);
-        numSlices = sz(4);
+elseif ndims(vol) == 4 && sz(3) == 3
+    % X × Y × 3 × Z
+    isRGB = true;
+    H = sz(1);
+    W = sz(2);
+    numSlices = sz(4);
 
-    else
-        error('Unsupported volume dimensions: expected X × Y × Z or X × Y × 3 × Z');
-    end
+elseif ndims(vol) == 4 && sz(4) == 3
+    % X × Y × Z × 3 -> convert to X × Y × 3 × Z
+    isRGB = true;
+    H = sz(1);
+    W = sz(2);
+    numSlices = sz(3);
+    vol = permute(vol,[1 2 4 3]);
+
+else
+    error('Unsupported volume dimensions: expected X×Y×Z, X×Y×3×Z, or X×Y×Z×3.');
+end
 
     % Pad if odd number of slices
     if mod(numSlices,2) == 1
