@@ -175,25 +175,57 @@ saveas(gca,'TH_Histogram.png');
 %% Output mask images with proton overlays:
 
 tiffFile = fullfile(outputPath,'MaskRegistered.tif');
-if ~isfile(tiffFile) || ~isfield(Ventilation,'Mask_Proton_Reg')
+
+forceTiffRegen = false;
+if exist('MainInput','var') && ...
+        isfield(MainInput,'ForceRegenerateReportTiffs') && ...
+        MainInput.ForceRegenerateReportTiffs
+    forceTiffRegen = true;
+end
+if isfield(Ventilation,'ForceRegenerateReportTiffs') && ...
+        Ventilation.ForceRegenerateReportTiffs
+    forceTiffRegen = true;
+end
+
+if forceTiffRegen
+    if isfile(tiffFile)
+        delete(tiffFile);
+        fprintf('Deleted stale TIFF: %s\n', tiffFile);
+    end
+
+    if isfield(Ventilation,'Mask_Proton_Reg')
+        Ventilation = rmfield(Ventilation,'Mask_Proton_Reg');
+        fprintf('Removed stale Ventilation.Mask_Proton_Reg\n');
+    end
+end
+
+if forceTiffRegen || ~isfile(tiffFile) || ~isfield(Ventilation,'Mask_Proton_Reg')
     disp('Saving MaskRegistered Tiff...')
+
     HImage = Proton.ProtonRegistered;
+
     frameH = size(HImage,1);
     frameW = size(HImage,2);
     nSlices = size(maskarray,3);
+
     MaskRegistered = uint8(zeros(frameH,frameW,3,nSlices));
+
     for slice = 1:nSlices
         lungMaskSlice = Ventilation.LungMask(:,:,slice);
+
         X = Global.robustOverlayRGB( ...
             abs(HImage(:,:,slice)), ...
             lungMaskSlice, ...
             [0,0.5*max(HImage(:))], ...
             [0 1 0], ...
             0.6);
+
         if size(X,1) ~= frameH || size(X,2) ~= frameW
             X = imresize(X,[frameH frameW]);
         end
+
         MaskRegistered(:,:,:,slice) = X;
+
         if slice == 1
             imwrite(X,tiffFile,'tif', ...
                 'Description','Package Version: 1; Cohort: test');
@@ -202,35 +234,72 @@ if ~isfile(tiffFile) || ~isfield(Ventilation,'Mask_Proton_Reg')
                 'Description','Package Version: 1; Cohort: test');
         end
     end
+
     MaskRegistered = permute(MaskRegistered,[1 2 4 3]);
     Ventilation.Mask_Proton_Reg = MaskRegistered;
+
     disp('MaskRegistered Tiff Completed.')
+else
+    disp('Using existing MaskRegistered Tiff / Ventilation.Mask_Proton_Reg')
 end
+
 MaskRegistered = Ventilation.Mask_Proton_Reg;
 % S = orthosliceViewer((MaskRegistered)); %colormap(SixBinMap);
-
 %% Output mask images with ventilation overlays:
-scaledImage2 = MR/max(MR,[],'all');
+
 tiffFile = fullfile(outputPath,'Mask_Vent_Reg.tif');
-if ~isfile(tiffFile) || ~isfield(Ventilation,'Mask_Vent_Reg')
+
+forceTiffRegen = false;
+if exist('MainInput','var') && ...
+        isfield(MainInput,'ForceRegenerateReportTiffs') && ...
+        MainInput.ForceRegenerateReportTiffs
+    forceTiffRegen = true;
+end
+if isfield(Ventilation,'ForceRegenerateReportTiffs') && ...
+        Ventilation.ForceRegenerateReportTiffs
+    forceTiffRegen = true;
+end
+
+if forceTiffRegen
+    if isfile(tiffFile)
+        delete(tiffFile);
+        fprintf('Deleted stale TIFF: %s\n', tiffFile);
+    end
+
+    if isfield(Ventilation,'Mask_Vent_Reg')
+        Ventilation = rmfield(Ventilation,'Mask_Vent_Reg');
+        fprintf('Removed stale Ventilation.Mask_Vent_Reg\n');
+    end
+end
+
+if forceTiffRegen || ~isfile(tiffFile) || ~isfield(Ventilation,'Mask_Vent_Reg')
     disp('Saving Mask_Vent_Reg Tiff...')
+
     MR = Ventilation.Image;
+    scaledImage2 = MR/max(MR,[],'all');
+
     frameH = size(scaledImage2,1);
     frameW = size(scaledImage2,2);
     nSlices = size(maskarray,3);
+
     Mask_Vent_Reg = uint8(zeros(frameH,frameW,3,nSlices));
+
     for slice = 1:nSlices
         lungMaskSlice = Ventilation.LungMask(:,:,slice);
+
         X = Global.robustOverlayRGB( ...
             abs(scaledImage2(:,:,slice)), ...
             lungMaskSlice, ...
             [0,max(scaledImage2(:))], ...
             [1 0 1], ...
             0.4);
+
         if size(X,1) ~= frameH || size(X,2) ~= frameW
             X = imresize(X,[frameH frameW]);
         end
+
         Mask_Vent_Reg(:,:,:,slice) = X;
+
         if slice == 1
             imwrite(X,tiffFile,'tif', ...
                 'Description','Package Version: 1; Cohort: test');
@@ -239,29 +308,65 @@ if ~isfile(tiffFile) || ~isfield(Ventilation,'Mask_Vent_Reg')
                 'Description','Package Version: 1; Cohort: test');
         end
     end
+
     Mask_Vent_Reg = permute(Mask_Vent_Reg,[1 2 4 3]);
     Ventilation.Mask_Vent_Reg = Mask_Vent_Reg;
+
     disp('Mask_Vent_Reg Tiff Completed.')
+else
+    disp('Using existing Mask_Vent_Reg Tiff / Ventilation.Mask_Vent_Reg')
 end
+
+Mask_Vent_Reg = Ventilation.Mask_Vent_Reg;
 % orthosliceViewer((Mask_Vent_Reg));
 % orthosliceViewer(Mask_Vent_Reg);
 % Global.imslice(Mask_Vent_Reg);
 
-%% Output mask boundaries  with ventilation overlays:
+
+%% Output mask boundaries with ventilation overlays:
 
 cd(outputPath);
 tiffFile = fullfile(outputPath,'maskboundaries.tif');
-if ~isfile(tiffFile) || ~isfield(Ventilation,'Mask_Vent_boundaries')
+
+forceTiffRegen = false;
+if exist('MainInput','var') && ...
+        isfield(MainInput,'ForceRegenerateReportTiffs') && ...
+        MainInput.ForceRegenerateReportTiffs
+    forceTiffRegen = true;
+end
+if isfield(Ventilation,'ForceRegenerateReportTiffs') && ...
+        Ventilation.ForceRegenerateReportTiffs
+    forceTiffRegen = true;
+end
+
+if forceTiffRegen
+    if isfile(tiffFile)
+        delete(tiffFile);
+        fprintf('Deleted stale TIFF: %s\n', tiffFile);
+    end
+
+    if isfield(Ventilation,'Mask_Vent_boundaries')
+        Ventilation = rmfield(Ventilation,'Mask_Vent_boundaries');
+        fprintf('Removed stale Ventilation.Mask_Vent_boundaries\n');
+    end
+end
+
+if forceTiffRegen || ~isfile(tiffFile) || ~isfield(Ventilation,'Mask_Vent_boundaries')
     disp('Saving maskboundaries Tiff...')
+
     MR = Ventilation.Image;
     MR2 = MR/max(MR,[],'all');
+
     frameH = size(MR2,1);
     frameW = size(MR2,2);
     nSlices = size(maskarray,3);
+
     Mask_Vent_boundaries = uint8(zeros(frameH,frameW,3,nSlices));
+
     for slice = 1:nSlices
         lungMaskSlice = maskarray(:,:,slice);
         maskboundaries = bwboundaries(lungMaskSlice);
+
         if isempty(maskboundaries)
             boundaryMask = false(size(lungMaskSlice));
         else
@@ -272,16 +377,20 @@ if ~isfile(tiffFile) || ~isfield(Ventilation,'Mask_Vent_boundaries')
             end
             boundaryMask = imdilate(boundaryMask,strel('disk',1));
         end
+
         X = Global.robustOverlayRGB( ...
             abs(MR2(:,:,slice)), ...
             boundaryMask, ...
             [0,max(MR2(:))], ...
             [1 0 1], ...
             1);
+
         if size(X,1) ~= frameH || size(X,2) ~= frameW
             X = imresize(X,[frameH frameW]);
         end
+
         Mask_Vent_boundaries(:,:,:,slice) = X;
+
         if slice == 1
             imwrite(X,tiffFile,'tif', ...
                 'Description','Package Version: 1; Cohort: test');
@@ -290,22 +399,61 @@ if ~isfile(tiffFile) || ~isfield(Ventilation,'Mask_Vent_boundaries')
                 'Description','Package Version: 1; Cohort: test');
         end
     end
+
     Mask_Vent_boundaries = permute(Mask_Vent_boundaries,[1 2 4 3]);
     Ventilation.Mask_Vent_boundaries = Mask_Vent_boundaries;
+
     disp('maskboundaries Tiff Completed.')
+else
+    disp('Using existing maskboundaries Tiff / Ventilation.Mask_Vent_boundaries')
 end
-%% Output mask boundaries  with proton overlays:
+
+Mask_Vent_boundaries = Ventilation.Mask_Vent_boundaries;
+
+
+%% Output mask boundaries with proton overlays:
+
 tiffFile = fullfile(outputPath,'protonmaskboundaries.tif');
-if ~isfile(tiffFile) || ~isfield(Ventilation, 'Mask_Proton_boundaries') 
+
+forceTiffRegen = false;
+if exist('MainInput','var') && ...
+        isfield(MainInput,'ForceRegenerateReportTiffs') && ...
+        MainInput.ForceRegenerateReportTiffs
+    forceTiffRegen = true;
+end
+if isfield(Ventilation,'ForceRegenerateReportTiffs') && ...
+        Ventilation.ForceRegenerateReportTiffs
+    forceTiffRegen = true;
+end
+
+if forceTiffRegen
+    if isfile(tiffFile)
+        delete(tiffFile);
+        fprintf('Deleted stale TIFF: %s\n', tiffFile);
+    end
+
+    if isfield(Ventilation,'Mask_Proton_boundaries')
+        Ventilation = rmfield(Ventilation,'Mask_Proton_boundaries');
+        fprintf('Removed stale Ventilation.Mask_Proton_boundaries\n');
+    end
+end
+
+if forceTiffRegen || ~isfile(tiffFile) || ~isfield(Ventilation,'Mask_Proton_boundaries')
     disp('Saving protonmaskboundaries Tiff...')
-    HImage = Proton.Image;
+
+    % Important: use registered proton, not unregistered Proton.Image
+    HImage = Proton.ProtonRegistered;
+
     frameH = size(HImage,1);
     frameW = size(HImage,2);
     nSlices = size(maskarray,3);
+
     Mask_Proton_boundaries = uint8(zeros(frameH,frameW,3,nSlices));
+
     for slice = 1:nSlices
         lungMaskSlice = Ventilation.LungMask(:,:,slice);
         maskboundaries = bwboundaries(lungMaskSlice);
+
         if isempty(maskboundaries)
             boundaryMask = false(size(lungMaskSlice));
         else
@@ -316,16 +464,20 @@ if ~isfile(tiffFile) || ~isfield(Ventilation, 'Mask_Proton_boundaries')
             end
             boundaryMask = imdilate(boundaryMask,strel('disk',1));
         end
+
         X = Global.robustOverlayRGB( ...
             abs(HImage(:,:,slice)), ...
             boundaryMask, ...
             [0,max(HImage(:))], ...
             [1 0 1], ...
             1);
+
         if size(X,1) ~= frameH || size(X,2) ~= frameW
             X = imresize(X,[frameH frameW]);
         end
+
         Mask_Proton_boundaries(:,:,:,slice) = X;
+
         if slice == 1
             imwrite(X,tiffFile,'tif', ...
                 'Description','Package Version: 1; Cohort: test');
@@ -334,10 +486,16 @@ if ~isfile(tiffFile) || ~isfield(Ventilation, 'Mask_Proton_boundaries')
                 'Description','Package Version: 1; Cohort: test');
         end
     end
+
     Mask_Proton_boundaries = permute(Mask_Proton_boundaries,[1 2 4 3]);
     Ventilation.Mask_Proton_boundaries = Mask_Proton_boundaries;
+
     disp('protonmaskboundaries Tiff Completed.')
+else
+    disp('Using existing protonmaskboundaries Tiff / Ventilation.Mask_Proton_boundaries')
 end
+
+Mask_Proton_boundaries = Ventilation.Mask_Proton_boundaries;
 
 %% Output ventilation images with defect overlays:
 % figure; Global.imslice(MR)

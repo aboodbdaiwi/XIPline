@@ -70,6 +70,38 @@ Ventilation.LungMask = double(maskarray);
 myCluster = parcluster('local');
 delete(myCluster.Jobs);
 
+% Force report overlay regeneration after manual correction rerun.
+% The rerun loads workspace.mat, which may contain stale report-overlay fields.
+MainInput.ForceRegenerateReportTiffs = true;
+Ventilation.ForceRegenerateReportTiffs = true;
+
+staleFields = { ...
+    'Mask_Proton_Reg', ...
+    'Mask_Vent_Reg', ...
+    'Mask_Vent_boundaries', ...
+    'Mask_Proton_boundaries'};
+
+for ii = 1:numel(staleFields)
+    if isfield(Ventilation, staleFields{ii})
+        Ventilation = rmfield(Ventilation, staleFields{ii});
+        fprintf('Removed stale Ventilation.%s\n', staleFields{ii});
+    end
+end
+
+staleTiffs = { ...
+    'MaskRegistered.tif', ...
+    'Mask_Vent_Reg.tif', ...
+    'maskboundaries.tif', ...
+    'protonmaskboundaries.tif'};
+
+for ii = 1:numel(staleTiffs)
+    f = fullfile(analysisSubfolder, staleTiffs{ii});
+    if isfile(f)
+        delete(f);
+        fprintf('Deleted stale TIFF: %s\n', f);
+    end
+end
+
 [Ventilation] = VentilationFunctions.Ventilation_Analysis(Ventilation, Proton, MainInput);
 close all;
 Outputs.timestamp = str2double(Ventilation.timestamp);
