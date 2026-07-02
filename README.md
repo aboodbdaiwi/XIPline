@@ -19,11 +19,6 @@ XIPline application is developed at the [CPIR](https://www.cincinnatichildrens.o
 
 ## Setup
 
-### Standalone Mode
-
-Due to ongoing improvements and updates, we encourage users to run the application in **developer mode**. If you prefer to use the application as a standalone executable, please contact the authors to obtain the `XIPlineInstaller.exe` installer.
-
-
 ### Developer Mode (Recommended)
 
 To customize the application, the user will need MATLAB version R2023b or newer. 
@@ -34,11 +29,11 @@ Clone XIPline to your local directory.
 git clone https://github.com/aboodbdaiwi/XIPline.git
 ```
 
-Start by adding the local folder in the MATLAB path and execute the `XIPline.mlapp` file. 
+Start by adding the local folder to the MATLAB path and execute the `XIPline.mlapp` file. 
 
 When implementing new features, or debugging, we recommend using the debugging MATLAB script `XIPline_Code_Script.m`. This script can run the entire application but without the graphical user interface (GUI). 
 
-##### Set up XIPline folder
+##### Set up XIPline folder (this step is automatically done when you run `XIPline.mlapp`)
 
 1. Download the [`XIPline`](https://zenodo.org/records/20041867) folder.
    
@@ -60,7 +55,7 @@ These components are essential for image reconstruction, registration, and segme
 
 Note: If you're having problems with the auto-segmentation, please take a look at [`issue #3`](https://github.com/aboodbdaiwi/XIPline/issues/3) for potential solutions. 
 
-##### For GE Data: Waveform Files
+##### For GE offline recon: Waveform Files
  Add waveform files in the `C:\XIPline\GE\waveforms` folder. Please refer to `User_Manual.pdf` document for more detailed steps. 
 
 
@@ -99,6 +94,8 @@ If you use this software, please cite:
 
 | **Task**                                                                 | **Date**        |
 |--------------------------------------------------------------------------|-----------------|
+| Setup XIPline folder automatically                                       | June 22, 2026   |
+| Update Diffusion analysis (add SNR rules and exclude noisy points)       | May 16, 2026    |
 | Add denosing methods option                                              | Jan 13, 2026    |
 | Add FV VDP method                                                        | Jan 13, 2026    |
 | Update Vent AI segmentation model                                        | Jan 01, 2026    |
