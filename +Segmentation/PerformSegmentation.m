@@ -353,6 +353,22 @@ switch MainInput.SegmentationMethod
         end
         cd(MainInput.XeDataLocation)
 end 
+
+% if strcmp(SegmentType, 'not_supported') 
+%     switch MainInput.AnalysisType
+%         case 'Ventilation'
+%            Ventilation.Mask = Mask;
+%            Ventilation.LungMask = lungmask;
+%            Ventilation.AirwayMask = airwaymask;                             
+%         case 'Diffusion'
+%            Diffusion.Mask = Mask;
+%            Diffusion.LungMask = lungmask;
+%            Diffusion.AirwayMask = airwaymask;
+%         case 'GasExchange'
+%     end
+% 
+% end
+
 try
    Ventilation.UncorrectedImage = Ventilation.Image; 
 catch
