@@ -201,6 +201,7 @@ for ii = 1:size(ScaledVentImage2,3)
         end
     end
 end
+VentBinMap = VentBinMap2;
 % figure; imslice(VentBinMap2)
 % Default to 'no' if field does not exist or is empty
 % Ventilation.MedianFilter = 'yes';
@@ -208,10 +209,10 @@ if ~isfield(Ventilation, 'MedianFilter') || isempty(Ventilation.MedianFilter)
     Ventilation.MedianFilter = 'no';
 end
 if strcmp(Ventilation.LB_Normalization,'HybridLBm') 
-    Ventilation.MedianFilter = 'no'; %
+    Ventilation.MedianFilter = 'yes'; %
 end
 if strcmp(Ventilation.MedianFilter,'yes')    
-    % VentBinMap2 = VentilationFunctions.medFilter_integer(VentBinMap2,3).*maskarray;
+    VentBinMap2 = VentilationFunctions.medFilter_integer(VentBinMap2,3).*maskarray;
 end
 %figure; imslice(VentBinMap2, 'MedDefectMap')
 

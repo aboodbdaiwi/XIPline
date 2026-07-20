@@ -35,8 +35,9 @@ niftiwrite(abs(fliplr(rot90(lobar_mask, -1))), fullfile(maskfolder, 'lobar_mask'
 
 input_3d_mask = double(ProtonMaskRegistered);
 lobar_mask = Segmentation.lobar_mask_registration_3d(input_3d_mask);
-% lobar_mask = permute(lobar_mask, [3,2,1]);
-figure; imslice(lobar_mask);
+lobar_mask1 = lobar_mask;
+lobar_mask1 = permute(lobar_mask1, [3,2,1]);
+figure; imslice(lobar_mask1);
 figure; montage(lobar_mask,'Size',[11 11],'DisplayRange',[0 5]);
 % niftiwrite(abs(fliplr(rot90(lobar_mask, -1))), fullfile(maskfolder, 'lobar_mask'), 'Compressed', true);
 %% Binary mask RGB stack

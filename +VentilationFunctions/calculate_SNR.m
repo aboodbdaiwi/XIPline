@@ -32,14 +32,19 @@ function [Ventilation] = calculate_SNR(Ventilation)
 % The structuring element size '28' can be changed as needed to remove
 % partial volume pixels and the trachea.
 parentPath = Ventilation.parentPath;
-SE = strel('square', 28);
+SE = strel('square', 15);
 MR = double(Ventilation.Image);
 MR = (MR - min(MR(:))) / (max(MR(:)) - min(MR(:)));
 maskarray = double(Ventilation.LungMask);
 
+% Keep only slices that contain lung
+validSlices = squeeze(any(any(maskarray > 0,1),2));
+MR        = MR(:,:,validSlices);
+maskarray = maskarray(:,:,validSlices);
+
 MRvv = double(MR);
 NormMR = MRvv.*(maskarray>0);
-incomplete = 0.5;
+incomplete = 0.6;
 defectmask = VentilationFunctions.medFilter(double(NormMR<(mean(NormMR(NormMR>0))*incomplete)*(maskarray>0)));
 Ventilation.SNRdefectmask = defectmask;
 % maskarray = double(Ventilation.LungMask + Ventilation.VesselMask);
