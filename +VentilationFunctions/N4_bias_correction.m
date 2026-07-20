@@ -47,6 +47,9 @@ else
     maskarray = maskarray > 0;
 end
 
+if ~endsWith(parentPath, filesep)
+    parentPath = [parentPath filesep];
+end
 % Dilate the mask arrary according to the structuring element:
 SE = strel('square', 10);
 maskarray_dilated = imdilate(maskarray, SE);
