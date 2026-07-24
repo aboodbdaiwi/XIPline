@@ -190,25 +190,42 @@ for n = 1:length(bvalues)
     end
 end
 
-SNR_vec=SNR_vec';
-weight_vec = zeros(1, length(SNR_vec));
-for n = 1:length(SNR_vec)
-    weight_vec(n) = SNR_vec(n) / SNR_vec(1); %the weighting vector
-end
-weight_vec =  weight_vec';
-Diffusion.weight_vec = weight_vec;
-cd(outputpath);
-SNR_table=table( bvalues',SNR_vec,weight_vec);
-SNRFig = figure('Name','SNR','units','normalized','position',[350 350 300 250]);
-set(SNRFig,'WindowState','minimized');
-set(SNRFig,'color','white','Units','inches','Position',[0.25 0.25 3 2.5])
+SNR_vec = SNR_vec';
 
-% SNRFig=figure('position',[350 350 300 250]);
-t = uitable(SNRFig,'Data',SNR_table{:,:},'ColumnName',...
-    SNR_table.Properties.VariableNames,'Position',[20 20 260 200]);
-% print('SNR Table','-dpng','-r300');
-saveas(gca,'SNR_Table.png')
-close all; 
+weight_vec = zeros(size(SNR_vec));
+
+for n = 1:length(SNR_vec)
+    weight_vec(n) = SNR_vec(n) / SNR_vec(1);
+end
+
+Diffusion.weight_vec = weight_vec;
+
+cd(outputpath);
+
+SNR_table = table( ...
+    bvalues', ...
+    SNR_vec, ...
+    weight_vec, ...
+    'VariableNames', {'bValue','SNR','Weight'});
+
+SNRFig = uifigure( ...
+    'Name','SNR', ...
+    'Color','white', ...
+    'Position',[100 100 300 250], ...
+    'Visible','off');
+
+uitable(SNRFig, ...
+    'Data',SNR_table, ...
+    'ColumnName',SNR_table.Properties.VariableNames, ...
+    'Position',[20 20 260 210]);
+
+drawnow;
+
+outputFile = fullfile(outputpath,'SNR_Table.png');
+
+exportapp(SNRFig,outputFile);
+
+close(SNRFig);
 
 %% Save images and maskes
 % ==== File Deletion Helper Function ====
