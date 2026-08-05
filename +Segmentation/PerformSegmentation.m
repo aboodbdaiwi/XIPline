@@ -267,8 +267,35 @@ switch MainInput.SegmentationMethod
             if exist('AutoMask.mat', 'file')
                 load([destinationFolderPath,'\AutoMask.mat']);
                 Mask = AutoMask > 0;
+
+                % clean up the mask
+                Mask = logical(Mask);
+                
+                % Remove slices containing <10% nonzero pixels
+                minPixels = round(0.1 * size(Mask,1));
+                nzCount = squeeze(sum(Mask,[1 2]));
+                Mask(:,:,nzCount < minPixels) = 0;
+                
+                % Find and retain the longest continuous sequence of nonzero slices
+                NZ = squeeze(any(Mask,[1 2]));
+                
+                d = diff([false; NZ; false]);
+                runStart = find(d == 1);
+                runEnd   = find(d == -1) - 1;
+                
+                if ~isempty(runStart)
+                    [~,idx] = max(runEnd - runStart + 1);
+                    keepRange = runStart(idx):runEnd(idx);
+                
+                    removeSlices = true(size(Mask,3),1);
+                    removeSlices(keepRange) = false;
+                    Mask(:,:,removeSlices) = 0;
+                end              
+                Mask = double(Mask);
                 disp('auto mask process Completed.')
                 %imslice(AutoMask)
+
+                % resize mask to xenon image
                 switch MainInput.AnalysisType
                     case 'Ventilation'
                         if size(Mask,1) ~= size(Ventilation.Image,1) || size(Mask,2) ~= size(Ventilation.Image,2)

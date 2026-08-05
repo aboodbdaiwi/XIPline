@@ -106,6 +106,7 @@ function registered_mask = lobar_mask_registration_2d(input_2d_mask, sliceOrient
         'Final lobar mask does not exactly match input lung mask.');
 
     registered_mask = uint8(registered_mask);
+    registered_mask = double(VentilationFunctions.medFilter_integer(registered_mask,3)).*double(input_2d_mask);
 
 end
 
