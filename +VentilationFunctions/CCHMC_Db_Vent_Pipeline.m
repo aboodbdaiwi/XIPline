@@ -48,6 +48,9 @@ Outputs.MaskPath = analysisFolder(57:end);
 Outputs.Offset_Frequency = MainInput.freqoffset;
 Outputs.ImageQuality = MainInput.ImageQuality;
 Outputs.Note = MainInput.Note;
+Outputs.ProcessingNotes = MainInput.ProcessingNotes;
+Outputs.AnalysisStatus  = MainInput.AnalysisStatus;
+Outputs.Analyst  = MainInput.Analyst;
 Outputs.xe_sernum = MainInput.xe_sernum;
 Outputs.proton_sernum = MainInput.proton_sernum;
 

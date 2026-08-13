@@ -2,15 +2,21 @@ function CCHMC_Db_Vent_Pipeline_rerun(MainInput)
 
 UpdatedImageQuality = MainInput.ImageQuality;
 UpdatedNote = MainInput.Note;
+UpdatedProcessingNotes = MainInput.ProcessingNotes;
+UpdatedAnalysisStatus  = MainInput.AnalysisStatus;
 
 analysisSubfolder = MainInput.analysisFolder;
 load(fullfile(MainInput.analysisFolder,'Ventilation_Analysis', 'workspace.mat'));
 
-
 MainInput.ImageQuality = UpdatedImageQuality;
 MainInput.Note = UpdatedNote;
+MainInput.ProcessingNotes = UpdatedProcessingNotes;
+MainInput.AnalysisStatus  = UpdatedAnalysisStatus;
+
 Outputs.ImageQuality = MainInput.ImageQuality;
 Outputs.Note = MainInput.Note;
+Outputs.ProcessingNotes = MainInput.ProcessingNotes;
+Outputs.AnalysisStatus  = MainInput.AnalysisStatus;
 
 mask_file_name = dir(fullfile(analysisSubfolder, 'lungmask_*.nii.gz'));
 mask_file_name = fullfile(mask_file_name.folder, mask_file_name.name);
@@ -27,8 +33,6 @@ elseif strcmp(mask_ext, '.dcm')
 end
 Ventilation.LungMask = A;
 [CorrectedMask, Ventilation] = VentilationFunctions.correct_mask_orientation(Ventilation);
-
-
 
 
 % B = rot90(B);

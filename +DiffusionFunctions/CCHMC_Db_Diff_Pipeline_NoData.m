@@ -20,6 +20,9 @@ function CCHMC_Db_Diff_Pipeline_NoData(MainInput)
     Outputs.SCAN_NUM = MainInput.subnum;
     Outputs.MaskPath = ''; 
     Outputs.Note = MainInput.Note; 
+    Outputs.ProcessingNotes = MainInput.ProcessingNotes;
+    Outputs.AnalysisStatus  = MainInput.AnalysisStatus;
+    Outputs.Analyst  = MainInput.Analyst;
     Outputs.ImageQuality = MainInput.ImageQuality;
     Outputs.diff_sernum = MainInput.sernum;
     Outputs.AnalysisVersion = 'v100'; %MainInput.analysisversion;

@@ -327,6 +327,53 @@ function ThresholdVDP_Report(Ventilation, Proton, MainInput)
     presentation.Close();
     ppt.Quit();
     delete(ppt);
+
+    % ================================================================
+    % Copy PDF to Batch Analysis Preview folder
+    % ================================================================
+    if isfield(MainInput, 'PreviewFolder') && ...
+            ~isempty(MainInput.PreviewFolder) && ...
+            isfolder(MainInput.PreviewFolder) && ...
+            exist(PDFoutputPath, 'file')
+    
+        % Subject ID
+        subjectID = char(string(MainInput.SubjectID));
+    
+        % Scan date
+        scanDate = MainInput.ScanDate;
+    
+        if isdatetime(scanDate)
+            scanDate = datestr(scanDate, 'yyyymmdd');
+        else
+            % Try to convert to datetime first
+            try
+                scanDate = datestr(datetime(string(scanDate)), 'yyyymmdd');
+            catch
+                scanDate = char(string(scanDate));
+            end
+        end
+    
+        % Remove characters that cannot be used in Windows filenames
+        subjectID = regexprep(subjectID, '[<>:"/\\|?*]', '_');
+        scanDate  = regexprep(scanDate,  '[<>:"/\\|?*]', '_');
+    
+        % New preview PDF name
+        previewFileName = sprintf( ...
+            '%s_%s_%s.pdf', ...
+            subjectID, ...
+            scanDate, ...
+            pptxFileName);
+    
+        previewPDFPath = fullfile( ...
+            MainInput.PreviewFolder, ...
+            previewFileName);
+    
+        % Copy PDF
+        copyfile(PDFoutputPath, previewPDFPath);
+    
+        fprintf('Preview PDF copied to:\n%s\n', previewPDFPath);
+    
+    end
 end
 
 % Local function

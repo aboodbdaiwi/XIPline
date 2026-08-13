@@ -1,6 +1,7 @@
 function [CorrectedMask, Ventilation] = correct_mask_orientation(Ventilation)
     
-    testmask = Segmentation.SegmentLungthresh(Ventilation.Image,1,0.6); 
+    Image = double(squeeze(Ventilation.Image(:,:,:,1)));
+    testmask = Segmentation.SegmentLungthresh(Image,1,0.6); 
     structuringElementSize = 2;
     se = strel('disk', structuringElementSize); % Create a disk-shaped structuring element
     testmask = double(imclose(testmask, se)); % Perform morphological closing
@@ -12,7 +13,7 @@ function [CorrectedMask, Ventilation] = correct_mask_orientation(Ventilation)
     % figure; Global.imslice(testmask,'testmask')
     
     A = Ventilation.LungMask;
-    sizeArray1 = size(Ventilation.Image);
+    sizeArray1 = size(Image);
     sizeArray2 = size(A);
     B = A;
     % Check if slices in the 3d dimension 
@@ -31,8 +32,8 @@ function [CorrectedMask, Ventilation] = correct_mask_orientation(Ventilation)
     end
     
     % check if number of mask slices don't match number of vent image slices
-    if size(B,3) ~= size(Ventilation.Image,3)
-        tempmask = zeros(size(Ventilation.Image));
+    if size(B,3) ~= size(Image,3)
+        tempmask = zeros(size(Image));
         sliceIndex = zeros(1,size(testmask, 3));
         for slice = 1:size(testmask, 3)
             % Check if any pixel has a value of 1 in the current slice
@@ -105,8 +106,11 @@ function [CorrectedMask, Ventilation] = correct_mask_orientation(Ventilation)
     end
     CorrectedMask = B;
     Ventilation.LungMask = B;
-    Ventilation.AirwayMask = zeros(size(Ventilation.LungMask));
 
+    % Only create AirwayMask if the input variable was named "Ventilation"
+    if strcmp(inputname(1), 'Ventilation')
+        Ventilation.AirwayMask = zeros(size(Ventilation.LungMask));
+    end
 end
 
 
