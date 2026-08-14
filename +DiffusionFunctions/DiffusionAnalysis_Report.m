@@ -94,7 +94,27 @@ function DiffusionAnalysis_Report(Diffusion, MainInput)
     % Add Title Bar
     Global.exportToPPTX('addtext','Diffusion Analysis Report', 'Position',[1.5 0 5 0.5], 'FontSize',25,'FontWeight','bold','Color',[1 0 0],'BackgroundColor',[1 1 1],'HorizontalAlignment','center');
 
-    SubjInfo = {MainInput.SubjectID,MainInput.Age,MainInput.Sex,MainInput.Disease, MainInput.ScanDate};
+    % Subject information
+    subjectID = char(string(MainInput.SubjectID));
+    sex       = char(string(MainInput.Sex));
+    disease   = char(string(MainInput.Disease));
+    
+    % Age
+    if isstring(MainInput.Age)
+        age = char(MainInput.Age);
+    else
+        age = MainInput.Age;
+    end
+    
+    % Scan date
+    if isdatetime(MainInput.ScanDate)
+        scanDate = datestr(MainInput.ScanDate, 'mm/dd/yyyy');
+    else
+        scanDate = char(string(MainInput.ScanDate));
+    end
+    
+    SubjInfo = {subjectID, age, sex, disease, scanDate};    % Header row 
+
     % Header row 
     SubjInfosummary = cell(2, 5);
     SubjInfosummary(1,:) = {
@@ -394,7 +414,8 @@ function DiffusionAnalysis_Report(Diffusion, MainInput)
     ppt.Quit();
     delete(ppt);
 
-   % ================================================================
+ 
+    % ================================================================
     % Copy PDF to Batch Analysis Preview folder
     % ================================================================
     if isfield(MainInput, 'PreviewFolder') && ...
@@ -404,30 +425,30 @@ function DiffusionAnalysis_Report(Diffusion, MainInput)
     
         % Subject ID
         subjectID = char(string(MainInput.SubjectID));
-    
+        % Reconstruction type
+        recon = char(string(MainInput.Recon));
         % Scan date
         scanDate = MainInput.ScanDate;
-    
         if isdatetime(scanDate)
             scanDate = datestr(scanDate, 'yyyymmdd');
         else
-            % Try to convert to datetime first
             try
                 scanDate = datestr(datetime(string(scanDate)), 'yyyymmdd');
             catch
                 scanDate = char(string(scanDate));
             end
         end
-    
+        
         % Remove characters that cannot be used in Windows filenames
         subjectID = regexprep(subjectID, '[<>:"/\\|?*]', '_');
         scanDate  = regexprep(scanDate,  '[<>:"/\\|?*]', '_');
-    
+        recon     = regexprep(recon,     '[<>:"/\\|?*]', '_');
         % New preview PDF name
         previewFileName = sprintf( ...
-            '%s_%s_%s.pdf', ...
+            '%s_%s_%s_%s.pdf', ...
             subjectID, ...
             scanDate, ...
+            recon, ...
             pptxFileName);
     
         previewPDFPath = fullfile( ...

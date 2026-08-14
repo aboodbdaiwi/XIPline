@@ -43,8 +43,8 @@ for i = 1:nSubjects
     MainInput.Sex              = SexValue;
     MainInput.Disease          = DiseaseValue;
     MainInput.ScanDate         = currentInput.Date;
-    MainInput.ScannerSoftware  = currentInput.Software;
-    MainInput.SequenceType     = '2D GRE';
+    MainInput.ScannerSoftware  = currentInput.Software; 
+    MainInput.SequenceType     = '2D GRE'; currentInput.Sequence;
     MainInput.denoiseXe        = 'no';
     MainInput.Analyst          = analyst;
     MainInput.Polarizer        = currentInput.Polarizer;
@@ -54,7 +54,7 @@ for i = 1:nSubjects
     MainInput.Note             = NoteValue;
     MainInput.ProcessingNotes  = currentInput.ProcessingNotes;
     MainInput.ImageQuality     = ImageQValue;
-    MainInput.MaskPath         = currentInput.MaskPath;
+    MainInput.MaskPath         = '';%currentInput.MaskPath;
     MainInput.SliceOrientation = 'transversal';
     MainInput.DiffAcqOrder     = 'b-value interleave';
     MainInput.PreviewFolder    = previewFolder;
@@ -63,22 +63,14 @@ for i = 1:nSubjects
     % Diff file
     if ismissing(DiffFileValue) || ...
             strlength(strtrim(string(DiffFileValue))) == 0
-
         MainInput.diff_file = '';
-
     else
-
         DiffFileValue = char(string(DiffFileValue));
-
         if contains(DiffFileValue, mainDir, 'IgnoreCase', true) || ...
                 contains(DiffFileValue, WoodsDir, 'IgnoreCase', true)
-
             MainInput.diff_file = DiffFileValue;
-
         else
-
             MainInput.diff_file = fullfile(mainDir, DiffFileValue);
-
         end
     end
 
@@ -120,21 +112,21 @@ for i = 1:nSubjects
 
         Dinfo = dicominfo(MainInput.diff_file);
         StudyTime = Dinfo.StudyTime;
-
-        ACQ_Type = char(string(currentInput.AcqType));
-
-        if strcmpi(ACQ_Type,'cpir_diffusion_4bs')
-            num_extra_attr1 = 4;
-        elseif strcmpi(ACQ_Type,'cpir_diffusion_3bs')
-            num_extra_attr1 = 3;
-        elseif strcmpi(ACQ_Type,'cpir_diffusion')
-            num_extra_attr1 = 3;
-        elseif strcmpi(ACQ_Type,'new*_hng_xe_diffusion_29jul2016')
-            num_extra_attr1 = 5;
-        else
-            num_extra_attr1 = NaN;
-        end
-
+        % 
+        % ACQ_Type = char(string(currentInput.AcqType));
+        % 
+        % if strcmpi(ACQ_Type,'cpir_diffusion_4bs')
+        %     num_extra_attr1 = 4;
+        % elseif strcmpi(ACQ_Type,'cpir_diffusion_3bs')
+        %     num_extra_attr1 = 3;
+        % elseif strcmpi(ACQ_Type,'cpir_diffusion')
+        %     num_extra_attr1 = 3;
+        % elseif strcmpi(ACQ_Type,'new*_hng_xe_diffusion_29jul2016')
+        %     num_extra_attr1 = 5;
+        % else
+        %     num_extra_attr1 = NaN;
+        % end
+        num_extra_attr1 = 4; % hard code until i figure out how to get this with the current webapp
         MainInput.sernum = num2str(currentInput.XeSeries);
 
     elseif strcmpi(reconValue, "Offline")
@@ -271,7 +263,8 @@ for i = 1:nSubjects
     end
 
     sesnum = datestr(scanDate, 'yyyymmdd');
-
+    MainInput.ScanDate = sesnum;
+    
     % Change to analysis folder and then run
     analysisfolder = fullfile( ...
         mainDir, ...
@@ -283,7 +276,7 @@ for i = 1:nSubjects
         ['ser-', char(string(MainInput.sernum))]);
 
     MainInput.analysisfolder = analysisfolder;
-
+    
     diff_analysis_folder = ...
         fullfile(analysisfolder,'Diffusion_Analysis');
 

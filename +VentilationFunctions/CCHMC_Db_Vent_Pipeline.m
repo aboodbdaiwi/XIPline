@@ -296,7 +296,8 @@ switch orientation
     case "AXIAL"
         orientation_out = "transversal";
     otherwise
-        error("Unsupported SliceOrientation: %s", MainInput.SliceOrientation);
+        orientation_out = "coronal";
+        %error("Unsupported SliceOrientation: %s", MainInput.SliceOrientation);
 end
 MainInput.SliceOrientation = orientation_out;
 
@@ -703,8 +704,12 @@ if strcmp(Ventilation.GLRLM_Analysis, 'yes') == 1
     Outputs.GLRLM.output = Ventilation.GLRLM;
 end
 
-Outputs.AnalysisDate = num2str(Outputs.AnalysisDate);
-Outputs.ScanDate = num2str(Outputs.ScanDate);
+if isnumeric(Outputs.ScanDate)
+    Outputs.ScanDate = num2str(Outputs.ScanDate);
+end
+if isnumeric(Outputs.AnalysisDate)
+    Outputs.AnalysisDate = num2str(Outputs.AnalysisDate);
+end
 Outputs.timestamp = Ventilation.timestamp;
 Outputs.AnalysisVersion = 'v100';
 Outputs.skewness = Ventilation.skewness;

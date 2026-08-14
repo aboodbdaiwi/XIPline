@@ -180,7 +180,7 @@ Outputs.MorphometryAnalysis = Diffusion.MorphometryAnalysis;
     
 %MainInput.PatientAge = MainInput.Age;
 Diffusion.ADCFittingType = 'Log Weighted Linear'; % Log Weighted Linear | Bayesian | Non-Linear | Log Linear
-Diffusion.ADCLB_Analysis = 'no';
+Diffusion.ADCLB_Analysis = 'yes';
 Age = str2double(string(MainInput.Age));
 Diffusion.ADCLB_RefMean = 0.0003 * Age + 0.024;
 Diffusion.ADCLB_RefSD = 2e-5*Age+0.0073;
@@ -195,7 +195,7 @@ Diffusion.SEMMorphometry = 'yes';
 Diffusion.MorphometryAnalysisType = 'human';
 Diffusion.Do = 0.14; % 100% Xenon
 Diffusion.Delta = Diffusion.BigDeltaTime;  
-Diffusion.writereport = 'no';
+Diffusion.writereport = 'yes';
 Outputs.Scanner = '3T-Philips';
 
 Outputs.MorphometryAnalysisType = Diffusion.MorphometryAnalysisType;

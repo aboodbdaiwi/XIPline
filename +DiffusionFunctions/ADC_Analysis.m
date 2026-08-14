@@ -661,16 +661,43 @@ disp('Saving ADCmap Tiff Completed.')
 close all;
 % read tiff
 cd(outputpath)
-tiff_info = imfinfo('ADCmap.tif'); % return tiff structure, one element per image
-% tiff_stack = imread('BinnedVent.tif', 1) ; % read in first image
-ADCcoloredmap = uint8(zeros(tiff_info(1).Height ,tiff_info(1).Width ,3,length(tiff_info)));
-%concatenate each successive tiff to tiff_stack
-for ii = 1 : size(tiff_info, 1)
-    temp_tiff = imread('ADCmap.tif', ii);
-    ADCcoloredmap(:,:,:,ii) = temp_tiff;
+tiffFile = fullfile(outputpath,'ADCmap.tif');
+tiff_info = imfinfo(tiffFile);
+
+% Read first TIFF page and use its dimensions as the reference
+temp_tiff = imread(tiffFile,1);
+
+% Make sure image is RGB
+if ndims(temp_tiff) == 2
+    temp_tiff = repmat(temp_tiff,[1 1 3]);
+elseif size(temp_tiff,3) > 3
+    temp_tiff = temp_tiff(:,:,1:3);
+end
+
+frameH = size(temp_tiff,1);
+frameW = size(temp_tiff,2);
+nSlices = numel(tiff_info);
+
+ADCcoloredmap = uint8(zeros(frameH,frameW,3,nSlices));
+ADCcoloredmap(:,:,:,1) = uint8(temp_tiff);
+
+% Read remaining TIFF pages
+for ii = 2:nSlices
+    temp_tiff = imread(tiffFile,ii);
+    % Convert grayscale to RGB if needed
+    if ndims(temp_tiff) == 2
+        temp_tiff = repmat(temp_tiff,[1 1 3]);
+    elseif size(temp_tiff,3) > 3
+        temp_tiff = temp_tiff(:,:,1:3);
+    end
+    % Force every page to match first-page dimensions
+    if size(temp_tiff,1) ~= frameH || size(temp_tiff,2) ~= frameW
+        temp_tiff = imresize(temp_tiff,[frameH frameW]);
+    end
+    ADCcoloredmap(:,:,:,ii) = uint8(temp_tiff);
 end
 Diffusion.ADCcoloredmap = ADCcoloredmap;
-% S = orthosliceViewer((BinnedVentmap)); %colormap(SixBinMap);
+% S = orthosliceViewer((permute  (ADCcoloredmap, [1,2,4,3]))); %colormap(SixBinMap);
 
 
 %% 

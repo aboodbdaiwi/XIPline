@@ -60,7 +60,27 @@ function LBVDP_Report(Ventilation, Proton, MainInput)
     % Add Title Bar
     Global.exportToPPTX('addtext','Ventilation Analysis Report', 'Position',[1.5 0 5 0.5], 'FontSize',25,'FontWeight','bold','Color',[1 0 0],'BackgroundColor',[1 1 1],'HorizontalAlignment','center');
     
-    SubjInfo = {MainInput.SubjectID,MainInput.Age,MainInput.Sex,MainInput.Disease, MainInput.ScanDate};
+    % Subject information
+    subjectID = char(string(MainInput.SubjectID));
+    sex       = char(string(MainInput.Sex));
+    disease   = char(string(MainInput.Disease));
+    
+    % Age
+    if isstring(MainInput.Age)
+        age = char(MainInput.Age);
+    else
+        age = MainInput.Age;
+    end
+    
+    % Scan date
+    if isdatetime(MainInput.ScanDate)
+        scanDate = datestr(MainInput.ScanDate, 'mm/dd/yyyy');
+    else
+        scanDate = char(string(MainInput.ScanDate));
+    end
+    
+    SubjInfo = {subjectID, age, sex, disease, scanDate};    % Header row 
+
     % Header row 
     SubjInfosummary = cell(2, 5);
     SubjInfosummary(1,:) = {
@@ -295,6 +315,55 @@ function LBVDP_Report(Ventilation, Proton, MainInput)
     presentation.Close();
     ppt.Quit();
     delete(ppt);
+
+
+    % ================================================================
+    % Copy PDF to Batch Analysis Preview folder
+    % ================================================================
+    if isfield(MainInput, 'PreviewFolder') && ...
+            ~isempty(MainInput.PreviewFolder) && ...
+            isfolder(MainInput.PreviewFolder) && ...
+            exist(PDFoutputPath, 'file')
+    
+        % Subject ID
+        subjectID = char(string(MainInput.SubjectID));
+        % Reconstruction type
+        recon = char(string(MainInput.Recon));
+        % Scan date
+        scanDate = MainInput.ScanDate;
+        if isdatetime(scanDate)
+            scanDate = datestr(scanDate, 'yyyymmdd');
+        else
+            try
+                scanDate = datestr(datetime(string(scanDate)), 'yyyymmdd');
+            catch
+                scanDate = char(string(scanDate));
+            end
+        end
+        
+        % Remove characters that cannot be used in Windows filenames
+        subjectID = regexprep(subjectID, '[<>:"/\\|?*]', '_');
+        scanDate  = regexprep(scanDate,  '[<>:"/\\|?*]', '_');
+        recon     = regexprep(recon,     '[<>:"/\\|?*]', '_');
+        % New preview PDF name
+        previewFileName = sprintf( ...
+            '%s_%s_%s_%s.pdf', ...
+            subjectID, ...
+            scanDate, ...
+            recon, ...
+            pptxFileName);
+    
+        previewPDFPath = fullfile( ...
+            MainInput.PreviewFolder, ...
+            previewFileName);
+    
+        % Copy PDF
+        copyfile(PDFoutputPath, previewPDFPath);
+    
+        fprintf('Preview PDF copied to:\n%s\n', previewPDFPath);
+    
+    end
+
 end
 
 % Local function

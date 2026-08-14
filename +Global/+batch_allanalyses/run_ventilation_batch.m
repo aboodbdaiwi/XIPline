@@ -77,7 +77,16 @@ for i = 1:nSubjects
     end
 
     MainInput.ScannerSoftware  = currentInput.Software;
-    MainInput.SequenceType     = currentInput.Traversal;
+    MainInput.SequenceType     = currentInput.Sequence;
+    sequence = string(currentInput.Sequence);    
+    if contains(sequence, "cartesian", 'IgnoreCase', true)
+        MainInput.SequenceType = '2D GRE';
+    elseif contains(sequence, "spiral", 'IgnoreCase', true)
+        MainInput.SequenceType = '2D Spiral';
+    else
+        MainInput.SequenceType = char(sequence);
+    end
+
     MainInput.denoiseXe        = 'no';
 
     % Analyst now comes from Polarizer
@@ -201,7 +210,7 @@ for i = 1:nSubjects
     end
 
     sesnum = datestr(scanDate, 'yyyymmdd');
-
+    MainInput.ScanDate = sesnum;
     % ============================================================
     % Remaining inputs
     % ============================================================

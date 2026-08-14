@@ -664,9 +664,11 @@ end
 VentDisplayStack = cat(4, VentCoronalStack, VentAxialStack);
 VentDisplayStack = reshape(VentDisplayStack, [size(Img,1), size(Img,2), 2*NumPlotSlices]);
 % Plot
-VentFig_simple = figure('Name','Ventilation','Color','w');
-montage(VentDisplayStack, 'Size', [2 NumPlotSlices], 'DisplayRange',[]);
-title('Ventilation','FontSize',16);
+VentFig_simple = figure('Name','Ventilation','Color','w','Units','pixels','Position',[100 100 1400 420]);
+ax = axes('Parent',VentFig_simple,'Position',[0.02 0.08 0.96 0.84]);
+montage(VentDisplayStack,'Size',[2 NumPlotSlices],'DisplayRange',[],'Parent',ax);
+title(ax,'Ventilation','FontSize',16);
+axis(ax,'tight');
 
 
 % Preallocate
@@ -685,9 +687,11 @@ end
 VentDisplayStack = cat(4, VentCoronalStack, VentAxialStack);
 VentDisplayStack = reshape(VentDisplayStack, [size(Img,1), size(Img,2), 2*NumPlotSlices]);
 % Plot
-MembraneFig_simple = figure('Name','Membrane','Color','w');
-montage(VentDisplayStack, 'Size', [2 NumPlotSlices], 'DisplayRange',[]);
-title('Membrane','FontSize',16);
+MembraneFig_simple = figure('Name','Membrane','Color','w','Units','pixels','Position',[100 100 1400 420]);
+ax = axes('Parent',MembraneFig_simple,'Position',[0.02 0.08 0.96 0.84]);
+montage(VentDisplayStack,'Size',[2 NumPlotSlices],'DisplayRange',[],'Parent',ax);
+title(ax,'Membrane','FontSize',16);
+axis(ax,'tight');
 
 
 % Preallocate
@@ -706,9 +710,11 @@ end
 VentDisplayStack = cat(4, VentCoronalStack, VentAxialStack);
 VentDisplayStack = reshape(VentDisplayStack, [size(Img,1), size(Img,2), 2*NumPlotSlices]);
 % Plot
-RBCFig_simple = figure('Name','RBC','Color','w');
-montage(VentDisplayStack, 'Size', [2 NumPlotSlices], 'DisplayRange',[]);
-title('RBC','FontSize',16);
+RBCFig_simple = figure('Name','RBC','Color','w','Units','pixels','Position',[100 100 1400 420]);
+ax = axes('Parent',RBCFig_simple,'Position',[0.02 0.08 0.96 0.84]);
+montage(VentDisplayStack,'Size',[2 NumPlotSlices],'DisplayRange',[],'Parent',ax);
+title(ax,'RBC','FontSize',16);
+axis(ax,'tight');
 
 
 % Preallocate
@@ -727,18 +733,17 @@ end
 VentDisplayStack = cat(4, VentCoronalStack, VentAxialStack);
 VentDisplayStack = reshape(VentDisplayStack, [size(Img,1), size(Img,2), 2*NumPlotSlices]);
 % Plot
-RBCMemRatioFig_simple = figure('Name','RBCMemRatio','Color','w');
-montage(VentDisplayStack, 'Size', [2 NumPlotSlices], 'DisplayRange',[0 0.6]);
-colormap("parula"); 
-ax = gca;
-cb = colorbar('southoutside');
-% Tighten spacing
-ax.Position(2) = ax.Position(2) + 0.03;   % move image down slightly
-ax.Position(4) = ax.Position(4) - 0.05;   % reduce height
-cb.Position(2) = ax.Position(2) - 0.04;   % move colorbar up (closer)
-cb.Position(4) = 0.03;                    % make colorbar thinner
+RBCMemRatioFig_simple = figure('Name','RBCMemRatio','Color','w','Units','pixels','Position',[100 100 1400 420]);
+ax = axes('Parent',RBCMemRatioFig_simple,'Position',[0.02 0.13 0.96 0.79]);
+montage(VentDisplayStack,'Size',[2 NumPlotSlices],'DisplayRange',[0 0.6],'Parent',ax);
+colormap(ax,"parula");
+cb = colorbar(ax,'southoutside');
+ax.Position(2) = ax.Position(2) + 0.03;
+ax.Position(4) = ax.Position(4) - 0.05;
+cb.Position(2) = ax.Position(2) - 0.04;
+cb.Position(4) = 0.03;
 cb.FontSize = 16;
-title('RBCMemRatio','FontSize',16);
+title(ax,'RBCMemRatio','FontSize',16);
 
 %% Save Images
 % waitbar(.70,f,'Saving Images....');
@@ -797,8 +802,7 @@ niftiwrite(abs(fliplr(rot90(RBCImage,-1))),[outputpath,'\RBCImage.nii'],info,'Co
 
 disp('Saving Niftis Completed.')
 
-%%  Tiffs (Binned Images)
-
+%% Tiffs (Binned Images)
 tiffFile = fullfile(outputpath,'BinnedVent.tif');
 if isfile(tiffFile)
     delete(tiffFile);
@@ -810,35 +814,52 @@ set(ax1,'Visible','off','units','inches','position',[0 0 2 2]);
 set(ax2,'Visible','off','units','inches','position',[0 0 2 2]);
 set(tiff,'units','inches','position',[1 1 2 2]);
 disp('Saving Vent Tiff...')
-
 for slice = 1:H_RecMatrix
     cla(ax1); cla(ax2);
     imshow(abs(ProtonImageRegistered(:,:,slice)),[0,0.99*ProtonMax],'Parent',ax1);
     Xe = imshow(VentBinMap(:,:,slice),[1,6],'Parent',ax2);
     set(Xe,'AlphaData',ProtonMaskRegistered(:,:,slice));
     colormap(ax2,SixBinMap);
-    drawnow limitrate;
+    drawnow;
     X = getframe(tiff).cdata;
+    if slice == 1
+        frameSize = [size(X,1) size(X,2)];
+    elseif size(X,1) ~= frameSize(1) || size(X,2) ~= frameSize(2)
+        X = imresize(X,frameSize);
+    end
     if slice == 1
         imwrite(X,tiffFile,'tif','Description',strcat('Package Version: ',ReconVersion,'; Cohort: ',HealthyCohortNum));
     else
         imwrite(X,tiffFile,'tif','WriteMode','append','Description',strcat('Package Version: ',ReconVersion,'; Cohort: ',HealthyCohortNum));
     end
 end
-
 close(tiff)
 tiff_info = imfinfo(tiffFile);
 if numel(tiff_info) ~= H_RecMatrix
     warning('Expected %d slices, but saved TIFF contains %d slices.',H_RecMatrix,numel(tiff_info));
 end
-BinnedVentmap = uint8(zeros(tiff_info(1).Height,tiff_info(1).Width,3,numel(tiff_info)));
-for ii = 1:numel(tiff_info)
-    BinnedVentmap(:,:,:,ii) = imread(tiffFile,ii);
+temp_tiff = imread(tiffFile,1);
+if ndims(temp_tiff) == 2
+    temp_tiff = repmat(temp_tiff,[1 1 3]);
+end
+frameH = size(temp_tiff,1);
+frameW = size(temp_tiff,2);
+BinnedVentmap = uint8(zeros(frameH,frameW,3,numel(tiff_info)));
+BinnedVentmap(:,:,:,1) = uint8(temp_tiff);
+for ii = 2:numel(tiff_info)
+    temp_tiff = imread(tiffFile,ii);
+    if ndims(temp_tiff) == 2
+        temp_tiff = repmat(temp_tiff,[1 1 3]);
+    end
+    if size(temp_tiff,1) ~= frameH || size(temp_tiff,2) ~= frameW
+        temp_tiff = imresize(temp_tiff,[frameH frameW]);
+    end
+    BinnedVentmap(:,:,:,ii) = uint8(temp_tiff);
 end
 BinnedVentmap = permute(BinnedVentmap,[1 2 4 3]);
 GasExchange.BinnedVentmap = BinnedVentmap;
 disp('Saving BinnedVentmap Tiff Completed. Saving Dissolved Tiff...')
-% S = orthosliceViewer(BinnedVentmap);
+% figure; S = orthosliceViewer(BinnedVentmap);
 
 
 %Dissolved Binned----------------------------------------------------------
@@ -852,33 +873,51 @@ ax2 = axes('Parent',tiff);
 set(ax1,'Visible','off','units','inches','position',[0 0 2 2]);
 set(ax2,'Visible','off','units','inches','position',[0 0 2 2]);
 set(tiff,'units','inches','position',[1 1 2 2]);
-disp('Saving Vent Tiff...')
+disp('Saving Dissolved Tiff...')
 for slice = 1:H_RecMatrix
     cla(ax1); cla(ax2);
     imshow(abs(ProtonImageRegistered(:,:,slice)),[0,0.99*ProtonMax],'Parent',ax1);
     Xe = imshow(DissolvedBinMap(:,:,slice),[1,6],'Parent',ax2);
     set(Xe,'AlphaData',ProtonMaskRegistered(:,:,slice));
     colormap(ax2,SixBinMap);
-    drawnow limitrate;
+    drawnow;
     X = getframe(tiff).cdata;
+    if slice == 1
+        frameSize = [size(X,1) size(X,2)];
+    elseif size(X,1) ~= frameSize(1) || size(X,2) ~= frameSize(2)
+        X = imresize(X,frameSize);
+    end
     if slice == 1
         imwrite(X,tiffFile,'tif','Description',strcat('Package Version: ',ReconVersion,'; Cohort: ',HealthyCohortNum));
     else
         imwrite(X,tiffFile,'tif','WriteMode','append','Description',strcat('Package Version: ',ReconVersion,'; Cohort: ',HealthyCohortNum));
     end
 end
-
 close(tiff)
 tiff_info = imfinfo(tiffFile);
 if numel(tiff_info) ~= H_RecMatrix
     warning('Expected %d slices, but saved TIFF contains %d slices.',H_RecMatrix,numel(tiff_info));
 end
-BinnedDissolvedmap = uint8(zeros(tiff_info(1).Height,tiff_info(1).Width,3,numel(tiff_info)));
-for ii = 1:numel(tiff_info)
-    BinnedDissolvedmap(:,:,:,ii) = imread(tiffFile,ii);
+temp_tiff = imread(tiffFile,1);
+if ndims(temp_tiff) == 2
+    temp_tiff = repmat(temp_tiff,[1 1 3]);
 end
-BinnedDissolvedmap = permute(BinnedDissolvedmap ,[1 2 4 3]);
-GasExchange.BinnedDissolvedmap = BinnedDissolvedmap ;
+frameH = size(temp_tiff,1);
+frameW = size(temp_tiff,2);
+BinnedDissolvedmap = uint8(zeros(frameH,frameW,3,numel(tiff_info)));
+BinnedDissolvedmap(:,:,:,1) = uint8(temp_tiff);
+for ii = 2:numel(tiff_info)
+    temp_tiff = imread(tiffFile,ii);
+    if ndims(temp_tiff) == 2
+        temp_tiff = repmat(temp_tiff,[1 1 3]);
+    end
+    if size(temp_tiff,1) ~= frameH || size(temp_tiff,2) ~= frameW
+        temp_tiff = imresize(temp_tiff,[frameH frameW]);
+    end
+    BinnedDissolvedmap(:,:,:,ii) = uint8(temp_tiff);
+end
+BinnedDissolvedmap = permute(BinnedDissolvedmap,[1 2 4 3]);
+GasExchange.BinnedDissolvedmap = BinnedDissolvedmap;
 disp('Saving BinnedDissolvedmap Tiff Completed. Saving Dissolved Tiff...')
 
 
@@ -893,33 +932,51 @@ ax2 = axes('Parent',tiff);
 set(ax1,'Visible','off','units','inches','position',[0 0 2 2]);
 set(ax2,'Visible','off','units','inches','position',[0 0 2 2]);
 set(tiff,'units','inches','position',[1 1 2 2]);
-disp('Saving Vent Tiff...')
+disp('Saving Barrier Tiff...')
 for slice = 1:H_RecMatrix
     cla(ax1); cla(ax2);
     imshow(abs(ProtonImageRegistered(:,:,slice)),[0,0.99*ProtonMax],'Parent',ax1);
     Xe = imshow(BarrierBinMap(:,:,slice),[1,8],'Parent',ax2);
     set(Xe,'AlphaData',ProtonMaskRegistered(:,:,slice));
     colormap(ax2,EightBinMap);
-    drawnow limitrate;
+    drawnow;
     X = getframe(tiff).cdata;
+    if slice == 1
+        frameSize = [size(X,1) size(X,2)];
+    elseif size(X,1) ~= frameSize(1) || size(X,2) ~= frameSize(2)
+        X = imresize(X,frameSize);
+    end
     if slice == 1
         imwrite(X,tiffFile,'tif','Description',strcat('Package Version: ',ReconVersion,'; Cohort: ',HealthyCohortNum));
     else
         imwrite(X,tiffFile,'tif','WriteMode','append','Description',strcat('Package Version: ',ReconVersion,'; Cohort: ',HealthyCohortNum));
     end
 end
-
 close(tiff)
 tiff_info = imfinfo(tiffFile);
 if numel(tiff_info) ~= H_RecMatrix
     warning('Expected %d slices, but saved TIFF contains %d slices.',H_RecMatrix,numel(tiff_info));
 end
-BinnedBarrierUptakemap = uint8(zeros(tiff_info(1).Height,tiff_info(1).Width,3,numel(tiff_info)));
-for ii = 1:numel(tiff_info)
-    BinnedBarrierUptakemap(:,:,:,ii) = imread(tiffFile,ii);
+temp_tiff = imread(tiffFile,1);
+if ndims(temp_tiff) == 2
+    temp_tiff = repmat(temp_tiff,[1 1 3]);
 end
-BinnedBarrierUptakemap = permute(BinnedBarrierUptakemap ,[1 2 4 3]);
-GasExchange.BinnedBarrierUptakemap = BinnedBarrierUptakemap ;
+frameH = size(temp_tiff,1);
+frameW = size(temp_tiff,2);
+BinnedBarrierUptakemap = uint8(zeros(frameH,frameW,3,numel(tiff_info)));
+BinnedBarrierUptakemap(:,:,:,1) = uint8(temp_tiff);
+for ii = 2:numel(tiff_info)
+    temp_tiff = imread(tiffFile,ii);
+    if ndims(temp_tiff) == 2
+        temp_tiff = repmat(temp_tiff,[1 1 3]);
+    end
+    if size(temp_tiff,1) ~= frameH || size(temp_tiff,2) ~= frameW
+        temp_tiff = imresize(temp_tiff,[frameH frameW]);
+    end
+    BinnedBarrierUptakemap(:,:,:,ii) = uint8(temp_tiff);
+end
+BinnedBarrierUptakemap = permute(BinnedBarrierUptakemap,[1 2 4 3]);
+GasExchange.BinnedBarrierUptakemap = BinnedBarrierUptakemap;
 disp('Saving BinnedBarrierUptakemap Tiff Completed. Saving Dissolved Tiff...')
 
 
@@ -934,33 +991,51 @@ ax2 = axes('Parent',tiff);
 set(ax1,'Visible','off','units','inches','position',[0 0 2 2]);
 set(ax2,'Visible','off','units','inches','position',[0 0 2 2]);
 set(tiff,'units','inches','position',[1 1 2 2]);
-disp('Saving Vent Tiff...')
+disp('Saving RBC Tiff...')
 for slice = 1:H_RecMatrix
     cla(ax1); cla(ax2);
     imshow(abs(ProtonImageRegistered(:,:,slice)),[0,0.99*ProtonMax],'Parent',ax1);
     Xe = imshow(RBCBinMap(:,:,slice),[1,6],'Parent',ax2);
     set(Xe,'AlphaData',ProtonMaskRegistered(:,:,slice));
     colormap(ax2,SixBinMap);
-    drawnow limitrate;
+    drawnow;
     X = getframe(tiff).cdata;
+    if slice == 1
+        frameSize = [size(X,1) size(X,2)];
+    elseif size(X,1) ~= frameSize(1) || size(X,2) ~= frameSize(2)
+        X = imresize(X,frameSize);
+    end
     if slice == 1
         imwrite(X,tiffFile,'tif','Description',strcat('Package Version: ',ReconVersion,'; Cohort: ',HealthyCohortNum));
     else
         imwrite(X,tiffFile,'tif','WriteMode','append','Description',strcat('Package Version: ',ReconVersion,'; Cohort: ',HealthyCohortNum));
     end
 end
-
 close(tiff)
 tiff_info = imfinfo(tiffFile);
 if numel(tiff_info) ~= H_RecMatrix
     warning('Expected %d slices, but saved TIFF contains %d slices.',H_RecMatrix,numel(tiff_info));
 end
-BinnedRBCTransfermap = uint8(zeros(tiff_info(1).Height,tiff_info(1).Width,3,numel(tiff_info)));
-for ii = 1:numel(tiff_info)
-    BinnedRBCTransfermap(:,:,:,ii) = imread(tiffFile,ii);
+temp_tiff = imread(tiffFile,1);
+if ndims(temp_tiff) == 2
+    temp_tiff = repmat(temp_tiff,[1 1 3]);
 end
-BinnedRBCTransfermap = permute(BinnedRBCTransfermap ,[1 2 4 3]);
-GasExchange.BinnedRBCTransfermap = BinnedRBCTransfermap ;
+frameH = size(temp_tiff,1);
+frameW = size(temp_tiff,2);
+BinnedRBCTransfermap = uint8(zeros(frameH,frameW,3,numel(tiff_info)));
+BinnedRBCTransfermap(:,:,:,1) = uint8(temp_tiff);
+for ii = 2:numel(tiff_info)
+    temp_tiff = imread(tiffFile,ii);
+    if ndims(temp_tiff) == 2
+        temp_tiff = repmat(temp_tiff,[1 1 3]);
+    end
+    if size(temp_tiff,1) ~= frameH || size(temp_tiff,2) ~= frameW
+        temp_tiff = imresize(temp_tiff,[frameH frameW]);
+    end
+    BinnedRBCTransfermap(:,:,:,ii) = uint8(temp_tiff);
+end
+BinnedRBCTransfermap = permute(BinnedRBCTransfermap,[1 2 4 3]);
+GasExchange.BinnedRBCTransfermap = BinnedRBCTransfermap;
 disp('Saving BinnedRBCTransfermap Tiff Completed. Saving Dissolved Tiff...')
 
 
@@ -975,35 +1050,52 @@ ax2 = axes('Parent',tiff);
 set(ax1,'Visible','off','units','inches','position',[0 0 2 2]);
 set(ax2,'Visible','off','units','inches','position',[0 0 2 2]);
 set(tiff,'units','inches','position',[1 1 2 2]);
-disp('Saving Vent Tiff...')
+disp('Saving RBC:Barrier Tiff...')
 for slice = 1:H_RecMatrix
     cla(ax1); cla(ax2);
     imshow(abs(ProtonImageRegistered(:,:,slice)),[0,0.99*ProtonMax],'Parent',ax1);
     Xe = imshow(RBCBarrierBinMap(:,:,slice),[1,6],'Parent',ax2);
     set(Xe,'AlphaData',ProtonMaskRegistered(:,:,slice));
     colormap(ax2,SixBinMap);
-    drawnow limitrate;
+    drawnow;
     X = getframe(tiff).cdata;
+    if slice == 1
+        frameSize = [size(X,1) size(X,2)];
+    elseif size(X,1) ~= frameSize(1) || size(X,2) ~= frameSize(2)
+        X = imresize(X,frameSize);
+    end
     if slice == 1
         imwrite(X,tiffFile,'tif','Description',strcat('Package Version: ',ReconVersion,'; Cohort: ',HealthyCohortNum));
     else
         imwrite(X,tiffFile,'tif','WriteMode','append','Description',strcat('Package Version: ',ReconVersion,'; Cohort: ',HealthyCohortNum));
     end
 end
-
 close(tiff)
 tiff_info = imfinfo(tiffFile);
 if numel(tiff_info) ~= H_RecMatrix
     warning('Expected %d slices, but saved TIFF contains %d slices.',H_RecMatrix,numel(tiff_info));
 end
-BinnedRBCBarriermap = uint8(zeros(tiff_info(1).Height,tiff_info(1).Width,3,numel(tiff_info)));
-for ii = 1:numel(tiff_info)
-    BinnedRBCBarriermap(:,:,:,ii) = imread(tiffFile,ii);
+temp_tiff = imread(tiffFile,1);
+if ndims(temp_tiff) == 2
+    temp_tiff = repmat(temp_tiff,[1 1 3]);
 end
-BinnedRBCBarriermap = permute(BinnedRBCBarriermap ,[1 2 4 3]);
-GasExchange.BinnedRBCBarriermap = BinnedRBCBarriermap ;
+frameH = size(temp_tiff,1);
+frameW = size(temp_tiff,2);
+BinnedRBCBarriermap = uint8(zeros(frameH,frameW,3,numel(tiff_info)));
+BinnedRBCBarriermap(:,:,:,1) = uint8(temp_tiff);
+for ii = 2:numel(tiff_info)
+    temp_tiff = imread(tiffFile,ii);
+    if ndims(temp_tiff) == 2
+        temp_tiff = repmat(temp_tiff,[1 1 3]);
+    end
+    if size(temp_tiff,1) ~= frameH || size(temp_tiff,2) ~= frameW
+        temp_tiff = imresize(temp_tiff,[frameH frameW]);
+    end
+    BinnedRBCBarriermap(:,:,:,ii) = uint8(temp_tiff);
+end
+BinnedRBCBarriermap = permute(BinnedRBCBarriermap,[1 2 4 3]);
+GasExchange.BinnedRBCBarriermap = BinnedRBCBarriermap;
 disp('Saving BinnedRBCBarriermap Tiff Completed. Saving Dissolved Tiff...')
-
 
 %RBC Oscillation Binned----------------------------------------------------------
 tiffFile = fullfile(outputpath,'BinnedRBCOscillation.tif');
@@ -1016,35 +1108,52 @@ ax2 = axes('Parent',tiff);
 set(ax1,'Visible','off','units','inches','position',[0 0 2 2]);
 set(ax2,'Visible','off','units','inches','position',[0 0 2 2]);
 set(tiff,'units','inches','position',[1 1 2 2]);
-disp('Saving Vent Tiff...')
+disp('Saving RBC Oscillation Tiff...')
 for slice = 1:H_RecMatrix
     cla(ax1); cla(ax2);
     imshow(abs(ProtonImageRegistered(:,:,slice)),[0,0.99*ProtonMax],'Parent',ax1);
     Xe = imshow(RBCOscBinMap(:,:,slice),[1,8],'Parent',ax2);
     set(Xe,'AlphaData',ProtonMaskRegistered(:,:,slice));
     colormap(ax2,EightBinMap);
-    drawnow limitrate;
+    drawnow;
     X = getframe(tiff).cdata;
+    if slice == 1
+        frameSize = [size(X,1) size(X,2)];
+    elseif size(X,1) ~= frameSize(1) || size(X,2) ~= frameSize(2)
+        X = imresize(X,frameSize);
+    end
     if slice == 1
         imwrite(X,tiffFile,'tif','Description',strcat('Package Version: ',ReconVersion,'; Cohort: ',HealthyCohortNum));
     else
         imwrite(X,tiffFile,'tif','WriteMode','append','Description',strcat('Package Version: ',ReconVersion,'; Cohort: ',HealthyCohortNum));
     end
 end
-
 close(tiff)
 tiff_info = imfinfo(tiffFile);
 if numel(tiff_info) ~= H_RecMatrix
     warning('Expected %d slices, but saved TIFF contains %d slices.',H_RecMatrix,numel(tiff_info));
 end
-BinnedRBCOscillationmap = uint8(zeros(tiff_info(1).Height,tiff_info(1).Width,3,numel(tiff_info)));
-for ii = 1:numel(tiff_info)
-    BinnedRBCOscillationmap(:,:,:,ii) = imread(tiffFile,ii);
+temp_tiff = imread(tiffFile,1);
+if ndims(temp_tiff) == 2
+    temp_tiff = repmat(temp_tiff,[1 1 3]);
 end
-BinnedRBCOscillationmap = permute(BinnedRBCOscillationmap ,[1 2 4 3]);
-GasExchange.BinnedRBCOscillationmap = BinnedRBCOscillationmap ;
+frameH = size(temp_tiff,1);
+frameW = size(temp_tiff,2);
+BinnedRBCOscillationmap = uint8(zeros(frameH,frameW,3,numel(tiff_info)));
+BinnedRBCOscillationmap(:,:,:,1) = uint8(temp_tiff);
+for ii = 2:numel(tiff_info)
+    temp_tiff = imread(tiffFile,ii);
+    if ndims(temp_tiff) == 2
+        temp_tiff = repmat(temp_tiff,[1 1 3]);
+    end
+    if size(temp_tiff,1) ~= frameH || size(temp_tiff,2) ~= frameW
+        temp_tiff = imresize(temp_tiff,[frameH frameW]);
+    end
+    BinnedRBCOscillationmap(:,:,:,ii) = uint8(temp_tiff);
+end
+BinnedRBCOscillationmap = permute(BinnedRBCOscillationmap,[1 2 4 3]);
+GasExchange.BinnedRBCOscillationmap = BinnedRBCOscillationmap;
 disp('Saving BinnedRBCOscillationmap Tiff Completed. Saving Dissolved Tiff...')
-
 
 %% Save Report
 % waitbar(.90,f,'Save Report....');
@@ -1548,17 +1657,68 @@ if strcmp(GasExchange.writereport,'yes')
     Global.exportToPPTX('addtext','Gas Exchange Analysis Report', 'Position',[0 -0.1 5 0.5], 'FontSize',20,'FontWeight','bold','Color',[1 0 0],'BackgroundColor',[1 1 1],'HorizontalAlignment','center');
 
     % Settings Table
-    settinglabels = {'Subject ID','Age(y)','Sex','Disease','Scan Date','Scanner','Scan Software','Sequence','Recon','XIPline Cmt','Denoise','N4Bias','Method','Age Cor.','Image Quality','Note','ProcessDate', 'Analyst Initials'};
-    settings = {MainInput.SubjectID,MainInput.Age,MainInput.Sex,MainInput.Disease, MainInput.ScanDate, MainInput.Scanner,MainInput.ScannerSoftware,MainInput.SequenceType,MainInput.Recon,MainInput.AnalysisCode_hash,MainInput.denoiseXe,MainInput.N4Bias,MainInput.AnalysisMethod,MainInput.AgeCor,MainInput.ImageQuality,MainInput.Note,todayStr,MainInput.Analyst};
-    settingsssummary = cell(18, 2);
-    settingsssummary(1,:) = {
-        {'Setting','BackgroundColor',rowColors(1,:),'FontWeight','bold'},
-        {'Value','BackgroundColor',rowColors(1,:),'FontWeight','bold'}
-    };
-    for i = 1:numel(settinglabels)
-        settingsssummary{i+1,1} = {settinglabels{i}, 'BackgroundColor', rowColors(2,:), 'FontWeight', 'bold'};
-        settingsssummary{i+1,2} = settings{i};
+    settinglabels = { ...
+        'Subject ID','Age(y)','Sex','Disease','Scan Date','Scanner', ...
+        'Scan Software','Sequence','Recon','XIPline Cmt','Denoise', ...
+        'N4Bias','Method','Age Cor.','Image Quality','Note', ...
+        'ProcessDate','Analyst Initials'};
+    
+    settings = { ...
+        MainInput.SubjectID, ...
+        MainInput.Age, ...
+        MainInput.Sex, ...
+        MainInput.Disease, ...
+        MainInput.ScanDate, ...
+        MainInput.Scanner, ...
+        MainInput.ScannerSoftware, ...
+        MainInput.SequenceType, ...
+        MainInput.Recon, ...
+        MainInput.AnalysisCode_hash, ...
+        MainInput.denoiseXe, ...
+        MainInput.N4Bias, ...
+        MainInput.AnalysisMethod, ...
+        MainInput.AgeCor, ...
+        MainInput.ImageQuality, ...
+        MainInput.Note, ...
+        todayStr, ...
+        MainInput.Analyst};
+    
+    % Convert unsupported types to char
+    for i = 1:numel(settings)
+        value = settings{i};
+        if isdatetime(value)
+            settings{i} = datestr(value, 'mm/dd/yyyy');
+        elseif isstring(value)
+            if ismissing(value)
+                settings{i} = '';
+            else
+                settings{i} = char(value);
+            end
+        elseif iscategorical(value)
+            settings{i} = char(string(value));
+        elseif isempty(value)
+            settings{i} = '';
+        end
     end
+    
+    % Build summary table
+    settingsssummary = cell(numel(settinglabels) + 1, 2);
+    
+    settingsssummary(1,:) = {
+        {'Setting','BackgroundColor',rowColors(1,:),'FontWeight','bold'}, ...
+        {'Value','BackgroundColor',rowColors(1,:),'FontWeight','bold'}};
+    
+    for i = 1:numel(settinglabels)
+    
+        settingsssummary{i+1,1} = { ...
+            settinglabels{i}, ...
+            'BackgroundColor', rowColors(2,:), ...
+            'FontWeight', 'bold'};
+    
+        settingsssummary{i+1,2} = settings{i};
+    
+    end
+
     Global.exportToPPTX('addtable', settingsssummary, 'Position', [0.05 0.35 2.5 3], ...
         'Vert', 'middle', 'Horiz', 'center', 'FontSize', 10);
     
@@ -2018,7 +2178,7 @@ if strcmp(GasExchange.writereport,'yes')
     Global.exportToPPTX('close');
     fprintf('Report saved to %s\n',pptxName);
 
-     close all;
+    close all;
     
     % save report as a PDF
     ppt = actxserver('PowerPoint.Application');
@@ -2034,7 +2194,8 @@ if strcmp(GasExchange.writereport,'yes')
     ppt.Quit();
     delete(ppt);   
  
-   % ================================================================
+
+    % ================================================================
     % Copy PDF to Batch Analysis Preview folder
     % ================================================================
     if isfield(MainInput, 'PreviewFolder') && ...
@@ -2044,30 +2205,30 @@ if strcmp(GasExchange.writereport,'yes')
     
         % Subject ID
         subjectID = char(string(MainInput.SubjectID));
-    
+        % Reconstruction type
+        recon = char(string(MainInput.Recon));
         % Scan date
         scanDate = MainInput.ScanDate;
-    
         if isdatetime(scanDate)
             scanDate = datestr(scanDate, 'yyyymmdd');
         else
-            % Try to convert to datetime first
             try
                 scanDate = datestr(datetime(string(scanDate)), 'yyyymmdd');
             catch
                 scanDate = char(string(scanDate));
             end
         end
-    
+        
         % Remove characters that cannot be used in Windows filenames
         subjectID = regexprep(subjectID, '[<>:"/\\|?*]', '_');
         scanDate  = regexprep(scanDate,  '[<>:"/\\|?*]', '_');
-    
+        recon     = regexprep(recon,     '[<>:"/\\|?*]', '_');
         % New preview PDF name
         previewFileName = sprintf( ...
-            '%s_%s_%s.pdf', ...
+            '%s_%s_%s_%s.pdf', ...
             subjectID, ...
             scanDate, ...
+            recon, ...
             pptxFileName);
     
         previewPDFPath = fullfile( ...
@@ -2092,6 +2253,32 @@ clc
    AnalysisDate = str2double(datestr(datetime('today'), 'yyyymmdd'));
     % JSON file
     clc;
+    % Remove main database path from input file paths
+    mainDir = '\\rds6.chmccorp.cchmc.org\PulMed-54\CPIR_Images_Database';
+    pathFields = {'cal_file','gx_file','anat_file'};
+    for i = 1:numel(pathFields)
+        fieldName = pathFields{i};
+        if isfield(MainInput,fieldName) && ~isempty(MainInput.(fieldName))
+            filePath = char(string(MainInput.(fieldName)));
+            if startsWith(filePath,mainDir,'IgnoreCase',true)
+                filePath = filePath(length(mainDir)+1:end);
+            end
+            if ~startsWith(filePath,'\')
+                filePath = ['\' filePath];
+            end
+            MainInput.(fieldName) = filePath;
+        end
+    end
+
+    scanDate = string(MainInput.ScanDate);
+    if ~isempty(regexp(scanDate,'^\d{8}$','once'))
+        MainInput.ScanDate = char(scanDate);
+    elseif isdatetime(MainInput.ScanDate)
+        MainInput.ScanDate = datestr(MainInput.ScanDate,'yyyymmdd');
+    else
+        MainInput.ScanDate = datestr(datetime(scanDate),'yyyymmdd');
+    end
+    
     headers = {'SUBJECT_ID','Age','Sex','Disease','ScanDate','ScanTime','scan_num','CalibrationDataPath','DissolvedDataPath','AnatomicalDataPath','analysispath','Note','ImageQuality','ProcessingNotes','AnalysisStatus','Analyst','Scanner', ...
                'ScannerSoftware','SequenceType','ReconType','ScanVersion','AnalysisCode_path','AnalysisDate','AnalysisVersion','AnalysisCode_hash',...
                'Denoise','N4Bias','AnalysisMethod','AgeCorrection','Spectral_SNR','k0_fit','TE90','Actual_TE90','Flip_Angle_Factor', ...
@@ -2116,11 +2303,12 @@ clc
                'woods_analysis_folder'};
     
     % --- Collect values in same order ---
+
     if ~isfield(MainInput,'UpdatedNote') && ~isfield(MainInput,'UpdatedImageQuality')                                        
     NewData = {MainInput.SubjectID, MainInput.Age,MainInput.Sex, MainInput.Disease,MainInput.ScanDate,MainInput.timeStr,scan_num,MainInput.cal_file,MainInput.gx_file, MainInput.anat_file,MainInput.analysispath,MainInput.Note,MainInput.ImageQuality,MainInput.ProcessingNotes, MainInput.AnalysisStatus, MainInput.Analyst, MainInput.Scanner, ...
                MainInput.ScannerSoftware,MainInput.SequenceType,MainInput.Recon,MainInput.Institute,AnalysisCode_path,string(AnalysisDate),MainInput.analysisversion,MainInput.AnalysisCode_hash,...
                MainInput.denoiseXe,MainInput.N4Bias,MainInput.AnalysisMethod,MainInput.AgeCor,spectralSNR,k0_fit, GasExchange.TE90, GasExchange.ActTE90, GasExchange.XeSin.flip_angles.vals(1,1)/DisFlipAngle, ...
-               ReconVersion, datestr(date,29), HealthyCohortNum, ...
+               ReconVersion, datestr(date,'yyyymmdd'), HealthyCohortNum, ...
                GasFreq, BarrierFreq, RBCFreq, ...
                GasT2Star, BarrierT2Star, BarrierLtoGRatio, RBCT2Star, ...
                AppendedDissolvedNMRFit.phase(3), AppendedDissolvedNMRFit.phase(2), AppendedDissolvedNMRFit.phase(1),...%Spectro Fitting Results - Phase

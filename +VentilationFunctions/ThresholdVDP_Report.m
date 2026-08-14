@@ -78,8 +78,27 @@ function ThresholdVDP_Report(Ventilation, Proton, MainInput)
     % Add Title Bar
     Global.exportToPPTX('addtext','Ventilation Analysis Report', 'Position',[1.5 0 5 0.5], 'FontSize',25,'FontWeight','bold','Color',[1 0 0],'BackgroundColor',[1 1 1],'HorizontalAlignment','center');
     
-    SubjInfo = {MainInput.SubjectID,MainInput.Age,MainInput.Sex,MainInput.Disease, MainInput.ScanDate};
-    % Header row 
+    % Subject information
+    subjectID = char(string(MainInput.SubjectID));
+    sex       = char(string(MainInput.Sex));
+    disease   = char(string(MainInput.Disease));
+    
+    % Age
+    if isstring(MainInput.Age)
+        age = char(MainInput.Age);
+    else
+        age = MainInput.Age;
+    end
+    
+    % Scan date
+    if isdatetime(MainInput.ScanDate)
+        scanDate = datestr(MainInput.ScanDate, 'mm/dd/yyyy');
+    else
+        scanDate = char(string(MainInput.ScanDate));
+    end
+    
+    SubjInfo = {subjectID, age, sex, disease, scanDate};    % Header row 
+
     SubjInfosummary = cell(2, 5);
     SubjInfosummary(1,:) = {
         {'Subject ID','BackgroundColor',rowColors(end,:),'FontWeight','bold'},
@@ -92,6 +111,7 @@ function ThresholdVDP_Report(Ventilation, Proton, MainInput)
     for i = 1:size(SubjInfosummary,2)
         SubjInfosummary{2,i} = {SubjInfo{i}, 'BackgroundColor', rowColors(2,:), 'FontWeight', 'bold'};
     end
+   
     % Add to slide
     Global.exportToPPTX('addtable', SubjInfosummary, 'Position', [0.1 0.5 8.2 0.2], ...
         'Vert', 'middle', 'Horiz', 'center', 'FontSize', 16);
@@ -338,30 +358,30 @@ function ThresholdVDP_Report(Ventilation, Proton, MainInput)
     
         % Subject ID
         subjectID = char(string(MainInput.SubjectID));
-    
+        % Reconstruction type
+        recon = char(string(MainInput.Recon));
         % Scan date
         scanDate = MainInput.ScanDate;
-    
         if isdatetime(scanDate)
             scanDate = datestr(scanDate, 'yyyymmdd');
         else
-            % Try to convert to datetime first
             try
                 scanDate = datestr(datetime(string(scanDate)), 'yyyymmdd');
             catch
                 scanDate = char(string(scanDate));
             end
         end
-    
+        
         % Remove characters that cannot be used in Windows filenames
         subjectID = regexprep(subjectID, '[<>:"/\\|?*]', '_');
         scanDate  = regexprep(scanDate,  '[<>:"/\\|?*]', '_');
-    
+        recon     = regexprep(recon,     '[<>:"/\\|?*]', '_');
         % New preview PDF name
         previewFileName = sprintf( ...
-            '%s_%s_%s.pdf', ...
+            '%s_%s_%s_%s.pdf', ...
             subjectID, ...
             scanDate, ...
+            recon, ...
             pptxFileName);
     
         previewPDFPath = fullfile( ...

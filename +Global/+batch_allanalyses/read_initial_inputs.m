@@ -34,38 +34,38 @@ function initial_inputs = read_initial_inputs(excelFile)
         'Note'
         };
 
-    shortVars = { ...
-        'Analysis'
-        'SubjectID'
-        'SubjectID_PO'
-        'Subject'
-        'Date'
-        'Scan'
-        'Study'
-        'Disease'
-        'Age'
-        'Sex'
-        'Selected'
-        'Recon'
-        'Quality'
-        'XeSeries'
-        'XePath'
-        'HSeries'
-        'HPath'
-        'FreqOffset'
-        'AnalysisStatus'
-        'RunMode'
-        'ProcessingNotes'
-        'PixelX'
-        'PixelY'
-        'SliceThickness'
-        'Scanner'
-        'Software'
-        'Traversal'
-        'Orientation'
-        'Polarizer'
-        'Note'
-        };
+  shortVars = { ...
+    'Analysis'
+    'SubjectID'
+    'SubjectID_PO'
+    'Subject'
+    'Date'
+    'Scan'
+    'Study'
+    'Disease'
+    'Age'
+    'Sex'
+    'Selected'
+    'Recon'
+    'Quality'
+    'XeSeries'
+    'XePath'
+    'HSeries'
+    'HPath'
+    'FreqOffset'
+    'AnalysisStatus'
+    'RunMode'
+    'ProcessingNotes'
+    'PixelX'
+    'PixelY'
+    'SliceThickness'
+    'Scanner'
+    'Software'
+    'Sequence'
+    'Orientation'
+    'Polarizer'
+    'Note'
+    };
 
     if ~isfile(excelFile)
         error('Excel file not found:\n%s', excelFile);
@@ -195,6 +195,28 @@ function initial_inputs = read_initial_inputs(excelFile)
         freqOffset(missingFreq) = "0";
     
         initial_inputs.FreqOffset = freqOffset;
+    end
+    
+    % ================================================================
+    % Gas Exchange specific input corrections
+    % ================================================================
+    gxRows = strcmpi(strtrim(string(initial_inputs.Analysis)), "gx");
+    
+    % GX images are isotropic
+    initial_inputs.PixelX(gxRows) = initial_inputs.SliceThickness(gxRows);
+    initial_inputs.PixelY(gxRows) = initial_inputs.SliceThickness(gxRows);
+    
+    % Force GX sequence and orientation
+    if iscell(initial_inputs.Sequence)
+        initial_inputs.Sequence(gxRows) = {'3D Radial'};
+    else
+        initial_inputs.Sequence(gxRows) = "3D Radial";
+    end
+    
+    if iscell(initial_inputs.Orientation)
+        initial_inputs.Orientation(gxRows) = {'Isotropic'};
+    else
+        initial_inputs.Orientation(gxRows) = "Isotropic";
     end
 
     % Add row number AFTER filtering
