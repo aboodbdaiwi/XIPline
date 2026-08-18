@@ -33,9 +33,19 @@ function [N4, Bias] = N4_bias_correction(MR, maskarray, parentPath)
 N4Path = mfilename('fullpath');
 idcs = strfind(N4Path,filesep);%determine location of file separators
 N4Path = [N4Path(1:idcs(end)-1),filesep];%remove file
-
+    if ispc
+        % Windows
+        XIPlineRoot = 'C:\XIPline';
+    elseif ismac
+        % macOS
+        XIPlineRoot = fullfile(getenv('HOME'), 'XIPline');
+    else
+        % Linux
+        XIPlineRoot = fullfile(getenv('HOME'), 'XIPline');
+    end 
+    
 if isempty(N4Path)
-    N4Path = 'C:\XIPline\';
+    N4Path = fullfile(XIPlineRoot, '\');
 end
 
 % maskarray = flip(maskarray,3);

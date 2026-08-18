@@ -29,7 +29,17 @@ dset = LoadData.ismrmrd.Dataset(mrdfile);
 % we prompt for it every time or set it once for each site
 
 % The path here should be the path to the local diffusion waveform file
-directory = 'C:\XIPline\GE\waveforms\xe_calibration';
+if ispc
+    % Windows
+    XIPlineRoot = 'C:\XIPline';
+elseif ismac
+    % macOS
+    XIPlineRoot = fullfile(getenv('HOME'), 'XIPline');
+else
+    % Linux
+    XIPlineRoot = fullfile(getenv('HOME'), 'XIPline');
+end 
+directory = fullfile(XIPlineRoot, 'GE\waveforms\xe_diffusion'); 
 % Define file patterns to search for
 filePatterns = {'*.mat', '*TR.fdl'};
 filePaths = {};

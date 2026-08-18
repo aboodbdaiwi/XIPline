@@ -84,6 +84,16 @@ AppendedDissolvedNMRFit = GasExchange.AppendedDissolvedNMRFit;
 ActTE90 = GasExchange.ActTE90;
 freq_jump = GasExchange.freq_jump;
 
+if ispc
+    % Windows
+    XIPlineRoot = 'C:\XIPline';
+elseif ismac
+    % macOS
+    XIPlineRoot = fullfile(getenv('HOME'), 'XIPline');
+else
+    % Linux
+    XIPlineRoot = fullfile(getenv('HOME'), 'XIPline');
+end 
 switch MainInput.HealthyReferenceType
     case 'Default'         
         MainInput.ImportHealthyCohort = 0;
@@ -95,7 +105,7 @@ switch MainInput.HealthyReferenceType
         HealthyCohortFullPath = fullfile(Scriptlocation, 'HealthyCohort.mat');        
         % If not found, try fallback
         if ~exist(HealthyCohortFullPath, 'file')
-            HealthyCohortFullPath = fullfile('C:\XIPline\GX_Healthy_Reference', 'HealthyCohort.mat');
+            HealthyCohortFullPath = fullfile(XIPlineRoot, 'GX_Healthy_Reference\HealthyCohort.mat'); 
         end        
         % Final check
         if ~exist(HealthyCohortFullPath, 'file')

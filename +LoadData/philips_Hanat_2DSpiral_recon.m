@@ -10,12 +10,21 @@ function [Proton, MainInput] = philips_Hanat_2DSpiral_recon(MainInput, Proton)
 %
 % Output:
 %   Proton - Struct with loaded image and metadata
-
+    if ispc
+        % Windows
+        XIPlineRoot = 'C:\XIPline';
+    elseif ismac
+        % macOS
+        XIPlineRoot = fullfile(getenv('HOME'), 'XIPline');
+    else
+        % Linux
+        XIPlineRoot = fullfile(getenv('HOME'), 'XIPline');
+    end 
     % Step 1: Write config file
     LoadData.write_config_file(MainInput);
 
     % Step 2: Run external recon executable
-    exePath = 'C:\XIPline\offline_recon\Philips_2DHSpiralRecon.exe';
+    exePath = fullfile(XIPlineRoot, 'offline_recon\Philips_2DHSpiralRecon.exe');
     [status, cmdout] = system(['"', exePath, '"']);
 
     if status ~= 0

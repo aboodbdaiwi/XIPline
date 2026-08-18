@@ -31,10 +31,22 @@ switch MainInput.SegmentationMethod
         [Proton,Ventilation,Diffusion,GasExchange] = Segmentation.PerformManualThresholdSegmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
 
     case 'Auto' % ============================================Auto================================================
-        automasking_folder = 'XIPline';
-        destinationFolderPath = join(['C:\',automasking_folder]);
+   
+        if ispc
+            % Windows
+            XIPlineRoot = 'C:\XIPline';
+        elseif ismac
+            % macOS
+            XIPlineRoot = fullfile(getenv('HOME'), 'XIPline');
+        else
+            % Linux
+            XIPlineRoot = fullfile(getenv('HOME'), 'XIPline');
+        end 
+
+        destinationFolderPath = XIPlineRoot;
+        
         cd('C:\');
-        if ~exist(automasking_folder, 'dir')
+        if ~exist(destinationFolderPath, 'dir')
             mkdir(destinationFolderPath);
         else        
             disp('HPXeAnalysisApp folder already exists in the destination folder.');
@@ -56,12 +68,7 @@ switch MainInput.SegmentationMethod
         [FunctionDirectory,~] = fileparts(FunctionDirectory);
 
         sourcemodel1Path = [FunctionDirectory,'\+Segmentation\AutoSegmentation.py'];
-        sourcemodel2Path = [FunctionDirectory,'\+Segmentation\2DVent_Xe_axial_1000e_20250509.hdf5'];
-        sourcemodel3Path = [FunctionDirectory,'\+Segmentation\2DVent_Xe_coronal_1000e_20250509.hdf5'];
-        sourcemodel4Path = [FunctionDirectory,'\+Segmentation\2DVent_Xe_H_coronal_1000e_20230528.hdf5'];
-        sourcemodel5Path = [FunctionDirectory,'\+Segmentation\3DGasExchange_Xe_100e_20250324.hdf5'];
-        sourcemodel6Path = [FunctionDirectory,'\+Segmentation\3DGasExchange_Xe_HLR_100e_20250324.hdf5'];
-        sourcemodel7Path = [FunctionDirectory,'\+Segmentation\2DDiff_Xe_axial_2000e_20240118.hdf5'];
+
         try
             copyfile(sourcemodel1Path, destinationFolderPath); % force to copy
         catch
@@ -69,22 +76,8 @@ switch MainInput.SegmentationMethod
         end
 
         cd(modelsFolderPath);
-        if ~exist(fullfile(modelsFolderPath, '2DVent_Xe_axial_1000e_20250509.hdf5'), 'file') ||...
-            ~exist(fullfile(modelsFolderPath, '2DVent_Xe_coronal_1000e_20250509.hdf5'), 'file') ||...
-            ~exist(fullfile(modelsFolderPath, '2DVent_Xe_H_coronal_1000e_20230528.hdf5'), 'file') ||...
-            ~exist(fullfile(modelsFolderPath, '3DGasExchange_Xe_100e_20250324.hdf5'), 'file') ||...
-            ~exist(fullfile(modelsFolderPath, '3DGasExchange_Xe_HLR_100e_20250324.hdf5'), 'file') ||...
-            ~exist(fullfile(modelsFolderPath, '2DDiff_Xe_axial_2000e_20240118.hdf5'), 'file') ||...~exist(fullfile(modelsFolderPath, 'AutoSegment_3DGasExchange_Xe_H_1000e.hdf5'), 'file') ||...
-            ~exist(fullfile(destinationFolderPath, 'AutoSegmentation.py'), 'file')
-
+        if ~exist(fullfile(destinationFolderPath, 'AutoSegmentation.py'), 'file')
             copyfile(sourcemodel1Path, destinationFolderPath);
-            % copyfile(sourcemodel2Path, modelsFolderPath);
-            % copyfile(sourcemodel3Path, modelsFolderPath);
-            % copyfile(sourcemodel4Path, modelsFolderPath);
-            % copyfile(sourcemodel5Path, modelsFolderPath);
-            % copyfile(sourcemodel6Path, modelsFolderPath);
-            % copyfile(sourcemodel7Path, modelsFolderPath);
-
             disp('File copied successfully.');
         else
             disp('models files already exist in the models folder.');
@@ -244,7 +237,7 @@ switch MainInput.SegmentationMethod
         Segmentation.write_configSeg_file(MainInput);
         [~, MainInput] = Segmentation.preprocess_images_for_auto_segmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
         cd(MainInput.AutoSegmentPath)  
-
+       
         if strcmp(SegmentType, 'not_supported') == 0
             switch  MainInput.AIScript
                 case 'Python'
@@ -254,9 +247,8 @@ switch MainInput.SegmentationMethod
                     LungMask = system(command);                            
                 case 'Executable'
                     %Step 2: Run external recon executable
-                    exePath = 'C:\XIPline\segmentation\AutoSegmentation.exe';
+                    exePath = fullfile(XIPlineRoot, 'segmentation\AutoSegmentation.exe'); 
                     [status, cmdout] = system(['"', exePath, '"']);
-            
                     if status ~= 0
                         error('Failed to run AutoSegmentation.exe:\n%s', cmdout);
                     end

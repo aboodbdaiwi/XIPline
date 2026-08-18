@@ -27,7 +27,18 @@ dset = LoadData.ismrmrd.Dataset(mrdfile);
 cf = h.psc.mps_freq/10;
 
 % The path here should be the path to the local calibration waveform file
-directory = 'C:\XIPline\GE\waveforms\xe_calibration';
+if ispc
+    % Windows
+    XIPlineRoot = 'C:\XIPline';
+elseif ismac
+    % macOS
+    XIPlineRoot = fullfile(getenv('HOME'), 'XIPline');
+else
+    % Linux
+    XIPlineRoot = fullfile(getenv('HOME'), 'XIPline');
+end 
+directory = fullfile(XIPlineRoot, 'GE\waveforms\xe_calibration'); 
+
 % Define file patterns to search for
 filePatterns = {'*freq.fdl', '*TR.fdl'};
 filePaths = {};

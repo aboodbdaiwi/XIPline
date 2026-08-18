@@ -1,8 +1,17 @@
 function write_config_file(MainInput)
 % write_config_file - Writes config_Xe.txt and/or config_H.txt
 % to C:\XIPline\offline_recon, removing old versions if present.
-
-    outputFolder = 'C:\XIPline\offline_recon';
+    if ispc
+        % Windows
+        XIPlineRoot = 'C:\XIPline';
+    elseif ismac
+        % macOS
+        XIPlineRoot = fullfile(getenv('HOME'), 'XIPline');
+    else
+        % Linux
+        XIPlineRoot = fullfile(getenv('HOME'), 'XIPline');
+    end 
+    outputFolder = fullfile(XIPlineRoot, 'offline_recon');
 
     if ~exist(outputFolder, 'dir')
         mkdir(outputFolder);

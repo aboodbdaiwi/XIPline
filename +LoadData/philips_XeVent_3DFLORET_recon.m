@@ -16,12 +16,22 @@ function [Ventilation, MainInput] = philips_XeVent_3DFLORET_recon(MainInput, Ven
 %
 % Output:
 %   Ventilation - Struct containing loaded image and metadata
+    if ispc
+        % Windows
+        XIPlineRoot = 'C:\XIPline';
+    elseif ismac
+        % macOS
+        XIPlineRoot = fullfile(getenv('HOME'), 'XIPline');
+    else
+        % Linux
+        XIPlineRoot = fullfile(getenv('HOME'), 'XIPline');
+    end 
 
     % Step 1: Write config file
     LoadData.write_config_file(MainInput);
 
     % Step 2: Run external recon executable
-    exePath = 'C:\XIPline\offline_recon\Philips_3D_XeVent_FLORET_recon.exe';
+    exePath = fullfile(XIPlineRoot, 'offline_recon\Philips_3D_XeVent_FLORET_recon.exe'); 
     [status, cmdout] = system(['"', exePath, '"']);
 
     if status ~= 0

@@ -12,41 +12,48 @@ from scipy.io import savemat, loadmat
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
+# Set XIPline root based on operating system
+if os.name == 'nt':
+    XIPlineRoot = 'C:/XIPline'
+else:
+    # macOS / Linux
+    XIPlineRoot = os.path.join(os.path.expanduser('~'), 'XIPline')
+
 def save_NIBnifti(file,outpath):
     # save .nii file
     img = nib.Nifti1Image(file, np.eye(4))
-    nib.save(img,outpath+'AutoMask.nii.gz')
+    nib.save(img,os.path.join(outpath,'AutoMask.nii.gz'))
     # save .mat file
-    savemat(outpath+'AutoMask.mat', {"AutoMask":file} )
+    savemat(os.path.join(outpath,'AutoMask.mat'), {"AutoMask":file} )
     
 def Segment3D(SegmentType):
-    inoutImgFolder = 'C:/XIPline/'
-    modelFolder = 'C:/XIPline/models/'
+    inoutImgFolder = XIPlineRoot
+    modelFolder = os.path.join(XIPlineRoot, 'models')
     InputImg = 'InputImage.mat'
-    imgarray = loadmat(inoutImgFolder+InputImg)
+    imgarray = loadmat(os.path.join(inoutImgFolder,InputImg))
     imgarray = imgarray["Images"]
 
     X_test = imgarray / np.max(imgarray)
     # % load model
     if SegmentType == 'vent_2D_1ch_cor':
-        #model = load_model(modelFolder+'2DVent_Xe_coronal_1000e_20250509.hdf5',compile=False) 
-        #model = load_model(modelFolder+'2DVent_XeCTC_20250603_1000epochs.hdf5',compile=False) 
-        model = load_model(modelFolder+'2DVent_XeCTC_20251003_1000epochs.hdf5',compile=False)
+        #model = load_model(os.path.join(modelFolder,'2DVent_Xe_coronal_1000e_20250509.hdf5'),compile=False) 
+        #model = load_model(os.path.join(modelFolder,'2DVent_XeCTC_20250603_1000epochs.hdf5'),compile=False) 
+        model = load_model(os.path.join(modelFolder,'2DVent_XeCTC_20251003_1000epochs.hdf5'),compile=False)
     elif SegmentType == 'vent_2D_2ch_cor':
-        model = load_model(modelFolder+'2DVent_Xe_H_coronal_1000e_20230528.hdf5',compile=False) 
+        model = load_model(os.path.join(modelFolder,'2DVent_Xe_H_coronal_1000e_20230528.hdf5'),compile=False) 
     elif SegmentType == 'vent_2D_1ch_axi':
-        model = load_model(modelFolder+'2DVent_Xe_axial_1000e_20250509.hdf5',compile=False) 
+        model = load_model(os.path.join(modelFolder,'2DVent_Xe_axial_1000e_20250509.hdf5'),compile=False) 
     elif SegmentType == 'vent_anat_2D_1ch_cor':
-        model = load_model(modelFolder+'2DVent_H_coronal_2000e_20230818.hdf5',compile=False)         
+        model = load_model(os.path.join(modelFolder,'2DVent_H_coronal_2000e_20230818.hdf5'),compile=False)         
     elif SegmentType == 'diff_2D_1ch':
-        #model = load_model(modelFolder+'2DDiff_Xe_axial_2000e_20240118.hdf5',compile=False)   
-        model = load_model(modelFolder+'2DDiff_XeCTC_20251020_1000epochs.hdf5',compile=False)        
+        #model = load_model(os.path.join(modelFolder,'2DDiff_Xe_axial_2000e_20240118.hdf5'),compile=False)   
+        model = load_model(os.path.join(modelFolder,'2DDiff_XeCTC_20251020_1000epochs.hdf5'),compile=False)        
     elif SegmentType == 'gx_3D_1ch_iso':
-        #model = load_model(modelFolder+'3DGasExchange_Xe_100e_20250324.hdf5',compile=False) 
-        model = load_model(modelFolder+'3DGasExchange_Xe_200e_20230623.hdf5',compile=False) 
+        #model = load_model(os.path.join(modelFolder,'3DGasExchange_Xe_100e_20250324.hdf5'),compile=False) 
+        model = load_model(os.path.join(modelFolder,'3DGasExchange_Xe_200e_20230623.hdf5'),compile=False) 
     elif SegmentType == 'gx_3D_2ch_iso':
-        #model = load_model(modelFolder+'3DGasExchange_Xe_HLR_100e_20250324.hdf5',compile=False) 
-        model = load_model(modelFolder+'3DGasExchange_Xe_HLR_1000e_20230623.hdf5',compile=False) 
+        #model = load_model(os.path.join(modelFolder,'3DGasExchange_Xe_HLR_100e_20250324.hdf5'),compile=False) 
+        model = load_model(os.path.join(modelFolder,'3DGasExchange_Xe_HLR_1000e_20230623.hdf5'),compile=False) 
             
     #% predict mask for each slice
     if SegmentType == 'vent_2D_1ch_cor' or SegmentType == 'vent_2D_2ch_cor' or SegmentType == 'vent_2D_1ch_axi' or SegmentType == 'diff_2D_1ch_axi':
@@ -71,7 +78,9 @@ def Segment3D(SegmentType):
 
     return lungmask
 
-def read_configSeg_file(config_path=r"C:\XIPline\config_segmentation.txt"):
+def read_configSeg_file(config_path=None):
+    if config_path is None:
+        config_path = os.path.join(XIPlineRoot, 'config_segmentation.txt')
     SegmentType = None
     with open(config_path, 'r') as f:
         for line in f:
@@ -89,11 +98,11 @@ def read_configSeg_file(config_path=r"C:\XIPline\config_segmentation.txt"):
  
     return SegmentType
 
-config_segmentation_path=r"C:\XIPline\config_segmentation.txt"
+config_segmentation_path = os.path.join(XIPlineRoot, 'config_segmentation.txt')
 SegmentType = read_configSeg_file(config_segmentation_path)
 #SegmentType = 'vent_2D_2ch_cor' # vent_2D_1ch_cor,
 MaskOut = Segment3D(SegmentType)
-outpath = 'C:/XIPline/' #os.path.dirname(InputImg)
+outpath = XIPlineRoot #os.path.dirname(InputImg)
 save_NIBnifti(MaskOut,outpath)
 
 # %% create .exe
@@ -107,20 +116,3 @@ save_NIBnifti(MaskOut,outpath)
 This will create a single .exe file under \dist. 
 
 '''
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

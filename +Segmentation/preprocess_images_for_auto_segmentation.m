@@ -195,8 +195,17 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
             % imslice(squeeze(Images(1,:,:,:,:)))
     end
 %     save([MainInput.XeDataLocation '\Mat2Py_preprocessing.mat'],'Images');
-    automasking_folder = 'XIPline';
-    destinationFolderPath = join(['C:\',automasking_folder]);
+        if ispc
+            % Windows
+            XIPlineRoot = 'C:\XIPline';
+        elseif ismac
+            % macOS
+            XIPlineRoot = fullfile(getenv('HOME'), 'XIPline');
+        else
+            % Linux
+            XIPlineRoot = fullfile(getenv('HOME'), 'XIPline');
+        end 
+    destinationFolderPath = XIPlineRoot;
     cd(destinationFolderPath)
     save([destinationFolderPath '\InputImage.mat'],'Images');
 %     scriptLocation = fileparts(mfilename('fullpath'));

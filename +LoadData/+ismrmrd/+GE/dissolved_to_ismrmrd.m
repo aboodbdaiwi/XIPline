@@ -32,7 +32,18 @@ end
 % run prep_dixon_gx
 dDP = XeFullPath;
 h = [];
-wfnpath = 'C:\XIPline\GE\waveforms\xe_dissolved';
+if ispc
+    % Windows
+    XIPlineRoot = 'C:\XIPline';
+elseif ismac
+    % macOS
+    XIPlineRoot = fullfile(getenv('HOME'), 'XIPline');
+else
+    % Linux
+    XIPlineRoot = fullfile(getenv('HOME'), 'XIPline');
+end 
+wfnpath = fullfile(XIPlineRoot, 'GE\waveforms\xe_dissolved'); 
+
 wfn_freq = '';
 fname = dDP;
 LoadData.ismrmrd.GE.prep_dixon_gx(dDP,h,wfnpath,wfn_freq,fname);
@@ -44,7 +55,7 @@ CalFullPath = MainInput.CalFullPath;
 % [Cal_path, Cal_name, Cal_ext ] = fileparts(CalFullPath);
 dCal = CalFullPath;
 h = [];
-wfnpath = 'C:\XIPline\GE\waveforms\xe_calibration'; % files inside the wfnpath folder = {'*.mat', '*freq.fdl', '*flip.fdl'};
+wfnpath = fullfile(XIPlineRoot, 'GE\waveforms\xe_calibration'); % files inside the wfnpath folder = {'*.mat', '*freq.fdl', '*flip.fdl'};
 [meanRbc2barrier,te90,targetAX,targetTG] = Calibration.recon_calibration(dCal,h,wfnpath);
 close all;
 % read in gas exchnage data
@@ -53,7 +64,8 @@ close all;
 % te90 = CalResults.te90;
 % freqfdlpath = MainInput.freqfdlFullPath;
 % The path here should be the path to the local calibration waveform file
-directory = 'C:\XIPline\GE\waveforms\xe_dissolved';
+directory = fullfile(XIPlineRoot, 'GE\waveforms\xe_dissolved'); 
+
 % Define file patterns to search for
 filePatterns = {'*freq.fdl', '*TR.fdl'};
 filePaths = {};

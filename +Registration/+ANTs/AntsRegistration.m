@@ -74,7 +74,19 @@ function [MainInput, Proton, Ventilation, GasExchange] = AntsRegistration(MainIn
     
     % Perform erosion on the 3D binary mask
     LungMask = imerode(LungMask, se);
-    registration_path = 'C:\XIPline\Registration';
+    if ispc
+        % Windows
+        XIPlineRoot = 'C:\XIPline';
+    elseif ismac
+        % macOS
+        XIPlineRoot = fullfile(getenv('HOME'), 'XIPline');
+    else
+        % Linux
+        XIPlineRoot = fullfile(getenv('HOME'), 'XIPline');
+    end
+    registration_path = fullfile(XIPlineRoot, 'Registration'); 
+    % registration_path = 'C:\XIPline\Registration';
+
     if MainInput.SkipRegistration == 0
         % Prepare paths
         ANTSPath = fileparts(mfilename('fullpath'));
