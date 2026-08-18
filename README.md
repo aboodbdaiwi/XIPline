@@ -94,6 +94,8 @@ If you use this software, please cite:
 
 | **Task**                                                                 | **Date**        |
 |--------------------------------------------------------------------------|-----------------|
+| XIPline is compatible with Windows, macOS, and Linux                     | Aug 18, 2026    |
+| Batch Processing for Vent, Diff, and GX in one go                        | Aug 16, 2026    |
 | Setup XIPline folder automatically                                       | June 22, 2026   |
 | Update Diffusion analysis (add SNR rules and exclude noisy points)       | May 16, 2026    |
 | Add denosing methods option                                              | Jan 13, 2026    |
