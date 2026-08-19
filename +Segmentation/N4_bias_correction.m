@@ -12,8 +12,9 @@ if isempty(N4Path)
     N4Path = 'C:\XIPline\';
 end
 maskarray = ones(size(MR));
-if parentPath(end) ~= '\'
-    parentPath = [parentPath, '\'];
+% RH: was hardcoded to '\' which broke on macOS/Linux paths; use filesep so this works cross-platform
+if parentPath(end) ~= filesep
+    parentPath = [parentPath, filesep];
 end
 
 % Export Image and Mask temporarily for use in N4
@@ -23,11 +24,24 @@ niftiwrite(abs(maskarray),[parentPath,'Weight.nii']); % Weight
 % Run Bias Correction
 % general settings (Abdullah)
 
-cmd = ['"',N4Path,'N4BiasFieldCorrection.exe"',...%run bias correction
-    ' -d 3 -i "',parentPath,'Image.nii"',... % set to 3 dimensions and input image of Image.nii
-    ' -s 2',... % shrink by factor of 1
-    ' -w "',parentPath,'Weight.nii" ',... % import mask called Weight.nii
-    ' -o ["',parentPath,'CorrectedImage.nii","',parentPath,'Bias.nii"]']; % output corrected image and bias field
+% RH: N4BiasFieldCorrection.exe is a Windows-only binary and can't run on macOS/Linux.
+% On those platforms, run N4 through ANTsPy (same xe_gx conda env used for Registration.ANTs)
+% instead of shelling out to a missing native CLI.
+if ispc
+    cmd = ['"',N4Path,'N4BiasFieldCorrection.exe"',...%run bias correction
+        ' -d 3 -i "',parentPath,'Image.nii"',... % set to 3 dimensions and input image of Image.nii
+        ' -s 2',... % shrink by factor of 1
+        ' -w "',parentPath,'Weight.nii" ',... % import mask called Weight.nii
+        ' -o ["',parentPath,'CorrectedImage.nii","',parentPath,'Bias.nii"]']; % output corrected image and bias field
+else
+    XIPlineRoot = fullfile(getenv('HOME'), 'XIPline');
+    registration_path = fullfile(XIPlineRoot, 'Registration');
+    pythonExe = Registration.ANTs.getAntsPythonExe(registration_path);
+    n4Script = fullfile(N4Path, 'n4_bias_correction.py');
+    cmd = sprintf('"%s" "%s" "%s" "%s" %d "%s" "%s"', ...
+        pythonExe, n4Script, [parentPath,'Image.nii'], [parentPath,'Weight.nii'], ...
+        2, [parentPath,'CorrectedImage.nii'], [parentPath,'Bias.nii']);
+end
 system(cmd);
 
 %% Import Results

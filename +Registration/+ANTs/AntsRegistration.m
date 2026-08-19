@@ -98,40 +98,57 @@ function [MainInput, Proton, Ventilation, GasExchange] = AntsRegistration(MainIn
         pathMoving2      = fullfile(tmp_path, 'image_moving2.nii');
         pathOutputPrefix = fullfile(tmp_path, 'thisTransform_');
         pathOutputMoving = fullfile(tmp_path, 'moving_reg.nii.gz');
-        pathReg          = fullfile(ANTSPath, 'antsRegistration.exe');
-        pathApply        = fullfile(ANTSPath, 'antsApplyTransforms.exe');
         tdata            = fullfile(tmp_path, 'thisTransform_0GenericAffine.mat');
-    
+
         % Write NIfTI files
         niftiwrite(abs(fixed1), pathStatic);
         niftiwrite(abs(moving1), pathMoving1);
         if MainInput.transform_reg
             niftiwrite(abs(moving2), pathMoving2);
         end
-    
+
         % Registration command
         fprintf('*** Running ANTs registration...\n');
-        output_prefix = sprintf('[%s,%s]', pathOutputPrefix, pathOutputMoving);
         switch lower(TransformType)  % ensure case-insensitivity
             case 'translation'
-                transformCmd = 'Translation[0.1]';
+                transformName = 'Translation';
             case 'rigid'
-                transformCmd = 'Rigid[0.1]';
+                transformName = 'Rigid';
             case 'similarity'
-                transformCmd = 'Similarity[0.1]';
+                transformName = 'Similarity';
             case 'affine'
-                transformCmd = 'Affine[0.1]';
+                transformName = 'Affine';
             otherwise
                 error('Unsupported TransformType: %s. Use translation, rigid, similarity, or affine.', TransformType);
         end
-        
-        % Assemble registration command using the selected transform
-        cmd_register = sprintf(...
-            ['"%s" --dimensionality 3 --float 0 --interpolation BSpline ' ...
-            '--metric MI[%s,%s,1,32,Regular,1] --transform %s ' ...
-            '--convergence [20x20x20,1e-6,20] --shrink-factors 4x2x1 ' ...
-            '--smoothing-sigmas 0x0x0 --output %s --verbose 1'], ...
-            pathReg, pathStatic, pathMoving1, transformCmd, output_prefix);
+
+        % RH: branch on platform — Windows keeps the original .exe call (quoting fixed below
+        % since zsh glob-expands unquoted [...] on macOS); macOS/Linux has no native ANTs CLI
+        % bundled with XIPline, so registration runs through ANTsPy (xe_gx conda env) instead.
+        if ispc
+            % Windows: shell out to the bundled antsRegistration.exe
+            pathReg   = fullfile(ANTSPath, 'antsRegistration.exe');
+            pathApply = fullfile(ANTSPath, 'antsApplyTransforms.exe');
+            if ~exist(pathReg, 'file')
+                error('ANTs binary not found: %s', pathReg);
+            end
+            transformCmd = sprintf('%s[0.1]', transformName);
+            output_prefix = sprintf('[%s,%s]', pathOutputPrefix, pathOutputMoving);
+            % RH: arguments containing [...] are double-quoted so the shell
+            % doesn't try to glob-expand them (matters on macOS/zsh; harmless on Windows).
+            cmd_register = sprintf(...
+                ['"%s" --dimensionality 3 --float 0 --interpolation BSpline ' ...
+                '--metric "MI[%s,%s,1,32,Regular,1]" --transform "%s" ' ...
+                '--convergence "[20x20x20,1e-6,20]" --shrink-factors 4x2x1 ' ...
+                '--smoothing-sigmas 0x0x0 --output "%s" --verbose 1'], ...
+                pathReg, pathStatic, pathMoving1, transformCmd, output_prefix);
+        else
+            % RH: macOS/Linux — run registration through ANTsPy (pip install antspyx)
+            pythonExe = Registration.ANTs.getAntsPythonExe(registration_path);
+            regScript = fullfile(ANTSPath, 'ants_register.py');
+            cmd_register = sprintf('"%s" "%s" "%s" "%s" "%s" "%s" "%s"', ...
+                pythonExe, regScript, pathStatic, pathMoving1, pathOutputMoving, tdata, transformName);
+        end
 
         % Execute registration
         [status, cmdout] = system(cmd_register);
@@ -159,8 +176,16 @@ function [MainInput, Proton, Ventilation, GasExchange] = AntsRegistration(MainIn
         % Optionally apply transform to second moving image
         if MainInput.transform_reg
             pathOutputMoving2 = fullfile(tmp_path, 'transform_reg.nii.gz');
-            cmd_applyTransform = sprintf('"%s" -d 3 -e 0 -i "%s" -r "%s" -o "%s" -t "%s"', ...
-                pathApply, pathMoving2, pathStatic, pathOutputMoving2, tdata);
+            % RH: same Windows-exe vs ANTsPy branch as the registration call above
+            if ispc
+                cmd_applyTransform = sprintf('"%s" -d 3 -e 0 -i "%s" -r "%s" -o "%s" -t "%s"', ...
+                    pathApply, pathMoving2, pathStatic, pathOutputMoving2, tdata);
+            else
+                pythonExe = Registration.ANTs.getAntsPythonExe(registration_path);
+                applyScript = fullfile(ANTSPath, 'ants_apply_transform.py');
+                cmd_applyTransform = sprintf('"%s" "%s" "%s" "%s" "%s" "%s" "%s"', ...
+                    pythonExe, applyScript, pathStatic, pathMoving2, pathOutputMoving2, tdata, 'linear');
+            end
             system(cmd_applyTransform);
 
              MainInput.pathOutputMoving2 = pathOutputMoving2;        
