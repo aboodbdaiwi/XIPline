@@ -127,42 +127,83 @@ switch MainInput.SegmentationMethod
         % so these files were never found there.
         satisfiedFile = fullfile(folderPath, 'python_requirement_satisfied.txt');
         pathFile = fullfile(folderPath, 'python_path.txt');
-        
+
+        % RH: read pythonPath unconditionally (not just when installing requirements)
+        % so it's available below to actually invoke AutoSegmentation.py — MATLAB's
+        % system() shell doesn't inherit the interactive PATH, so a bare "python"
+        % command can silently fail to resolve (seen on macOS: "command not found").
+        if exist(pathFile, 'file')
+            fid = fopen(pathFile, 'r');
+            if fid == -1
+                error('Cannot open file: %s', pathFile);
+            end
+            pythonPath = strtrim(fgetl(fid));
+            fclose(fid);
+        else
+            pythonPath = 'python3';
+        end
+
         % Check if 'python_requirement_satisfied.txt' exists
         if exist(satisfiedFile, 'file')
             disp('Python requirements already satisfied.');
         else
             % If 'python_requirement_satisfied.txt' does not exist, check for 'python_path.txt'
             if exist(pathFile, 'file')
-                % Read the first line from 'python_path.txt'
-                fid = fopen(pathFile, 'r');
-                if fid == -1
-                    error('Cannot open file: %s', pathFile);
-                end
-                pythonPath = fgetl(fid);
-                fclose(fid);
-                
                 % Display the Python path (this is where you can add additional steps if needed)
                 fprintf('Python path: %s\n', pythonPath);
-                
+
                 terminate(pyenv)
                 pyenv('Version', pythonPath);
-                system('pip install numpy==1.26.4')
-                system('pip install keras==2.10.0'); % Specific version of Keras
-                system('pip install tensorflow==2.10.1'); % Specific version of TensorFlow
-                system('pip install nibabel')
-                system('pip install scipy') 
+                % RH: use "<pythonPath> -m pip ..." instead of bare "pip" — same PATH
+                % issue as above; this also guarantees pip belongs to this interpreter.
+                % RH: tensorflow==2.10.1/keras==2.10.0 (the Windows pins) have no
+                % Apple Silicon wheel at all, so they can never install on macOS —
+                % use the newer combo verified to load/run XIPline's existing legacy
+                % .hdf5 models correctly under Keras 3 (tested against a real
+                % production model). Same versions used for Linux since untested
+                % there; tensorflow-macos is Apple-only so plain tensorflow is used
+                % on Linux instead.
+                pipStatus = zeros(1,5);
+                if ispc
+                    pipStatus(1) = system(sprintf('"%s" -m pip install numpy==1.26.4', pythonPath));
+                    pipStatus(2) = system(sprintf('"%s" -m pip install keras==2.10.0', pythonPath)); % Specific version of Keras
+                    pipStatus(3) = system(sprintf('"%s" -m pip install tensorflow==2.10.1', pythonPath)); % Specific version of TensorFlow
+                    pipStatus(4) = system(sprintf('"%s" -m pip install nibabel', pythonPath));
+                    pipStatus(5) = system(sprintf('"%s" -m pip install scipy', pythonPath));
+                elseif ismac
+                    pipStatus(1) = system(sprintf('"%s" -m pip install numpy==1.26.4', pythonPath));
+                    pipStatus(2) = system(sprintf('"%s" -m pip install keras==3.15.1', pythonPath));
+                    pipStatus(3) = system(sprintf('"%s" -m pip install tensorflow-macos==2.16.2', pythonPath));
+                    pipStatus(4) = system(sprintf('"%s" -m pip install nibabel==5.3.0', pythonPath));
+                    pipStatus(5) = system(sprintf('"%s" -m pip install scipy==1.13.1', pythonPath));
+                else
+                    pipStatus(1) = system(sprintf('"%s" -m pip install numpy==1.26.4', pythonPath));
+                    pipStatus(2) = system(sprintf('"%s" -m pip install keras==3.15.1', pythonPath));
+                    pipStatus(3) = system(sprintf('"%s" -m pip install tensorflow==2.16.2', pythonPath));
+                    pipStatus(4) = system(sprintf('"%s" -m pip install nibabel==5.3.0', pythonPath));
+                    pipStatus(5) = system(sprintf('"%s" -m pip install scipy==1.13.1', pythonPath));
+                end
                 %system('python -m pip uninstall -y protobuf')
-                %system('python -m pip install "protobuf>=3.20.0,<3.21.0"') 
+                %system('python -m pip install "protobuf>=3.20.0,<3.21.0"')
                 terminate(pyenv)
-        
+
+                % RH: only mark requirements satisfied if every install actually
+                % succeeded — previously this was written unconditionally, so a
+                % silently failed pip install (e.g. "pip: command not found") got
+                % permanently marked as satisfied and never retried.
+                if any(pipStatus ~= 0)
+                    error(['One or more pip installs failed (exit codes: %s). ' ...
+                        'Not marking Python requirements as satisfied — fix the ' ...
+                        'issue and try again.'], mat2str(pipStatus));
+                end
+
                 % Create an empty 'python_requirement_satisfied.txt' file
                 fid = fopen(satisfiedFile, 'w');
                 if fid == -1
                     error('Cannot create file: %s', satisfiedFile);
                 end
                 fclose(fid);
-                
+
                 disp('Python requirements are now marked as satisfied.');
             else
                 error('Neither python_requirement_satisfied.txt nor python_path.txt found.');
@@ -248,10 +289,12 @@ switch MainInput.SegmentationMethod
         if strcmp(SegmentType, 'not_supported') == 0
             switch  MainInput.AIScript
                 case 'Python'
-                    % run python script 
+                    % run python script
                     cd(destinationFolderPath)
-                    command = string(strcat('python AutoSegmentation.py',{' '},SegmentType));
-                    LungMask = system(command);                            
+                    % RH: was bare "python", which isn't on MATLAB's system() PATH on
+                    % macOS; use the resolved interpreter from python_path.txt instead.
+                    command = string(strcat(sprintf('"%s" AutoSegmentation.py', pythonPath),{' '},SegmentType));
+                    LungMask = system(command);
                 case 'Executable'
                     %Step 2: Run external recon executable
                     exePath = fullfile(XIPlineRoot, 'segmentation\AutoSegmentation.exe'); 
