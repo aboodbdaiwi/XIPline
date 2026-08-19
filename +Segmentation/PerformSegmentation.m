@@ -44,16 +44,19 @@ switch MainInput.SegmentationMethod
         end 
 
         destinationFolderPath = XIPlineRoot;
-        
-        cd('C:\');
+
+        % RH: removed hardcoded cd('C:\') — crashed on macOS ("Unable to change
+        % current folder to '.../C:\'"). It only reset the cwd before creating
+        % destinationFolderPath below, which mkdir/cd don't need.
         if ~exist(destinationFolderPath, 'dir')
             mkdir(destinationFolderPath);
         else        
             disp('HPXeAnalysisApp folder already exists in the destination folder.');
         end 
         cd(destinationFolderPath)
-        models_folder = '\models';
-        modelsFolderPath = join([destinationFolderPath,models_folder]);
+        % RH: was string-concatenated with a literal '\models', which produced a
+        % bogus path (embedded backslash) on macOS/Linux; use fullfile instead.
+        modelsFolderPath = fullfile(destinationFolderPath, 'models');
         if ~exist(modelsFolderPath, 'dir')
             mkdir(modelsFolderPath);
         else
@@ -67,7 +70,8 @@ switch MainInput.SegmentationMethod
         FunctionDirectory = fileparts(fullFilePath);
         [FunctionDirectory,~] = fileparts(FunctionDirectory);
 
-        sourcemodel1Path = [FunctionDirectory,'\+Segmentation\AutoSegmentation.py'];
+        % RH: was hardcoded with backslash separators, breaking on macOS/Linux
+        sourcemodel1Path = fullfile(FunctionDirectory, '+Segmentation', 'AutoSegmentation.py');
 
         try
             copyfile(sourcemodel1Path, destinationFolderPath); % force to copy
@@ -118,8 +122,11 @@ switch MainInput.SegmentationMethod
         % Define the folder path
         folderPath = destinationFolderPath;        
         % Define the file names
-        satisfiedFile = fullfile(folderPath, '\python_requirement_satisfied.txt');
-        pathFile = fullfile(folderPath, '\python_path.txt');
+        % RH: leading '\' made fullfile emit a bogus path on macOS/Linux
+        % (fullfile('/a/b','\c.txt') -> '/a/b/\c.txt', not '/a/b/c.txt'),
+        % so these files were never found there.
+        satisfiedFile = fullfile(folderPath, 'python_requirement_satisfied.txt');
+        pathFile = fullfile(folderPath, 'python_path.txt');
         
         % Check if 'python_requirement_satisfied.txt' exists
         if exist(satisfiedFile, 'file')
@@ -257,7 +264,8 @@ switch MainInput.SegmentationMethod
             % load auto mask
             cd(destinationFolderPath);
             if exist('AutoMask.mat', 'file')
-                load([destinationFolderPath,'\AutoMask.mat']);
+                % RH: hardcoded backslash separator, broke on macOS/Linux
+                load(fullfile(destinationFolderPath, 'AutoMask.mat'));
                 Mask = AutoMask > 0;
 
                 % clean up the mask

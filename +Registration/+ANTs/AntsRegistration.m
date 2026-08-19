@@ -109,6 +109,8 @@ function [MainInput, Proton, Ventilation, GasExchange] = AntsRegistration(MainIn
 
         % Registration command
         fprintf('*** Running ANTs registration...\n');
+        % RH: split into bare transformName + transformCmd ("Name[0.1]") since the
+        % macOS branch below needs the bare name too (for the Python script's argv)
         switch lower(TransformType)  % ensure case-insensitivity
             case 'translation'
                 transformName = 'Translation';
@@ -122,9 +124,19 @@ function [MainInput, Proton, Ventilation, GasExchange] = AntsRegistration(MainIn
                 error('Unsupported TransformType: %s. Use translation, rigid, similarity, or affine.', TransformType);
         end
 
+        transformCmd = sprintf('%s[0.1]', transformName);
+
         % RH: branch on platform — Windows keeps the original .exe call (quoting fixed below
-        % since zsh glob-expands unquoted [...] on macOS); macOS/Linux has no native ANTs CLI
-        % bundled with XIPline, so registration runs through ANTsPy (xe_gx conda env) instead.
+        % since zsh glob-expands unquoted [...] on macOS). macOS/Linux has no native ANTs CLI
+        % bundled with XIPline, so registration runs through ants_register.py instead, which
+        % calls ANTs' own compiled antsRegistration library function directly with this exact
+        % same argument list (dimensionality/metric/transform/convergence/shrink-factors/
+        % smoothing-sigmas/interpolation) — NOT ants.registration()'s Python convenience
+        % wrapper, whose internal defaults silently differ (hardcoded 0.25 gradient step,
+        % 20% sampling, different iteration schedule, no BSpline interpolation option).
+        % Because both platforms now run the identical underlying algorithm/schedule, the
+        % NIfTI output header convention matches too, so the flip/imrotate/flip compensation
+        % below applies unconditionally again, same as the original Windows-only code.
         if ispc
             % Windows: shell out to the bundled antsRegistration.exe
             pathReg   = fullfile(ANTSPath, 'antsRegistration.exe');
@@ -132,7 +144,6 @@ function [MainInput, Proton, Ventilation, GasExchange] = AntsRegistration(MainIn
             if ~exist(pathReg, 'file')
                 error('ANTs binary not found: %s', pathReg);
             end
-            transformCmd = sprintf('%s[0.1]', transformName);
             output_prefix = sprintf('[%s,%s]', pathOutputPrefix, pathOutputMoving);
             % RH: arguments containing [...] are double-quoted so the shell
             % doesn't try to glob-expand them (matters on macOS/zsh; harmless on Windows).
@@ -143,11 +154,11 @@ function [MainInput, Proton, Ventilation, GasExchange] = AntsRegistration(MainIn
                 '--smoothing-sigmas 0x0x0 --output "%s" --verbose 1'], ...
                 pathReg, pathStatic, pathMoving1, transformCmd, output_prefix);
         else
-            % RH: macOS/Linux — run registration through ANTsPy (pip install antspyx)
+            % RH: macOS/Linux — run registration through ants_register.py (pip install antspyx)
             pythonExe = Registration.ANTs.getAntsPythonExe(registration_path);
             regScript = fullfile(ANTSPath, 'ants_register.py');
             cmd_register = sprintf('"%s" "%s" "%s" "%s" "%s" "%s" "%s"', ...
-                pythonExe, regScript, pathStatic, pathMoving1, pathOutputMoving, tdata, transformName);
+                pythonExe, regScript, pathStatic, pathMoving1, pathOutputMoving, pathOutputPrefix, transformCmd);
         end
 
         % Execute registration
@@ -169,22 +180,22 @@ function [MainInput, Proton, Ventilation, GasExchange] = AntsRegistration(MainIn
         A = flip(A, 1);
         A = imrotate(A, 180);
         A = flip(A, 1);
-        ProtonRegistered = A;    
+        ProtonRegistered = A;
         %imslice(A)
 
         Proton.tdata = load(tdata);
         % Optionally apply transform to second moving image
         if MainInput.transform_reg
             pathOutputMoving2 = fullfile(tmp_path, 'transform_reg.nii.gz');
-            % RH: same Windows-exe vs ANTsPy branch as the registration call above
+            % RH: same Windows-exe vs ants_apply_transform.py branch as the registration call above
             if ispc
                 cmd_applyTransform = sprintf('"%s" -d 3 -e 0 -i "%s" -r "%s" -o "%s" -t "%s"', ...
                     pathApply, pathMoving2, pathStatic, pathOutputMoving2, tdata);
             else
                 pythonExe = Registration.ANTs.getAntsPythonExe(registration_path);
                 applyScript = fullfile(ANTSPath, 'ants_apply_transform.py');
-                cmd_applyTransform = sprintf('"%s" "%s" "%s" "%s" "%s" "%s" "%s"', ...
-                    pythonExe, applyScript, pathStatic, pathMoving2, pathOutputMoving2, tdata, 'linear');
+                cmd_applyTransform = sprintf('"%s" "%s" "%s" "%s" "%s" "%s"', ...
+                    pythonExe, applyScript, pathStatic, pathMoving2, pathOutputMoving2, tdata);
             end
             system(cmd_applyTransform);
 
@@ -199,7 +210,7 @@ function [MainInput, Proton, Ventilation, GasExchange] = AntsRegistration(MainIn
             A = flip(A, 1);
             A = imrotate(A, 180);
             A = flip(A, 1);
-            ProtonMaskRegistered = A;                 
+            ProtonMaskRegistered = A;
         end
     else
         ProtonRegistered = moving1;
