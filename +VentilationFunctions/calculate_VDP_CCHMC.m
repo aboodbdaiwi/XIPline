@@ -156,10 +156,10 @@ set(h(1),'FaceColor','b','EdgeColor','k','facealpha',0.5);
 set(h(2),'FaceColor','r','EdgeColor','k','facealpha',0.5);
 set(h(3),'FaceColor','y','EdgeColor','k','facealpha',0.5);
 set(h(4),'FaceColor','w','EdgeColor','k','facealpha',0.5);
-legend1 = sprintf('Normal: %0.2f±%0.2f (%0.1f%%)',md_Normal, sd_Normal, Normal);
-legend2 = sprintf('Incomplete: %0.2f±%0.2f (%0.1f%%)',md_Incomplete,sd_Incomplete,Incomplete);
-legend3 = sprintf('Complete: %0.2f±%0.2f (%0.1f%%)',md_Complete,sd_Complete, Complete);
-legend4 = sprintf('Hyper: %0.2f±%0.2f (%0.1f%%)',md_Hyper,sd_Hyper, Hyper);
+legend1 = sprintf('Normal: %0.2fï¿½%0.2f (%0.1f%%)',md_Normal, sd_Normal, Normal);
+legend2 = sprintf('Incomplete: %0.2fï¿½%0.2f (%0.1f%%)',md_Incomplete,sd_Incomplete,Incomplete);
+legend3 = sprintf('Complete: %0.2fï¿½%0.2f (%0.1f%%)',md_Complete,sd_Complete, Complete);
+legend4 = sprintf('Hyper: %0.2fï¿½%0.2f (%0.1f%%)',md_Hyper,sd_Hyper, Hyper);
 legend({legend1 legend2 legend3 legend4});
 % title1 = sprintf('Ventilation Histogram');
 title2 = sprintf('\nVentilation Defect Percentage %0.1f%%',VDP);
@@ -581,43 +581,27 @@ array4dMRrgb4 = uint8(255*array4dMRrgb3);
 % save mask images
 % niftiwrite(abs(fliplr(rot90(maskarray,-1))),[outputPath,'\MaskImage.nii'],'Compressed',true);
 close all;
-%% %% write tiff and read back VDPVent maps
+%% %% write tiff and keep VDPVent maps in memory
+% RH: this used to render each slice to a hidden figure and capture it via
+% getframe(ax1) before writing to TIFF and reading it back. On macOS that
+% captured only a cropped/zoomed-in portion of each frame (reported as
+% "only 1/4 visible" in the defect-overlay montage) â€” apparently a
+% Retina/backing-store scaling mismatch between the axes' pixel Position
+% and what getframe actually returns for an invisible figure. array4dMRrgb4
+% is already the fully-rendered RGB array in memory (built via ind2rgb
+% compositing above, no figure involved), so write it straight to TIFF and
+% use it directly â€” no figure/axes/getframe/read-back round trip needed.
 tiffFile = fullfile(outputPath,'VentDefectmap.tif');
 if isfile(tiffFile)
     delete(tiffFile);
 end
 
-% Fixed output size based on the actual image size
 frameH = size(array4dMRrgb4,1);
 frameW = size(array4dMRrgb4,2);
 
-tiff = figure('MenuBar','none','ToolBar','none','DockControls','off', ...
-    'Resize','off','Visible','off', ...
-    'Units','pixels', ...
-    'Position',[100 100 frameW frameH], ...
-    'Color','black');
-ax1 = axes('Parent',tiff, ...
-    'Units','pixels', ...
-    'Position',[1 1 frameW frameH], ...
-    'Visible','off');
 disp('Saving VentDefectmap Tiff...')
-
 for slice = 1:size(array4dMRrgb4,4)
-    cla(ax1,'reset');
-    image(ax1,array4dMRrgb4(:,:,:,slice));
-    axis(ax1,'image');
-    axis(ax1,'off');
-    set(ax1,'Units','pixels','Position',[1 1 frameW frameH]);
-    set(ax1,'LooseInset',[0 0 0 0]);
-
-    drawnow;
-    % Capture axes only, not the full figure
-    X = getframe(ax1).cdata;
-    % Force every saved page to be identical size
-    if size(X,1) ~= frameH || size(X,2) ~= frameW
-        X = imresize(X,[frameH frameW]);
-    end
-    X = uint8(X);
+    X = uint8(array4dMRrgb4(:,:,:,slice));
     if slice == 1
         imwrite(X,tiffFile,'tif', ...
             'Description',strcat('Package Version: ','1','; Cohort: ','test'));
@@ -626,25 +610,9 @@ for slice = 1:size(array4dMRrgb4,4)
             'Description',strcat('Package Version: ','1','; Cohort: ','test'));
     end
 end
-close(tiff)
-
 disp('Saving VentDefectmap Tiff Completed.')
-tiff_info = imfinfo(tiffFile);
-if numel(tiff_info) ~= size(array4dMRrgb4,4)
-    warning('Expected %d slices, but saved TIFF contains %d slices.', ...
-        size(array4dMRrgb4,4), numel(tiff_info));
-end
-VentDefectmap = uint8(zeros(frameH,frameW,3,numel(tiff_info)));
-for ii = 1:numel(tiff_info)
-    temp_tiff = imread(tiffFile,ii);
-    if size(temp_tiff,1) ~= frameH || size(temp_tiff,2) ~= frameW
-        temp_tiff = imresize(temp_tiff,[frameH frameW]);
-    end
-    if size(temp_tiff,3) == 1
-        temp_tiff = repmat(temp_tiff,[1 1 3]);
-    end
-    VentDefectmap(:,:,:,ii) = uint8(temp_tiff);
-end
+
+VentDefectmap = uint8(array4dMRrgb4);
 cd(DataPath)
 % S = orthosliceViewer(permute (VentDefectmap, [1,2,4,3])); %colormap(SixBinMap);
 %% Generate montages
@@ -984,10 +952,10 @@ Ventilation.Threshold.vdp_per_slice_local = vdp_per_slice_local;
 Ventilation.Threshold.vdp_per_slice_global = vdp_per_slice_global;
 
 %% Save workspace data:
-legend1 = sprintf('%0.2f±%0.2f (%0.1f%%)',md_Normal, sd_Normal, Normal);
-legend2 = sprintf('%0.2f±%0.2f (%0.1f%%)',md_Incomplete,sd_Incomplete,Incomplete);
-legend3 = sprintf('%0.2f±%0.2f (%0.1f%%)',md_Complete,sd_Complete, Complete);
-legend4 = sprintf('%0.2f±%0.2f (%0.1f%%)',md_Hyper,sd_Hyper, Hyper);
+legend1 = sprintf('%0.2fï¿½%0.2f (%0.1f%%)',md_Normal, sd_Normal, Normal);
+legend2 = sprintf('%0.2fï¿½%0.2f (%0.1f%%)',md_Incomplete,sd_Incomplete,Incomplete);
+legend3 = sprintf('%0.2fï¿½%0.2f (%0.1f%%)',md_Complete,sd_Complete, Complete);
+legend4 = sprintf('%0.2fï¿½%0.2f (%0.1f%%)',md_Hyper,sd_Hyper, Hyper);
 
 Ventilation.Threshold.VDP = VDP;
 Ventilation.Threshold.VentscaledImage = VentscaledImage;

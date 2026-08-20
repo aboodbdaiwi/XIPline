@@ -39,7 +39,8 @@ function [Ventilation] = GLRLM_Analysis(Ventilation)
 % this code is based on the GLRLM analysis 
 % https://www.mathworks.com/matlabcentral/fileexchange/17482-gray-level-run-length-matrix-toolbox
 % Abdullah Bdaiwi
-parentPath = [Ventilation.parentPath,'\'];
+% RH: hardcoded backslash broke on macOS/Linux; use filesep instead
+parentPath = [Ventilation.parentPath,filesep];
 cd(parentPath)
 maskarray = double(Ventilation.LungMask + Ventilation.VesselMask);
 maskarray(maskarray > 1) = 0;
@@ -50,7 +51,8 @@ VentLungMask = double(Ventilation.defectMap_forGLRLM == 1);
 
 Image = Ventilation.Image.*maskarray.*VentLungMask;
 %figure; imslice(Image);
-foldername = "GLRLM_Analysis\";
+% RH: dropped trailing backslash — broke on macOS/Linux; consumers below now use fullfile
+foldername = "GLRLM_Analysis";
 mkdir(foldername)
 outputPath = char(foldername);
 cd(outputPath)
@@ -255,7 +257,7 @@ GLRLMSummary = table({...
     stats_average(10); stats_average(11)]);
 headers =({'summary','Mean'});
 GLRLMSummary.Properties.VariableNames = headers;
-writetable(GLRLMSummary,[parentPath, outputPath,'GLRLMSummary.xlsx'],'Sheet',1)
+writetable(GLRLMSummary,fullfile(parentPath, outputPath,'GLRLMSummary.xlsx'),'Sheet',1)
 
 %% save ppt 
 cd(parentPath)
@@ -283,25 +285,25 @@ end
 Global.exportToPPTX('addslide'); % angles
 Global.exportToPPTX('addtext',sprintf(foldername),'Position',[6 0 7 1],'Color','b','FontSize',25);
 
-GLRLM_Angle0 = imread([parentPath, outputPath ,'GLRLM_Angle0.png']);    
+GLRLM_Angle0 = imread(fullfile(parentPath, outputPath, 'GLRLM_Angle0.png'));
 Global.exportToPPTX('addpicture',GLRLM_Angle0,'Position',[0 0.5 8.5 8.5*(size(GLRLM_Angle0,1)/size(GLRLM_Angle0,2))]);
 
-GLRLM_Angle45 = imread([parentPath, outputPath ,'GLRLM_Angle45.png']);    
+GLRLM_Angle45 = imread(fullfile(parentPath, outputPath, 'GLRLM_Angle45.png'));
 Global.exportToPPTX('addpicture',GLRLM_Angle45,'Position',[8 0.5 8.5 8.5*(size(GLRLM_Angle45,1)/size(GLRLM_Angle45,2))]);
 
-GLRLM_Angle90 = imread([parentPath, outputPath ,'GLRLM_Angle90.png']);    
+GLRLM_Angle90 = imread(fullfile(parentPath, outputPath, 'GLRLM_Angle90.png'));
 Global.exportToPPTX('addpicture',GLRLM_Angle90,'Position',[0 5 8.5 8.5*(size(GLRLM_Angle90,1)/size(GLRLM_Angle90,2))]);
 
-GLRLM_Angle135 = imread([parentPath, outputPath ,'GLRLM_Angle135.png']);    
+GLRLM_Angle135 = imread(fullfile(parentPath, outputPath, 'GLRLM_Angle135.png'));
 Global.exportToPPTX('addpicture',GLRLM_Angle135,'Position',[8 5 8.5 8.5*(size(GLRLM_Angle135,1)/size(GLRLM_Angle135,2))]);
 
 Global.exportToPPTX('addslide'); % average
 Global.exportToPPTX('addtext',sprintf(foldername),'Position',[6 0 7 1],'Color','b','FontSize',25);
 
-GLRLM_MeanAngles = imread([parentPath, outputPath ,'GLRLM_Mean Angles.png']);    
+GLRLM_MeanAngles = imread(fullfile(parentPath, outputPath, 'GLRLM_Mean Angles.png'));
 Global.exportToPPTX('addpicture',GLRLM_MeanAngles,'Position',[0.5 0.5 8.5 8.5*(size(GLRLM_MeanAngles,1)/size(GLRLM_MeanAngles,2))]);
 
-GLRLM_AverageAll = imread([parentPath, outputPath ,'GLRLM_AverageAll.png']);    
+GLRLM_AverageAll = imread(fullfile(parentPath, outputPath, 'GLRLM_AverageAll.png'));
 Global.exportToPPTX('addpicture',GLRLM_AverageAll,'Position',[0.5 4 8.5 8.5*(size(GLRLM_AverageAll,1)/size(GLRLM_AverageAll,2))]);
 
 
@@ -328,7 +330,7 @@ Ventilation.SRHGE = stats_average(9);
 Ventilation.LRLGE = stats_average(10);
 Ventilation.LRHGE = stats_average(11);
     
-save_data=[parentPath, outputPath,'GLRLM_Analysis','.mat'];
+save_data=fullfile(parentPath, outputPath, 'GLRLM_Analysis.mat');
 save(save_data,'GLRLM_output');  
 
 disp('GLRLM analysis completed');

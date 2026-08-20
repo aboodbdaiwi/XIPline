@@ -474,7 +474,8 @@ if strcmp(Ventilation.writereport,'yes')
 end
 
 %% %% save maps in mat file
-save_data=[parentPath,'\','Ventilation_Analysis','.mat'];
+% RH: hardcoded backslash separator broke on macOS/Linux; use fullfile instead
+save_data=fullfile(parentPath,'Ventilation_Analysis.mat');
 save(save_data);  
 
 VentilationExcelFile = fullfile(parentPath, 'Ventilation_workspace.xlsx');
