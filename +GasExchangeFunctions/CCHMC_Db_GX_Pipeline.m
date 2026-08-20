@@ -217,7 +217,7 @@ end
 
 
 % -----------------------------segmentation-----------------------------
-if strcmp(MainInput.ImageQuality, '1-Failed')
+if strcmp(MainInput.ImageQuality, '1-Failed') && strcmp(MainInput.NoProtonImage, 'no') 
     SegmentMaskMode = 1;
 else
     SegmentMaskMode = 0;  % 0 = new AI mask, 1 = load exisitng mask 
@@ -253,6 +253,7 @@ else
     MainInput.SE = 1;
     MainInput.SegmentManual = 'Freehand'; % 'AppSegmenter' || 'Freehand'
     MainInput.SliceOrientation = 'isotropic'; % 'coronal' ||'transversal' || 'sagittal' ||'isotropic'
+    GasExchange.LungMask = double(Proton.ProtonMaskRegistred);
 end
 
 
