@@ -207,7 +207,8 @@ function [Images, MainInput] = preprocess_images_for_auto_segmentation(Proton,Ve
         end 
     destinationFolderPath = XIPlineRoot;
     cd(destinationFolderPath)
-    save([destinationFolderPath '\InputImage.mat'],'Images');
+    % RH: hardcoded backslash separator broke on macOS/Linux; use fullfile instead
+    save(fullfile(destinationFolderPath, 'InputImage.mat'),'Images');
 %     scriptLocation = fileparts(mfilename('fullpath'));
     MainInput.AutoSegmentPath = destinationFolderPath;
     %disp(scriptLocation)

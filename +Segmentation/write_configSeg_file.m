@@ -2,7 +2,13 @@ function write_configSeg_file(MainInput)
 % write_config_file - Writes config_Xe.txt and/or config_H.txt
 % to C:\XIPline\offline_recon, removing old versions if present.
 
-    outputFolder = 'C:\XIPline';
+    % RH: was hardcoded to 'C:\XIPline', which doesn't exist on macOS/Linux;
+    % branch like the rest of the segmentation pipeline does.
+    if ispc
+        outputFolder = 'C:\XIPline';
+    else
+        outputFolder = fullfile(getenv('HOME'), 'XIPline');
+    end
 
     % if ~exist(outputFolder, 'dir')
     %     mkdir(outputFolder);

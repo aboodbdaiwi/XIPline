@@ -101,7 +101,8 @@ re_seg(msk2d == 0) = NaN;
 % cmap = [1 0 0; 1 0.7143 0; 0.4 0.7 0.4; 0 1 0; 0 0 1];
 cmap = [1 0 0; 0 1 0; 0 1 0; 0 1 0; 0 1 0];
 % % %plot and see the colormap
-outputpath = [Ventilation.parentPath, '\VDP_Analysis'];
+% RH: hardcoded backslash separator broke on macOS/Linux; use fullfile instead
+outputpath = fullfile(Ventilation.parentPath, 'VDP_Analysis');
 mkdir(outputpath);
 cd(outputpath);
 
@@ -128,7 +129,11 @@ set(ax1,'position',[0 0 2 2]);set(ax2,'position',[0 0 2 2]);%make axis same as i
 set(gcf,'units','inches'); % set the figure units to pixels
 set(gcf,'position',[1 1 2 2])% set the position of the figure to axes
 disp('Saving VentDefectmap Tiff...')
-
+% RH: force the figure to fully render before capturing any frames — on
+% macOS, getframe() on a just-created/minimized figure can return a
+% different pixel size for the first capture than subsequent ones,
+% which crashed the AkmeansDefectmap(:,:,:,ii) assignment below.
+drawnow
 
 % Create an output image initialized to zeros (same size as xenon_image)
 VDPmap = zeros(size(segmentation));
@@ -140,16 +145,25 @@ VDPmap(class_2to4_inside_lung) = 1;
 % imslice(VDPmap); colormap(cmap)
 
 cmap = [0 0 0;  0 1 0; 1 0 0];
+targetFrameSize = [];
 for slice = 1:size(VDPmap,3)
     [~,~] = Global.imoverlay(squeeze(abs(Proton.ProtonRegistered(:,:,slice))),squeeze(VDPmap(:,:,slice).*2),[1,4],[0,0.8*max(Proton.ProtonRegistered(:))],cmap,1,gca);
-    colormap(gca,cmap) 
+    colormap(gca,cmap)
 %     imshow(VDPmap(:,:,slice).*2, cmap, 'DisplayRange', [0 4]);
+    drawnow
     Xdata = getframe(gcf);
-    X = Xdata.cdata; 
+    X = Xdata.cdata;
+    % RH: defend against any remaining frame-to-frame size drift (see drawnow note above)
+    if isempty(targetFrameSize)
+        targetFrameSize = [size(X,1) size(X,2)];
+    elseif ~isequal([size(X,1) size(X,2)], targetFrameSize)
+        X = imresize(X, targetFrameSize);
+    end
+    % RH: hardcoded backslash separator broke on macOS/Linux; use fullfile instead
     if (slice == 1)
-        imwrite(X,[outputpath,'\AkmeansDefectmap.tif'],'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
+        imwrite(X,fullfile(outputpath,'AkmeansDefectmap.tif'),'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
     else
-        imwrite(X,[outputpath,'\AkmeansDefectmap.tif'],'WriteMode','append','Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%append tiff
+        imwrite(X,fullfile(outputpath,'AkmeansDefectmap.tif'),'WriteMode','append','Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%append tiff
     end
 end
 
@@ -177,6 +191,8 @@ set(ax1,'position',[0 0 2 2]);set(ax2,'position',[0 0 2 2]);%make axis same as i
 set(gcf,'units','inches'); % set the figure units to pixels
 set(gcf,'position',[1 1 2 2])% set the position of the figure to axes
 disp('Saving VentDefectmap2 Tiff...')
+% RH: see drawnow note above — force initial render before capturing frames
+drawnow
 
 VDPmap= defect_mask;
 
@@ -187,16 +203,25 @@ cus_colormap(:,1) = 1;
 cus_colormap(:,2) = 0;
 cus_colormap(:,3) = 0;
 
+targetFrameSize = [];
 for slice = 1:size(VDPmap,3)
     [~,~] = Global.imoverlay(squeeze(abs(Ventilation.Image(:,:,slice))),squeeze(VDPmap(:,:,slice)),[1,100],[0,max(Ventilation.Image(:))],cus_colormap,1,gca);
-    colormap(gca,cus_colormap) 
+    colormap(gca,cus_colormap)
 %     imshow(VDPmap(:,:,slice).*2, cmap, 'DisplayRange', [0 4]);
+    drawnow
     Xdata = getframe(gcf);
-    X = Xdata.cdata; 
+    X = Xdata.cdata;
+    % RH: defend against any remaining frame-to-frame size drift (see drawnow note above)
+    if isempty(targetFrameSize)
+        targetFrameSize = [size(X,1) size(X,2)];
+    elseif ~isequal([size(X,1) size(X,2)], targetFrameSize)
+        X = imresize(X, targetFrameSize);
+    end
+    % RH: hardcoded backslash separator broke on macOS/Linux; use fullfile instead
     if (slice == 1)
-        imwrite(X,[outputpath,'\AkmeansDefectmap2.tif'],'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
+        imwrite(X,fullfile(outputpath,'AkmeansDefectmap2.tif'),'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
     else
-        imwrite(X,[outputpath,'\AkmeansDefectmap2.tif'],'WriteMode','append','Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%append tiff
+        imwrite(X,fullfile(outputpath,'AkmeansDefectmap2.tif'),'WriteMode','append','Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%append tiff
     end
 end
 
@@ -517,6 +542,8 @@ set(ax1,'position',[0 0 2 2]);set(ax2,'position',[0 0 2 2]);%make axis same as i
 set(gcf,'units','inches'); % set the figure units to pixels
 set(gcf,'position',[1 1 2 2])% set the position of the figure to axes
 disp('Saving Vent Tiff...')
+% RH: see drawnow note above — force initial render before capturing frames
+drawnow
 
 % Normalize the intensity of the original image to fall between [0,1].
 MR = Ventilation.Image;
@@ -542,18 +569,27 @@ end
 % scaledImage5 = scaledImage5 - min(scaledImage5(:));
 % scaledImage5 = scaledImage5 ./ max(scaledImage5(:));
 
+targetFrameSize = [];
 for slice=1:size(maskarray,3) %repeat for rest of slices
     [~,~] = Global.imoverlay(squeeze(abs(scaledImage2(:,:,slice))),squeeze(maskarray(:,:,slice)),[1,100],[0,max(scaledImage2(:))],cus_colormap,0.4,gca);
-    colormap(gca,cus_colormap)   
+    colormap(gca,cus_colormap)
 %     X = print('-RGBImage',['-r',num2str(size(VentBinMap2,2)/2)]);%2 inches
-%      hImage = get( gca, 'Children' ); 
-%      X = hImage.CData;   
+%      hImage = get( gca, 'Children' );
+%      X = hImage.CData;
+     drawnow
      Xdata = getframe(gcf);
-     X = Xdata.cdata;     
+     X = Xdata.cdata;
+    % RH: defend against any remaining frame-to-frame size drift (see drawnow note above)
+    if isempty(targetFrameSize)
+        targetFrameSize = [size(X,1) size(X,2)];
+    elseif ~isequal([size(X,1) size(X,2)], targetFrameSize)
+        X = imresize(X, targetFrameSize);
+    end
+    % RH: hardcoded backslash separator broke on macOS/Linux; use fullfile instead
     if (slice == 1)
-        imwrite(X,[outputpath,'\Mask_Vent_Reg.tif'],'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
+        imwrite(X,fullfile(outputpath,'Mask_Vent_Reg.tif'),'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
     else
-        imwrite(X,[outputpath,'\Mask_Vent_Reg.tif'],'WriteMode','append','Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%append tiff
+        imwrite(X,fullfile(outputpath,'Mask_Vent_Reg.tif'),'WriteMode','append','Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%append tiff
     end
 end
 disp('Mask_Vent_Reg Tiff Completed.')
@@ -629,7 +665,8 @@ saveas(gca,'Adaptive_Kmeans_Histogram.png');
 close all;
 
 %%
-save_data=[parentPath,'\','Ventilation_Analysis','.mat'];
+% RH: hardcoded backslash separator broke on macOS/Linux; use fullfile instead
+save_data=fullfile(parentPath,'Ventilation_Analysis.mat');
 save(save_data); 
 
 

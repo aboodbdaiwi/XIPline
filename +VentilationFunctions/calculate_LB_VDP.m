@@ -51,11 +51,13 @@ Thresholds = Ventilation.LBThresholds;
 
 try
     InhaledGasMask = Ventilation.InhaledGasMask;
-    niftiwrite((fliplr(rot90(InhaledGasMask,-1))),[parentPath,'\InhaledGasMask.nii'],'Compressed',true);    
+    % RH: hardcoded backslash separator broke on macOS/Linux; use fullfile instead
+    niftiwrite((fliplr(rot90(InhaledGasMask,-1))),fullfile(parentPath,'InhaledGasMask.nii'),'Compressed',true);    
 catch
     VV_mask = VentilationFunctions.SegVentVolume(MR);
     InhaledGasMask = double((maskarray + VV_mask) > 0);
-    niftiwrite((fliplr(rot90(InhaledGasMask,-1))),[parentPath,'\InhaledGasMask.nii'],'Compressed',true);
+    % RH: hardcoded backslash separator broke on macOS/Linux; use fullfile instead
+    niftiwrite((fliplr(rot90(InhaledGasMask,-1))),fullfile(parentPath,'InhaledGasMask.nii'),'Compressed',true);
 end
 
 cd(parentPath)
@@ -711,31 +713,21 @@ protonMax = max(HImage(:));
 if protonMax == 0 || isnan(protonMax)
     protonMax = 1;
 end
-tiffFig = figure('MenuBar','none','ToolBar','none','DockControls','off', ...
-    'Resize','off','WindowState','minimized','Visible','off');
-ax1 = axes('Parent',tiffFig);
-set(ax1,'Visible','off','Units','pixels','Position',[1 1 frameW frameH]);
-set(tiffFig,'Units','pixels','Position',[100 100 frameW frameH]);
 
+% RH: this used to render each slice via Global.imoverlay into a hidden/
+% minimized axes and capture it with getframe(ax1) before writing to TIFF.
+% On macOS that captured only a cropped/zoomed-in portion of each frame
+% (reported as "only 1/4 visible" in the LB defect-overlay montage) —
+% apparently a Retina/backing-store scaling mismatch between the axes'
+% pixel Position and what getframe actually returns for an invisible
+% figure (same root cause fixed for calculate_VDP_CCHMC.m's VentDefectmap).
+% Global.robustColormapOverlayRGB builds the identical composite via pure
+% array math instead — no figure/axes/getframe involved at all.
 for slice = 1:nSlices
-    cla(ax1)
     protonSlice = HImage(:,:,slice);
     ventSlice   = VentBinMap2(:,:,slice);
-    Global.imoverlay( ...
-        protonSlice, ...
-        ventSlice, ...
-        [1,6], ...
-        [0,0.99*protonMax], ...
-        SixBinMap, ...
-        1, ...
-        ax1);
-    colormap(gca,SixBinMap)
-    axis(ax1,'image')
-    axis(ax1,'off')
-    drawnow
-
-    Xdata = getframe(ax1);
-    X = Xdata.cdata;
+    X = Global.robustColormapOverlayRGB( ...
+        protonSlice, ventSlice, [0,0.99*protonMax], [1,6], SixBinMap, 1);
 
     if size(X,1) ~= frameH || size(X,2) ~= frameW
         X = imresize(X,[frameH frameW]);
@@ -749,7 +741,6 @@ for slice = 1:nSlices
             'Description','Package Version: 1; Cohort: test');
     end
 end
-close(tiffFig)
 Ventilation.BinnedVentmap = BinnedVentmap;
 
 disp('BinnedVent Tiff Completed.')
@@ -792,6 +783,7 @@ VentscaledImage = Ventilation.Image(:,:,slice_indices); % Ventilation.Image or V
 VentMontage = figure('Name','Vent Image');set(VentMontage,'WindowState','minimized');
 montage(reshape(VentscaledImage,[size(VentscaledImage,1), size(VentscaledImage,2), 1, size(VentscaledImage,3)]),...
     'Size',[1 size(VentscaledImage,3)],'DisplayRange',[0 max(VentscaledImage(:))]);
+drawnow % RH: force full render before reading axes/figure geometry below (see getframe drawnow notes)
 set(gca,'units','pixels'); % set the axes units to pixels
 x = get(gca,'position'); % get the position of the axes
 set(gcf,'units','pixels'); % set the figure units to pixels
@@ -811,6 +803,7 @@ else
     montage(reshape(ProtonImage,[size(ProtonImage,1), size(ProtonImage,2),size(ProtonImage,3),...
     size(ProtonImage,4)]),'Size',[1 size(ProtonImage,4)],'DisplayRange',[]);
 end
+drawnow % RH: force full render before reading axes/figure geometry below (see getframe drawnow notes)
 set(gca,'units','pixels'); % set the axes units to pixels
 x = get(gca,'position'); % get the position of the axes
 set(gcf,'units','pixels'); % set the figure units to pixels
@@ -824,6 +817,7 @@ maskarrayimg = MaskRegistered(:,:,:,slice_indices);
 MaskMontage = figure('Name','Mask');set(MaskMontage,'WindowState','minimized');
 montage(reshape(maskarrayimg,[size(maskarrayimg,1), size(maskarrayimg,2), size(maskarrayimg,3), size(maskarrayimg,4)]),...
     'Size',[1 size(maskarrayimg,4)],'DisplayRange',[]);
+drawnow % RH: force full render before reading axes/figure geometry below (see getframe drawnow notes)
 set(gca,'units','pixels'); % set the axes units to pixels
 x = get(gca,'position'); % get the position of the axes
 set(gcf,'units','pixels'); % set the figure units to pixels
@@ -837,6 +831,7 @@ Ventcolormap = BinnedVentmap(:,:,:,slice_indices);
 DefectArrayMontage = figure('Name','Defects');set(DefectArrayMontage,'WindowState','minimized');
 montage(reshape(Ventcolormap,[size(Ventcolormap,1), size(Ventcolormap,2),size(Ventcolormap,3),...
     size(Ventcolormap,4)]),'Size',[1 size(Ventcolormap,4)],'DisplayRange',[]);
+drawnow % RH: force full render before reading axes/figure geometry below (see getframe drawnow notes)
 set(gca,'units','pixels'); % set the axes units to pixels
 x = get(gca,'position'); % get the position of the axes
 set(gcf,'units','pixels'); % set the figure units to pixels
