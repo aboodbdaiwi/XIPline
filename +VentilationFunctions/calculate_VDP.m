@@ -154,19 +154,32 @@ set(ax1,'position',[0 0 2 2]);set(ax2,'position',[0 0 2 2]);%make axis same as i
 set(gcf,'units','inches'); % set the figure units to pixels
 set(gcf,'position',[1 1 2 2])% set the position of the figure to axes
 disp('Saving Vent Tiff...')
+% RH: force the figure to fully render before capturing any frames — on
+% macOS, getframe() on a just-created/minimized figure can return a
+% different pixel size for the first capture than subsequent ones.
+drawnow
 %Mask images
+targetFrameSize = [];
 for slice=1:size(maskarray,3) %repeat for rest of slices
     [~,~] = Global.imoverlay(squeeze(abs(Proton.ProtonRegistered(:,:,slice))),squeeze(Ventilation.LungMask(:,:,slice)),[1,100],[0,0.99*max(Proton.ProtonRegistered(:))],cus_colormap,0.6,gca);
-    colormap(gca,cus_colormap)   
+    colormap(gca,cus_colormap)
 %     X = print('-RGBImage',['-r',num2str(size(VentBinMap2,2)/2)]);%2 inches
-%      hImage = get( gca, 'Children' ); 
-%      X = hImage.CData;   
+%      hImage = get( gca, 'Children' );
+%      X = hImage.CData;
+     drawnow
      Xdata = getframe(gcf);
-     X = Xdata.cdata;     
+     X = Xdata.cdata;
+    % RH: defend against any remaining frame-to-frame size drift (see drawnow note above)
+    if isempty(targetFrameSize)
+        targetFrameSize = [size(X,1) size(X,2)];
+    elseif ~isequal([size(X,1) size(X,2)], targetFrameSize)
+        X = imresize(X, targetFrameSize);
+    end
+    % RH: hardcoded backslash separator broke on macOS/Linux; use fullfile instead
     if (slice == 1)
-        imwrite(X,[outputPath,'\MaskRegistered.tif'],'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
+        imwrite(X,fullfile(outputPath,'MaskRegistered.tif'),'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
     else
-        imwrite(X,[outputPath,'\MaskRegistered.tif'],'WriteMode','append','Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%append tiff
+        imwrite(X,fullfile(outputPath,'MaskRegistered.tif'),'WriteMode','append','Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%append tiff
     end
 end
 disp('MaskRegistered Tiff Completed.')
@@ -196,7 +209,8 @@ for m = 1:size(MR2,3)
     scaledImage2(:,:,m) = adapthisteq(scaledImage(:,:,m));
 end
 % save Vent images
-niftiwrite(abs(fliplr(rot90(scaledImage2,-1))),[outputPath,'\VentilationImage.nii'],'Compressed',true);
+% RH: hardcoded backslash separator broke on macOS/Linux; use fullfile instead
+niftiwrite(abs(fliplr(rot90(scaledImage2,-1))),fullfile(outputPath,'VentilationImage.nii'),'Compressed',true);
 
 % Now add the defect information to the images:
 d_Incomplete_rgb = (defectArray == 1)*255;
@@ -259,7 +273,8 @@ array4dMRrgb3 = defectArray_rgb2+array4dMRrgb2;
 array4dMRrgb4 = uint8(255*array4dMRrgb3);
 
 % save mask images
-niftiwrite(abs(fliplr(rot90(maskarray,-1))),[outputPath,'\MaskImage.nii'],'Compressed',true);
+% RH: hardcoded backslash separator broke on macOS/Linux; use fullfile instead
+niftiwrite(abs(fliplr(rot90(maskarray,-1))),fullfile(outputPath,'MaskImage.nii'),'Compressed',true);
 close all;
 %% %% write tiff and read back VDPVent maps
 clc
@@ -271,17 +286,28 @@ set(ax1,'position',[0 0 2 2]);set(ax2,'position',[0 0 2 2]);%make axis same as i
 set(gcf,'units','inches'); % set the figure units to pixels
 set(gcf,'position',[1 1 2 2])% set the position of the figure to axes
 disp('Saving VentDefectmap Tiff...')
+% RH: see drawnow note above — force initial render before capturing frames
+drawnow
+targetFrameSize = [];
 for slice = 1:size(array4dMRrgb4,4)
 %     [~,~] = Global.imoverlay(squeeze(abs(Proton.ProtonRegistered(:,:,slice))),squeeze(array4dMRrgb4(:,:,:,slice)),[1,255],[0,0.99*max(Proton.ProtonRegistered(:))],[],1,gca);
-%     colormap(gca,SixBinMap) 
+%     colormap(gca,SixBinMap)
     image(array4dMRrgb4(:,:,:,slice));
 %      X = print('-RGBImage',['-r',num2str(size(array4dMRrgb4,2)/2)]);%2 inches
+     drawnow
      Xdata = getframe(gcf);
-     X = Xdata.cdata; 
+     X = Xdata.cdata;
+    % RH: defend against any remaining frame-to-frame size drift (see drawnow note above)
+    if isempty(targetFrameSize)
+        targetFrameSize = [size(X,1) size(X,2)];
+    elseif ~isequal([size(X,1) size(X,2)], targetFrameSize)
+        X = imresize(X, targetFrameSize);
+    end
+    % RH: hardcoded backslash separator broke on macOS/Linux; use fullfile instead
     if (slice == 1)
-        imwrite(X,[outputPath,'\VentDefectmap.tif'],'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
+        imwrite(X,fullfile(outputPath,'VentDefectmap.tif'),'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
     else
-        imwrite(X,[outputPath,'\VentDefectmap.tif'],'WriteMode','append','Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%append tiff
+        imwrite(X,fullfile(outputPath,'VentDefectmap.tif'),'WriteMode','append','Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%append tiff
     end
 end
 
@@ -367,6 +393,7 @@ VentscaledImage = scaledImage2(:,:,sl_1:sl_end);
 VentMontage = figure('Name','Vent Image');set(VentMontage,'WindowState','minimized');
 montage(reshape(VentscaledImage,[size(VentscaledImage,1), size(VentscaledImage,2), 1, size(VentscaledImage,3)]),...
     'Size',[1 size(VentscaledImage,3)],'DisplayRange',[0 1]);
+drawnow % RH: force full render before reading axes/figure geometry below (see getframe drawnow notes)
 set(gca,'units','pixels'); % set the axes units to pixels
 x = get(gca,'position'); % get the position of the axes
 set(gcf,'units','pixels'); % set the figure units to pixels
@@ -386,38 +413,49 @@ else
     montage(reshape(ProtonImage,[size(ProtonImage,1), size(ProtonImage,2),size(ProtonImage,3),...
     size(ProtonImage,4)]),'Size',[1 size(ProtonImage,4)],'DisplayRange',[]);
 end
+drawnow % RH: force full render before reading axes/figure geometry below (see getframe drawnow notes)
 set(gca,'units','pixels'); % set the axes units to pixels
 x = get(gca,'position'); % get the position of the axes
 set(gcf,'units','pixels'); % set the figure units to pixels
 y = get(gcf,'position'); % get the figure position
 set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
+% RH: was never captured — this montage's addpicture call below reused
+% VentMontagePosition's aspect ratio instead of its own, which visibly
+% cropped/distorted it whenever the two montages' proportions differed.
+ProtonMontagePosition=get(gcf,'position');
 
 maskarrayimg = MaskRegistered(:,:,:,sl_1:sl_end);
 MaskMontage = figure('Name','Mask');set(MaskMontage,'WindowState','minimized');
 montage(reshape(maskarrayimg,[size(maskarrayimg,1), size(maskarrayimg,2), size(maskarrayimg,3), size(maskarrayimg,4)]),...
     'Size',[1 size(maskarrayimg,4)],'DisplayRange',[]);
+drawnow % RH: force full render before reading axes/figure geometry below (see getframe drawnow notes)
 set(gca,'units','pixels'); % set the axes units to pixels
 x = get(gca,'position'); % get the position of the axes
 set(gcf,'units','pixels'); % set the figure units to pixels
 y = get(gcf,'position'); % get the figure position
 set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
-% MaskMontagePosition = get(gcf,'position'); 
+% RH: was commented out — see ProtonMontagePosition note above
+MaskMontagePosition = get(gcf,'position');
 
 DefectArray = array4dMRrgb4(:,:,:,sl_1:sl_end);
 DefectArrayMontage = figure('Name','Defects');set(DefectArrayMontage,'WindowState','minimized');
 montage(reshape(DefectArray,[size(DefectArray,1), size(DefectArray,2),size(DefectArray,3),...
     size(DefectArray,4)]),'Size',[1 size(DefectArray,4)],'DisplayRange',[]);
+drawnow % RH: force full render before reading axes/figure geometry below (see getframe drawnow notes)
 set(gca,'units','pixels'); % set the axes units to pixels
 x = get(gca,'position'); % get the position of the axes
 set(gcf,'units','pixels'); % set the figure units to pixels
 y = get(gcf,'position'); % get the figure position
 set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
-% DefectArrayMontagePosition=get(gcf,'position'); 
+% RH: was commented out — this is exactly the montage users reported as
+% cropped/zoomed in the report (it was being sized using VentMontage's
+% aspect ratio instead of its own). See ProtonMontagePosition note above.
+DefectArrayMontagePosition=get(gcf,'position');
 
-% save ppt 
+% save ppt
 cd(DataPath)
 ReportTitle = 'Ventilation_Analysis';
 %Start new presentation
@@ -438,14 +476,16 @@ end
 %Add slides
 Global.exportToPPTX('addslide'); % Image/mask/VDP
 Global.exportToPPTX('addtext',sprintf(foldername),'Position',[5 0 7 1],'Color','b','FontSize',25);
+% RH: each montage now uses its own captured aspect ratio instead of
+% VentMontagePosition's for all four — see the Position/Montage notes above.
 Global.exportToPPTX('addpicture',VentMontage,'Position',...
     [0 0.4 NumSliceView NumSliceView*(VentMontagePosition(4)/VentMontagePosition(3))]);
 Global.exportToPPTX('addpicture',ProtonMontage,'Position',...
-    [0 1.6 NumSliceView NumSliceView*(VentMontagePosition(4)/VentMontagePosition(3))]);
+    [0 1.6 NumSliceView NumSliceView*(ProtonMontagePosition(4)/ProtonMontagePosition(3))]);
 Global.exportToPPTX('addpicture',MaskMontage,'Position',...
-    [0 2.8 NumSliceView NumSliceView*(VentMontagePosition(4)/VentMontagePosition(3))]);
+    [0 2.8 NumSliceView NumSliceView*(MaskMontagePosition(4)/MaskMontagePosition(3))]);
 Global.exportToPPTX('addpicture',DefectArrayMontage,'Position',...
-    [0 4 NumSliceView NumSliceView*(VentMontagePosition(4)/VentMontagePosition(3))]);
+    [0 4 NumSliceView NumSliceView*(DefectArrayMontagePosition(4)/DefectArrayMontagePosition(3))]);
 VDP_hist = imread([outputPath ,'Ventilation_Histogram.png']);    
 Global.exportToPPTX('addpicture',VDP_hist,'Position',[0 5 8.5 8.5*(size(VDP_hist,1)/size(VDP_hist,2))]);
 

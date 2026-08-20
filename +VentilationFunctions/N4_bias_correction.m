@@ -123,39 +123,25 @@ niftiwrite(abs(Weight),[parentPath,'Weight.nii']); % Weight
 
 %% new settings (Abdullah)
 %Main issue is drop off at top of lungs (dual loop) and RL edges (Polarean)
+% RH: N4BiasFieldCorrection.exe is a Windows-only binary and can't run on macOS/
+% Linux. On those platforms, run each pass through ANTsPy's low-level
+% N4BiasFieldCorrection library call (n4_bias_correction.py) with the exact same
+% -c/-b/-t arguments as Windows, instead of shelling out to a missing native CLI.
+imagePath = [parentPath,'Image.nii'];
+correctedPath = [parentPath,'CorrectedImage.nii'];
+maskPath = [parentPath,'Mask.nii'];
+weightPath = [parentPath,'Weight.nii'];
+biasPath = [parentPath,'Bias.nii'];
+
 % Z Correction
-cmd = ['"',N4Path,'N4BiasFieldCorrection.exe"',...%run bias correction
-    ' -d 3 -i "',parentPath,'Image.nii"',... % set to 3 dimensions and input image of Image.nii
-    ' -s 1',... % shrink by factor of 1
-    ' -x "',parentPath,'Mask.nii" ',... % import mask called Mask.nii
-    ' -w "',parentPath,'Weight.nii" ',... % import mask called Weight.nii
-    ' -c [25,0]',... % convergence
-    ' -b [1x1x14,3]',... % spline settings %hf, lr, ap
-    ' -t [0.75,0.01,100]',... % histogram settings
-    ' -o ["',parentPath,'CorrectedImage.nii","',parentPath,'Bias.nii"]']; % output corrected image and bias field
-system(cmd);
+VentilationFunctions.run_N4_pass(N4Path, imagePath, maskPath, weightPath, ...
+    '1', '[25,0]', '[1x1x14,3]', '[0.75,0.01,100]', correctedPath, biasPath);
 % X Correction
-cmd = ['"',N4Path,'N4BiasFieldCorrection.exe"',...%run bias correction
-    ' -d 3 -i "',parentPath,'CorrectedImage.nii"',... % set to 3 dimensions and input image of Image.nii
-    ' -s 1',... % shrink by factor of 1
-    ' -x "',parentPath,'Mask.nii" ',... % import mask called Mask.nii
-    ' -w "',parentPath,'Weight.nii" ',... % import mask called Weight.nii
-    ' -c [25,0]',... % convergence
-    ' -b [1x14x1,3]',... % spline settings %hf, lr, ap
-    ' -t [0.75,0.01,100]',... % histogram settings
-    ' -o ["',parentPath,'CorrectedImage.nii","',parentPath,'Bias.nii"]']; % output corrected image and bias field
-system(cmd);
+VentilationFunctions.run_N4_pass(N4Path, correctedPath, maskPath, weightPath, ...
+    '1', '[25,0]', '[1x14x1,3]', '[0.75,0.01,100]', correctedPath, biasPath);
 % Y Correction
-cmd = ['"',N4Path,'N4BiasFieldCorrection.exe"',...%run bias correction
-    ' -d 3 -i "',parentPath,'CorrectedImage.nii"',... % set to 3 dimensions and input image of Image.nii
-    ' -s 1',... % shrink by factor of 1
-    ' -x "',parentPath,'Mask.nii" ',... % import mask called Mask.nii
-    ' -w "',parentPath,'Weight.nii" ',... % import mask called Weight.nii
-    ' -c [25,0]',... % convergence
-    ' -b [14x1x1,3]',... % spline settings %hf, lr, ap
-    ' -t [0.75,0.01,100]',... % histogram settings
-    ' -o ["',parentPath,'CorrectedImage.nii","',parentPath,'Bias.nii"]']; % output corrected image and bias field
-system(cmd);
+VentilationFunctions.run_N4_pass(N4Path, correctedPath, maskPath, weightPath, ...
+    '1', '[25,0]', '[14x1x1,3]', '[0.75,0.01,100]', correctedPath, biasPath);
 
 %% Import Results
 N4 = double(niftiread(strcat(parentPath,"CorrectedImage.nii")));

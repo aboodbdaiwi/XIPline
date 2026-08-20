@@ -28,8 +28,20 @@ function wav = tts(txt,voice,pace,fs)
 %
 %   See also WAVREAD, WAVWRITE, WAVPLAY.
 % Written by Siyi Deng; 12-21-2007;
-if ~ispc, error('Microsoft Win32 SAPI is required.'); end
-if ~ischar(txt), error('First input must be string.'); end
+% RH: added macOS support via the built-in `say` command for the basic
+% speak-only use case (tts(txt), no voice/pace/fs/output-wav args) — that's
+% the only way this is actually called in the app. The Windows-only SAPI
+% path below still handles voice selection, pace, and WAV output.
+if ~ischar(txt) && ~isstring(txt), error('First input must be string.'); end
+if ~ispc
+    if ismac && nargin == 1 && nargout == 0
+        % Single-quote for the shell, escaping any embedded single quotes.
+        safeTxt = strrep(char(txt), '''', '''\''''');
+        system(sprintf('say ''%s''', safeTxt));
+        return
+    end
+    error('Microsoft Win32 SAPI is required (voice/pace/fs options and WAV output are Windows-only).');
+end
 SV = actxserver('SAPI.SpVoice');
 TK = invoke(SV,'GetVoices');
 if nargin > 1

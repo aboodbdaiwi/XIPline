@@ -154,8 +154,9 @@ PrPos  = get(figPr, 'Position');
 DefPos = get(figVDP, 'Position');
 Mask_VentPos = get(figMask_Vent, 'Position');
 
-foldername = "VDP Analysis\";
-Venthist = imread([pptDir,'\', char(foldername) ,'Ventilation_Histogram.png']);    
+% RH: hardcoded backslash separators broke on macOS/Linux; use fullfile instead
+foldername = "VDP Analysis";
+Venthist = imread(fullfile(pptDir, char(foldername), 'Ventilation_Histogram.png'));
 Global.exportToPPTX('addpicture',Venthist,'Position',[3.3 6 5.5 3]);
 Global.exportToPPTX('addtext','Histogram', 'Position',[3.3 6 2 0.1], 'FontSize',14,'FontWeight','bold','Color',[1 0 0],'HorizontalAlignment','left');
 
