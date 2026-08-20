@@ -32,10 +32,13 @@ for slice=1:size(Image2,3) %repeat for rest of slices
     hImage = get( gca, 'Children' ); 
     X = hImage.CData;
     X = imresize(X,[size(Image1,1) size(Image1,2)]);    
+    % RH: hardcoded backslash separator broke on macOS/Linux (created a
+    % literal "...\ProtonRegistered.tif" file in the parent folder instead
+    % of inside DataLocation); use fullfile instead.
     if (slice == 1)
-        imwrite(X,[outputpath,'\ProtonRegistered.tif']);%write new/ overwrite tiff
+        imwrite(X,fullfile(outputpath,'ProtonRegistered.tif'));%write new/ overwrite tiff
     else
-        imwrite(X,[outputpath,'\ProtonRegistered.tif'],'WriteMode','append');%append tiff
+        imwrite(X,fullfile(outputpath,'ProtonRegistered.tif'),'WriteMode','append');%append tiff
     end
 
 end

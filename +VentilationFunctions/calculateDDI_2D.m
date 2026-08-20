@@ -129,7 +129,10 @@ function [Ventilation] = calculateDDI_2D(Ventilation,Proton,MainInput)
     Ventilation.DDI2D_max = max(DDI(:));
     Ventilation.DDI2D_Stat = DDIStat;
     %% %% write tiff and read it back 
-    DDI_outputpath = [Ventilation.outputpath, '\VDP_Analysis\'];
+    % RH: hardcoded backslash separators broke on macOS/Linux; use fullfile
+    % for the join, keeping a trailing filesep since callers below concatenate
+    % filenames onto DDI_outputpath directly.
+    DDI_outputpath = [fullfile(Ventilation.outputpath, 'VDP_Analysis'), filesep];
     mkdir(DDI_outputpath);
     cd(DDI_outputpath);
     tiff = figure('MenuBar','none','ToolBar','none','DockControls','off','Resize','off','WindowState','minimized');%figure for tiffs
@@ -140,12 +143,24 @@ function [Ventilation] = calculateDDI_2D(Ventilation,Proton,MainInput)
     set(gcf,'units','inches'); % set the figure units to pixels
     set(gcf,'position',[1 1 2 2])% set the position of the figure to axes
     disp('Saving Vent Tiff...')
+    % RH: force the figure to fully render before capturing any frames — on
+    % macOS, getframe() on a just-created/minimized figure can return a
+    % different pixel size for the first capture than subsequent ones.
+    drawnow
     %Vent Binned
+    targetFrameSize = [];
     for slice=1:size(Ventilation.Image,3) %repeat for rest of slices
         [~,~] = Global.imoverlay(squeeze(abs(Ventilation.Image(:,:,slice))),squeeze(DDI(:,:,slice)),[0.001,25],[0,0.9*max(Ventilation.Image(:))],colormap('hsv'),0.8,gca);
         colormap(gca,colormap('hsv')); clim([0 25]);
+         drawnow
          Xdata = getframe(gcf);
-         X = Xdata.cdata;     
+         X = Xdata.cdata;
+        % RH: defend against any remaining frame-to-frame size drift (see drawnow note above)
+        if isempty(targetFrameSize)
+            targetFrameSize = [size(X,1) size(X,2)];
+        elseif ~isequal([size(X,1) size(X,2)], targetFrameSize)
+            X = imresize(X, targetFrameSize);
+        end
         if (slice == 1)
             imwrite(X,[DDI_outputpath,'DDI2Dmap.tif'],'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
         else

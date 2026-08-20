@@ -256,8 +256,9 @@ function KmeansVDP_Report(Ventilation, Proton, MainInput)
     DefPos = get(figVDP, 'Position');
     Mask_VentPos = get(figMask_Vent, 'Position');
     
-    foldername = "VDP_Analysis\";
-    Venthist = imread([pptDir,'\', char(foldername) ,'Kmeans_Histogram.png']);    
+    % RH: hardcoded backslash separators broke on macOS/Linux; use fullfile instead
+    foldername = "VDP_Analysis";
+    Venthist = imread(fullfile(pptDir, char(foldername), 'Kmeans_Histogram.png'));
     Global.exportToPPTX('addpicture',Venthist,'Position',[3.3 5.8 5.5 3]);
     % Global.exportToPPTX('addtext','Histogram', 'Position',[3.3 5.5 2 0.1], 'FontSize',14,'FontWeight','bold','Color',[1 0 0],'HorizontalAlignment','left');
     
@@ -282,18 +283,26 @@ function KmeansVDP_Report(Ventilation, Proton, MainInput)
     close all;
     
     % save report as a PDF
-    ppt = actxserver('PowerPoint.Application');
-    
-    presentation = ppt.Presentations.Open(pptxName);
-    PDFoutputPath = fullfile(pptDir,[pptxFileName,'.pdf']);
-    if exist(PDFoutputPath, 'file')
-        delete(PDFoutputPath);  % remove existing PDF to avoid overwrite conflict
-    end    
-    presentation.SaveAs(PDFoutputPath, 32);
-    pause(2);  % <-- allow time for file to be written
-    presentation.Close();
-    ppt.Quit();
-    delete(ppt);
+    % RH: actxserver (ActiveX/COM) only exists on Windows — PowerPoint-driven
+    % PDF export has no direct macOS/Linux equivalent, so it's skipped there;
+    % the pptx report above is still saved on every platform.
+    if ispc
+        ppt = actxserver('PowerPoint.Application');
+
+        presentation = ppt.Presentations.Open(pptxName);
+        PDFoutputPath = fullfile(pptDir,[pptxFileName,'.pdf']);
+        if exist(PDFoutputPath, 'file')
+            delete(PDFoutputPath);  % remove existing PDF to avoid overwrite conflict
+        end
+        presentation.SaveAs(PDFoutputPath, 32);
+        pause(2);  % <-- allow time for file to be written
+        presentation.Close();
+        ppt.Quit();
+        delete(ppt);
+    else
+        PDFoutputPath = fullfile(pptDir,[pptxFileName,'.pdf']);
+        disp('Skipping PDF export (PowerPoint COM automation is Windows-only).');
+    end
 end
 
 % Local function

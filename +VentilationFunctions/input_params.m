@@ -118,13 +118,16 @@ classdef input_params
             end
             
             % Intialize the settings for each instance:
-            input_params.Median_Filter = medfilter
-            input_params.RF_correction = RFcorrection
-            input_params.savedata = savedata
-            input_params.calculate_SNR = calculateSNR
-            input_params.N4_bias_analysis = N4
-            input_params.Incomplete_threshold = incomplete
-            input_params.Complete_threshold = complete
+            % RH: added trailing semicolons on all but the last assignment — their
+            % absence made MATLAB auto-echo the whole object after every single
+            % assignment instead of once, fully populated, at the end.
+            input_params.Median_Filter = medfilter;
+            input_params.RF_correction = RFcorrection;
+            input_params.savedata = savedata;
+            input_params.calculate_SNR = calculateSNR;
+            input_params.N4_bias_analysis = N4;
+            input_params.Incomplete_threshold = incomplete;
+            input_params.Complete_threshold = complete;
             input_params.Hyper_threshold = hyper
 
 		end
