@@ -164,6 +164,7 @@ for i = 125 %2:nSubjects%:nSubjects % always start from 2
         elseif RuneCol{i} == 1
             MainInput.UpdatedNote = T{i, 13};
             MainInput.UpdatedImageQuality  = T{i, 15};
+            MainInput.ProcessingNotes = MainInput.UpdatedNote;
             MainInput.ImageQuality = MainInput.UpdatedImageQuality;
             GasExchangeFunctions.CCHMC_Db_GX_Pipeline_rerun(MainInput,analysispath);
         end
