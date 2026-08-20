@@ -1580,6 +1580,7 @@ GasExchange.RBCOscStd = RBCOscStd;
 GasExchange.RBCOscBinPercents = RBCOscBinPercents;
 GasExchange.imagequality = quality;
 GasExchange.image_qualityscore = qualityscore;
+MainInput.ImageQuality = quality;
 
 %% write report
 % ------------------------------------------------------------------------

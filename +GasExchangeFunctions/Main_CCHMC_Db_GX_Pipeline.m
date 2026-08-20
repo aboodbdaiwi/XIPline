@@ -65,6 +65,7 @@ for i = 2:nSubjects%:nSubjects % always start from 2
     MainInput.AnalysisMethod   = '1-Point Dixon';
     MainInput.AgeCor           = 'no';   
    
+    MainInput.ImageQuality      = '1-Failed';
 
     % Gx file
     if ismissing(GxFileCol{i}) 

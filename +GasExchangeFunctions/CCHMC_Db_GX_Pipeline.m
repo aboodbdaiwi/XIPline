@@ -217,7 +217,12 @@ end
 
 
 % -----------------------------segmentation-----------------------------
-SegmentMaskMode = 0;    % 0 = new AI mask, 1 = load exisitng mask 
+if strcmp(MainInput.ImageQuality, '1-Failed')
+    SegmentMaskMode = 1;
+else
+    SegmentMaskMode = 0;  % 0 = new AI mask, 1 = load exisitng mask 
+end
+ 
 if SegmentMaskMode == 0
     cd(MainInput.XeDataLocation)
     % % % diary Log.txt
@@ -237,7 +242,17 @@ if SegmentMaskMode == 0
     MainInput.SliceOrientation = 'isotropic'; % 'coronal' ||'transversal' || 'sagittal' ||'isotropic'
     [Proton,~,~,GasExchange] = Segmentation.PerformSegmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
 else
-  % skip for now
+    cd(MainInput.XeDataLocation)
+    % % % diary Log.txt
+    MainInput.SegmentationMethod = 'Auto'; % 'Threshold' || 'Manual' || 'Auto'
+    MainInput.SegmentAnatomy = 'Parenchyma'; % 'Airway'; || 'Parenchyma'
+    MainInput.Imagestosegment = 'Proton & Xe Registered';  % 'Proton & Xe Registered' | 'Xenon' | 'Registered Proton'
+    MainInput.Imagestosegment = 'Registered Proton';   
+    MainInput.AIScript = 'Python';
+    MainInput.thresholdlevel = 1; % 'threshold' 
+    MainInput.SE = 1;
+    MainInput.SegmentManual = 'Freehand'; % 'AppSegmenter' || 'Freehand'
+    MainInput.SliceOrientation = 'isotropic'; % 'coronal' ||'transversal' || 'sagittal' ||'isotropic'
 end
 
 
