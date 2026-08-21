@@ -1,0 +1,42 @@
+###########################################################################
+##***                How to add new MATLAB to fidall                  ***##
+###########################################################################
+
+1. Add functions to matlab_scpter_cchmc.m
+    -We will compile this file so having the function in it, will include 
+        it as a dependency
+2. Create python access scripts for passing data to the functions
+    -Confirm they have LF line endings for linux compatibility
+3. Run compile_mascri.m on Linux with MATLAB and coder license
+    -Needs to be on Linux since that is the platform GE is on
+    -I installed MATLAB from UC onto WSL2 and run it there
+4. Place mascriXXX_cchmc folder on scanner under ~/fidall/bin
+5. Make sure the sonofrecon script that is used in the python access 
+    scripts includes the mcr version you will be using in the setup_mcr
+    function.
+6. Make sure the scanner has the appropriate MATLAB runtime for the 
+    compiled code and make sure the path to it exists in the sonofrecon
+    script
+    -If not, install it and add path to sonofrecon script (can use firefox 
+	on scanner to download it
+	-For v24.2, was installed to /export/home/signa/research/MATLAV/v242
+	-Then confirmed with "python3 -c 'import sonofrecon_cchmc; sonofrecon_cchmc.setup_mcr()'
+	-Then copied with "python3 -c 'import sonofrecon_cchmc; sonofrecon_cchmc.copy_mcr()'
+7. Link rhrecons to python files as usual.
+
+###########################################################################
+Notes from Rolf:
+
+Actually, I strongly discourage replacing the existing matlab_scripter; it 
+will just lead to chaos, as I am continuously working on it; some python 
+functions might have changed, and it could break other stuff. The way to do
+it is to compile it under matlab V9.12 (or a newer version, in which case 
+you have to install matlab runtime environment on the scanner and modify 
+sonofrecon.py). You give it another name in another directory; copy 
+sonofrecon.py (giving it another name as well) and adapt it accordingly. 
+Attached the compilation script I am using. I could also compile it in; 
+though I am not sure if that is OK with Andrew (he has not shared that 
+stuff with me). Also, I am worried that people will poke me when 1pt Dixon 
+does not work (which will happen; I firmly believe it is the wrong 
+approach, as we need 4TEs (or more) for 3 peaks to be robust; certainly not
+one).

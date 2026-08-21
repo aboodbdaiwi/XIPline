@@ -1,0 +1,34 @@
+autolock 0 //No p-file saving
+         1 //Store p-file
+
+ak_dbdt_check 2 //More accurate convolution PNS check
+			  0 //No check - phantom only
+			  1 //Deafualt conservative GE
+
+spsp_dbdt_check 2 //More accurate convolution PNS check for spsp pulses
+				0 //No check - phantom only
+				1 //Deafualt conservative GE
+
+t_sp 200 //initial wait period
+
+rfs_squeeze_rf1 1 //minimize pw_rf1 based on b1max
+
+dda 0 //No dummy acqs
+
+rfs_fastfid 2 //Very short TR
+			3 //No spoiler
+			4 //Read from cv file
+			5 //area with rfs_crush times phase dispersion across opslithick
+			1 //Short TR
+			0 //Normal
+
+rfs_nreps 1 //Number of acq repititions to reach desired sampling
+
+vap_continue_loop 1 //Continue variable parameters through reps
+
+ak_dynwf_mode 2 //load wfs into sequencer
+			  0 //load while played out
+			  1 //AGP memory
+			  3 //only first waveform
+
+ak_debug 1 //extra debug info for arbitrary waveforms

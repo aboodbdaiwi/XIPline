@@ -1,0 +1,65 @@
+#Gradwarp Coefficient file for an XRMW Gradient Coil - Spherical Harmonic Correction
+GRADWARPTYPE            1
+SCALEX1                 0.0
+SCALEX2                 0.0
+SCALEX3                 -1.67824E-04
+SCALEX4                 0.0
+SCALEX5                 -8.12244E-08
+SCALEX6                 0.0
+SCALEX7                 6.02516E-12
+SCALEX8                 0.0
+SCALEX9                 -1.86390E-16
+SCALEX10                0.0
+SCALEY1                 0.0
+SCALEY2                 0.0
+SCALEY3                 -1.43159E-04
+SCALEY4                 0.0
+SCALEY5                 -8.64823E-08
+SCALEY6                 0.0
+SCALEY7                 5.32647E-12
+SCALEY8                 0.0
+SCALEY9                 -1.06640E-16
+SCALEY10                0.0
+SCALEZ1                 0.0
+SCALEZ2                 0.0
+SCALEZ3                 -1.13524E-04
+SCALEZ4                 0.0
+SCALEZ5                 -1.90511E-08
+SCALEZ6                 0.0
+SCALEZ7                 1.05544E-11
+SCALEZ8                 0.0
+SCALEZ9                 -8.25379E-16
+SCALEZ10                0.0
+DELTA                   0.0
+# created 28 April 2017, includes 9th order correction
+# Created by G. Astary using CoilBuilder 4.20 and wire files from DRF20130022
+# Decomposition performed on 50 cm DSV with 40,000 equally-spaced points
+# SCALEX1 - SCALEX9, SCALEY1- SCALEY9, SCALEZ1 - SCALEZ9 (The spherical
+# harmonic coefficients) need to be computed and recorded in this file.
+# However, the numbers entred in the file should have the multiplicative
+# factors for each of the term already incorporated.
+# Therefore,
+# SCALEX1 *= 1, SCALEX2 *= 3,   SCALEX3 *= 3/2, SCALEX4 *= 5/2, SCALEX5 *= 15/8, 
+# SCALEX6 *= 21/8, SCALEX7 *= 7/16, SCALEX8 *= 9/16, SCALEX9 *= 45/128
+# SCALEY1 *= 1, SCALEY2 *= 3,   SCALEY3 *= 3/2, SCALEY4 *= 5/2, SCALEY5 *= 15/8,
+# SCALEY6 *= 21/8, SCALEY7 *= 7/16, SCALEY8 *= 9/16, SCALEY9 *= 45/128
+# SCALEZ1 *= 1, SCALEZ2 *= 1/2, SCALEZ3 *= 1/2, SCALEZ4 *= 1/8, SCALEZ5 *= 1/8,
+# SCALEZ6 *= 1/16, SCALEZ7 *= 1/16, SCALEZ8 *= 1/128, SCALEZ9 *= 1/128
+#
+#
+#	X:
+#		hc31 
+#		hc51 
+#		hc71 
+#		hc91 
+#	Y:
+#		hc31 
+#		hc51 
+#		hc71 
+#		hc91 
+#	Z:
+#		hc30 
+#		hc50 
+#		hc70 
+#		hc90 
+

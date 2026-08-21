@@ -1,0 +1,7 @@
+rfs_fastfid 5
+t_sp 100
+ak_dbdt_check 2
+spsp_dbdt_check 2
+ak_dynwf_mode 1
+spectro_non_radix2 1
+xtr_settling 8

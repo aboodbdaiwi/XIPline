@@ -1,0 +1,53 @@
+#Gradwarp Coefficient file for a XRMB Body Gradient Coil - Spherical Harmonic Correction
+GRADWARPTYPE            1
+SCALEX1                 0.0
+SCALEX2                 0.0
+SCALEX3                 -1.2498e-4
+SCALEX4                 0.0
+SCALEX5                 -9.7395e-8
+SCALEX6                 0.0
+SCALEX7                 0.0
+SCALEX8                 0.0
+SCALEX9                 0.0
+SCALEX10                0.0
+SCALEY1                 0.0
+SCALEY2                 0.0
+SCALEY3                 -1.0338e-4
+SCALEY4                 0.0
+SCALEY5                 -1.0046e-7
+SCALEY6                 0.0
+SCALEY7                 0.0
+SCALEY8                 0.0
+SCALEY9                 0.0
+SCALEY10                0.0
+SCALEZ1                 0.0
+SCALEZ2                 0.0
+SCALEZ3                 -4.8939e-5
+SCALEZ4                 0.0
+SCALEZ5                 -3.5190e-8
+SCALEZ6                 0.0
+SCALEZ7                 0.0
+SCALEZ8                 0.0
+SCALEZ9                 0.0
+SCALEZ10                0.0
+DELTA                   0.0
+#created 10-05-05 
+# SCALEX1 - SCALEX5, SCALEY1- SCALEY5, SCALEZ1 - SCALEZ5 (The spherical
+# harmonic coefficients) need to be computed and recorded in this file.
+# However, the numbers entred in the file should have the multiplicative
+# factors for each of the term already incorporated.
+# Therefore,
+# SCALEX1 *= 1, SCALEX2 *= 3,   SCALEX3 *= 3/2, SCALEX4 *= 5/2, SCALEX5 *= 15/8
+# SCALEY1 *= 1, SCALEY2 *= 3,   SCALEY3 *= 3/2, SCALEY4 *= 5/2, SCALEY5 *= 15/8
+# SCALEZ1 *= 1, SCALEZ2 *= 1/2, SCALEZ3 *= 1/2, SCALEZ4 *= 1/8, SCALEZ5 *= 1/8.
+#
+#
+#	X:
+#		hc31 = -9.267075e-05
+#		hc51 = -4.670852e-08
+#	Y:
+#		hc31 = -9.086344e-05
+#		hc51 = -4.790186e-08
+#	Z:
+#		hc30 = -2.209195e-05
+#		hc50 = -9.620042e-08
