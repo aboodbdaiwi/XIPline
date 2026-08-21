@@ -61,7 +61,7 @@ function Outputs = analyzeVentilationImage(imagePath, maskPath)
 
     Ventilation.LB_Analysis = 'yes';
     Ventilation.LB_Normalization = 'HybridLBm';
-    Ventilation.LBThresholds = [0.5, 0.75, 1.0, 1.22, 1.45]; % 
+    Ventilation.LBThresholds = [0.5, 0.75, 1.0, 1.22, 1.44]; % 
     Ventilation.Hdist = [-0.893154, 1.133836, 0.285275];
     Ventilation =  VentilationFunctions.calculate_LB_VDP(Ventilation,Proton,MainInput);
     Outputs.N4.HybridGLBm.VDP = Ventilation.LB_VDP;
