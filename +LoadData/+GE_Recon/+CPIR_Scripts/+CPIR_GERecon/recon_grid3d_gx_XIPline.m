@@ -1,7 +1,7 @@
-function [bb,bbabs] = recon_grid_interp(d,h,wfn,mtx_reco,interp_factor,delay,lb,fname,...
+function [bb,bbabs,gx] = recon_grid3d_gx_XIPline(d,h,wfn,mtx_reco,interp_factor,delay,lb,fname,...
     mask_fac,coco,plt,grdwrp)
-%RECON_GRID Reconstruct 2D/3D non-Cartesian data
-%[bb,bbabs] = recon_grid(d,h,wfn,mtx_reco,delay,lb,fname,mask_fac,coco,...
+%recon_grid3d_gx Reconstruct 2D/3D non-Cartesian data
+%[bb,bbabs] = recon_grid3d_gx(d,h,wfn,mtx_reco,delay,lb,fname,mask_fac,coco,...
 %                        plt,grdwrp)
 %         d   Raw data (or P-File/ScanArchive fname)
 %         h   Header from p-file (or empty)
@@ -26,6 +26,7 @@ function [bb,bbabs] = recon_grid_interp(d,h,wfn,mtx_reco,interp_factor,delay,lb,
 %  2/2025  Rolf Schulte
 if (nargin<1), help(mfilename); return; end
 
+gx = struct();
 
 %% input variables
 RFS_MAX_NSCANS = 16382;                % maximum number of scans
@@ -46,8 +47,8 @@ if length(delay)>1
 end
 if ~exist('lb','var'),      lb = []; end
 if isempty(lb),             lb = 0; end
-if length(lb)<2,            lb = [lb 0]; end
-if length(lb)<3,            lb = [lb 0]; end
+if length(lb)<2,            lb = [lb lb]; end
+if length(lb)<3,            lb = [lb lb]; end
 if ~exist('fname','var'),   fname = []; end
 if ~exist('mask_fac','var'), mask_fac = []; end
 if isempty(mask_fac),       mask_fac = 0; end
@@ -84,7 +85,7 @@ if ~isnumeric(d) || isempty(d)
     end
     [d,h] = LoadData.GE_Recon.fidall.read_p(d,true);
 end
-d = single(d);
+d = single(conj(d));
 
 
 %% create/check fname
@@ -126,7 +127,7 @@ else
             fprintf('reducing delay by %g [us]\n',1d3/(4*h.rdb_hdr.bw));
             delay = delay - 1d3/(4*h.rdb_hdr.bw);
         else
-            wf = LoadData.GE_Recon.fidall.calc_spiral_waveform(h);
+            wf = calc_spiral_waveform(h);
         end
         delay = delay + 4;   % default in sonofrecon.py now -4; adding back
     end
@@ -169,6 +170,13 @@ if isfield(wf,'fov')
         end
     end
 end
+% Preserve acquisition information for XIPline gas-exchange processing
+gx.mtx_acq = mtx_acq;
+gx.niso = niso;
+gx.fov_m = h.rdb_hdr.fov*1d-3;
+gx.wfn = wfn;
+gx.header = h;
+
 clear wf
 nslices = size(d,5);
 dim = size(k,3);
@@ -208,7 +216,6 @@ if ((sum(ind(:))>RFS_MAX_NSCANS) && (size(d,4)>1))
     clear tmp
 end
 
-
 %% misc variables to checkings
 bw = h.rdb_hdr.user0;
 if ((abs(bw)<500) || ~isempty(regexpi(h.image.psdname,'spiral', 'once')))
@@ -226,26 +233,134 @@ if ~((trnsps(1)==0)||(trnsps(1)==3))
 end
 if n3~=1, warning('size(d,3)(=%g)~=1',n3); end
 
+%% Split interleaves
+% The CPIR 1-point Dixon acquisition alternates two image streams.
+% Preserve both raw streams before the standard GE reconstruction reshaping.
+d1 = d(1:2:end,:); % first interleave
+d2 = d(2:2:end,:); % second interleave
+
+gx.RawInterleave1 = d1;
+gx.RawInterleave2 = d2;
+
+d=cat(3,d1,d2);
+d=reshape(d,size(d,1),size(d,2),1,size(d,3));
+[nproj, nread, ~, ~] = size(d);
+
+ind = ind(1:2:end,:);
+nacq=sum(sum(ind,1)>0);
+
+dcf_tmp = reshape(dcf,[],nproj);
+dcf_keep = dcf_tmp(1:nacq,:);
+dcf = dcf_keep(:)';
+
+k_tmp = reshape(k,[],nproj,3);
+k_keep = k_tmp(1:nacq,:,:);
+
+% XIPline trajectory convention: [3 x readout x projection]
+gx.XeTraj = permute(k_keep,[3 1 2]);
+gx.nacq = nacq;
+gx.nproj = nproj;
+gx.nread = nread;
+gx.dcf = dcf_keep;
+
+% Convert the two raw streams to [readout x projection] when possible.
+% Keep the untouched raw arrays above regardless.
+try
+    if ismatrix(d1) && size(d1,2) >= nacq
+        gx.Interleave1KSpace = transpose(d1(:,1:nacq));
+    else
+        gx.Interleave1KSpace = [];
+    end
+    if ismatrix(d2) && size(d2,2) >= nacq
+        gx.Interleave2KSpace = transpose(d2(:,1:nacq));
+    else
+        gx.Interleave2KSpace = [];
+    end
+catch
+    gx.Interleave1KSpace = [];
+    gx.Interleave2KSpace = [];
+end
+
+% ============================================================
+% Check GE trajectory center
+% ============================================================
+
+kx0 = mean(k_keep(1,:,1));
+ky0 = mean(k_keep(1,:,2));
+kz0 = mean(k_keep(1,:,3));
+
+fprintf('\nGE trajectory center:\n');
+fprintf('  kx0 = %.8f\n',kx0);
+fprintf('  ky0 = %.8f\n',ky0);
+fprintf('  kz0 = %.8f\n',kz0);
+
+fprintf('First trajectory point range:\n');
+fprintf('  Kx: %.8f to %.8f\n', ...
+    min(k_keep(1,:,1)),max(k_keep(1,:,1)));
+fprintf('  Ky: %.8f to %.8f\n', ...
+    min(k_keep(1,:,2)),max(k_keep(1,:,2)));
+fprintf('  Kz: %.8f to %.8f\n\n', ...
+    min(k_keep(1,:,3)),max(k_keep(1,:,3)));
+
+k = reshape(k_keep,1,nacq*nproj,3);
+
+t_tmp = reshape(t,[],nproj);
+t_keep = t_tmp(1:nacq,:);
+gx.t = t_keep;
+t = t_keep(:)';
 
 %% pre-processing of data
-if ((abs(xloc)>0.01) || (abs(yloc)>0.01) || (abs(zloc)>0.01))
-    shft = mtx_reco.*[xloc yloc zloc]*1d-3/fov.*niso;
-    if dim==2, shft = shft(1,1:2); end
-else
-    % shft = [];
-    shft = zeros(1,dim);
-end
-for ld=1:dim
-    % if ~isodd(mtx_reco(ld)), shft(ld) = shft(ld) + 0.5; end
-    shft(ld) = shft(ld) + 0.5;
+% if ((abs(xloc)>0.01) || (abs(yloc)>0.01) || (abs(zloc)>0.01))
+%     shft = mtx_reco.*[xloc yloc zloc]*1d-3/fov.*niso;
+%     if dim==2, shft = shft(1,1:2); end
+% else
+%     % shft = [];
+%     shft = zeros(1,dim);
+% end
+% for ld=1:dim
+%     % if ~isodd(mtx_reco(ld)), shft(ld) = shft(ld) + 0.5; end
+%     shft(ld) = shft(ld) + 0.5;
+% end
+% For the CPIR 3D radial gas-exchange reconstruction, do not apply the
+% scanner prescription position or the half-voxel correction here.
+% The trajectory is reconstructed at the k-space/FOV center.
+%
+% IMPORTANT: shft must be set BEFORE raw2grid because raw2grid applies the
+% spatial phase shift to the acquired k-space data.
+%% pre-processing of data
+shft = zeros(1,dim);
+
+% Base half-voxel correction
+for ld = 1:dim
+    if ~LoadData.GE_Recon.fidall.isodd(mtx_reco(ld))
+        shft(ld) = shft(ld) + 0.5;
+    end
 end
 
+% Additional manual centering correction
+shft(1) = shft(1) + 0;
+shft(2) = shft(2) + 20;
+
+fprintf('Reconstruction shift = [%s] voxels\n', num2str(shft));
+
 cart_down_fac = [];
-dd = LoadData.GE_Recon.fidall.raw2grid(d,LoadData.GE_Recon.fidall.ischop(h),k,shft,cart_down_fac,[],ind,delay*1d-6,bw,false);
+
+dd = LoadData.GE_Recon.fidall.raw2grid( ...
+    d, ...
+    LoadData.GE_Recon.fidall.ischop(h), ...
+    k, ...
+    shft, ...
+    cart_down_fac, ...
+    [], ...
+    ind, ...
+    delay*1e-6, ...
+    bw, ...
+    false);
+
 clear d ind
 % size of reshaped data dd:
 %  dim1=#coils; dim2=#indexed kspace data; dim3=#excitations; dim4=#slices
-if any(abs(lb)>0), dd = ak_apodise(dd,k,lb(2),t,[lb(1) lb(3)],false); end
+if any(abs(lb)>0), dd = LoadData.GE_Recon.fidall.ak_apodise(dd,k,lb(2),t,[lb(1) lb(3)],false); end
 if abs(f0)>0.01
     fprintf('Off-resonance f0(=%g[Hz]) reconstruction\n',f0);
     phafu = exp(1i*2*pi*t*f0); 
@@ -259,12 +374,32 @@ clear t
 ntimesteps = size(dd,3);
 fprintf('Reconstructing/storing data as single (loop)\n');
 if dim==3
+    % fprintf('3D gridding\n');
+    % if length(size(dd))>3, error('length(size(dd))(=%d)>3',length(size(dd))); end
+    % dd = reshape(permute(dd,[1 3 2]),[ncoils*ntimesteps,size(k,2)]);
+    % bb = LoadData.GE_Recon.fidall.gridding3dsingle(k,dd,dcf,mtx_reco);
+    % clear dd
+    % bb = permute(reshape(bb,[mtx_reco ncoils ntimesteps]),[1 2 3 5 4]);
+
+
     fprintf('3D gridding\n');
-    if length(size(dd))>3, error('length(size(dd))(=%d)>3',length(size(dd))); end
-    dd = reshape(permute(dd,[1 3 2]),[ncoils*ntimesteps,size(k,2)]);
-    bb = LoadData.GE_Recon.fidall.gridding3dsingle(k,dd,dcf,mtx_reco);
+
+    if length(size(dd))>3
+        error('length(size(dd))(=%d)>3',length(size(dd)));
+    end
+
+    dd = reshape(permute(dd,[1 3 2]), ...
+        [ncoils*ntimesteps,size(k,2)]);
+
+    bb = LoadData.GE_Recon.fidall.gridding3dsingle( ...
+        k,dd,dcf,mtx_reco);
+
     clear dd
-    bb = permute(reshape(bb,[mtx_reco ncoils ntimesteps]),[1 2 3 5 4]);
+
+    bb = permute( ...
+        reshape(bb,[mtx_reco ncoils ntimesteps]), ...
+        [1 2 3 5 4]);
+
 else
     bb = complex(zeros([mtx_reco,ntimesteps,ncoils],'single'));
     for lt=1:ntimesteps
@@ -282,7 +417,7 @@ bb = fliplr(bb);
 
 %% separable 3D
 if dim==2
-    if LoadData.GE_Recon.fidall.isodd(bitget(h.rdb_hdr.data_collect_type,7))
+    if isodd(bitget(h.rdb_hdr.data_collect_type,7))
         fprintf('Cartesian FFT along 3rd dimension\n');
         % bb = bb(:,:,end:-1:1,:,:,:);
         bb = fft(ifftshift(bb,3),[],3);
@@ -294,7 +429,7 @@ end
 
 %% masking
 if mask_fac>0
-    mask = LoadData.GE_Recon.fidall.calc_mask(sqrt(mean(mean(bb.*conj(bb),5),4)),2,...
+    mask = calc_mask(sqrt(mean(mean(bb.*conj(bb),5),4)),2,...
         0.1*mask_fac,[],[],true);
     if ncoils==1, bb = bsxfun(@times,bb,mask); end
 else
@@ -314,7 +449,7 @@ if ncoils>1
     if coco(1)>-1
         mtx_coco = [];
         if coco(4)>0, mtx_coco = coco(4); end
-        bb = LoadData.GE_Recon.fidall.mri_coil_combine(bb,coco(2),'first',coco(1),mtx_coco,mask,true,dim);
+        bb = mri_coil_combine(bb,coco(2),'first',coco(1),mtx_coco,mask,true,dim);
     else
         warning('Skipping coil combination');
     end
@@ -344,7 +479,7 @@ if grdwrp
         zfov = [];
     end
     try
-        bb = grad_warp(bb,h,gradcoil,(dim==3),'',zfov);
+        bb = LoadData.GE_Recon.fidall.grad_warp(bb,h,gradcoil,(dim==3),'',zfov);
     catch ME
         warning(sprintf('grad_warp failed with Error\n\t%s',ME.message));
         grdwrp = -1;
@@ -385,7 +520,7 @@ if (plt(1)>0) || ~isempty(fname)
         fid = figure('visible','off');
     end
     if dim==3      % plot 3D
-        LoadData.GE_Recon.fidall.imagesc_ind3d(bbabs,'','','',false,true,[]);
+        LoadData.GE_Recon.fidall.imagesc_ind3d(bbabs,'','','',false,true,'row');
     else
         rshp = false;
         if (ntimesteps==1) && (nslices>8), rshp = true; end
@@ -420,6 +555,21 @@ if ~isempty(fname) && (plt(2)>0)
 end
 
 
+%% XIPline gas-exchange reconstruction metadata
+gx.mtx_reco = mtx_reco;
+gx.interp_factor = interp_factor;
+gx.delay = delay;
+gx.lb = lb;
+gx.mask_fac = mask_fac;
+gx.coco = coco;
+gx.plt = plt;
+gx.grdwrp = grdwrp;
+gx.dim = dim;
+gx.ntimesteps = ntimesteps;
+gx.ncoils = ncoils;
+gx.bw = bw;
+gx.fov = fov;
+
 %% print execution time
 ttv = toc(timerVal);
 fprintf('recon_grid: runtime = %g [m] %02g [s]\n',...
@@ -427,4 +577,4 @@ fprintf('recon_grid: runtime = %g [m] %02g [s]\n',...
 
 if nargout<1, clear bb; end
 
-end      % recon_grid.m
+end      % recon_grid3d_gx_XIPline.m

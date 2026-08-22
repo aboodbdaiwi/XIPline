@@ -298,6 +298,24 @@ elseif strcmp(MainInput.XeDataext,'.nii') || strcmp(MainInput.XeDataext,'.gz') =
     elseif strcmp(MainInput.AnalysisType,'GasExchange') == 1 
         % not supported yet
     end
+elseif strcmp(MainInput.Scanner, 'GE') && strcmp(MainInput.XeDataext,'.h5') 
+    if strcmp(MainInput.AnalysisType,'Ventilation')   
+        if strcmp(MainInput.SequenceType, '2D Spiral') && strcmp(MainInput.Institute,'CCHMC') 
+            Ventilation = LoadData.GE_Recon.CPIR_Scripts.CPIR_GERecon.GE_Vent_2D_Spiral_Recon(MainInput); 
+        elseif strcmp(MainInput.SequenceType, '3D FLORET') && strcmp(MainInput.Institute,'CCHMC') 
+            Ventilation = LoadData.GE_Recon.CPIR_Scripts.CPIR_GERecon.GE_Vent_3D_FLORET_Recon(MainInput); 
+        end
+    elseif strcmp(MainInput.AnalysisType,'Diffusion') 
+        if strcmp(MainInput.SequenceType, '2D GRE') && strcmp(MainInput.Institute,'CCHMC') 
+            Diffusion = LoadData.GE_Recon.CPIR_Scripts.CPIR_GERecon.GE_Diffusion_2D_GRE_Recon(MainInput);            
+        end
+    elseif strcmp(MainInput.AnalysisType,'GasExchange')  
+        if strcmp(MainInput.SequenceType, '3D Radial') && strcmp(MainInput.Institute,'XeCTC') 
+            GasExchange = LoadData.GE_Recon.CPIR_Scripts.CPIR_GERecon.GE_GX_3D_Radial_XeCTC_1ptDixon_Recon(MainInput);
+        % elseif strcmp(MainInput.SequenceType, '3D Radial') && strcmp(MainInput.Institute,'XeCTC') 
+
+        end
+    end    
 elseif (strcmp(MainInput.XeDataext,'.h5') || strcmp(MainInput.XeDataext,'.mrd')) 
     if strcmp(MainInput.AnalysisType,'Ventilation') == 1   
         MainInput.ReconImageMode = 'xenon';
@@ -430,22 +448,35 @@ elseif strcmp(MainInput.XeDataext,'.7') && strcmp(MainInput.Scanner,'GE')
 
 end 
 
-% change dims :
+% Change dimensions
 if strcmp(MainInput.AnalysisType,'Ventilation')
-    Image = Ventilation.Image;    
-    % Ensure Ventilation.Image exists and is 3-D
-    assert(ndims(Image) == 3, 'Ventilation.Image must be a 3-D array.');
-    sz = size(Image);                 % [d1 d2 d3]        
-    [~, idxMin] = min(sz(1:3));   % idxMin ∈ {1,2,3}
-    order = 1:3;                  % [1 2 3]
-    order(order == idxMin) = [];  % remove the smallest dim => two dims left in original order
-    order = [order, idxMin];      % append the smallest as the last dim
-    Image = permute(Image, order);
-    Ventilation.Image = Image;
-    % (Optional) show what changed
-    fprintf('Original size: [%s]  ->  New size: [%s], permute order: [%s]\n', ...
-        num2str(sz), num2str(size(Image)), num2str(order));
-    
+
+    Image = Ventilation.Image;
+    % Ensure Ventilation.Image is 3-D
+    assert(ndims(Image) == 3, ...
+        'Ventilation.Image must be a 3-D array.');
+    sz = size(Image);   % [d1 d2 d3]
+    % True 3D means all three spatial dimensions are equal
+    isTrue3D = (sz(1) == sz(2)) && (sz(2) == sz(3));
+
+    if ~isTrue3D
+        [~, idxMin] = min(sz(1:3));
+        order = 1:3;
+        order(order == idxMin) = [];
+        order = [order, idxMin];
+
+        Image = permute(Image, order);
+        Ventilation.Image = Image;
+        fprintf( ...
+            'Original size: [%s] -> New size: [%s], permute order: [%s]\n', ...
+            num2str(sz), ...
+            num2str(size(Image)), ...
+            num2str(order));
+    else
+        fprintf( ...
+            'True 3D volume detected [%s]. Dimension reordering skipped.\n', ...
+            num2str(sz));
+    end
 elseif strcmp(MainInput.AnalysisType,'Diffusion')
 
 end
@@ -587,7 +618,7 @@ elseif strcmp(MainInput.AnalysisType,'Diffusion')
 end
 
 %% Load/Read Proton data 
-try
+% try
     if (isnumeric(MainInput.NoProtonImage) && MainInput.NoProtonImage == 0) || ...
        (ischar(MainInput.NoProtonImage) && strcmp(MainInput.NoProtonImage, 'no'))
         % try 
@@ -739,6 +770,21 @@ try
                     end
                     [Proton] = LoadData.LoadData_Proton_GasExchange_Philips_Sin(MainInput.HDataLocation,PixelShift,MainInput.Institute,Proton,GasExchange);
                 end
+            elseif strcmp(MainInput.Scanner, 'GE') && strcmp(MainInput.XeDataext,'.h5') 
+                if strcmp(MainInput.AnalysisType,'Ventilation')   
+                    if strcmp(MainInput.SequenceType, '2D Spiral') && strcmp(MainInput.Institute,'CCHMC') 
+                        Proton = LoadData.GE_Recon.CPIR_Scripts.CPIR_GERecon.GE_Proton_2D_Spiral_Recon(MainInput);    
+                    elseif strcmp(MainInput.SequenceType, '3D FLORET') && strcmp(MainInput.Institute,'CCHMC') 
+                            Proton = LoadData.GE_Recon.CPIR_Scripts.CPIR_GERecon.GE_Proton_3D_FLORET_Recon(MainInput);  
+                    end
+                elseif strcmp(MainInput.AnalysisType,'Diffusion') 
+
+                elseif strcmp(MainInput.AnalysisType,'GasExchange')   
+                    if strcmp(MainInput.SequenceType, '3D Radial') 
+                        Proton = LoadData.GE_Recon.CPIR_Scripts.CPIR_GERecon.GE_Proton_3D_Radial_Recon(MainInput); 
+                    end
+
+                end                 
             elseif (strcmp(MainInput.HDataext,'.h5') || strcmp(MainInput.HDataext,'.mrd'))              
                 if strcmp(MainInput.AnalysisType,'Ventilation')  
                     MainInput.ReconImageMode = 'proton';
@@ -804,9 +850,9 @@ try
         %     MainInput.NoProtonImage = 1;
         % end
     end % end of Load/Read Proton data 
-catch
-    disp('no proton data was selected or something went wrong, please check log')
-end
+% catch
+%     disp('no proton data was selected or something went wrong, please check log')
+% end
 close all;
 end
 

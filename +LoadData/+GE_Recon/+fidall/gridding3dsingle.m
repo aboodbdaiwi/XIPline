@@ -101,12 +101,12 @@ if false
     % c-loop faster than parfor
     gdat = complex(zeros(grsize(1), grsize(2), grsize(3),nrep,'single'));
     parfor l=1:nrep
-        gdat(:,:,:,l) = gr3dKB_float_mex(kvec(:,1), kvec(:,2), kvec(:,3), ...
+        gdat(:,:,:,l) = LoadData.GE_Recon.fidall.gr3dKB_float_mex(kvec(:,1), kvec(:,2), kvec(:,3), ...
             kdata(l,:), dcf, grsize(:), kwidth/2, single(C_samp), single(vdim));
     end
 else
     % call mex function
-    gdat = gr3dKB_float_mex(kvec(:,1), kvec(:,2), kvec(:,3), ...
+    gdat = LoadData.GE_Recon.fidall.gr3dKB_float_mex(kvec(:,1), kvec(:,2), kvec(:,3), ...
         kdata, dcf, grsize(:), kwidth/2, single(C_samp), single(vdim));
 end
 

@@ -407,38 +407,79 @@ function ThresholdVDP_Report(Ventilation, Proton, MainInput)
     end
 end
 
-% Local function
+
+%% Local function
 function figHandle = makeTwoRowMontage(vol, figName)
 
-sz = size(vol);
+    sz = size(vol);
 
-if ndims(vol) == 3
-    isRGB = false;
-    H = sz(1);
-    W = sz(2);
-    numSlices = sz(3);
+    if ndims(vol) == 3
+        isRGB = false;
+        H = sz(1);
+        W = sz(2);
+        numSlices = sz(3);
 
-elseif ndims(vol) == 4 && sz(3) == 3
-    % X × Y × 3 × Z
-    isRGB = true;
-    H = sz(1);
-    W = sz(2);
-    numSlices = sz(4);
+    elseif ndims(vol) == 4 && sz(3) == 3
+        isRGB = true;
+        H = sz(1);
+        W = sz(2);
+        numSlices = sz(4);
 
-elseif ndims(vol) == 4 && sz(4) == 3
-    % X × Y × Z × 3 -> convert to X × Y × 3 × Z
-    isRGB = true;
-    H = sz(1);
-    W = sz(2);
-    numSlices = sz(3);
-    vol = permute(vol,[1 2 4 3]);
+    else
+        error('Unsupported volume dimensions: expected X × Y × Z or X × Y × 3 × Z');
+    end
 
-else
-    error('Unsupported volume dimensions: expected X×Y×Z, X×Y×3×Z, or X×Y×Z×3.');
-end
+    % ---------------------------------------------------------------------
+    % For true 3D volumes (>20 slices), display only 20 slices sampled
+    % from the central 35%-75% portion of the volume.
+    % ---------------------------------------------------------------------
+    if numSlices > 20
 
+        firstSlice = max(1, round(0.35 * numSlices));
+        lastSlice  = min(numSlices, round(0.75 * numSlices));
+
+        % Select 20 approximately evenly spaced slices within this range
+        sliceIdx = round(linspace(firstSlice, lastSlice, 20));
+
+        % In case rounding produces duplicate indices
+        sliceIdx = unique(sliceIdx, 'stable');
+
+        % If fewer than 20 unique slices are available in the 35%-75%
+        % interval, use a centered 20-slice block instead.
+        if numel(sliceIdx) < 20
+
+            centerSlice = round(numSlices / 2);
+
+            firstSlice = centerSlice - 9;
+            lastSlice  = firstSlice + 19;
+
+            % Keep the 20-slice block inside the volume
+            if firstSlice < 1
+                firstSlice = 1;
+                lastSlice = 20;
+            elseif lastSlice > numSlices
+                lastSlice = numSlices;
+                firstSlice = numSlices - 19;
+            end
+
+            sliceIdx = firstSlice:lastSlice;
+        end
+
+        if isRGB
+            vol = vol(:,:,:,sliceIdx);
+        else
+            vol = vol(:,:,sliceIdx);
+        end
+
+        numSlices = 20;
+
+    end
+
+    % ---------------------------------------------------------------------
     % Pad if odd number of slices
+    % ---------------------------------------------------------------------
     if mod(numSlices,2) == 1
+
         if isRGB
             padSlice = zeros(H,W,3,1,'like',vol);
             vol = cat(4,vol,padSlice);
@@ -446,16 +487,21 @@ end
             padSlice = zeros(H,W,1,'like',vol);
             vol = cat(3,vol,padSlice);
         end
+
         numSlices = numSlices + 1;
     end
 
     nCols = numSlices / 2;
 
+    % ---------------------------------------------------------------------
     % Build montage manually
+    % ---------------------------------------------------------------------
     if isRGB
+
         montageImg = zeros(2*H, nCols*W, 3, 'like', vol);
 
         for s = 1:numSlices
+
             row = ceil(s/nCols);
             col = s - (row-1)*nCols;
 
@@ -464,10 +510,13 @@ end
 
             montageImg(rIdx,cIdx,:) = vol(:,:,:,s);
         end
+
     else
+
         montageImg = zeros(2*H, nCols*W, 'like', vol);
 
         for s = 1:numSlices
+
             row = ceil(s/nCols);
             col = s - (row-1)*nCols;
 
@@ -476,10 +525,14 @@ end
 
             montageImg(rIdx,cIdx) = vol(:,:,s);
         end
+
     end
 
+    % ---------------------------------------------------------------------
     % Create tightly cropped figure
-    figHandle = figure('Name',figName, ...
+    % ---------------------------------------------------------------------
+    figHandle = figure( ...
+        'Name',figName, ...
         'Visible','off', ...
         'MenuBar','none', ...
         'ToolBar','none', ...
@@ -488,7 +541,8 @@ end
         'Color','black', ...
         'Units','pixels');
 
-    ax = axes('Parent',figHandle, ...
+    ax = axes( ...
+        'Parent',figHandle, ...
         'Units','normalized', ...
         'Position',[0 0 1 1]);
 
@@ -501,7 +555,9 @@ end
     axis(ax,'image');
     axis(ax,'off');
 
-    set(figHandle,'Position',[100 100 size(montageImg,2) size(montageImg,1)]);
+    set(figHandle,'Position', ...
+        [100 100 size(montageImg,2) size(montageImg,1)]);
 
     drawnow;
+
 end

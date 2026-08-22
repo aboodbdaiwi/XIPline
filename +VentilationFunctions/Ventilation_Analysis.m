@@ -59,7 +59,11 @@ end
 
 Ventilation.parentPath = parentPath;
 %parentPath = [MainInput.XeDataLocation,'\'];
+try
 FileNames = Ventilation.filename;
+catch
+    FileNames = MainInput.XeFileName;
+end
 
 try
     Ventilation.AirwayMask = double(Ventilation.AirwayMask);
@@ -442,6 +446,9 @@ if Ventilation.GLRLM_Analysis == "yes" % 'yes'; || 'no'
 end 
 close all;
 %% write report
+if ~isfield(Ventilation,'outputpath')
+    Ventilation.outputpath = MainInput.OutputPath;
+end
 if strcmp(Ventilation.writereport,'yes')
     if strcmp(Ventilation.ThreshAnalysis,'yes')
         files = dir(fullfile(Ventilation.outputpath, 'ThresholdVDP_Report*.pptx')); 

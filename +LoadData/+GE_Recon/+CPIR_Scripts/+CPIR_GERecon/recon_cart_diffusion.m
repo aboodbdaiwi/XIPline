@@ -43,7 +43,7 @@ if isempty(comb_time),  comb_time = 0; end
 %% reading in data, if pfile name is given
 if ~isnumeric(d)
     if exist(d,'file')
-        [d,h] = read_p(d);
+        [d,h] = LoadData.GE_Recon.fidall.read_p(d);
     else
         warning('strange input d/file not existing');
     end
@@ -173,7 +173,7 @@ tmp = reshape(tmp,sum(wf.ind(1,:)),nbvalues,size(d,1)/nbvalues,2);
 wf.k = reshape(tmp(:,1,:,:),1,size(tmp,1)*size(tmp,3),2);
 
 for B = 1:nbvalues
-    dtmp(:,:,:,:,B) = raw2grid(d(B:nbvalues:end,:,:,:,:,:),ischop(h),wf.k(1,:,1:2),shft,[],[],wf.ind,delay*1d-6,bw,false);
+    dtmp(:,:,:,:,B) = LoadData.GE_Recon.fidall.raw2grid(d(B:nbvalues:end,:,:,:,:,:),LoadData.GE_Recon.fidall.ischop(h),wf.k(1,:,1:2),shft,[],[],wf.ind,delay*1d-6,bw,false);
 end
 size(dtmp)
 [~,ns1,nrep,~] = size(dtmp);
@@ -250,8 +250,8 @@ end
 
 %% apodisation
 if abs(lb)>1d-10
-    lbf1 = lb_fun(nk_freq,nk_freq,[0 lb],'h').';
-    lbf2 = lb_fun(nk_pha1,nk_pha1,[0 lb],'h');
+    lbf1 = LoadData.GE_Recon.fidall.lb_fun(nk_freq,nk_freq,[0 lb],'h').';
+    lbf2 = LoadData.GE_Recon.fidall.lb_fun(nk_pha1,nk_pha1,[0 lb],'h');
     dd = bsxfun(@times,dd,lbf1);
     dd = bsxfun(@times,dd,lbf2);
     if nk_pha2>1 && dim>2
@@ -290,7 +290,7 @@ end
 
 
 %% image orientation
-if ~isodd(rot90fac(1))
+if ~LoadData.GE_Recon.fidall.isodd(rot90fac(1))
     ntmp = [mtx(1),mtx(2),n3,nrep,ncoils,nbvalues];
 else
     ntmp = [mtx(2),mtx(1),n3,nrep,ncoils,nbvalues];
@@ -343,7 +343,7 @@ end
 switch dim
     case 2
         figure; set(gcf,'DefaultAxesFontSize',14); colormap(gray);
-        imagesc_row(squeeze(bbabs),[],[],false,true);
+        LoadData.GE_Recon.fidall.imagesc_row(squeeze(bbabs),[],[],false,true);
         
         colormap(gray);
         figstr = sprintf('P%05d Exam%d Series%d',...

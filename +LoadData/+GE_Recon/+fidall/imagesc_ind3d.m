@@ -118,7 +118,7 @@ end
 
 
 %% actual plotting
-imagesc_row(bplt,cm,scale,'',tght,[],[],cb);
+LoadData.GE_Recon.fidall.imagesc_row(bplt,cm,scale,'',tght,[],[],cb);
 
 
 %% plot crosses of index in all slices

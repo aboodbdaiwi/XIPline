@@ -113,15 +113,15 @@ if ~isempty(mtx)
     end
     bx = complex(zeros(mtx(1),mtx(2),mtx(3),1,nc,class(bc)));
     for lc=1:nc
-        bx(:,:,:,1,lc) = truma(bc(:,:,:,1,lc),true,mtx);
+        bx(:,:,:,1,lc) = LoadData.GE_Recon.fidall.truma(bc(:,:,:,1,lc),true,mtx);
     end
     bc = bx;
     clear bx;
     if ~isempty(bref)
-        bref = truma(bref,true,mtx);
+        bref = LoadData.GE_Recon.fidall.truma(bref,true,mtx);
     end
     if do_mask
-        mask_lowres = truma(single(mask),true,mtx)>0.2;
+        mask_lowres = LoadData.GE_Recon.fidall.truma(single(mask),true,mtx)>0.2;
     end
 end
 
@@ -157,13 +157,13 @@ if do_fiex>0
     end
     if dim==3
         for lc=1:nc
-            smap(:,:,:,1,lc) = fiex3d(smap(:,:,:,1,lc),1,4,'','','','',...
+            smap(:,:,:,1,lc) = LoadData.GE_Recon.fidall.fiex3d(smap(:,:,:,1,lc),1,4,'','','','',...
                 ex_rounds,(verb>1));
         end
     else
         for l3=1:mtx(3)
             for lc=1:nc
-                smap(:,:,l3,1,lc) = fiex3d(smap(:,:,l3,1,lc),1,4,'','','','',...
+                smap(:,:,l3,1,lc) = LoadData.GE_Recon.fidall.fiex3d(smap(:,:,l3,1,lc),1,4,'','','','',...
                     ex_rounds,(verb>1));
             end
         end
@@ -177,13 +177,13 @@ smap(isnan(smap)) = 0;
 if ~isempty(zf)
     sx = complex(zeros(zf(1),zf(2),zf(3),1,nc,class(bc)));
     for lc=1:nc
-        sx(:,:,:,1,lc) = truma(smap(:,:,:,1,lc),true,zf);
+        sx(:,:,:,1,lc) = LoadData.GE_Recon.fidall.truma(smap(:,:,:,1,lc),true,zf);
     end
     smap = sx;
     clear sx;
     if do_mask
         if zf~=nn(1:3)
-           mask = truma(single(mask),true,zf)>0.3;
+           mask = LoadData.GE_Recon.fidall.truma(single(mask),true,zf)>0.3;
         end
         smap = bsxfun(@times,smap,mask);
     end

@@ -24,7 +24,7 @@ trajectory_x = [trajectory_x; zeros(size(trajectory_x)); ones(size(trajectory_x)
 trajectory_y = (0:(2*S-1)) ./ (S * Gy);
 trajectory_y = [zeros(size(trajectory_y)); trajectory_y; ones(size(trajectory_y))];
 
-half_kernel = igrid_interp(matrix, trajectory_x, gridFOV);
+half_kernel = LoadData.GE_Recon.fidall.igrid_interp(matrix, trajectory_x, gridFOV);
 deapod_FT = zeros(S*Gx, 1);
 deapod_FT(1:length(half_kernel)) = half_kernel;
 deapod_FT((length(deapod_FT)-length(half_kernel)+2):end) = flipud(half_kernel(2:end));
@@ -33,7 +33,7 @@ deapod = ifft(deapod_FT);
 deapod_x = (1./ real([flipud(deapod(2:(Nx/2+1))); deapod(1:(Nx/2))]) ...
     .* sub_sinc(((-Nx/2):(Nx/2-1)).' ./ (S * Gx)).^2);
 
-half_kernel = igrid_interp(matrix, trajectory_y, gridFOV);
+half_kernel = LoadData.GE_Recon.fidall.igrid_interp(matrix, trajectory_y, gridFOV);
 deapod_FT = zeros(S*Gy, 1);
 deapod_FT(1:length(half_kernel)) = half_kernel;
 deapod_FT((length(deapod_FT)-length(half_kernel)+2):end) = flipud(half_kernel(2:end));

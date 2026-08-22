@@ -27,7 +27,7 @@ end
 
 %% orientation
 % moved fliplr(bb) to pre-gradwarp
-if get_mver>8
+if LoadData.GE_Recon.fidall.get_mver>8
     if trnsps==3
         bb = rot90(permute(bb,[2 1 3 4 5 6]),rot90fac);
     else

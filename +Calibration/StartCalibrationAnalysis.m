@@ -33,7 +33,7 @@ CalResults= [];
     elseif strcmp(MainInput.CalDataext,'.7') && strcmp(MainInput.Scanner, 'GE')   
         [GasExResults, CalResults] = Calibration.GE_calibration(MainInput);
     elseif strcmp(MainInput.CalDataext,'.h5') && strcmp(MainInput.Scanner, 'GE')  && strcmp(MainInput.Institute, 'CCHMC') 
-        [GasExResults, CalResults] = LoadData.GE_Recon.CPIR_Scripts.CPIR_GERecon.calibration_cchmc(MainInput);        
+        [GasExResults, CalResults] = LoadData.GE_Recon.CPIR_Scripts.CPIR_GERecon.GE_Calibration_Spect_CCHMC(MainInput);        
     elseif (strcmp(MainInput.CalDataext,'.h5') || strcmp(MainInput.CalDataext,'.MRD') ||...
             strcmp(MainInput.CalDataext,'.mrd')) && strcmp(MainInput.Scanner, 'GE')   
         [GasExResults, CalResults] = Calibration.XeCTC_Calibration_GEMRD(MainInput);         

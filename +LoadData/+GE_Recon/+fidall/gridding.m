@@ -44,13 +44,13 @@ if isreal(k)
     k = k(1,:,1) +1i*k(1,:,2);
 end
 traj = double([real(k(:)).' ; imag(k(:)).' ; dcf(:).']); % adjust to grid_interp input
-deapod_im = deapodize([N11 N12]);      % deapodisation kernel
+deapod_im = LoadData.GE_Recon.fidall.deapodize([N11 N12]);      % deapodisation kernel
 ctr1_index = N11/2+1;                  % centre indices
 ctr2_index = N12/2+1;
 ind1 = int64(ctr1_index-N01/2:ctr1_index+N01/2-1);
 ind2 = int64(ctr2_index-N02/2:ctr2_index+N02/2-1);
 
-M = grid_interp_mex(d.',traj,[N11 N12],[N11 N12]);
+M = LoadData.GE_Recon.fidall.grid_interp_mex(d.',traj,[N11 N12],[N11 N12]);
 m = bsxfun(@times,deapod_im,fftshift(fftshift(ifft2(ifftshift(ifftshift(M,1),2)),2),1));
 mm = m(ind1,ind2,:)*oversamp^2;  % inverse FFT scaled by 1/N => correct oversampling
 

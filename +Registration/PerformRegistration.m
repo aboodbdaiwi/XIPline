@@ -31,20 +31,23 @@ if strcmp(MainInput.AnalysisType,'Ventilation')
     end
 
 elseif strcmp(MainInput.AnalysisType,'GasExchange') 
+    if (strcmp(MainInput.Institute,'CCHMC') || strcmp(MainInput.Institute,'XeCTC')) && strcmp(MainInput.Scanner, 'Philips')
         [Proton,GasExchange] = Registration.GasExchange_RegisterProton_to_Xenon(Proton,GasExchange,MainInput);
-
-    % switch MainInput.RegistrationType
-    %     case 'ANTs'
-    %         %[MainInput, Proton,  Ventilation, GasExchange] = Registration.ANTs.AntsRegistration(MainInput, Proton, Ventilation, GasExchange);
-    %     case 'Multimodal'
-    %         [Proton, Ventilation, GasExchange, MainInput] = Registration.GeneralRegisterProton_to_Xenon(...
-    %         Proton,...
-    %         GasExchange.VentImage,...
-    %         MainInput, GasExchange); 
-    %     case 'Manual'
-    % 
-    %     case 'Pretrained DL Model'
-    % end 
+    else
+        switch MainInput.RegistrationType
+            case 'ANTs'
+                [MainInput, Proton,  Ventilation, GasExchange] = Registration.ANTs.AntsRegistration(MainInput, Proton, Ventilation, GasExchange);
+            case 'Multimodal'
+                [Proton, Ventilation, GasExchange, MainInput] = Registration.GeneralRegisterProton_to_Xenon(...
+                Proton,...
+                GasExchange.VentImage,...
+                MainInput, GasExchange); 
+            case 'Manual'
+    
+            case 'Pretrained DL Model'
+        end 
+    end
+    
     % if (strcmp(MainInput.Institute,'CCHMC') == 1 || strcmp(MainInput.Institute,'XeCTC')) &&...
     %         strcmp(MainInput.SequenceType, '3D Radial') && MainInput.NoProtonImage == 0 && (strcmp(MainInput.Scanner, 'Philips') ||...
     %         strcmp(MainInput.Scanner,'Siemens') ) 

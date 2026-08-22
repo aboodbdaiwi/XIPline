@@ -210,11 +210,11 @@ end
 switch method
     case -99       % smap provided as input
     case {0,1,2}   % low-res plus polynomial smoothing
-        smap = mri_sens_map_fiex(b,[],[],dim,method,mtx,mask,verb);
+        smap = LoadData.GE_Recon.fidall.mri_sens_map_fiex(b,[],[],dim,method,mtx,mask,verb);
     case 3         % eSPIRIT
-        smap = mri_sens_map_espirit(b,[],dim,[],mtx,true,true,verb);
+        smap = LoadData.GE_Recon.fidall.mri_sens_map_espirit(b,[],dim,[],mtx,true,true,verb);
     case 4         % Walsh
-        smap = mri_sens_map_walsh(b);
+        smap =LoadData.GE_Recon.fidall. mri_sens_map_walsh(b);
     otherwise
         error('method(=%g) unknown',method);
 end

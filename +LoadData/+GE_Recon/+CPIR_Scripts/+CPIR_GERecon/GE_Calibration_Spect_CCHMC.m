@@ -1,4 +1,4 @@
-function [GasExResults, CalResults] = calibration_cchmc(MainInput)
+function [GasExResults, CalResults] = GE_Calibration_Spect_CCHMC(MainInput)
 
 % calibration_cchmc
 % Process GE calibration data for XIPline.

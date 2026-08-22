@@ -24,4 +24,4 @@ if isreal(matrix),
 end
 
 % run mex file
-data = igrid_interp_mex(matrix, trajectory, FOV);
+data = LoadData.GE_Recon.fidall.igrid_interp_mex(matrix, trajectory, FOV);
