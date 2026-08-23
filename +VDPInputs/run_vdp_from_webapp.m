@@ -53,7 +53,7 @@ function run_vdp_from_webapp(excelFile, includeBackupRows)
     % -------- Main loop --------
     for i = 1:height(T)
         fprintf('Processing subject %d of %d\n', i, height(T));
-
+        set(groot, 'defaultFigureVisible', 'off');
         try
             row = T(i,:);
             MainInput = iBuildMainInput(row, cfg);
@@ -79,6 +79,7 @@ function run_vdp_from_webapp(excelFile, includeBackupRows)
                 'Row %d failed: %s', i, ME.message);
             fprintf(2, '%s\n', getReport(ME, 'basic', 'hyperlinks', 'off'));
         end
+        set(groot, 'defaultFigureVisible', 'on');
     end
 end
 

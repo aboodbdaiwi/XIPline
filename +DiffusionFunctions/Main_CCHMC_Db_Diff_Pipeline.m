@@ -1,60 +1,82 @@
 clc; clear;
 
 % excelFile = 'D:\OneDrive - cchmc\Lab\Random Subject analysis\CPIR_Diff_Analysis\Validation\comparison_output_rawDiff.xlsx';
-excelFile = 'D:\OneDrive - cchmc\Lab\Random Subject analysis\CPIR_Diff_Analysis\Validation\main_rawDiff.xlsx';
+excelFile = 'C:\Users\MCM5BK\OneDrive - cchmc\Documents\03_Data Analysis\02_Data Logs\WorkflowOverhaul2026\main_rawDiff.xlsx';
 mainDir = '\\rds6.chmccorp.cchmc.org\PulMed-54\CPIR_Images_Database';
+outputRoot = 'C:\Users\MCM5BK\OneDrive - cchmc\Documents\68_TestData\Diff_v100_testing';
 WoodsDir = '\\Rds6.cchmc.org\pulmed-35\Woods_CPIR_Images';
 
 % === Load Excel Table ===
-T = readcell(excelFile);
+% T = readcell(excelFile);
 [~, excelName, excelExt] = fileparts(excelFile);
 
-if contains(excelName, "rawDiff")
-    % Extract relevant columns into simple cell arrays
-    StudyCol     = T(:,2);
-    SubjectCol   = T(:,3);
-    ScanDateCol  = T(:,4);
-    SubNumCol    = T(:,5);
-    DiffFileCol  = T(:,6);
-    ACQ_TypeCol  = T(:,7);
-    % SerNum     = T(:,7);
-    ScannerSW    = T(:,9);
-    ScannerCol   = ''; % T(:,9)   % keep as-is if you truly want blank
-    SexCol       = T(:,10);
-    AgeCol       = T(:,11);
-    DiseaseCol   = T(:,13);
-    NoteCol      = T(:,15);
-    ImageQCol    = T(:,16);
-    RuneCol      = T(:,20);
-    MaskCol      = T(:,18);
+C = DiffusionFunctions.standardize_CCHMC_DiffInputTable(excelFile);
 
-elseif contains(excelName, "dcmDiff")
-    % Extract relevant columns into simple cell arrays
-    StudyCol     = T(:,1);
-    SubjectCol   = T(:,2);
-    ScanDateCol  = T(:,3);
-    SubNumCol    = T(:,4);
-    DiffFileCol  = T(:,5);
-    ACQ_TypeCol  = T(:,6);
-    SerNum       = T(:,7);
-    ScannerSW    = T(:,8);
-    ScannerCol   = T(:,9);
-    SexCol       = T(:,12);
-    AgeCol       = T(:,13);
-    DiseaseCol   = T(:,14);
-    NoteCol      = T(:,17);
-    RuneCol      = T(:,18);
-
-else
-    error("excelFile name must contain 'rawDiff' or 'dcmDiff'. Got: %s", excelFile);
-end
+StudyCol     = C.StudyCol;
+SubjectCol   = C.SubjectCol;
+ScanDateCol  = C.ScanDateCol;
+SubNumCol    = C.SubNumCol;
+DiffFileCol  = C.DiffFileCol;
+ACQ_TypeCol  = C.ACQ_TypeCol;
+SerNum       = C.SerNum;
+ScannerSW    = C.ScannerSW;
+ScannerCol   = C.ScannerCol;
+SexCol       = C.SexCol;
+AgeCol       = C.AgeCol;
+DiseaseCol   = C.DiseaseCol;
+NoteCol      = C.NoteCol;
+ImageQCol    = C.ImageQCol;
+RuneCol      = C.RuneCol;
+MaskCol      = C.MaskCol;
 
 nSubjects = size(SexCol,1);
+
+% if contains(excelName, "rawDiff")
+%     % Extract relevant columns into simple cell arrays
+%     StudyCol     = T(:,2);
+%     SubjectCol   = T(:,3);
+%     ScanDateCol  = T(:,4);
+%     SubNumCol    = T(:,5);
+%     DiffFileCol  = T(:,6);
+%     ACQ_TypeCol  = T(:,7);
+%     % SerNum     = T(:,7);
+%     ScannerSW    = T(:,9);
+%     ScannerCol   = ''; % T(:,9)   % keep as-is if you truly want blank
+%     SexCol       = T(:,10);
+%     AgeCol       = T(:,11);
+%     DiseaseCol   = T(:,13);
+%     NoteCol      = T(:,15);
+%     ImageQCol    = T(:,16);
+%     RuneCol      = T(:,20);
+%     MaskCol      = T(:,18);
+% 
+% elseif contains(excelName, "dcmDiff")
+%     % Extract relevant columns into simple cell arrays
+%     StudyCol     = T(:,1);
+%     SubjectCol   = T(:,2);
+%     ScanDateCol  = T(:,3);
+%     SubNumCol    = T(:,4);
+%     DiffFileCol  = T(:,5);
+%     ACQ_TypeCol  = T(:,6);
+%     SerNum       = T(:,7);
+%     ScannerSW    = T(:,8);
+%     ScannerCol   = T(:,9);
+%     SexCol       = T(:,12);
+%     AgeCol       = T(:,13);
+%     DiseaseCol   = T(:,14);
+%     NoteCol      = T(:,17);
+%     RuneCol      = T(:,18);
+% 
+% else
+%     error("excelFile name must contain 'rawDiff' or 'dcmDiff'. Got: %s", excelFile);
+% end
+% 
+% nSubjects = size(SexCol,1);
 
 %% 
 
 clc;
-for i = 230%:nSubjects % always start from 2
+for i = 494%:nSubjects % always start from 2
     fprintf('Processing subject %d of %d\n', i, nSubjects);
 
     if ismissing(AgeCol{i})
@@ -101,11 +123,11 @@ for i = 230%:nSubjects % always start from 2
     MainInput.diff_file = char(MainInput.diff_file);
     % Get folder path from file
     [filePath,~,~] = fileparts(MainInput.diff_file);
-    analysisFolder = fullfile(filePath,'Diffusion_Analysis');
-    if exist(analysisFolder,'dir')
-        rmdir(analysisFolder,'s');
-    end
-    MainInput.ScannerSoftware = ScannerSW{i};
+    % analysisFolder = fullfile(filePath,'Diffusion_Analysis');
+    % if exist(analysisFolder,'dir')
+    %     rmdir(analysisFolder,'s');
+    % end
+    % MainInput.ScannerSoftware = ScannerSW{i};
     if contains(MainInput.ScannerSoftware, "5.9")
         MainInput.ScannerSoftware = '5.9.0';
     elseif contains(MainInput.ScannerSoftware, "5.6")
@@ -229,12 +251,13 @@ for i = 230%:nSubjects % always start from 2
     MainInput.EncodingOrder = 'linear'; % confirm this
 
     % change to analysis folder and then run
-    analysisfolder = fullfile(mainDir,StudyCol{i}, 'analysis', analysisversion, ...
+    analysisfolder = fullfile(outputRoot,StudyCol{i}, 'analysis', analysisversion, ...
         ['sub-', subnum], ['ses-', num2str(MainInput.ScanDate)], ['ser-', (MainInput.sernum)]);
     MainInput.analysisfolder = analysisfolder;
 
-    diff_analysis_folder = fullfile(analysisfolder,'Diffusion_Analysis');
-    MainInput.diff_analysis_folder = diff_analysis_folder;
+    %diff_analysis_folder = fullfile(analysisfolder,'Diffusion_Analysis');
+    % MainInput.diff_analysis_folder = diff_analysis_folder;
+      MainInput.diff_analysis_folder = analysisfolder;
     if ~exist(diff_analysis_folder, 'dir')
         mkdir(diff_analysis_folder);
     end

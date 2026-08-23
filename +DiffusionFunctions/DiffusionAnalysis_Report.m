@@ -390,8 +390,24 @@ function DiffusionAnalysis_Report(Diffusion, MainInput)
     end    
     presentation.SaveAs(PDFoutputPath, 32);
     pause(2);  % <-- allow time for file to be written
-    presentation.Close();
-    ppt.Quit();
+    
+    try
+        presentation.Saved = true;
+        presentation.Close();
+    catch ME
+    end
+    
+    try
+        presentation.Close();
+    catch ME
+        warning('DiffusionReport:PowerPointCloseFailed', ...
+            'PowerPoint report was saved, but presentation.Close failed: %s', ME.message);
+    end
+
+    try
+        ppt.Quit();
+    catch
+    end
     delete(ppt);
 end
 

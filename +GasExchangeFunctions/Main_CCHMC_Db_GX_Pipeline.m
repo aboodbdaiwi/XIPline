@@ -29,7 +29,7 @@ nSubjects = size(SexCol,1);
 %% 
 
 clc;
-for i = 2:nSubjects%:nSubjects % always start from 2
+for i = 2:nSubjects % always start from 2
     fprintf('Processing subject %d of %d\n', i, nSubjects);
 
     if ismissing(AgeCol{i})
@@ -80,14 +80,16 @@ for i = 2:nSubjects%:nSubjects % always start from 2
         MainInput.gx_file = GxFileCol{i};
         MainInput.anat_file = GxAnatFileCol{i};
         MainInput.cal_file = char(CalFileCol{i});        
-        if contains(GxFileCol{i}, mainDir, 'IgnoreCase', true) || contains(GxFileCol{i}, WoodsDir, 'IgnoreCase', true)
+        if contains(GxFileCol{i}, mainDir, 'IgnoreCase', true) || contains(GxFileCol{i}, WoodsDir, 'IgnoreCase', true) ||...
+             contains(GxFileCol{i}, '\\rds6.cchmc.org\PulMed-54\CPIR_Images_Database')   
             MainInput.gx_file = GxFileCol{i};
         else
             MainInput.gx_file = fullfile(mainDir, GxFileCol{i});
         end
         
         % Anat file
-        if contains(GxAnatFileCol{i}, mainDir, 'IgnoreCase', true) || contains(GxAnatFileCol{i}, WoodsDir, 'IgnoreCase', true)
+        if contains(GxAnatFileCol{i}, mainDir, 'IgnoreCase', true) || contains(GxAnatFileCol{i}, WoodsDir, 'IgnoreCase', true) || ...
+                contains(GxAnatFileCol{i}, '\\rds6.cchmc.org\PulMed-54\CPIR_Images_Database') 
             MainInput.anat_file = GxAnatFileCol{i};
         else
             MainInput.anat_file = fullfile(mainDir, GxAnatFileCol{i});
@@ -105,7 +107,18 @@ for i = 2:nSubjects%:nSubjects % always start from 2
         sinfiles = sinfiles(keep);
         
         if isempty(sinfiles)
-            error('No eligible .sin files found after filtering.');
+            try
+                allFolders = strsplit(genpath(folder), pathsep);
+    
+                sinfiles = [];
+                for k = 1:numel(allFolders)
+                    if ~isempty(allFolders{k})
+                        sinfiles = [sinfiles; dir(fullfile(allFolders{k}, '*.sin*'))];
+                    end
+                end
+            catch 
+                error('No eligible .sin files found after filtering.');
+            end
         end
         % Pick the last file by modification time
         [~, order] = sort([sinfiles.datenum], 'ascend');
@@ -114,11 +127,20 @@ for i = 2:nSubjects%:nSubjects % always start from 2
         % Extract time (2nd numeric group: yyyymmdd_HHMMSS_...)
         tok = regexp(lastFile.name, '^(\d{8})_(\d{6})_', 'tokens', 'once');
         if isempty(tok)
-            error('Filename does not match expected pattern: yyyymmdd_HHMMSS_...');
+            try
+                txt = fileread(lastPath);
+                tok = regexp(txt, ...
+                    'start_scan_date_time\s*:\s*\d{2}-[A-Z]{3}-\d{4}\s+(\d{2}):(\d{2}):(\d{2})', ...
+                    'tokens', 'once');
+
+                tok{2} = [tok{1} tok{2} tok{3}];  % char vector: hhmmss
+            catch
+                error('Filename does not match expected pattern: yyyymmdd_HHMMSS_...');
+            end
         end
         scandate = tok{1};
         timeStr = tok{2};           % e.g., '132833'
-        MainInput.scandate     = scandate;
+        MainInput.scandate     = ScanDateCol{i};
         MainInput.timeStr     = timeStr; 
         MainInput.cal_file     = char(MainInput.cal_file);
         MainInput.gx_file     = char(MainInput.gx_file);

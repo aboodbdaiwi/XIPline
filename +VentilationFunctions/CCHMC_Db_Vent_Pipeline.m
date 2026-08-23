@@ -233,7 +233,7 @@ MainInput.SkipRegistration = 0;
 if strcmp(MainInput.NoProtonImage, 'no') 
     try
         MainInput.RegistrationType = 'ANTs'; 
-        MainInput.TransformType = 'rigid'; % 'translation' | 'rigid' | 'similarity' | 'affine'
+        MainInput.TransformType = 'affine'; % 'translation' | 'rigid' | 'similarity' | 'affine'
         [Proton] = Registration.PerformRegistration(Proton,Ventilation,GasExchange,MainInput);        
     catch
         MainInput.RegistrationType = 'Multimodal'; 
