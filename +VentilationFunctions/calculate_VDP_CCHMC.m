@@ -119,28 +119,23 @@ sd_Complete = std(d_Complete(d_Complete>0));
 md_Hyper = mean(d_Hyper(d_Hyper>0));
 sd_Hyper = std(d_Hyper(d_Hyper>0));
 
-% Equalize histogram bin counts for each defect
+% RH: equalize bin WIDTH (not count) across all four groups using histogram()
+% instead of the legacy hist(). hist() with hold on + non-integer bin counts
+% was producing stray diagonal line artifacts; histogram() with a shared
+% BinWidth reproduces the original intent (same bin width as the 50-bin
+% Normal group) without that bug, matching the pattern already used in
+% calculate_LB_VDP.m / Akmeans / kmeans VDP_calculationASB.m.
 acnts = 50;
-a = hist(d_Normal(d_Normal>0),acnts);
-bcnts = length(a)*(max(d_Incomplete(d_Incomplete>0))- ...
-    min(d_Incomplete(d_Incomplete>0)))/(max(d_Normal(d_Normal>0))-min(d_Normal(d_Normal>0)));
-ccnts = length(a)*(max(d_Complete(d_Complete>0))- ...
-    min(d_Complete(d_Complete>0)))/(max(d_Normal(d_Normal>0))-min(d_Normal(d_Normal>0)));
-dcnts = length(a)*(max(d_Hyper(d_Hyper>0))- ...
-    min(d_Hyper(d_Hyper>0)))/(max(d_Normal(d_Normal>0))-min(d_Normal(d_Normal>0)));
-if isempty(dcnts) % 91-95 added due to lower Hypervent values/#of pixels causing error
-    dcnts = 1;
-elseif ((dcnts < 1) && (length(find(d_Hyper)) < 5))
-    dcnts = 1;
-end 
-if isempty(ccnts)
-    ccnts = 1;
-elseif ((dcnts < 1) && (length(find(d_Complete)) < 5))
-    ccnts = 1;
-end 
-% Create histogram figure of ventilation defects and print/save figure
+binWidth = (max(d_Normal(d_Normal>0)) - min(d_Normal(d_Normal>0))) / acnts;
+
+% RH: colors match original scheme (Normal=white, Incomplete=yellow,
+% Complete=red, Hyper=blue) - the old hist()+findobj code looked like it
+% assigned b/r/y/w in creation order, but findobj(gcf,'Type','patch')
+% actually returns patches in REVERSE creation order, so h(1)='b' was really
+% the last-created patch (Hyper), not the first (Normal). Assign explicitly
+% here instead of relying on handle order.
 figure('position',[350 350 750 350]);
-hist(d_Normal(d_Normal>0),acnts);
+histogram(d_Normal(d_Normal>0),'BinWidth',binWidth,'FaceColor','w','EdgeColor','k','FaceAlpha',0.5);
 hold on
 hist(d_Incomplete(d_Incomplete>0),bcnts);
 try
@@ -952,10 +947,11 @@ Ventilation.Threshold.vdp_per_slice_local = vdp_per_slice_local;
 Ventilation.Threshold.vdp_per_slice_global = vdp_per_slice_global;
 
 %% Save workspace data:
-legend1 = sprintf('%0.2f�%0.2f (%0.1f%%)',md_Normal, sd_Normal, Normal);
-legend2 = sprintf('%0.2f�%0.2f (%0.1f%%)',md_Incomplete,sd_Incomplete,Incomplete);
-legend3 = sprintf('%0.2f�%0.2f (%0.1f%%)',md_Complete,sd_Complete, Complete);
-legend4 = sprintf('%0.2f�%0.2f (%0.1f%%)',md_Hyper,sd_Hyper, Hyper);
+% RH: fix corrupted ± byte (was U+FFFD replacement char, showed as "?")
+legend1 = sprintf('%0.2f±%0.2f (%0.1f%%)',md_Normal, sd_Normal, Normal);
+legend2 = sprintf('%0.2f±%0.2f (%0.1f%%)',md_Incomplete,sd_Incomplete,Incomplete);
+legend3 = sprintf('%0.2f±%0.2f (%0.1f%%)',md_Complete,sd_Complete, Complete);
+legend4 = sprintf('%0.2f±%0.2f (%0.1f%%)',md_Hyper,sd_Hyper, Hyper);
 
 Ventilation.Threshold.VDP = VDP;
 Ventilation.Threshold.VentscaledImage = VentscaledImage;
