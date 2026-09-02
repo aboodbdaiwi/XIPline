@@ -3,6 +3,7 @@ function initial_inputs = read_initial_inputs(excelFile)
 
     requiredVars = { ...
         'AnalysisType'
+        'AcqDescription'
         'SubjectID'
         'SubjectID_PO'
         'Subject'
@@ -15,6 +16,7 @@ function initial_inputs = read_initial_inputs(excelFile)
         'Selected'
         'Recon'
         'ImageQuality'
+        'ANALYSIS_SERIES_NUMBER'
         'XENON_SERIES_NUMBER'
         'XENON_PATH'
         'PROTON_SERIES_NUMBER'
@@ -36,6 +38,7 @@ function initial_inputs = read_initial_inputs(excelFile)
 
   shortVars = { ...
     'Analysis'
+    'SequenceName'
     'SubjectID'
     'SubjectID_PO'
     'Subject'
@@ -48,6 +51,7 @@ function initial_inputs = read_initial_inputs(excelFile)
     'Selected'
     'Recon'
     'Quality'
+    'AnalysisXeSeries'
     'XeSeries'
     'XePath'
     'HSeries'
@@ -111,57 +115,119 @@ function initial_inputs = read_initial_inputs(excelFile)
     end
 
     initial_inputs = initial_inputs(keepRows, :);
-
+    
     % Rename variables
     initial_inputs.Properties.VariableNames = shortVars;
-    
+
     % ================================================================
-    % Add .data extension to offline raw-data paths
+    % Offline reconstruction corrections
+    %   1. Add .data extension to raw-data paths
+    %   2. For 4-digit series numbers, replace the 3rd digit with "5"
+    %      Example: 1501 -> 1551
     % ================================================================
     for i = 1:height(initial_inputs)
-    
+
         if strcmpi(strtrim(string(initial_inputs.Recon(i))), "Offline")
-    
+
+            % --------------------------------------------------------
             % Xenon path
+            % --------------------------------------------------------
             if ~ismissing(initial_inputs.XePath(i)) && ...
                     strlength(strtrim(string(initial_inputs.XePath(i)))) > 0
-    
+
                 xePath = char(string(initial_inputs.XePath(i)));
-    
+
                 if endsWith(xePath, '.*')
                     xePath = [xePath(1:end-2) '.data'];
                 else
                     [~, ~, ext] = fileparts(xePath);
-    
+
                     if isempty(ext)
                         xePath = [xePath '.data'];
                     end
                 end
-    
+
                 initial_inputs.XePath{i} = xePath;
             end
-    
+
+            % --------------------------------------------------------
             % Proton path
+            % --------------------------------------------------------
             if ~ismissing(initial_inputs.HPath(i)) && ...
                     strlength(strtrim(string(initial_inputs.HPath(i)))) > 0
-    
+
                 hPath = char(string(initial_inputs.HPath(i)));
-    
+
                 if endsWith(hPath, '.*')
                     hPath = [hPath(1:end-2) '.data'];
                 else
                     [~, ~, ext] = fileparts(hPath);
-    
+
                     if isempty(ext)
                         hPath = [hPath '.data'];
                     end
                 end
-    
+
                 initial_inputs.HPath{i} = hPath;
             end
+
+            % --------------------------------------------------------
+            % Analysis Xenon Series
+            % Replace 3rd digit with "5" only for 4-digit series
+            % --------------------------------------------------------
+            value = initial_inputs.AnalysisXeSeries(i);
+
+            if ~ismissing(value)
+
+                seriesNum = str2double(strtrim(string(value)));
+
+                if ~isnan(seriesNum)
+
+                    seriesStr = sprintf('%.0f', seriesNum);
+
+                    if length(seriesStr) == 4
+                        seriesStr(3) = '5';
+                        newSeries = str2double(seriesStr);
+
+                        if isnumeric(initial_inputs.AnalysisXeSeries)
+                            initial_inputs.AnalysisXeSeries(i) = newSeries;
+                        else
+                            initial_inputs.AnalysisXeSeries(i) = string(newSeries);
+                        end
+                    end
+                end
+            end
+
+            % --------------------------------------------------------
+            % Proton Series
+            % Replace 3rd digit with "5" only for 4-digit series
+            % --------------------------------------------------------
+            value = initial_inputs.HSeries(i);
+
+            if ~ismissing(value)
+
+                seriesNum = str2double(strtrim(string(value)));
+
+                if ~isnan(seriesNum)
+
+                    seriesStr = sprintf('%.0f', seriesNum);
+
+                    if length(seriesStr) == 4
+                        seriesStr(3) = '5';
+                        newSeries = str2double(seriesStr);
+
+                        if isnumeric(initial_inputs.HSeries)
+                            initial_inputs.HSeries(i) = newSeries;
+                        else
+                            initial_inputs.HSeries(i) = string(newSeries);
+                        end
+                    end
+                end
+            end
+
         end
     end
-    
+
     % ================================================================
     % Replace missing Frequency Offset values with 0
     % ================================================================

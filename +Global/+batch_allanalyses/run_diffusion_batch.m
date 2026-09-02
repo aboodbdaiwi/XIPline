@@ -43,8 +43,6 @@ for i = 1:nSubjects
     MainInput.Sex              = SexValue;
     MainInput.Disease          = DiseaseValue;
     MainInput.ScanDate         = currentInput.Date;
-    MainInput.ScannerSoftware  = currentInput.Software; 
-    MainInput.SequenceType     = '2D GRE'; currentInput.Sequence;
     MainInput.denoiseXe        = 'no';
     MainInput.Analyst          = analyst;
     MainInput.Polarizer        = currentInput.Polarizer;
@@ -60,6 +58,29 @@ for i = 1:nSubjects
     MainInput.PreviewFolder    = previewFolder;
     MainInput.AnalysisStatus   = currentInput.AnalysisStatus;
 
+    MainInput.SequenceType     = currentInput.Sequence;
+    MainInput.SequenceName     = currentInput.SequenceName;
+    sequence = string(currentInput.Sequence);    
+    SequenceName = string(currentInput.SequenceName); 
+    if contains(sequence, "cartesian", 'IgnoreCase', true) || contains(sequence, "RECTILINEAR", 'IgnoreCase', true)
+        MainInput.SequenceType = '2D GRE';
+    elseif contains(SequenceName, "vent_2d_vardens_sos", 'IgnoreCase', true)
+        MainInput.SequenceType = '2D Spiral';  
+    elseif contains(SequenceName, "CPIR_VENT_FLORET", 'IgnoreCase', true)
+        MainInput.SequenceType = '3D FLORET';         
+    elseif contains(sequence, "spiral", 'IgnoreCase', true)
+        MainInput.SequenceType = '2D Spiral';
+    else
+        MainInput.SequenceType = char(sequence);
+    end
+
+    if contains(currentInput.Scanner, "Philips", 'IgnoreCase', true)
+        MainInput.Scanner = 'Philips';     
+    elseif contains(currentInput.Scanner, "GE", 'IgnoreCase', true)
+        MainInput.Scanner = 'GE';
+    else
+        MainInput.Scanner = '';
+    end    
     % Diff file
     if ismissing(DiffFileValue) || ...
             strlength(strtrim(string(DiffFileValue))) == 0
@@ -102,131 +123,29 @@ for i = 1:nSubjects
     % ============================================================
     % Reconstruction type
     % ============================================================
+    ACQ_Type = char(string(currentInput.SequenceName));
+
+    if contains(ACQ_Type, "cpir_diffusion_4bs", 'IgnoreCase', true)
+        num_extra_attr1 = 4;
+    elseif contains(ACQ_Type, "cpir_diffusion_3bs", 'IgnoreCase', true)
+        num_extra_attr1 = 3;
+    elseif contains(ACQ_Type, "cpir_diffusion", 'IgnoreCase', true)
+        num_extra_attr1 = 3;
+    elseif contains(ACQ_Type, "hng_xe_diffusion_29jul2016", 'IgnoreCase', true)
+        num_extra_attr1 = 5;
+    else
+        num_extra_attr1 = NaN;
+    end
+    % num_extra_attr1 = 4; % hard code until i figure out how to get this with the current webapp
+    MainInput.sernum = num2str(currentInput.AnalysisXeSeries);
+    MainInput.XeSeries = num2str(currentInput.XeSeries);
 
     reconValue = string(currentInput.Recon);
 
     if strcmpi(reconValue, "Online")
-
         MainInput.ReconType = 'online';
-        MainInput.Scanner = 'Philips';
-
-        Dinfo = dicominfo(MainInput.diff_file);
-        StudyTime = Dinfo.StudyTime;
-        % 
-        % ACQ_Type = char(string(currentInput.AcqType));
-        % 
-        % if strcmpi(ACQ_Type,'cpir_diffusion_4bs')
-        %     num_extra_attr1 = 4;
-        % elseif strcmpi(ACQ_Type,'cpir_diffusion_3bs')
-        %     num_extra_attr1 = 3;
-        % elseif strcmpi(ACQ_Type,'cpir_diffusion')
-        %     num_extra_attr1 = 3;
-        % elseif strcmpi(ACQ_Type,'new*_hng_xe_diffusion_29jul2016')
-        %     num_extra_attr1 = 5;
-        % else
-        %     num_extra_attr1 = NaN;
-        % end
-        num_extra_attr1 = 4; % hard code until i figure out how to get this with the current webapp
-        MainInput.sernum = num2str(currentInput.XeSeries);
-
     elseif strcmpi(reconValue, "Offline")
-
-        MainInput.Scanner = 'Philips';
         MainInput.ReconType = 'offline';
-
-        % Extract b-values and file name from .list file
-        toks = regexp(MainInput.diff_file, ...
-            '^(.*?)(\.list|\.data)?$', 'tokens');
-
-        prefix = toks{1}{1};
-        listname = sprintf('%s.list',prefix);
-
-        fid = fopen(listname,'r');
-
-        dataset_name = '';
-        num_extra_attr1 = NaN;
-
-        while ~feof(fid)
-
-            line = strtrim(fgetl(fid));
-
-            % Check for dataset name
-            if contains(line, 'Dataset name:')
-                tokens = regexp( ...
-                    line, ...
-                    'Dataset name:\s*(\S+)', ...
-                    'tokens');
-
-                if ~isempty(tokens)
-                    dataset_name = tokens{1}{1};
-                end
-            end
-
-            % Check for number_of_extra_attribute_1_values
-            if contains(line, 'number_of_extra_attribute_1_values')
-
-                tokens = regexp( ...
-                    line, ...
-                    'number_of_extra_attribute_1_values\s*:\s*(\d+)', ...
-                    'tokens');
-
-                if ~isempty(tokens)
-                    num_extra_attr1 = str2double(tokens{1}{1});
-                end
-            end
-        end
-
-        fclose(fid);
-
-        diffFilePath = MainInput.diff_file;
-
-        % Split path, base name, and extension
-        [folderPath, baseName, ~] = fileparts(diffFilePath);
-
-        % Construct expected filenames
-        sinFile  = fullfile(folderPath, [baseName '.sin']);
-        jsonFile = fullfile(folderPath, [baseName '.json']);
-
-        % Initialize output
-        SeriesTime = [];
-
-        % Step 1: Check if .sin file exists
-        if isfile(sinFile)
-
-            % Step 2: Check if matching .json file exists
-            if isfile(jsonFile)
-
-                % Step 3: Read and parse JSON
-                jsonText = fileread(jsonFile);
-                jsonData = jsondecode(jsonText);
-
-                % Step 4: Extract SeriesTime if present
-                if isfield(jsonData, 'SeriesTime')
-                    SeriesTime = jsonData.SeriesTime;
-                else
-                    warning('JSON file found, but "SeriesTime" field is missing.');
-                end
-
-            else
-                warning('Matching .sin file found, but .json file is missing.');
-            end
-
-            MainInput.sernum = SeriesTime(1:6);
-
-        else
-
-            MainInput.sernum = '000000';
-            dataset_name;
-
-        end
-
-    else
-
-        MainInput.ReconType = '';
-        MainInput.Scanner = char(string(currentInput.Scanner));
-        MainInput.sernum = num2str(currentInput.XeSeries);
-        num_extra_attr1 = NaN;
-
     end
 
     analysisversion = 'diff_v100';
@@ -310,23 +229,14 @@ for i = 1:nSubjects
     end
 
     if isempty(MainInput.diff_file)
-
         DiffusionFunctions.CCHMC_Db_Diff_Pipeline_NoData(MainInput)
-
     else
-
         if runMode == 1 && ~strcmp(string(ImageQValue), '1-Failed')
-
             DiffusionFunctions.CCHMC_Db_Diff_Pipeline(MainInput);
-
         elseif strcmp(string(ImageQValue), '1-Failed')
-
             DiffusionFunctions.CCHMC_Db_Diff_Pipeline_NoData(MainInput)
-
         elseif runMode == 2
-
             DiffusionFunctions.CCHMC_Db_Diff_Pipeline_rerun(MainInput);
-
         end
 
     end

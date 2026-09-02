@@ -21,7 +21,10 @@ GasExchange = '';
 MainInput.AnalysisType = 'Diffusion';
 MainInput.Institute = 'CCHMC'; 
 MainInput.CCHMC_DbDiffAnalysis = 'yes';
-MainInput.Scanner = 'Philips'; 
+
+% MainInput.Scanner = 'Philips'; 
+Outputs.SequenceName = MainInput.SequenceName;
+Outputs.SequenceType = MainInput.SequenceType;
 
 Outputs.Institute = MainInput.Institute;
 Outputs.Scanner = MainInput.Scanner;
@@ -50,6 +53,7 @@ Outputs.AnalysisStatus  = MainInput.AnalysisStatus;
 Outputs.Analyst  = MainInput.Analyst;
 Outputs.ImageQuality = MainInput.ImageQuality;
 Outputs.diff_sernum = MainInput.sernum;
+Outputs.xesernum = MainInput.XeSeries;
 Outputs.AnalysisVersion = 'v100'; %MainInput.analysisversion;
 
 Outputs.AnalysisCode_path = 'https://github.com/aboodbdaiwi/XIPline';

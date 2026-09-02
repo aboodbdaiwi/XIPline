@@ -78,14 +78,28 @@ for i = 1:nSubjects
 
     MainInput.ScannerSoftware  = currentInput.Software;
     MainInput.SequenceType     = currentInput.Sequence;
+    MainInput.SequenceName     = currentInput.SequenceName;
     sequence = string(currentInput.Sequence);    
+    SequenceName = string(currentInput.SequenceName); 
     if contains(sequence, "cartesian", 'IgnoreCase', true)
         MainInput.SequenceType = '2D GRE';
+    elseif contains(SequenceName, "vent_2d_vardens_sos", 'IgnoreCase', true)
+        MainInput.SequenceType = '2D Spiral';  
+    elseif contains(SequenceName, "CPIR_VENT_FLORET", 'IgnoreCase', true)
+        MainInput.SequenceType = '3D FLORET';         
     elseif contains(sequence, "spiral", 'IgnoreCase', true)
         MainInput.SequenceType = '2D Spiral';
     else
         MainInput.SequenceType = char(sequence);
     end
+
+    if contains(MainInput.Scanner, "Philips", 'IgnoreCase', true)
+        MainInput.Scanner = 'Philips';     
+    elseif contains(MainInput.Scanner, "GE", 'IgnoreCase', true)
+        MainInput.Scanner = 'GE';
+    else
+        MainInput.Scanner = '';
+    end    
 
     MainInput.denoiseXe        = 'no';
 
@@ -214,12 +228,25 @@ for i = 1:nSubjects
     % ============================================================
     % Remaining inputs
     % ============================================================
-    MainInput.xe_sernum     = currentInput.XeSeries;
+    if strcmpi(reconValue, "Online")
+        MainInput.xe_sernum     = currentInput.XeSeries;
+    elseif strcmpi(reconValue, "Offline")
+        MainInput.xe_sernum     = currentInput.AnalysisXeSeries;
+    else
+        MainInput.ReconType = '';
+    end    
+    MainInput.xe_sernum = currentInput.AnalysisXeSeries;
+    MainInput.XeSeries = currentInput.XeSeries;
+
     MainInput.proton_sernum = HSerNumValue;
     MainInput.ImageQuality  = ImageQValue;
     MainInput.Note          = NoteValue;
     MainInput.ProcessingNotes = currentInput.ProcessingNotes;
-    MainInput.freqoffset    = currentInput.FreqOffset;
+    if iscell(currentInput.FreqOffset)
+        MainInput.freqoffset = str2double(string(currentInput.FreqOffset{1}));
+    else
+        MainInput.freqoffset = double(currentInput.FreqOffset);
+    end
 
     % ============================================================
     % Preview folder passed from app
@@ -250,11 +277,9 @@ for i = 1:nSubjects
     if isempty(MainInput.vent_file)
 
         VentilationFunctions.CCHMC_Db_Vent_Pipeline_NoData(MainInput)
-
     else
 
         runMode = currentInput.RunMode;
-
         % Convert RunMode safely if it came in as string/text
         if iscell(runMode)
             runMode = runMode{1};

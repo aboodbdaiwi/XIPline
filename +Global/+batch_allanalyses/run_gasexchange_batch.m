@@ -20,6 +20,7 @@ for i = 1:nSubjects
     SexValue     = currentInput.Sex;
     DiseaseValue = currentInput.Disease;
     NoteValue    = currentInput.Note;
+    QualityValue    = currentInput.Quality;
     % CalFileValue = currentInput.CalPath;
     GxFileValue  = currentInput.XePath;
     AnatFileValue = currentInput.HPath;
@@ -39,6 +40,9 @@ for i = 1:nSubjects
     if ismissing(NoteValue)
         NoteValue = "";
     end
+     if ismissing(QualityValue)
+        QualityValue = "";
+    end   
 
     % if ismissing(CalFileValue)
     %     disp("no calibration .data file detected")
@@ -69,7 +73,8 @@ for i = 1:nSubjects
     MainInput.AnalysisMethod  = '1-Point Dixon';
     MainInput.AgeCor          = 'no';
     MainInput.PreviewFolder   = previewFolder;
-    MainInput.AnalysisStatus   = currentInput.AnalysisStatus;
+    MainInput.AnalysisStatus  = currentInput.AnalysisStatus;
+    MainInput.ImageQuality    = QualityValue;
 
     % ============================================================
     % Gas-exchange file

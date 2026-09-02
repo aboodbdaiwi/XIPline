@@ -83,11 +83,21 @@ for i = 1:numel(fileExtensions)
 end
 
 %----------------------------- load data -----------------------------
-if strcmp(MainInput.SequenceType, 'CARTESIAN') || strcmp(MainInput.SequenceType, 'RECTILINEAR') 
+sequence = string(MainInput.SequenceType);    
+SequenceName = string(MainInput.SequenceName); 
+if contains(sequence, "cartesian", 'IgnoreCase', true)
     MainInput.SequenceType = '2D GRE';
-elseif  strcmp(MainInput.SequenceType, 'SPIRAL')
+elseif contains(SequenceName, "vent_2d_vardens_sos", 'IgnoreCase', true)
+    MainInput.SequenceType = '2D Spiral';  
+elseif contains(SequenceName, "CPIR_VENT_FLORET", 'IgnoreCase', true)
+    MainInput.SequenceType = '3D FLORET';         
+elseif contains(sequence, "spiral", 'IgnoreCase', true)
     MainInput.SequenceType = '2D Spiral';
+else
+    MainInput.SequenceType = char(sequence);
 end
+Outputs.SequenceName = MainInput.SequenceName;
+Outputs.SequenceType = MainInput.SequenceType;
 
 % Extract the file names
 [path,filename] = fileparts(xedatapath);
@@ -622,11 +632,12 @@ Outputs.SNR = Ventilation.SNR_lung;
 Outputs.SNRvv_slice = Ventilation.SNRvv_slice;
 Outputs.SNR_vv = Ventilation.SNR_vv;
 
-Outputs.VENT_SERIES_NUMBER = MainInput.xe_sernum;
+Outputs.VENT_SERIES_NUMBER = MainInput.XeSeries;
 try
     Outputs.VENTONLINE_SERIES_NUMBER = MainInput.xe_sernum_online;
 catch
 end
+Outputs.VENT_ANALYSIS_SERIES_NUMBER = MainInput.xe_sernum;
 Outputs.ANATVENT_SERIES_NUMBER = MainInput.proton_sernum;
 Outputs.IMAGE_ORIENT = MainInput.SliceOrientation;
 Outputs.PIXEL_SPACING_X = MainInput.PIXEL_SPACING_X;
