@@ -358,20 +358,16 @@ function ThresholdVDP_Report(Ventilation, Proton, MainInput)
         PDFoutputPath = fullfile(pptDir,[pptxFileName,'.pdf']);
         disp('Skipping PDF export (PowerPoint COM automation is Windows-only).');
     end
-
+    
     % ================================================================
-    % Copy PDF to Batch Analysis Preview folder
+    % Copy PowerPoint to Batch Analysis Preview folder
     % ================================================================
     if isfield(MainInput, 'PreviewFolder') && ...
             ~isempty(MainInput.PreviewFolder) && ...
             isfolder(MainInput.PreviewFolder) && ...
-            exist(PDFoutputPath, 'file')
-    
-        % Subject ID
+            exist(pptxName, 'file')
         subjectID = char(string(MainInput.SubjectID));
-        % Reconstruction type
         recon = char(string(MainInput.Recon));
-        % Scan date
         scanDate = MainInput.ScanDate;
         if isdatetime(scanDate)
             scanDate = datestr(scanDate, 'yyyymmdd');
@@ -382,28 +378,20 @@ function ThresholdVDP_Report(Ventilation, Proton, MainInput)
                 scanDate = char(string(scanDate));
             end
         end
-        
-        % Remove characters that cannot be used in Windows filenames
         subjectID = regexprep(subjectID, '[<>:"/\\|?*]', '_');
         scanDate  = regexprep(scanDate,  '[<>:"/\\|?*]', '_');
         recon     = regexprep(recon,     '[<>:"/\\|?*]', '_');
-        % New preview PDF name
         previewFileName = sprintf( ...
-            '%s_%s_%s_%s.pdf', ...
+            '%s_%s_%s_%s.pptx', ...
             subjectID, ...
             scanDate, ...
             recon, ...
             pptxFileName);
-    
-        previewPDFPath = fullfile( ...
+        previewPPTXPath = fullfile( ...
             MainInput.PreviewFolder, ...
             previewFileName);
-    
-        % Copy PDF
-        copyfile(PDFoutputPath, previewPDFPath);
-    
-        fprintf('Preview PDF copied to:\n%s\n', previewPDFPath);
-    
+        copyfile(pptxName, previewPPTXPath);
+        fprintf('Preview PowerPoint copied to:\n%s\n', previewPPTXPath);
     end
 end
 

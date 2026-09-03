@@ -8,8 +8,8 @@ UpdatedNote = MainInput.Note;
 UpdatedProcessingNotes = MainInput.ProcessingNotes;
 UpdatedAnalysisStatus  = MainInput.AnalysisStatus;
 
-analysisSubfolder = MainInput.analysisFolder;
-load(fullfile(MainInput.analysisFolder,'Diffusion_Analysis', 'workspace.mat'));
+analysisSubfolder = MainInput.analysisfolder;
+load(fullfile(MainInput.analysisfolder,'Diffusion_Analysis', 'workspace.mat'));
 
 MainInput.ImageQuality = UpdatedImageQuality;
 MainInput.Note = UpdatedNote;
@@ -21,7 +21,7 @@ Outputs.Note = MainInput.Note;
 Outputs.ProcessingNotes = MainInput.ProcessingNotes;
 Outputs.AnalysisStatus  = MainInput.AnalysisStatus;
 
-mask_file_name = dir(fullfile(analysisSubfolder, 'lungmask_*.nii.gz'));
+mask_file_name = dir(fullfile(analysisSubfolder, 'LungMask*.nii.gz'));
 mask_file_name = fullfile(mask_file_name.folder, mask_file_name.name);
 [~,~,mask_ext] = fileparts(mask_file_name);
 if strcmp(mask_ext, '.gz') || strcmp(mask_ext, '.nii')
@@ -34,9 +34,15 @@ if strcmp(mask_ext, '.gz') || strcmp(mask_ext, '.nii')
 elseif strcmp(mask_ext, '.dcm')
     A = double(squeeze(dicomread(mask_file_name)));
 end
-Diffusion.LungMask = A;
+if ndims(A) == 4
+    Diffusion.LungMask = A(:,:,:,1);
+else
+    Diffusion.LungMask = A;
+end
 [CorrectedMask, Diffusion] = VentilationFunctions.correct_mask_orientation(Diffusion);
-
+if ~isequal(size(Diffusion.AirwayMask), size(Diffusion.LungMask))
+    Diffusion.AirwayMask = zeros(size(Diffusion.LungMask));
+end
 % run analysis
 [Diffusion] = DiffusionFunctions.Diffusion_Analysis(Diffusion,MainInput);
 
