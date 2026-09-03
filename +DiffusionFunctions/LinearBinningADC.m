@@ -369,40 +369,39 @@ saveas(gca,'LinearBinningADCMontage.png');
 close all;
 
 %% %% write tiff and read back Binneddiff maps
-tiff = figure('MenuBar','none','ToolBar','none','DockControls','off','Resize','off','WindowState','minimized');%figure for tiffs
-ax1 = axes('Parent',tiff);ax2 = axes('Parent',tiff);%make axis for both images
-set(ax1,'Visible','off');set(ax2,'Visible','off');%turn off axis 
-set(ax1,'units','inches');set(ax2,'units','inches');%make axis units inches
-set(ax1,'position',[0 0 2 2]);set(ax2,'position',[0 0 2 2]);%make axis same as image
-set(gcf,'units','inches'); % set the figure units to pixels
-set(gcf,'position',[1 1 2 2])% set the position of the figure to axes
-disp('Saving ADCcolormap Tiff...')
-%ADCmap Binned
+
+disp('Saving BinnedADCmap Tiff...')
+tiffFile = fullfile(DataLocation,'BinnedADCmap.tif');
+if isfile(tiffFile)
+    delete(tiffFile);
+end
 Proton_Image = zeros(size(DiffBinMap2));
-for slice=1:size(DiffBinMap2,3) %repeat for rest of slices
-    [~,~] = Global.imoverlay(squeeze(abs(Proton_Image(:,:,slice))),squeeze(DiffBinMap2(:,:,slice)),[1,6],[0,0.99*max(Proton_Image(:))],colormap_Bins,1,gca);
-    colormap(gca,colormap_Bins); %caxis([0 0.14]);   
-%     X = print('-RGBImage',['-r',num2str(size(DiffBinMap2,2)/2)]);%2 inches
-     Xdata = getframe(gcf);
-     X = Xdata.cdata;     
-    if (slice == 1)
-        imwrite(X,[DataLocation,'\BinnedADCmap.tif'],'Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%write new/ overwrite tiff
+frameH = size(Proton_Image,1);
+frameW = size(Proton_Image,2);
+nSlices = size(DiffBinMap2,3);
+BinnedADCmaptif = uint8(zeros(frameH,frameW,3,nSlices));
+protonMax = max(Proton_Image(:));
+if protonMax == 0 || isnan(protonMax)
+    protonMax = 1;
+end
+for slice = 1:nSlices
+    protonSlice = abs(Proton_Image(:,:,slice));
+    adcSlice = DiffBinMap2(:,:,slice);
+    X = Global.robustColormapOverlayRGB( ...
+        protonSlice, adcSlice, [0,0.99*protonMax], [1,6], colormap_Bins, 1);
+    if size(X,1) ~= frameH || size(X,2) ~= frameW
+        X = imresize(X,[frameH frameW]);
+    end
+    BinnedADCmaptif(:,:,:,slice) = X;
+    if slice == 1
+        imwrite(X,tiffFile,'tif', ...
+            'Description','Package Version: 1; Cohort: test');
     else
-        imwrite(X,[DataLocation,'\BinnedADCmap.tif'],'WriteMode','append','Description',strcat('Package Version: ', '1','; Cohort: ', 'test'));%append tiff
+        imwrite(X,tiffFile,'tif','WriteMode','append', ...
+            'Description','Package Version: 1; Cohort: test');
     end
 end
 disp('Saving BinnedADCmap Tiff Completed.')
-close all;
-% read tiff
-cd(DataLocation)
-tiff_info = imfinfo('BinnedADCmap.tif'); % return tiff structure, one element per image
-% tiff_stack = imread('BinnedVent.tif', 1) ; % read in first image
-BinnedADCmaptif = uint8(zeros(tiff_info(1).Height ,tiff_info(1).Width ,3,length(tiff_info)));
-%concatenate each successive tiff to tiff_stack
-for ii = 2 : size(tiff_info, 1)
-    temp_tiff = imread('BinnedADCmap.tif', ii);
-    BinnedADCmaptif(:,:,:,ii) = temp_tiff;
-end
 % BinnedADCmaptif = permute(BinnedADCmaptif,[1 2 4 3]);
 % S = orthosliceViewer((test)); %colormap(SixBinMap);
 
