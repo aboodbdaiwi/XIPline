@@ -4,6 +4,8 @@ function CCHMC_Db_GX_Pipeline_rerun(MainInput, analysispath)
     UpdatedNote = MainInput.UpdatedNote;
     UpdatedProcessingNotes = MainInput.UpdatedProcessingNotes;
     UpdatedAnalysisStatus = MainInput.UpdatedAnalysisStatus;    
+    PreviewFolder2 = MainInput.PreviewFolder;
+
     disp('loading workspace, please wait.....')
     load(fullfile(MainInput.gx_analysis_folder, 'workspace.mat'));
     
@@ -11,6 +13,8 @@ function CCHMC_Db_GX_Pipeline_rerun(MainInput, analysispath)
     MainInput.UpdatedNote = UpdatedNote;
     MainInput.UpdatedProcessingNotes = UpdatedProcessingNotes;
     MainInput.UpdatedAnalysisStatus = UpdatedAnalysisStatus;
+    MainInput.PreviewFolder = PreviewFolder2;
+
     % mask_file_name = dir(fullfile(MainInput.gx_analysis_folder, 'Mask.nii.gz'));
     % mask_file_name = fullfile(mask_file_name.folder, mask_file_name.name);
     mask_file_name = fullfile(MainInput.gx_analysis_folder, 'Mask.nii.gz');

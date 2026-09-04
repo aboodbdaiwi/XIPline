@@ -208,7 +208,38 @@ end
 if strcmp(ADCLB_Analysis, 'yes') == 1 && strcmp(ADC_Analysis, 'yes') == 1
     [Diffusion] = DiffusionFunctions.LinearBinningADC(Diffusion, MainInput);   
 end
+
 %% Morphometry Analysis
+ADCmap = Diffusion.ADCmap ;
+% Morphometry Analysis QC
+minADCfraction = 0.01; % 0.10% of total image voxels
+minADCvoxels = round(minADCfraction * numel(ADCmap));
+
+minADCcoverage = 0.10; % At least 5% of lung mask
+
+lungMask = Diffusion.LungMask > 0;
+validADC = isfinite(ADCmap) & ADCmap > 0 & lungMask;
+
+nLungVoxels = nnz(lungMask);
+nADCvoxels = nnz(validADC);
+
+if nLungVoxels > 0
+    ADCcoverage = nADCvoxels / nLungVoxels;
+else
+    ADCcoverage = 0;
+end
+
+poorADCmap = nLungVoxels < minADCvoxels || ...
+             nADCvoxels < minADCvoxels || ...
+             ADCcoverage < minADCcoverage;
+
+if poorADCmap
+    fprintf('Morphometry disabled: insufficient ADC data (%d valid voxels, %.1f%% lung coverage).\n', ...
+        nADCvoxels,100*ADCcoverage);
+    MorphometryAnalysis = 'no';
+end
+
+
 if strcmp(MorphometryAnalysis, 'no') 
     Diffusion.MorphometryAnalysis = 'no';
     Diffusion.SEMMorphometry = 'no';
@@ -218,6 +249,7 @@ elseif strcmp(MorphometryAnalysis, 'yes')  && Nbvalues < 3
     Diffusion.SEMMorphometry = 'no';
     Diffusion.CMMorphometry = 'no';
 end
+
 if strcmp(MorphometryAnalysis, 'yes') == 1 && Nbvalues > 3
 % CM Morphometry analysis
 %     waitbar(.30,f,'Processing CM Morphometry Analysis ');

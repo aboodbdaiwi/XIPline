@@ -4,6 +4,7 @@ UpdatedImageQuality = MainInput.ImageQuality;
 UpdatedNote = MainInput.Note;
 UpdatedProcessingNotes = MainInput.ProcessingNotes;
 UpdatedAnalysisStatus  = MainInput.AnalysisStatus;
+PreviewFolder2 = MainInput.PreviewFolder;
 
 analysisSubfolder = MainInput.analysisFolder;
 load(fullfile(MainInput.analysisFolder,'Ventilation_Analysis', 'workspace.mat'));
@@ -12,6 +13,7 @@ MainInput.ImageQuality = UpdatedImageQuality;
 MainInput.Note = UpdatedNote;
 MainInput.ProcessingNotes = UpdatedProcessingNotes;
 MainInput.AnalysisStatus  = UpdatedAnalysisStatus;
+MainInput.PreviewFolder = PreviewFolder2;
 
 Outputs.ImageQuality = MainInput.ImageQuality;
 Outputs.Note = MainInput.Note;

@@ -3,18 +3,20 @@ function CCHMC_Db_Diff_Pipeline_rerun(MainInput)
 
 warning('off', 'all'); % Turn off all warnings 'off' | 'on'
 
-UpdatedImageQuality = MainInput.ImageQuality;
-UpdatedNote = MainInput.Note;
-UpdatedProcessingNotes = MainInput.ProcessingNotes;
-UpdatedAnalysisStatus  = MainInput.AnalysisStatus;
+UpdatedImageQuality2 = MainInput.ImageQuality;
+UpdatedNote2 = MainInput.Note;
+UpdatedProcessingNotes2 = MainInput.ProcessingNotes;
+UpdatedAnalysisStatus2  = MainInput.AnalysisStatus;
+PreviewFolder2 = MainInput.PreviewFolder;
 
 analysisSubfolder = MainInput.analysisfolder;
 load(fullfile(MainInput.analysisfolder,'Diffusion_Analysis', 'workspace.mat'));
 
-MainInput.ImageQuality = UpdatedImageQuality;
-MainInput.Note = UpdatedNote;
-MainInput.ProcessingNotes = UpdatedProcessingNotes;
-MainInput.AnalysisStatus  = UpdatedAnalysisStatus;
+MainInput.ImageQuality = UpdatedImageQuality2;
+MainInput.Note = UpdatedNote2;
+MainInput.ProcessingNotes = UpdatedProcessingNotes2;
+MainInput.AnalysisStatus  = UpdatedAnalysisStatus2;
+MainInput.PreviewFolder = PreviewFolder2;
 
 Outputs.ImageQuality = MainInput.ImageQuality;
 Outputs.Note = MainInput.Note;

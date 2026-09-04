@@ -133,7 +133,55 @@ else
     
     MainInput.SegmentManual = 'Freehand'; % 'AppSegmenter' || 'Freehand'
     % MainInput.SliceOrientation = SliceOrientation; % 'coronal' ||'transversal' || 'sagittal' ||'isotropic'
-    [Proton,Ventilation,Diffusion,GasExchange] = Segmentation.PerformSegmentation(Proton,Ventilation,Diffusion,GasExchange,MainInput);
+    [Proton,Ventilation,Diffusion,GasExchange] = Segmentation.PerformSegmentation( ...
+        Proton,Ventilation,Diffusion,GasExchange,MainInput);
+    
+    % Deep-learning mask
+    DLmask = logical(Diffusion.LungMask);
+    
+    % Threshold-based reference mask
+    Image = double(squeeze(Diffusion.Image(:,:,:,1)));
+    [testmask,bestThreshold,QC] = Segmentation.OptimizeThresholdMask(Image);
+    %figure; imslice(testmask)
+    % Make sure dimensions match
+    if ~isequal(size(DLmask),size(testmask))
+        warning('DL mask and threshold mask dimensions do not match.');
+    else
+        % Mask volumes
+        volDL = nnz(DLmask);
+        volThresh = nnz(testmask);
+    
+        % Volume ratio
+        if volThresh > 0
+            volumeRatio = volDL / volThresh;
+        else
+            volumeRatio = Inf;
+        end
+    
+        % Dice overlap
+        diceValue = 2 * nnz(DLmask & testmask) / ...
+            max(nnz(DLmask) + nnz(testmask),1);
+    
+        % Basic quality checks
+        badVolume = volumeRatio < 0.60 || volumeRatio > 1.40;
+        badDice   = diceValue < 0.60;
+        emptyMask = volDL == 0;
+    
+        % Replace clearly bad DL mask
+        if emptyMask || badVolume || badDice
+            fprintf('DL lung mask rejected: Dice = %.2f, Volume Ratio = %.2f\n', ...
+                diceValue,volumeRatio);
+            Diffusion.LungMask = testmask;
+            Diffusion.LungMaskMethod = 'Threshold';
+        else
+            fprintf('DL lung mask accepted: Dice = %.2f, Volume Ratio = %.2f\n', ...
+                diceValue,volumeRatio);
+            Diffusion.LungMask = DLmask;
+            Diffusion.LungMaskMethod = 'DeepLearning';
+        end
+    end
+
+   
 end
 if ~isfield(Diffusion, 'AirwayMask')
     Diffusion.AirwayMask = zeros(size(Diffusion.LungMask));
