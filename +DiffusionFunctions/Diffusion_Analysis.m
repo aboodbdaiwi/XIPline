@@ -256,7 +256,10 @@ if strcmp(MorphometryAnalysis, 'yes') == 1 && Nbvalues > 3
 %     pause(1)
     if strcmp(Diffusion.CMMorphometry, 'yes') 
         cd(outputpath)
-        [Diffusion]= DiffusionFunctions.CM_MorphometryFit(Diffusion, MainInput); 
+        Diffusion.GasType = '129Xe'; % '129Xe' or '3He'
+        Diffusion.DeltaUnits = 'ms'; % 's' or 'ms'
+        % [Diffusion]= DiffusionFunctions.CM_MorphometryFit(Diffusion, MainInput); 
+        [Diffusion]= DiffusionFunctions.CM_MorphometryFit_v2(Diffusion, MainInput); 
 
 %         [R_map,h_map,r_map,Lm_map,SVR_map,Na_map,DT_map,Dan_map,DL_map,Dmean_map,So_map,MSR_map,Residual_map,LungCMMorphometrySummary]=...
 %             DiffusionFunctions.CM_Lung_Morphometry(...

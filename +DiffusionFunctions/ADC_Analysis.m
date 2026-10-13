@@ -234,6 +234,7 @@ delete_if_exist = @(pattern) cellfun(@(f) delete(fullfile(outputpath, f)), ...
 
 % ==== Delete any older matching files ====
 delete_if_exist('DiffusionImage*.nii*');
+delete_if_exist('b0Image*.nii*');
 delete_if_exist('LungMask*.nii*');
 delete_if_exist('AirwayMask*.nii*');
 
@@ -242,6 +243,12 @@ niftiwrite(abs(fliplr(rot90(diffimg,-1))),[outputpath,'\DiffusionImage.nii'],'Co
 info = niftiinfo([outputpath,'\DiffusionImage.nii.gz']);
 info.Description = strcat('Package Version: ', 'Version1');
 niftiwrite(abs(fliplr(rot90(diffimg,-1))),[outputpath,'\DiffusionImage.nii'],info,'Compressed',true);
+% b0 images
+b0Image = squeeze(diffimg(:,:,:,1));
+niftiwrite(abs(fliplr(rot90(b0Image,-1))),[outputpath,'\b0Image.nii'],'Compressed',true);
+info = niftiinfo([outputpath,'\b0Image.nii.gz']);
+info.Description = strcat('Package Version: ', 'Version1');
+niftiwrite(abs(fliplr(rot90(b0Image,-1))),[outputpath,'\b0Image.nii'],info,'Compressed',true);
 % lung mask
 niftiwrite(abs(fliplr(rot90(final_mask,-1))),[outputpath,'\LungMask.nii'],'Compressed',true);
 info = niftiinfo([outputpath,'\LungMask.nii.gz']);
