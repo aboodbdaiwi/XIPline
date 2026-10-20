@@ -217,7 +217,7 @@ minADCvoxels = round(minADCfraction * numel(ADCmap));
 
 minADCcoverage = 0.10; % At least 5% of lung mask
 
-lungMask = Diffusion.LungMask > 0;
+lungMask = Diffusion.final_mask > 0;
 validADC = isfinite(ADCmap) & ADCmap > 0 & lungMask;
 
 nLungVoxels = nnz(lungMask);
