@@ -122,7 +122,7 @@ gasfitObj.fitTimeDomainSignal();
 % gasfitObj.plotTimeAndSpectralFit;
 gasfitObj.describe();
 % set(gcf,'Units','Normalized','Position',[0 0.04 0.5 0.85]);
-
+CalResults.GasFit = gasfitObj;
 %% Fit Dissolved Spectrum
 fprintf('\nAnalysis of Averaged Dissolved FID, skipping %0.0f\n',nSkip);
 if Voigt == 1
@@ -136,6 +136,14 @@ disfitObj = disfitObj.fitTimeDomainSignal();
 % figure('Name','Dissolved Phase Analysis')
 % disfitObj.plotTimeAndSpectralFit;
 % set(gcf,'Units','Normalized','Position',[0.5 0.04 0.5 0.85]); 
+fprintf('\nFitting Dissolved-Phase 129Xe Spectrum...\n');
+
+[disfitObj, fitQC] = Calibration.fit_xe_dissolved_robust( ...
+    disData1_avg, t, logical(Voigt));
+
+% Review fitting performance
+fprintf('Relative FID Fit Error: %.4f\n', ...
+    fitQC.relativeComplexFIDError);
 
 disp('            Area     Freq (Hz)   Linewidths(Hz)   Phase(degrees)');
 peakName = {'    RBC:','Barrier:','    Gas:'};
@@ -147,6 +155,62 @@ for iComp = 1:length(disfitObj.area)
         sprintf('%8.2f',abs(disfitObj.fwhmG(iComp))) '  ' ...
         sprintf('%+9.2f',disfitObj.phase(iComp))]);
 end
+
+
+% %% Gas and Dissolved-Phase Spectral Fitting
+% 
+% % Acquisition parameters (dwell time in seconds)
+% 
+% % Generate fitted gas spectrum
+% gasFit = Calibration.NMR_Mix( ...
+%     CalResults.GasFit.area, ...
+%     CalResults.GasFit.freq, ...
+%     CalResults.GasFit.fwhm, ...
+%     CalResults.GasFit.phase);
+% 
+% gasSpectrum = gasFit.calcComponentSpectralDomainSignal(CalResults.GasFit.f);
+% 
+% % Generate fitted dissolved-phase spectrum
+% time = (0:numel(gasSpectrum)-1) * dwell_time;
+% 
+% dissFit = disfitObj;
+% dissSignal = dissFit.calcComponentTimeDomainSignal(time);
+% 
+% dissSpectrum = dwell_time * fftshift(fft(dissSignal, [], 1), 1);
+% fittedSpectrum = abs(sum(dissSpectrum, 2));
+% 
+% % Plot Dissolved-Phase Spectrum
+% 
+% figure('Color', 'w');
+% hold on;
+% 
+% plot(dissFit.f, abs(dissFit.spectralDomainSignal), ...
+%     'bo', 'MarkerFaceColor', 'b', 'DisplayName', 'Measured');
+% 
+% plot(dissFit.f, fittedSpectrum, ...
+%     'r-', 'LineWidth', 2, 'DisplayName', 'Fitted');
+% 
+% xlabel('Frequency (Hz)');
+% ylabel('Signal Magnitude');
+% title('^{129}Xe Dissolved-Phase Spectrum');
+% legend('Location', 'best');
+% grid on;
+% hold off;
+
+% %% Gas-Exchange Metrics
+% 
+% phaseDiff = diff(dissFit.phase(1:2));
+% freqDiff  = diff(dissFit.freq(1:2));
+% 
+% % Preserve original subtraction order (component 1 - component 2)
+% phaseDiff = -phaseDiff;
+% freqDiff  = -freqDiff;
+% 
+% fprintf('\n--- 129Xe Gas-Exchange Metrics ---\n');
+% fprintf('Phase Difference : %.2f%c\n', phaseDiff, char(176));
+% fprintf('Freq. Difference : %.1f Hz\n', freqDiff);
+% fprintf('RBC/Barrier Ratio: %.2f\n', GasExResults.RbcBarRatio);
+% fprintf('Gas Contamination: %.1f%%\n', GasExResults.GasDisRatio * 100);
 
 %% Calculate Target TR Frequency from Gas Fit
 freq_target = freq + gasfitObj.freq(1);

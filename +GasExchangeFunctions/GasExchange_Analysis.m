@@ -207,11 +207,27 @@ if SpecDissolvedPhaseDifference >= 180  %Shift phase difference to be between +1
 elseif SpecDissolvedPhaseDifference <= -180
     SpecDissolvedPhaseDifference = SpecDissolvedPhaseDifference + 360;
 end
+
 %T2* Calculations
-GasT2Star = 1/(pi * AppendedDissolvedNMRFit.fwhm(3))*1000; %in ms
-BarrierT2Star = 1/(pi * max([AppendedDissolvedNMRFit.fwhm(2),AppendedDissolvedNMRFit.fwhmG(2)]))*1000; %in ms
-BarrierLtoGRatio = AppendedDissolvedNMRFit.fwhm(2)/AppendedDissolvedNMRFit.fwhmG(2);
-RBCT2Star = 1/(pi * AppendedDissolvedNMRFit.fwhm(1))*1000; %in ms
+fitObj = AppendedDissolvedNMRFit;
+fwhm = abs(fitObj.fwhm);
+% Gas and RBC T2* (ms)
+GasT2Star = 1000 / (pi * fwhm(3));
+RBCT2Star = 1000 / (pi * fwhm(1));
+% Barrier T2* and Lorentzian/Gaussian ratio
+if isprop(fitObj, 'fwhmG') && ~isempty(fitObj.fwhmG)
+    % Voigt fitting
+    fwhmG = abs(fitObj.fwhmG);
+    BarrierT2Star = 1000 / ...
+        (pi * max(fwhm(2), fwhmG(2)));
+    BarrierLtoGRatio = fwhm(2) / max(fwhmG(2), eps);
+else
+    % Lorentzian fitting
+    BarrierT2Star = 1000 / (pi * fwhm(2));
+    % Gaussian linewidth not available
+    BarrierLtoGRatio = NaN;
+end
+
 %Freqs
 GasFreq = AppendedDissolvedNMRFit.freq(3)+freq_jump;
 BarrierFreq = AppendedDissolvedNMRFit.freq(2)+freq_jump;
@@ -225,11 +241,18 @@ SpecGasPhaseContaminationPercentage = AppendedDissolvedNMRFit.area(3)/(AppendedD
 disp('Dixon separation of Dissolved Phases...')
 %Standard Dissolved Image
 [BarrierImage,RBCImage,Delta_angle_deg,~] = GasExchangeFunctions.SinglePointDixon(CorrDissolvedImage,-SpecRBCBarrierRatio,GasImage,ProtonMaskRegistered);
-[~,RBCOsc_High,~,~] = GasExchangeFunctions.SinglePointDixon(RBCOsc_High_Image,-RBC2Bar_struct.High,GasImage,ProtonMaskRegistered);
-[~,RBCOsc_Low,~,~] = GasExchangeFunctions.SinglePointDixon(RBCOsc_Low_Image,-RBC2Bar_struct.Low,GasImage,ProtonMaskRegistered);
-[~,RBCOsc_Norm,~,~] = GasExchangeFunctions.SinglePointDixon(RBCOsc_Normalization,-RBC2Bar_struct.Tot,GasImage,ProtonMaskRegistered);
+try
+    [~,RBCOsc_High,~,~] = GasExchangeFunctions.SinglePointDixon(RBCOsc_High_Image,-RBC2Bar_struct.High,GasImage,ProtonMaskRegistered);
+    [~,RBCOsc_Low,~,~] = GasExchangeFunctions.SinglePointDixon(RBCOsc_Low_Image,-RBC2Bar_struct.Low,GasImage,ProtonMaskRegistered);
+    [~,RBCOsc_Norm,~,~] = GasExchangeFunctions.SinglePointDixon(RBCOsc_Normalization,-RBC2Bar_struct.Tot,GasImage,ProtonMaskRegistered);
+catch
+    RBCOsc_High = zeros(size(BarrierImage));
+    RBCOsc_Low = zeros(size(BarrierImage));
+    RBCOsc_Norm = zeros(size(BarrierImage));
+end
+
 disp('Dixon separation of Dissolved Phases Completed.')
-% figure; imslice(abs(DissolvedImage))
+% figure; imslice(abs(RBCImage))
 %Remove Values below zero
 BarrierImage(BarrierImage<0) = 0;
 RBCImage(RBCImage<0) = 0;
@@ -288,10 +311,34 @@ disp('Calculating Ratios Completed.')
 
 
 %% Scale Ventilation Intensities
+
 disp('Scaling Ventilation Image...')
-VentMax = prctile(abs(VentImage(ProtonMaskRegistered(:))),99);
-ScaledVentImage = VentImage/VentMax;
-ScaledVentImage(ScaledVentImage>1) = 1;
+% Convert complex MRI signal to magnitude
+VentMagnitude = abs(VentImage);
+
+% Calculate 99th percentile within lung mask
+lungValues = VentMagnitude(ProtonMaskRegistered > 0);
+lungValues = lungValues(isfinite(lungValues));
+
+if isempty(lungValues)
+    error('No valid lung voxels found for ventilation scaling.');
+end
+
+VentMax = prctile(lungValues, 99);
+
+if ~isfinite(VentMax) || VentMax <= 0
+    error('Invalid ventilation scaling factor.');
+end
+
+% Normalize ventilation magnitude
+ScaledVentImage = VentMagnitude / VentMax;
+
+% Limit values to [0, 1]
+ScaledVentImage = min(ScaledVentImage, 1);
+
+% Remove invalid values
+ScaledVentImage(~isfinite(ScaledVentImage)) = 0;
+
 disp('Scaling Ventilation Image Completed.')
 
 
@@ -425,7 +472,7 @@ disp('Quantifying Images Completed.')
 % pause(1)
 disp('Calculating Histograms...')
 %Calculate bin ranges
-VentEdges = [-0.5, linspace(0,1,100) 1.5];
+VentEdges = [-0.5, linspace(0,1,100) 1.5]; 
 BarEdges = [-100, linspace(0,BarrierThresh(3)*3,100) 100];
 DissEdges = [-100, linspace(0,DissolvedThresh(3)*3,100) 100];
 RBCEdges = [-100, linspace(0,RBCThresh(3)*3,100) 100];
@@ -765,11 +812,12 @@ info = niftiinfo([outputpath,'\ProtonImage.nii.gz']);
 info.Description = strcat('Package Version: ', ReconVersion);
 niftiwrite(abs(fliplr(rot90(ProtonImage,-1))),[outputpath,'\ProtonImage.nii'],info,'Compressed',true);
 
-niftiwrite(abs(fliplr(rot90(Proton.ProtonHRRegistered,-1))),[outputpath,'\ProtonImageHRReg.nii'],'Compressed',true);
-info = niftiinfo([outputpath,'\ProtonImageHRReg.nii.gz']);
-info.Description = strcat('Package Version: ', ReconVersion);
-niftiwrite(abs(fliplr(rot90(Proton.ProtonHRRegistered,-1))),[outputpath,'\ProtonImageHRReg.nii'],info,'Compressed',true);
-
+if exist('Proton', 'var') && isstruct(Proton) && isfield(Proton, 'ProtonHRRegistered')
+    niftiwrite(abs(fliplr(rot90(Proton.ProtonHRRegistered,-1))),[outputpath,'\ProtonImageHRReg.nii'],'Compressed',true);
+    info = niftiinfo([outputpath,'\ProtonImageHRReg.nii.gz']);
+    info.Description = strcat('Package Version: ', ReconVersion);
+    niftiwrite(abs(fliplr(rot90(Proton.ProtonHRRegistered,-1))),[outputpath,'\ProtonImageHRReg.nii'],info,'Compressed',true);
+end
 niftiwrite(abs(fliplr(rot90(Proton.ProtonRegistered,-1))),[outputpath,'\ProtonRegistered.nii'],'Compressed',true);
 info = niftiinfo([outputpath,'\ProtonRegistered.nii.gz']);
 info.Description = strcat('Package Version: ', ReconVersion);
@@ -1202,12 +1250,12 @@ catch
         ProtonMontage = figure('Name','Proton Image');set(ProtonMontage,'WindowState','minimized');
         montage(Proton.ProtonRegistered,'DisplayRange',[0 max(Proton.ProtonRegistered(:))*0.8])%unregistered for these
         savefig('ProtonMontage.fig')
-        close(gcf)
+        % close(gcf)
     else
         ProtonMontage = figure('Name','Proton Image');set(ProtonMontage,'WindowState','minimized');
         montage(Proton.ProtonRegistered,'DisplayRange',[])%unregistered for these
         savefig('ProtonMontage.fig')
-        close(gcf)
+        % close(gcf)
     end
 end
 if MainInput.NoProtonImage == 0
@@ -1221,12 +1269,29 @@ Global.exportToPPTX('addslide'); %Proton Mask
 Global.exportToPPTX('addpicture',ProtonMaskMontage);
 Global.exportToPPTX('addtext',sprintf('Proton Mask'),'Position',[0 0 5 3]);
 
-VentMontage = GasExchangeFunctions.openfig_safe('VentMontage.fig');
+vent_figPath = fullfile(GasExchange.outputpath,'VentMontage.fig');
+if ~isfile(vent_figPath)
+    VentMontage = figure('Visible','off','Color','w');
+    montage(abs(GasExchange.UncorrectedVentImage),'DisplayRange',[]);
+    savefig(VentMontage,vent_figPath);
+    close(VentMontage);
+end
+VentMontage = openfig(vent_figPath);
+% VentMontage = GasExchangeFunctions.openfig_safe(vent_figPath);
 Global.exportToPPTX('addslide'); %Uncorrected Vent Image
 Global.exportToPPTX('addpicture',VentMontage);
 Global.exportToPPTX('addtext',sprintf(['Uncorrected Ventilation Image-\nSNR: ', num2str(VentSNR)]),'Position',[0 0 5 3]);
 
-CorrVentMontage = GasExchangeFunctions.openfig_safe('CorrVentMontage.fig');
+corrvent_figPath = fullfile(GasExchange.outputpath,'CorrVentMontage.fig');
+if ~isfile(corrvent_figPath)
+    CorrVentMontage = figure('Visible','off','Color','w');
+    montage(abs(VentImage),'DisplayRange',[]);
+    savefig(CorrVentMontage,corrvent_figPath);
+    close(CorrVentMontage);
+end
+CorrVentMontage = openfig(corrvent_figPath);
+
+% CorrVentMontage = GasExchangeFunctions.openfig_safe(corrvent_figPath);
 Global.exportToPPTX('addslide'); %Vent Image
 Global.exportToPPTX('addpicture',CorrVentMontage);
 Global.exportToPPTX('addtext',sprintf(['Corrected Ventilation Image-\nUncorrected SNR: ', num2str(VentSNR)]),'Position',[0 0 5 3]);
@@ -1266,17 +1331,42 @@ Global.exportToPPTX('addslide'); %Registration
 Global.exportToPPTX('addpicture',Registration);
 Global.exportToPPTX('addtext',sprintf('Registration'),'Position',[0 0 5 3]);
 
-GasMontage = GasExchangeFunctions.openfig_safe('GasMontage.fig');
+Gas_figPath = fullfile(GasExchange.outputpath,'GasMontage.fig');
+if ~isfile(Gas_figPath)
+    GasMontage = figure('Visible','off','Color','w');
+    montage(abs(GasImage),'DisplayRange',[]);
+    savefig(GasMontage,Gas_figPath);
+    close(GasMontage);
+end
+GasMontage = openfig(Gas_figPath);
+
+% GasMontage = GasExchangeFunctions.openfig_safe('GasMontage.fig');
 Global.exportToPPTX('addslide'); %Gas Image
 Global.exportToPPTX('addpicture',GasMontage);
 Global.exportToPPTX('addtext',sprintf(['Gas Image-\nSNR: ', num2str(GasSNR)]),'Position',[0 0 5 3]);
 
-DissolvedMontage = GasExchangeFunctions.openfig_safe('DissolvedMontage.fig');
+Diss_figPath = fullfile(GasExchange.outputpath,'DissolvedMontage.fig');
+if ~isfile(Diss_figPath)
+    DissolvedMontage = figure('Visible','off','Color','w');
+    montage(abs(DissolvedImage),'DisplayRange',[]);
+    savefig(DissolvedMontage,Diss_figPath);
+    % close(DissolvedMontage);
+end
+DissolvedMontage = openfig(Diss_figPath);
+% DissolvedMontage = GasExchangeFunctions.openfig_safe('DissolvedMontage.fig');
 Global.exportToPPTX('addslide'); %Dissolved Image
 Global.exportToPPTX('addpicture',DissolvedMontage);
 Global.exportToPPTX('addtext',sprintf(['Dissolved Image-\nSNR: ', num2str(DissolvedSNR)]),'Position',[0 0 5 3]);
 
-CorrDissolvedMontage = GasExchangeFunctions.openfig_safe('CorrDissolvedMontage.fig');
+corrDiss_figPath = fullfile(GasExchange.outputpath,'CorrDissolvedMontage.fig');
+if ~isfile(corrDiss_figPath)
+    CorrDissolvedMontage = figure('Visible','off','Color','w');
+    montage(abs(CorrDissolvedImage),'DisplayRange',[]);
+    savefig(CorrDissolvedMontage,corrDiss_figPath);
+    % close(CorrDissolvedMontage);
+end
+CorrDissolvedMontage = openfig(corrDiss_figPath);
+% CorrDissolvedMontage = GasExchangeFunctions.openfig_safe('CorrDissolvedMontage.fig');
 Global.exportToPPTX('addslide'); %Corrected Dissolved Image
 Global.exportToPPTX('addpicture',CorrDissolvedMontage);
 Global.exportToPPTX('addtext',sprintf(['Corrected Dissolved Image-\nSNR: ', num2str(CorrDissolvedSNR)]),'Position',[0 0 5 3]);

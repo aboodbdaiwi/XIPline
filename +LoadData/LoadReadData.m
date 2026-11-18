@@ -311,7 +311,8 @@ elseif strcmp(MainInput.Scanner, 'GE') && strcmp(MainInput.XeDataext,'.h5')
         end
     elseif strcmp(MainInput.AnalysisType,'GasExchange')  
         if strcmp(MainInput.SequenceType, '3D Radial') && strcmp(MainInput.Institute,'XeCTC') 
-            GasExchange = LoadData.GE_Recon.CPIR_Scripts.CPIR_GERecon.GE_GX_3D_Radial_XeCTC_1ptDixon_Recon(MainInput);
+            GasExchange = LoadData.GE_Recon.CPIR_Scripts.CPIR_GERecon.GE_radial_3D_XeCTC_gx_recon(MainInput);
+            % GasExchange = LoadData.GE_Recon.CPIR_Scripts.CPIR_GERecon.GE_GX_3D_Radial_XeCTC_UnifiedRecon(MainInput);
         % elseif strcmp(MainInput.SequenceType, '3D Radial') && strcmp(MainInput.Institute,'XeCTC') 
 
         end
@@ -781,7 +782,8 @@ end
 
                 elseif strcmp(MainInput.AnalysisType,'GasExchange')   
                     if strcmp(MainInput.SequenceType, '3D Radial') 
-                        Proton = LoadData.GE_Recon.CPIR_Scripts.CPIR_GERecon.GE_Proton_3D_Radial_Recon(MainInput); 
+                        Proton = LoadData.GE_Recon.CPIR_Scripts.CPIR_GERecon.GE_radial_3D_XeCTC_H_recon(MainInput); 
+                        % Proton = LoadData.GE_Recon.CPIR_Scripts.CPIR_GERecon.GE_Proton_3D_Radial_MRDStyle_Recon(MainInput); 
                     end
 
                 end                 

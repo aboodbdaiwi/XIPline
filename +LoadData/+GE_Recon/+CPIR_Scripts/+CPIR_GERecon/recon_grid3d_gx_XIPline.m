@@ -1,6 +1,9 @@
 function [bb,bbabs,gx] = recon_grid3d_gx_XIPline(d,h,wfn,mtx_reco,interp_factor,delay,lb,fname,...
     mask_fac,coco,plt,grdwrp)
-%recon_grid3d_gx Reconstruct 2D/3D non-Cartesian data
+% Native GE 3D gridding with XIPline gas-exchange outputs.
+% The imaging reconstruction follows the original recon_grid3d_gx.m.
+% XIPline additions: extract two bonus FIDs, expose raw interleaves and
+% trajectory, use the CPIR spatial shift, return metadata in gx.
 %[bb,bbabs] = recon_grid3d_gx(d,h,wfn,mtx_reco,delay,lb,fname,mask_fac,coco,...
 %                        plt,grdwrp)
 %         d   Raw data (or P-File/ScanArchive fname)
@@ -25,8 +28,8 @@ function [bb,bbabs,gx] = recon_grid3d_gx_XIPline(d,h,wfn,mtx_reco,interp_factor,
 %
 %  2/2025  Rolf Schulte
 if (nargin<1), help(mfilename); return; end
-
 gx = struct();
+
 
 %% input variables
 RFS_MAX_NSCANS = 16382;                % maximum number of scans
@@ -170,13 +173,19 @@ if isfield(wf,'fov')
         end
     end
 end
-% Preserve acquisition information for XIPline gas-exchange processing
+% XIPline: save metadata needed by the downstream gas-exchange pipeline.
 gx.mtx_acq = mtx_acq;
 gx.niso = niso;
-gx.fov_m = h.rdb_hdr.fov*1d-3;
 gx.wfn = wfn;
 gx.header = h;
-
+gx.WaveformFlips_deg = [];
+gx.WaveformFreqs_Hz = [];
+gx.ImagingFreqJump_Hz = NaN;
+if isfield(wf,'flips'), gx.WaveformFlips_deg = double(wf.flips(:).'); end
+if isfield(wf,'freqs'), gx.WaveformFreqs_Hz = double(wf.freqs(:).'); end
+if numel(gx.WaveformFreqs_Hz)==2
+    gx.ImagingFreqJump_Hz = abs(diff(gx.WaveformFreqs_Hz));
+end
 clear wf
 nslices = size(d,5);
 dim = size(k,3);
@@ -202,6 +211,81 @@ k = single(k);
 dcf = single(dcf);
 t = single(t);
 
+
+%% XIPline: extract the two appended spectroscopy FIDs (if present)
+% Original imaging views come first, then gas FID, then dissolved FID.
+% The last two whole DCF profiles must be zero. Keep unpadded FIDs for
+% fitting and separate 512-point versions for display (no new information).
+gx.GasBonusFID = [];
+gx.DissolvedBonusFID = [];
+gx.GasBonusFIDAcquired = [];
+gx.DissolvedBonusFIDAcquired = [];
+gx.GasBonusFIDPerCoil = [];
+gx.DissolvedBonusFIDPerCoil = [];
+gx.BonusTime_s = [];
+gx.BonusTimePadded_s = [];
+gx.BonusDwell_s = NaN;
+gx.BonusAcquisitionIndices = [];
+gx.BonusCoilIndex = NaN;
+gx.BonusFIDStatus = 'not detected';
+
+nViews = size(ind,1);
+nRead = nnz(ind(1,:));
+canCheck = size(d,1)==nViews && nViews>=4 && nRead>=32 && mod(nViews,2)==0 && ...
+    size(d,3)==1 && size(d,4)==1 && size(d,5)==1 && ...
+    all(sum(ind,2)==nRead) && size(d,2)>=size(ind,2) && ...
+    numel(dcf)==nRead*nViews && size(k,2)==nRead*nViews && ...
+    numel(t)==nRead*nViews;
+
+if canCheck
+    dcfByView = reshape(dcf,nRead,nViews);
+    isBonus = all(dcfByView(:,end-1:end)==0,'all') && ...
+        any(dcfByView(:,end-2)~=0) && ...
+        numel(gx.WaveformFlips_deg)==2 && ...
+        gx.WaveformFlips_deg(1)<gx.WaveformFlips_deg(2) && ...
+        numel(gx.WaveformFreqs_Hz)==2 && ...
+        gx.WaveformFreqs_Hz(1)~=gx.WaveformFreqs_Hz(2) && ...
+        isequal(ind(end,:),ind(end-1,:));
+
+    if isBonus
+        adc = find(ind(end,:));
+        nCoils = size(d,6);
+        gasFID = reshape(d(end-1,adc,1,1,1,:),nRead,nCoils);
+        disFID = reshape(d(end,adc,1,1,1,:),nRead,nCoils);
+        [~,bestCoil] = max(sum(abs(disFID).^2,1));
+
+        gx.GasBonusFIDPerCoil = gasFID;
+        gx.DissolvedBonusFIDPerCoil = disFID;
+        gx.GasBonusFIDAcquired = gasFID(:,bestCoil);
+        gx.DissolvedBonusFIDAcquired = disFID(:,bestCoil);
+
+        % Compatibility: display/export arrays zero-filled to >=512 points.
+        Npad = max(512,nRead);
+        gx.GasBonusFID = [gx.GasBonusFIDAcquired; complex(zeros(Npad-nRead,1,'single'))];
+        gx.DissolvedBonusFID = [gx.DissolvedBonusFIDAcquired; complex(zeros(Npad-nRead,1,'single'))];
+        gx.BonusCoilIndex = bestCoil;
+        gx.BonusAcquisitionIndices = [nViews-1,nViews];
+        tv = reshape(t,nRead,nViews);
+        gx.BonusTime_s = double(tv(:,end));
+        gx.BonusDwell_s = median(diff(gx.BonusTime_s));
+        gx.BonusTimePadded_s = gx.BonusTime_s(1) + ...
+            (0:Npad-1)' * gx.BonusDwell_s;
+        gx.BonusFIDStatus = 'extracted: gas and dissolved bonus FIDs';
+        fprintf('Bonus FIDs: views %d, %d; %d acquired samples; %d coil(s)\n', ...
+            nViews-1,nViews,nRead,nCoils);
+
+        % Remove bonus views from ALL imaging arrays before interleave split.
+        d = d(1:end-2,:,:,:,:,:);
+        ind = ind(1:end-2,:);
+        kByView = reshape(k,nRead,nViews,size(k,3));
+        k = reshape(kByView(:,1:end-2,:),1,nRead*(nViews-2),size(k,3));
+        dcf = reshape(dcfByView(:,1:end-2),1,[]);
+        t = reshape(tv(:,1:end-2),1,[]);
+    end
+end
+if isempty(gx.BonusAcquisitionIndices)
+    warning('GE bonus FIDs not identified. No automatic bonus subtraction.');
+end
 
 %% reshape data for vap_continue_loop
 if ((sum(ind(:))>RFS_MAX_NSCANS) && (size(d,4)>1))
@@ -234,14 +318,10 @@ end
 if n3~=1, warning('size(d,3)(=%g)~=1',n3); end
 
 %% Split interleaves
-% The CPIR 1-point Dixon acquisition alternates two image streams.
-% Preserve both raw streams before the standard GE reconstruction reshaping.
-d1 = d(1:2:end,:); % first interleave
-d2 = d(2:2:end,:); % second interleave
-
+d1 = d(1:2:end,:); % gas/dissolved interleave 1
+d2 = d(2:2:end,:); % gas/dissolved interleave 2
 gx.RawInterleave1 = d1;
 gx.RawInterleave2 = d2;
-
 d=cat(3,d1,d2);
 d=reshape(d,size(d,1),size(d,2),1,size(d,3));
 [nproj, nread, ~, ~] = size(d);
@@ -250,113 +330,35 @@ ind = ind(1:2:end,:);
 nacq=sum(sum(ind,1)>0);
 
 dcf_tmp = reshape(dcf,[],nproj);
-dcf_keep = dcf_tmp(1:nacq,:);
-dcf = dcf_keep(:)';
+dcfKeep = dcf_tmp(1:nacq,:);
+dcf = dcfKeep(:)';
 
 k_tmp = reshape(k,[],nproj,3);
-k_keep = k_tmp(1:nacq,:,:);
-
-% XIPline trajectory convention: [3 x readout x projection]
-gx.XeTraj = permute(k_keep,[3 1 2]);
-gx.nacq = nacq;
-gx.nproj = nproj;
-gx.nread = nread;
-gx.dcf = dcf_keep;
-
-% Convert the two raw streams to [readout x projection] when possible.
-% Keep the untouched raw arrays above regardless.
-try
-    if ismatrix(d1) && size(d1,2) >= nacq
-        gx.Interleave1KSpace = transpose(d1(:,1:nacq));
-    else
-        gx.Interleave1KSpace = [];
-    end
-    if ismatrix(d2) && size(d2,2) >= nacq
-        gx.Interleave2KSpace = transpose(d2(:,1:nacq));
-    else
-        gx.Interleave2KSpace = [];
-    end
-catch
-    gx.Interleave1KSpace = [];
-    gx.Interleave2KSpace = [];
-end
-
-% ============================================================
-% Check GE trajectory center
-% ============================================================
-
-kx0 = mean(k_keep(1,:,1));
-ky0 = mean(k_keep(1,:,2));
-kz0 = mean(k_keep(1,:,3));
-
-fprintf('\nGE trajectory center:\n');
-fprintf('  kx0 = %.8f\n',kx0);
-fprintf('  ky0 = %.8f\n',ky0);
-fprintf('  kz0 = %.8f\n',kz0);
-
-fprintf('First trajectory point range:\n');
-fprintf('  Kx: %.8f to %.8f\n', ...
-    min(k_keep(1,:,1)),max(k_keep(1,:,1)));
-fprintf('  Ky: %.8f to %.8f\n', ...
-    min(k_keep(1,:,2)),max(k_keep(1,:,2)));
-fprintf('  Kz: %.8f to %.8f\n\n', ...
-    min(k_keep(1,:,3)),max(k_keep(1,:,3)));
-
-k = reshape(k_keep,1,nacq*nproj,3);
+kKeep = k_tmp(1:nacq,:,:);
+k = reshape(kKeep,1,nacq*nproj,3);
 
 t_tmp = reshape(t,[],nproj);
-t_keep = t_tmp(1:nacq,:);
-gx.t = t_keep;
-t = t_keep(:)';
+tKeep = t_tmp(1:nacq,:);
+t = tKeep(:)';
 
-%% pre-processing of data
-% if ((abs(xloc)>0.01) || (abs(yloc)>0.01) || (abs(zloc)>0.01))
-%     shft = mtx_reco.*[xloc yloc zloc]*1d-3/fov.*niso;
-%     if dim==2, shft = shft(1,1:2); end
-% else
-%     % shft = [];
-%     shft = zeros(1,dim);
-% end
-% for ld=1:dim
-%     % if ~isodd(mtx_reco(ld)), shft(ld) = shft(ld) + 0.5; end
-%     shft(ld) = shft(ld) + 0.5;
-% end
-% For the CPIR 3D radial gas-exchange reconstruction, do not apply the
-% scanner prescription position or the half-voxel correction here.
-% The trajectory is reconstructed at the k-space/FOV center.
-%
-% IMPORTANT: shft must be set BEFORE raw2grid because raw2grid applies the
-% spatial phase shift to the acquired k-space data.
-%% pre-processing of data
-shft = zeros(1,dim);
+% XIPline: preserve raw imaging k-space and matched trajectory.
+gx.XeTraj = permute(kKeep,[3 1 2]);        % 3 x readout x profile
+gx.Interleave1KSpace = transpose(d1(:,1:nacq));
+gx.Interleave2KSpace = transpose(d2(:,1:nacq));
+gx.nacq = nacq;
+gx.nread = nread;
+gx.nproj = nproj;
+gx.dcf = dcfKeep;
+gx.t = tKeep;
 
-% Base half-voxel correction
-for ld = 1:dim
-    if ~LoadData.GE_Recon.fidall.isodd(mtx_reco(ld))
-        shft(ld) = shft(ld) + 0.5;
-    end
-end
 
-% Additional manual centering correction
-shft(1) = shft(1) + 0;
+%% XIPline: same GE raw2grid step, with CPIR centering shift
+shft = 0.5 * double(mod(mtx_reco(1:dim),2)==0);
 shft(2) = shft(2) + 20;
-
-fprintf('Reconstruction shift = [%s] voxels\n', num2str(shft));
+fprintf('XIPline spatial shift: [%s] voxels\n',num2str(shft));
 
 cart_down_fac = [];
-
-dd = LoadData.GE_Recon.fidall.raw2grid( ...
-    d, ...
-    LoadData.GE_Recon.fidall.ischop(h), ...
-    k, ...
-    shft, ...
-    cart_down_fac, ...
-    [], ...
-    ind, ...
-    delay*1e-6, ...
-    bw, ...
-    false);
-
+dd = LoadData.GE_Recon.fidall.raw2grid(d,LoadData.GE_Recon.fidall.ischop(h),k,shft,cart_down_fac,[],ind,delay*1d-6,bw,false);
 clear d ind
 % size of reshaped data dd:
 %  dim1=#coils; dim2=#indexed kspace data; dim3=#excitations; dim4=#slices
@@ -374,32 +376,12 @@ clear t
 ntimesteps = size(dd,3);
 fprintf('Reconstructing/storing data as single (loop)\n');
 if dim==3
-    % fprintf('3D gridding\n');
-    % if length(size(dd))>3, error('length(size(dd))(=%d)>3',length(size(dd))); end
-    % dd = reshape(permute(dd,[1 3 2]),[ncoils*ntimesteps,size(k,2)]);
-    % bb = LoadData.GE_Recon.fidall.gridding3dsingle(k,dd,dcf,mtx_reco);
-    % clear dd
-    % bb = permute(reshape(bb,[mtx_reco ncoils ntimesteps]),[1 2 3 5 4]);
-
-
     fprintf('3D gridding\n');
-
-    if length(size(dd))>3
-        error('length(size(dd))(=%d)>3',length(size(dd)));
-    end
-
-    dd = reshape(permute(dd,[1 3 2]), ...
-        [ncoils*ntimesteps,size(k,2)]);
-
-    bb = LoadData.GE_Recon.fidall.gridding3dsingle( ...
-        k,dd,dcf,mtx_reco);
-
+    if length(size(dd))>3, error('length(size(dd))(=%d)>3',length(size(dd))); end
+    dd = reshape(permute(dd,[1 3 2]),[ncoils*ntimesteps,size(k,2)]);
+    bb = LoadData.GE_Recon.fidall.gridding3dsingle(k,dd,dcf,mtx_reco);
     clear dd
-
-    bb = permute( ...
-        reshape(bb,[mtx_reco ncoils ntimesteps]), ...
-        [1 2 3 5 4]);
-
+    bb = permute(reshape(bb,[mtx_reco ncoils ntimesteps]),[1 2 3 5 4]);
 else
     bb = complex(zeros([mtx_reco,ntimesteps,ncoils],'single'));
     for lt=1:ntimesteps
@@ -555,7 +537,7 @@ if ~isempty(fname) && (plt(2)>0)
 end
 
 
-%% XIPline gas-exchange reconstruction metadata
+%% XIPline metadata (native gridding output itself is unchanged)
 gx.mtx_reco = mtx_reco;
 gx.interp_factor = interp_factor;
 gx.delay = delay;
@@ -569,6 +551,7 @@ gx.ntimesteps = ntimesteps;
 gx.ncoils = ncoils;
 gx.bw = bw;
 gx.fov = fov;
+gx.fov_m = fov;
 
 %% print execution time
 ttv = toc(timerVal);

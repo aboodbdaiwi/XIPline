@@ -82,6 +82,9 @@ else
     disfitObj = GasExchangeFunctions.GasExchange_Spectro.NMR_TimeFit(disData1_avg,t,[1 1 1],[0 -720  -7700],[240 240 40],[0 0 0],0,length(t));
 end
 disfitObj = disfitObj.fitTimeDomainSignal();
+
+[disfitObj, fitQC] = Calibration.fit_xe_dissolved_robust( ...
+    disData1_avg, t, logical(Voigt));
 % figure('Name','Dissolved Phase Analysis')
 % disfitObj.plotTimeAndSpectralFit;
 % set(gcf,'Units','Normalized','Position',[0.5 0.04 0.5 0.85]); 

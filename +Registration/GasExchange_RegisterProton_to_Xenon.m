@@ -117,14 +117,22 @@ set(Registrationfig,'color','white','Units','inches','Position',[0.25 0.25 2*Num
 tiledlayout(4,NumPlotSlices,'TileSpacing','none','Padding','compact');
 for slice=1:NumPlotSlices
     nexttile
+    if size(ProtonImage,1) >= H_RecMatrix*3
     imshowpair(abs(ProtonImage(H_RecMatrix:2*H_RecMatrix,H_RecMatrix:2*H_RecMatrix,H_RecMatrix+Slices_Co(slice)))/max(abs(ProtonImage(:))),abs(VentImage(:,:,Slices_Co(slice)))/max(abs(VentImage(ProtonMaskRegistred(:)))),'Scaling','none','ColorChannels','red-cyan')
+    else
+    imshowpair(abs(ProtonImage(:,:,Slices_Co(slice)))/max(abs(ProtonImage(:))),abs(VentImage(:,:,Slices_Co(slice)))/max(abs(VentImage(ProtonMaskRegistred(:)))),'Scaling','none','ColorChannels','red-cyan')
+    end
     if slice == round(NumPlotSlices/2)
         title('Before Registration','FontSize',24)
     end
 end
 for slice=1:NumPlotSlices
     nexttile
+    if size(ProtonImage,1) >= H_RecMatrix*3
     imshowpair(fliplr(rot90(squeeze(abs(ProtonImage(H_RecMatrix+Slices_Ax(slice),H_RecMatrix:2*H_RecMatrix,H_RecMatrix:2*H_RecMatrix))),-1))/max(abs(ProtonImage(:))),fliplr(rot90(squeeze(abs(VentImage(Slices_Ax(slice),:,:))),-1))/max(abs(VentImage(ProtonMaskRegistred(:)))),'Scaling','none','ColorChannels','red-cyan')
+    else
+    imshowpair(fliplr(rot90(squeeze(abs(ProtonImage(Slices_Ax(slice),:,:))),-1))/max(abs(ProtonImage(:))),fliplr(rot90(squeeze(abs(VentImage(Slices_Ax(slice),:,:))),-1))/max(abs(VentImage(ProtonMaskRegistred(:)))),'Scaling','none','ColorChannels','red-cyan')
+    end    
 end
 for slice=1:NumPlotSlices
     nexttile
@@ -138,7 +146,7 @@ for slice=1:NumPlotSlices
     imshowpair(fliplr(rot90(squeeze(abs(ProtonRegistered(Slices_Ax(slice),:,:))),-1))/max(abs(ProtonRegistered(:))),fliplr(rot90(squeeze(abs(VentImage(Slices_Ax(slice),:,:))),-1))/max(abs(VentImage(ProtonMaskRegistred(:)))),'Scaling','none','ColorChannels','red-cyan')
 end
 savefig('Registerationfig.fig')
-close(gcf)
+% close(gcf)
 %% stor data
 for slice =1:size(VentImage,3)
     A = ProtonRegistered(:,:,slice);

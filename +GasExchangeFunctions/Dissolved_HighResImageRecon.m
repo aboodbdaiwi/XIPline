@@ -13,7 +13,7 @@ function Image_Out = Dissolved_HighResImageRecon(ImageSize,data,traj,PixelShift)
 % PixelShift - array of size 3 with pixels to shift by [a(-)p(+), h(+)f(-), r(+)l(-)]
 
 %  Settings
-kernel.sharpness = 0.3;
+kernel.sharpness = 0.3; % defualt 0.3
 kernel.extent = 6*kernel.sharpness;
 overgrid_factor = 3;
 output_image_size = ImageSize*[1 1 1];

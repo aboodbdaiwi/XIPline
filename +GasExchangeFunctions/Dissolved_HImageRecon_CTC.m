@@ -1,4 +1,4 @@
-function Image_Out = Dissolved_HImageRecon(ImageSize,data,traj,PixelShift)
+function Image_Out = Dissolved_HImageRecon_CTC(ImageSize,data,traj,PixelShift)
 %% A Function written to reconstruct Images when K-space data and trajectories are passed to it
 % Uses Scott Robertson's reconstruction code - This just makes it more
 % modular and easy to implement - This is for 3D data
